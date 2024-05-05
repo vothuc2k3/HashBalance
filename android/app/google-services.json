@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1024351849204",
+    "project_id": "hash-balance-24465",
+    "storage_bucket": "hash-balance-24465.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1024351849204:android:0354ad612091fdbf2deca1",
+        "android_client_info": {
+          "package_name": "com.example.hash_balance"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_5iZg-03Mc7lA9lsTxVSfWYfseEHuUe8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
