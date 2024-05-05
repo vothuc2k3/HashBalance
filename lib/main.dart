@@ -46,22 +46,25 @@ class MyAppState extends ConsumerState<MyApp> {
   @override
   Widget build(BuildContext context) {
     return ref.watch(authStageChangeProvider).when(
-        data: (data) => MaterialApp.router(
-              debugShowCheckedModeBanner: false,
-              title: 'Hash Balance',
-              theme: Pallete.darkModeAppTheme,
-              routerDelegate: RoutemasterDelegate(routesBuilder: (context) {
-                if (data != null) {
-                  getData(ref, data);
-                }
-                if (userModel != null) {
-                  return loggedInRoute;
-                }
-                return loggedOutRoute;
-              }),
-              routeInformationParser: const RoutemasterParser(),
-            ),
-        error: (error, stackTrace) => ErrorText(error: error.toString()),
-        loading: () => const LoadingCircular());
+          data: (data) => MaterialApp.router(
+            debugShowCheckedModeBanner: false,
+            title: 'Hash Balance',
+            theme: Pallete.darkModeAppTheme,
+            routerDelegate: RoutemasterDelegate(routesBuilder: (context) {
+              if (data != null) {
+                getData(ref, data);
+              }
+              if (userModel != null) {
+                return loggedInRoute;
+              }
+              return loggedOutRoute;
+            }),
+            routeInformationParser: const RoutemasterParser(),
+          ),
+          error: (error, stackTrace) => ErrorText(
+            error: error.toString(),
+          ),
+          loading: () => const LoadingCircular(),
+        );
   }
 }
