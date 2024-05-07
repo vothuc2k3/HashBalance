@@ -5,6 +5,8 @@ class GamingCommunityModel {
   final String name;
   final String profileImage;
   final String bannerImage;
+  final String type;
+  final bool containsExposureContents;
   final List<String> members;
   final List<String> mods;
   GamingCommunityModel({
@@ -12,6 +14,8 @@ class GamingCommunityModel {
     required this.name,
     required this.profileImage,
     required this.bannerImage,
+    required this.type,
+    required this.containsExposureContents,
     required this.members,
     required this.mods,
   });
@@ -21,6 +25,8 @@ class GamingCommunityModel {
     String? name,
     String? profileImage,
     String? bannerImage,
+    String? type,
+    bool? containsExposureContents,
     List<String>? members,
     List<String>? mods,
   }) {
@@ -29,6 +35,9 @@ class GamingCommunityModel {
       name: name ?? this.name,
       profileImage: profileImage ?? this.profileImage,
       bannerImage: bannerImage ?? this.bannerImage,
+      type: type ?? this.type,
+      containsExposureContents:
+          containsExposureContents ?? this.containsExposureContents,
       members: members ?? this.members,
       mods: mods ?? this.mods,
     );
@@ -40,6 +49,8 @@ class GamingCommunityModel {
       'name': name,
       'profileImage': profileImage,
       'bannerImage': bannerImage,
+      'type': type,
+      'containsExposureContents': containsExposureContents,
       'members': members,
       'mods': mods,
     };
@@ -51,6 +62,8 @@ class GamingCommunityModel {
       name: map['name'] as String,
       profileImage: map['profileImage'] as String,
       bannerImage: map['bannerImage'] as String,
+      type: map['type'] as String,
+      containsExposureContents: map['containsExposureContents'] as bool,
       members: List<String>.from((map['members'] as List<String>)),
       mods: List<String>.from(
         (map['mods'] as List<String>),
@@ -60,7 +73,7 @@ class GamingCommunityModel {
 
   @override
   String toString() {
-    return 'GamingCommunityModel(id: $id, name: $name, profileImage: $profileImage, bannerImage: $bannerImage, members: $members, mods: $mods)';
+    return 'GamingCommunityModel(id: $id, name: $name, profileImage: $profileImage, bannerImage: $bannerImage, type: $type, containsExposureContents: $containsExposureContents, members: $members, mods: $mods)';
   }
 
   @override
@@ -71,6 +84,8 @@ class GamingCommunityModel {
         other.name == name &&
         other.profileImage == profileImage &&
         other.bannerImage == bannerImage &&
+        other.type == type &&
+        other.containsExposureContents == containsExposureContents &&
         listEquals(other.members, members) &&
         listEquals(other.mods, mods);
   }
@@ -81,6 +96,8 @@ class GamingCommunityModel {
         name.hashCode ^
         profileImage.hashCode ^
         bannerImage.hashCode ^
+        type.hashCode ^
+        containsExposureContents.hashCode ^
         members.hashCode ^
         mods.hashCode;
   }

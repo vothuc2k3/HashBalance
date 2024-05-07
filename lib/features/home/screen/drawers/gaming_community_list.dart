@@ -16,7 +16,12 @@ class GameCommunityListDrawer extends ConsumerWidget {
         child: Column(
           children: [
             ListTile(
-              title: const Text('Create your new Community'),
+              title: const Text(
+                'Create your new Community',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
               leading: const Icon(
                 Icons.add,
               ),

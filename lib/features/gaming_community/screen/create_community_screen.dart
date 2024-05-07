@@ -23,6 +23,10 @@ class _CreateGameCommunityScreenState
     communityNameController.dispose();
   }
 
+  void _createCommunity(){
+    
+  }
+
   void _showCommunityTypeModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -94,7 +98,8 @@ class _CreateGameCommunityScreenState
               ),
               controller: communityNameController,
               decoration: const InputDecoration(
-                hintText: '#=/Community_name',
+                prefixText: '#=',
+                hintText: 'Community_name',
                 filled: true,
                 fillColor: Color(0xFF111111),
                 border: InputBorder.none,
@@ -133,7 +138,9 @@ class _CreateGameCommunityScreenState
                     Row(
                       children: [
                         Flexible(
-                          child: Text(selectedCommunityTypeDesc!),
+                          child: Text(
+                            selectedCommunityTypeDesc!,
+                          ),
                         ),
                       ],
                     ),
@@ -151,17 +158,26 @@ class _CreateGameCommunityScreenState
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 18,
+                        fontSize: 16,
                       ),
                     ),
                   ),
-                  Switch(
-                    value: containsExposureContents,
-                    onChanged: (value) {
-                      setState(() {
-                        containsExposureContents = value;
-                      });
-                    },
+                  SizedBox(
+                    width: 60,
+                    height: 40,
+                    child: FittedBox(
+                      fit: BoxFit.fill,
+                      child: Switch(
+                        value: containsExposureContents,
+                        onChanged: (value) {
+                          setState(
+                            () {
+                              containsExposureContents = value;
+                            },
+                          );
+                        },
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -169,6 +185,24 @@ class _CreateGameCommunityScreenState
                 () {
                   containsExposureContents = !containsExposureContents;
                 },
+              ),
+            ),
+            const SizedBox(height: 30),
+            ElevatedButton(
+              onPressed: () {},
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                backgroundColor: const Color(0xFF3690EA),
+              ),
+              child: const Text(
+                'Create community',
+                style: TextStyle(
+                  fontSize: 17,
+                  color: Colors.white,
+                ),
               ),
             ),
           ],

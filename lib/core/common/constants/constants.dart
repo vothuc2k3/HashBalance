@@ -16,7 +16,7 @@ class Constants {
   static const communityTypesDescMap = {
     'Public': 'Anybody can view, post, and comment to this community',
     'Restricted':
-        'Anybody can view, and comment to this community, but ONLY users with approval can post',
+        'Anybody can view, and comment, but ONLY users with approval can post',
     'Private': 'ONLY approved users can view and interact with this community',
   };
 
