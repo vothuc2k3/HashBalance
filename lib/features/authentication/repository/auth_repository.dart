@@ -92,4 +92,20 @@ class AuthRepository {
       );
     }
   }
+
+  Either<Failures, dynamic> logUserOut() {
+    try {
+      _googleSignIn.disconnect();
+      _firebaseAuth.signOut();
+      return right(null);
+    } on FirebaseException catch (e) {
+      throw e.message!;
+    } catch (e) {
+      return left(
+        Failures(
+          e.toString(),
+        ),
+      );
+    }
+  }
 }

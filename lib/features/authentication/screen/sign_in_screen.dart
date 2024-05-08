@@ -6,6 +6,7 @@ import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 
+
 class SignInScreen extends ConsumerWidget {
   const SignInScreen({super.key});
 

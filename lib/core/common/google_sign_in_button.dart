@@ -7,8 +7,8 @@ import 'package:hash_balance/theme/pallette.dart';
 class GoogleSignInButton extends ConsumerWidget {
   const GoogleSignInButton({super.key});
 
-  void signInWithGoogle(BuildContext ctx, WidgetRef ref) {
-    ref.read(authControllerProvider.notifier).signInWithGoogle(ctx);
+  void signInWithGoogle(BuildContext context, WidgetRef ref) {
+    ref.read(authControllerProvider.notifier).signInWithGoogle(context);
   }
 
   @override

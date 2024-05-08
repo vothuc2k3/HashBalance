@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
+import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/gaming_community/controller/gaming_comunity_controller.dart';
 
 class CreateGamingCommunityScreen extends ConsumerStatefulWidget {
@@ -80,6 +81,8 @@ class _CreateGameCommunityScreenState
 
   @override
   Widget build(BuildContext context) {
+    bool isLoading = ref.watch(gamingCommunityControllerProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -111,6 +114,12 @@ class _CreateGameCommunityScreenState
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.all(18),
               ),
+              validator: (value) {
+                if (value!.isEmpty) {
+                  return 'Community name cannot be empty';
+                }
+                return null;
+              },
               maxLength: 21,
             ),
             const Align(
@@ -195,7 +204,7 @@ class _CreateGameCommunityScreenState
             ),
             const SizedBox(height: 30),
             ElevatedButton(
-              onPressed: _createCommunity,
+              onPressed: !isLoading ? _createCommunity : null,
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(
@@ -203,13 +212,15 @@ class _CreateGameCommunityScreenState
                 ),
                 backgroundColor: const Color(0xFF3690EA),
               ),
-              child: const Text(
-                'Create community',
-                style: TextStyle(
-                  fontSize: 17,
-                  color: Colors.white,
-                ),
-              ),
+              child: isLoading
+                  ? const LoadingCircular()
+                  : const Text(
+                      'Create community',
+                      style: TextStyle(
+                        fontSize: 17,
+                        color: Colors.white,
+                      ),
+                    ),
             ),
           ],
         ),
