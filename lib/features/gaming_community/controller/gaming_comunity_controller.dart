@@ -9,14 +9,16 @@ import 'package:hash_balance/models/gaming_community_model.dart';
 import 'package:routemaster/routemaster.dart';
 
 final gamingCommunityControllerProvider =
-    StateNotifierProvider<GamingCommunityController, bool>((ref) {
-  final gamingCommunityRepository =
-      ref.watch(gamingCommunityRepositoryProvider);
-  return GamingCommunityController(
-    gamingCommunityRepository: gamingCommunityRepository,
-    ref: ref,
-  );
-});
+    StateNotifierProvider<GamingCommunityController, bool>(
+  (ref) {
+    final gamingCommunityRepository =
+        ref.watch(gamingCommunityRepositoryProvider);
+    return GamingCommunityController(
+      gamingCommunityRepository: gamingCommunityRepository,
+      ref: ref,
+    );
+  },
+);
 
 class GamingCommunityController extends StateNotifier<bool> {
   final GamingCommunityRepository _gamingCommunityRepository;

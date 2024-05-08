@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
+import 'package:hash_balance/features/gaming_community/controller/gaming_comunity_controller.dart';
 
 class CreateGamingCommunityScreen extends ConsumerStatefulWidget {
   const CreateGamingCommunityScreen({super.key});
@@ -23,8 +24,13 @@ class _CreateGameCommunityScreenState
     communityNameController.dispose();
   }
 
-  void _createCommunity(){
-    
+  void _createCommunity() async {
+    ref.read(gamingCommunityControllerProvider.notifier).createGamingCommunity(
+          context,
+          '#=${communityNameController.text}'.trim(),
+          selectedCommunityType,
+          containsExposureContents,
+        );
   }
 
   void _showCommunityTypeModal(BuildContext context) {
@@ -189,7 +195,7 @@ class _CreateGameCommunityScreenState
             ),
             const SizedBox(height: 30),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: _createCommunity,
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(
