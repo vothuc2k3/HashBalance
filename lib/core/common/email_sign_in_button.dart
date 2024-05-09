@@ -21,7 +21,7 @@ class EmailSignInButton extends StatelessWidget {
         width: 35,
       ),
       label: const Text(
-        'Sign in with Email',
+        'Join with Email',
         style: TextStyle(
           fontSize: 18,
           color: Colors.white,

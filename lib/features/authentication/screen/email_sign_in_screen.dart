@@ -1,77 +1,83 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/common/auth_text_field.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
 
-class EmailSignInScreen extends StatelessWidget {
-  const EmailSignInScreen({super.key});
-
+class EmailSignInScreen extends ConsumerWidget {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  EmailSignInScreen({
+    super.key,
+  });
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.arrow_back),
-            ),
-            Image.asset(Constants.logoPath),
-            TextButton(
-              onPressed: () {},
-              child: const Text('Sign In'),
-            ),
-          ],
+        title: Image.asset(
+          Constants.logoPath,
+          height: 45,
         ),
+        centerTitle: true,
+        actions: [
+          TextButton(
+            onPressed: () {},
+            child: const Text(
+              'Skip',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
-          const SizedBox(height: 30),
+          const SizedBox(
+            height: 30,
+          ),
           const Text(
-            'Hi there, welcome to Hash Balance',
+            'Hi our new friend, let\'s create your account!',
             style: TextStyle(
               fontSize: 24,
               letterSpacing: 0.5,
             ),
           ),
+          const SizedBox(height: 40),
           Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Email',
+            padding: const EdgeInsets.only(
+              right: 30,
+              left: 30,
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF232e37),
+                borderRadius: BorderRadius.circular(10),
               ),
-              keyboardType: TextInputType.emailAddress,
-              autocorrect: false,
-              textCapitalization: TextCapitalization.none,
-              validator: (value) {
-                if (value == null ||
-                    value.trim().isEmpty ||
-                    !value.contains('@') ||
-                    !value.contains('.')) {
-                  return 'Please enter a valid email';
-                }
-                return null;
-              },
-              onSaved: (value) {},
+              child: AuthTextField(
+                controller: emailController,
+                obscureText: true,
+                hintText: 'Email',
+              ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 20),
           Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Password',
+            padding: const EdgeInsets.only(
+              right: 30,
+              left: 30,
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF232e37),
+                borderRadius: BorderRadius.circular(10),
               ),
-              keyboardType: TextInputType.visiblePassword,
-              obscureText: true,
-              autocorrect: false,
-              textCapitalization: TextCapitalization.none,
-              validator: (value) {
-                if (value == null || value.trim().length < 6) {
-                  return 'Password must be at least 6 characters long.';
-                }
-                return null;
-              },
-              onSaved: (value) {},
+              child: AuthTextField(
+                controller: passwordController,
+                obscureText: true,
+                hintText: 'Password',
+              ),
             ),
           ),
         ],

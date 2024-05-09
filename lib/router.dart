@@ -9,7 +9,7 @@ final loggedOutRoute = RouteMap(routes: {
   '/': (_) => const MaterialPage(
         child: SignInScreen(),
       ),
-  '/email-sign-in': (_) => const MaterialPage(
+  '/email-sign-in': (_) => MaterialPage(
         child: EmailSignInScreen(),
       )
 });

@@ -20,7 +20,7 @@ class GoogleSignInButton extends ConsumerWidget {
         width: 35,
       ),
       label: const Text(
-        'Continue with Google',
+        'Join with Google',
         style: TextStyle(
           fontSize: 18,
           color: Colors.white,

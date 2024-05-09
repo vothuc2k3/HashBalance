@@ -6,7 +6,6 @@ import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 
-
 class SignInScreen extends ConsumerWidget {
   const SignInScreen({super.key});
 
@@ -41,7 +40,7 @@ class SignInScreen extends ConsumerWidget {
               children: [
                 const SizedBox(height: 30),
                 const Text(
-                  'Dive into the network',
+                  'Let\'s join the communities!',
                   style: TextStyle(
                     fontSize: 24,
                     letterSpacing: 0.5,
@@ -57,12 +56,18 @@ class SignInScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 20),
                 const Padding(
-                  padding: EdgeInsets.only(right: 30, left: 30),
+                  padding: EdgeInsets.only(
+                    right: 30,
+                    left: 30,
+                  ),
                   child: GoogleSignInButton(),
                 ),
                 const SizedBox(height: 10),
                 const Padding(
-                  padding: EdgeInsets.only(right: 30, left: 30),
+                  padding: EdgeInsets.only(
+                    right: 30,
+                    left: 30,
+                  ),
                   child: EmailSignInButton(),
                 ),
               ],
