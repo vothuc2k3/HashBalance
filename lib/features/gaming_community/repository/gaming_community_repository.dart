@@ -25,9 +25,7 @@ class GamingCommunityRepository {
         throw 'The name is already exists!';
       }
       return right(
-        _communities.doc(community.name).set(
-              community.toMap(),
-            ),
+        _communities.doc(community.name).set(community.toMap()),
       );
     } on FirebaseException catch (e) {
       return left(

@@ -8,7 +8,8 @@ import 'package:hash_balance/models/gaming_community_model.dart';
 import 'package:routemaster/routemaster.dart';
 
 final userCommunitiesProvider = StreamProvider((ref) {
-  final communityController = ref.watch(gamingCommunityControllerProvider.notifier);
+  final communityController =
+      ref.watch(gamingCommunityControllerProvider.notifier);
   return communityController.getUserCommunities();
 });
 
@@ -80,6 +81,6 @@ class GamingCommunityController extends StateNotifier<bool> {
 
   Stream<List<GamingCommunityModel>> getUserCommunities() {
     final uid = _ref.read(userProvider)!.uid;
-    return _gamingCommunityRepository.getUserCommunities(uid);
+    return _gamingCommunityRepository.getUserCommunities(uid!);
   }
 }
