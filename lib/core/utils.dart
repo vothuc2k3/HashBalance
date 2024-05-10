@@ -16,3 +16,8 @@ String generateCommunityId() {
       "${now.year}${now.month}${now.day}${now.hour}${now.minute}${now.second}${now.millisecond}";
   return communityId;
 }
+
+String generateRandomString() {
+  DateTime now = DateTime.now();
+  return '${now.microsecond}';
+}

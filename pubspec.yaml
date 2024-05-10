@@ -44,6 +44,7 @@ dependencies:
   fpdart: ^1.1.0
   routemaster: ^1.0.1
   toggle_switch: ^2.3.0
+  crypto: ^3.0.3
 
 dev_dependencies:
   flutter_test:

@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -9,6 +8,7 @@ import 'package:hash_balance/core/common/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
+import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 final userProvider = StateProvider<UserModel?>((ref) => null);
@@ -36,14 +36,6 @@ class AuthRepository {
         _firebaseAuth = firebaseAuth,
         _googleSignIn = googleSignIn;
 
-  //get the user data from firebase
-  Stream<UserModel> getUserData(String uid) {
-    return _user.doc(uid).snapshots().map(
-          (event) => UserModel.fromMap(event.data() as Map<String, dynamic>),
-        );
-  }
-
-  //
   Stream<User?> get authStageChange => _firebaseAuth.authStateChanges();
 
   //SIGN THE USER IN WITH GOOGLE
@@ -66,15 +58,16 @@ class AuthRepository {
       //if the user logs in for the first time, new data is set
       if (userCredential.additionalUserInfo!.isNewUser) {
         userModel = UserModel(
-          name:
-              userCredential.user!.displayName ?? 'No name to be displayed...',
+          email: userCredential.user!.email!,
+          name: userCredential.user!.displayName ??
+              'nameless_user_${generateRandomString()}',
           profileImage:
               userCredential.user!.photoURL ?? Constants.avatarDefault,
           bannerImage: Constants.bannerDefault,
           uid: userCredential.user!.uid,
           isAuthenticated: true,
           activityPoint: 0,
-          achivements: [],
+          achivements: ['New boy'],
         );
         await _user.doc(userCredential.user!.uid).set(
               userModel.toMap(),
@@ -95,66 +88,51 @@ class AuthRepository {
   }
 
   //Sign the user in with Email
-  FutureEither<UserModel> signInWithEmailAndPassword(UserModel user) async {
-    try {
-      final credential = EmailAuthProvider.credential(
-        email: user.email!,
-        password: user.password!,
-      );
+  // FutureEither<UserModel> signInWithEmailAndPassword(UserModel user) async {
+  //   try {
+  //     final usersDoc = await _user.doc(user.email).get();
+  //     //Make sure there is user data in the database
+  //     if (!usersDoc.exists) {
+  //       await _firebaseAuth.createUserWithEmailAndPassword(
+  //           email: user.email!, password: user.password!);
+  //       await _user.doc().set(user.toMap());
+  //     } else {
+  //       user = await getUserData(user.uid!).first;
+  //     }
+  //     await _firebaseAuth.signInWithEmailAndPassword(
+  //         email: user.email!, password: user.password!);
 
-      final userCredential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(
-              email: user.email!, password: user.password!);
-      await _firebaseAuth.signInWithCredential(credential);
+  //     return right(user);
+  //   } on FirebaseAuthException catch (e) {
+  //     return left(
+  //       Failures(e.message!),
+  //     );
+  //   } catch (e) {
+  //     return left(
+  //       Failures(
+  //         e.toString(),
+  //       ),
+  //     );
+  //   }
+// }
 
-      late UserModel userModel;
-      //if the user logs in for the first time, new data is set
-      if (userCredential.additionalUserInfo!.isNewUser) {
-        userModel = UserModel(
-          name:
-              userCredential.user!.displayName ?? 'No name to be displayed...',
-          profileImage:
-              userCredential.user!.photoURL ?? Constants.avatarDefault,
-          bannerImage: Constants.bannerDefault,
-          uid: userCredential.user!.uid,
-          isAuthenticated: true,
-          activityPoint: 0,
-          achivements: [],
-        );
-        await _user.doc(userCredential.user!.uid).set(
-              userModel.toMap(),
-            );
-      } else {
-        userModel = await getUserData(userCredential.user!.uid).first;
-      }
-      return right(userModel);
-    } on FirebaseAuthException catch (e) {
-      return left(
-        Failures(e.message!),
-      );
-    } catch (e) {
-      return left(
-        Failures(
-          e.toString(),
-        ),
-      );
-    }
-  }
-
-  Either<Failures, dynamic> logUserOut() {
-    try {
-      _googleSignIn.disconnect();
-      _firebaseAuth.signOut();
-      return right(null);
-    } on FirebaseException catch (e) {
-      throw e.message!;
-    } catch (e) {
-      return left(
-        Failures(
-          e.toString(),
-        ),
-      );
-    }
+  //get the user data from firebase
+  Stream<UserModel> getUserData(String uid) {
+    final snapshot = _user.doc(uid).snapshots();
+    return snapshot.map(
+      (event) => UserModel(
+        email: event['email'],
+        name: event['name'],
+        uid: event['uid'],
+        profileImage: event['profileImage'],
+        bannerImage: event['bannerImage'],
+        isAuthenticated: event['isAuthenticated'],
+        activityPoint: event['activityPoint'],
+        achivements: (event['achivements'] as List)
+            .map((item) => item.toString())
+            .toList(),
+      ),
+    );
   }
 
   CollectionReference get _user =>

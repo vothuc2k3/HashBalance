@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/features/home/screen/drawers/gaming_community_list_drawer.dart';
+import '../../authentication/repository/auth_repository.dart';
+import 'drawers/gaming_community_list_drawer.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});

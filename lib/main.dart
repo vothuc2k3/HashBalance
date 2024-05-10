@@ -34,14 +34,15 @@ class MyApp extends ConsumerStatefulWidget {
 class MyAppState extends ConsumerState<MyApp> {
   UserModel? userModel;
 
-  void getData(WidgetRef ref, User user) async {
-    userModel = await ref
-        .watch(authControllerProvider.notifier)
-        .getUserData(user.uid)
-        .first;
-    ref.read(userProvider.notifier).update((state) => userModel);
-    setState(() {});
-  }
+    void getData(WidgetRef ref, User user) async {
+      
+      userModel = await ref
+          .watch(authControllerProvider.notifier)
+          .getUserData(user.uid)
+          .first;
+      ref.read(userProvider.notifier).update((state) => userModel);
+      setState(() {});
+    }
 
   @override
   Widget build(BuildContext context) {
@@ -53,9 +54,9 @@ class MyAppState extends ConsumerState<MyApp> {
             routerDelegate: RoutemasterDelegate(routesBuilder: (context) {
               if (data != null) {
                 getData(ref, data);
-              }
-              if (userModel != null) {
-                return loggedInRoute;
+                if (userModel != null) {
+                  return loggedInRoute;
+                }
               }
               return loggedOutRoute;
             }),

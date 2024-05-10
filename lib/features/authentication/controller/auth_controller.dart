@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -47,50 +46,48 @@ class AuthController extends StateNotifier<bool> {
         );
       },
       (userModel) {
-        _ref.read(userProvider.notifier).update((state) => null);
+        _ref.read(userProvider.notifier).update(
+              (state) => userModel,
+            );
       },
     );
   }
 
   //sign in with email in controller
-  void signInWithEmailAndPassword(
-    BuildContext ctx,
-    String email,
-    String password,
-    String name,
-  ) async {
-    state = true;
+  // void signInWithEmailAndPassword(
+  //   BuildContext ctx,
+  //   String email,
+  //   String password,
+  //   String name,
+  // ) async {
+  //   state = true;
 
-    UserModel userModel = UserModel(
-      email: email,
-      password: password,
-      name: name,
-      profileImage: Constants.avatarDefault,
-      bannerImage: Constants.bannerDefault,
-      isAuthenticated: true,
-      activityPoint: 0,
-      achivements: [],
-    );
+  //   UserModel userModel = UserModel(
+  //     email: email,
+  //     password: password,
+  //     name: name,
+  //     uid: generateUid(email),
+  //     profileImage: Constants.avatarDefault,
+  //     bannerImage: Constants.bannerDefault,
+  //     isAuthenticated: true,
+  //     activityPoint: 0,
+  //     achivements: [],
+  //   );
 
-    final user = await _authRepository.signInWithEmailAndPassword(userModel);
-    state = false;
-    user.fold(
-      (error) {
-        return showSnackBar(
-          ctx,
-          error.message,
-        );
-      },
-      (userModel) {
-        _ref.read(userProvider.notifier).update((state) => null);
-      },
-    );
-  }
-
-  void logUserOut() async {
-    _authRepository.logUserOut();
-    _ref.read(userProvider.notifier).update((state) => null);
-  }
+  //   final user = await _authRepository.signInWithEmailAndPassword(userModel);
+  //   state = false;
+  //   user.fold(
+  //     (error) {
+  //       return showSnackBar(
+  //         ctx,
+  //         error.message,
+  //       );
+  //     },
+  //     (userModel) {
+  //       _ref.read(userProvider.notifier).update((state) => null);
+  //     },
+  //   );
+  // }
 
   Stream<UserModel> getUserData(String uid) {
     return _authRepository.getUserData(uid);

@@ -13,14 +13,14 @@ class EmailSignInScreen extends ConsumerWidget {
     super.key,
   });
 
-  void signInWithEmail(BuildContext context, WidgetRef ref) {
-    ref.read(authControllerProvider.notifier).signInWithEmailAndPassword(
-          context,
-          emailController.text,
-          passwordController.text,
-          nameController.text,
-        );
-  }
+  // void signInWithEmail(BuildContext context, WidgetRef ref) {
+  //   ref.read(authControllerProvider.notifier).signInWithEmailAndPassword(
+  //         context,
+  //         emailController.text,
+  //         passwordController.text,
+  //         nameController.text,
+  //       );
+  // }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -35,7 +35,7 @@ class EmailSignInScreen extends ConsumerWidget {
         centerTitle: true,
         actions: [
           TextButton(
-            onPressed:(){},
+            onPressed: () {},
             child: const Text(
               'Skip',
               style: TextStyle(
@@ -130,7 +130,7 @@ class EmailSignInScreen extends ConsumerWidget {
                     left: 30,
                   ),
                   child: ElevatedButton(
-                    onPressed: ()=>signInWithEmail(context, ref),
+                    onPressed: () {},
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 50),
                       shape: RoundedRectangleBorder(
