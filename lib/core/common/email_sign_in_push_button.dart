@@ -3,8 +3,8 @@ import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/theme/pallette.dart';
 import 'package:routemaster/routemaster.dart';
 
-class EmailSignInButton extends StatelessWidget {
-  const EmailSignInButton({super.key});
+class EmailSignInPushButton extends StatelessWidget {
+  const EmailSignInPushButton({super.key});
 
   void navigateToEmailSignInScreen(BuildContext context) {
     Routemaster.of(context).push('/email-sign-in');

@@ -81,6 +81,6 @@ class GamingCommunityController extends StateNotifier<bool> {
 
   Stream<List<GamingCommunityModel>> getUserCommunities() {
     final uid = _ref.read(userProvider)!.uid;
-    return _gamingCommunityRepository.getUserCommunities(uid!);
+    return _gamingCommunityRepository.getUserCommunities(uid);
   }
 }

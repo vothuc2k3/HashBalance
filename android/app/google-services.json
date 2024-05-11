@@ -48,6 +48,42 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1024351849204:android:1b90cececf312b572deca1",
+        "android_client_info": {
+          "package_name": "com.example.reddit_tutorial"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1024351849204-rti4djm0ti5qhhd03t04fd1au0al66lt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_5iZg-03Mc7lA9lsTxVSfWYfseEHuUe8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1024351849204-rti4djm0ti5qhhd03t04fd1au0al66lt.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1024351849204-a6j8lglddd5n7ff1p7mii6ar80blqbii.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.hashBalance"
+              }
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"

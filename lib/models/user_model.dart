@@ -2,8 +2,9 @@ import 'package:flutter/foundation.dart';
 
 class UserModel {
   final String email;
+  String? password;
   final String name;
-  final String uid;
+  String uid;
   final String profileImage;
   final String bannerImage;
   final bool isAuthenticated;
@@ -11,6 +12,7 @@ class UserModel {
   final List<String> achivements;
   UserModel({
     required this.email,
+    this.password,
     required this.name,
     required this.uid,
     required this.profileImage,
@@ -22,6 +24,7 @@ class UserModel {
 
   UserModel copyWith({
     String? email,
+    String? password,
     String? name,
     String? uid,
     String? profileImage,
@@ -32,6 +35,7 @@ class UserModel {
   }) {
     return UserModel(
       email: email ?? this.email,
+      password: password ?? this.password,
       name: name ?? this.name,
       uid: uid ?? this.uid,
       profileImage: profileImage ?? this.profileImage,
@@ -45,6 +49,7 @@ class UserModel {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'email': email,
+      'password': password,
       'name': name,
       'uid': uid,
       'profileImage': profileImage,
@@ -58,6 +63,7 @@ class UserModel {
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
       email: map['email'] as String,
+      password: map['password'] != null ? map['password'] as String : null,
       name: map['name'] as String,
       uid: map['uid'] as String,
       profileImage: map['profileImage'] as String,
@@ -72,7 +78,7 @@ class UserModel {
 
   @override
   String toString() {
-    return 'UserModel(email: $email, name: $name, uid: $uid, profileImage: $profileImage, bannerImage: $bannerImage, isAuthenticated: $isAuthenticated, activityPoint: $activityPoint, achivements: $achivements)';
+    return 'UserModel(email: $email, password: $password, name: $name, uid: $uid, profileImage: $profileImage, bannerImage: $bannerImage, isAuthenticated: $isAuthenticated, activityPoint: $activityPoint, achivements: $achivements)';
   }
 
   @override
@@ -80,6 +86,7 @@ class UserModel {
     if (identical(this, other)) return true;
 
     return other.email == email &&
+        other.password == password &&
         other.name == name &&
         other.uid == uid &&
         other.profileImage == profileImage &&
@@ -92,6 +99,7 @@ class UserModel {
   @override
   int get hashCode {
     return email.hashCode ^
+        password.hashCode ^
         name.hashCode ^
         uid.hashCode ^
         profileImage.hashCode ^

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/common/email_sign_in_button.dart';
+import 'package:hash_balance/core/common/email_sign_in_push_button.dart';
 import 'package:hash_balance/core/common/google_sign_in_button.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
@@ -68,7 +68,7 @@ class SignInScreen extends ConsumerWidget {
                     right: 30,
                     left: 30,
                   ),
-                  child: EmailSignInButton(),
+                  child: EmailSignInPushButton(),
                 ),
               ],
             ),

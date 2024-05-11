@@ -41,6 +41,7 @@ class AuthRepository {
   //SIGN THE USER IN WITH GOOGLE
   FutureEither<UserModel> signInWithGoogle() async {
     try {
+      //try signing the google account of user in
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
       final googleAuth = await googleUser?.authentication;
@@ -88,42 +89,49 @@ class AuthRepository {
   }
 
   //Sign the user in with Email
-  // FutureEither<UserModel> signInWithEmailAndPassword(UserModel user) async {
-  //   try {
-  //     final usersDoc = await _user.doc(user.email).get();
-  //     //Make sure there is user data in the database
-  //     if (!usersDoc.exists) {
-  //       await _firebaseAuth.createUserWithEmailAndPassword(
-  //           email: user.email!, password: user.password!);
-  //       await _user.doc().set(user.toMap());
-  //     } else {
-  //       user = await getUserData(user.uid!).first;
-  //     }
-  //     await _firebaseAuth.signInWithEmailAndPassword(
-  //         email: user.email!, password: user.password!);
-
-  //     return right(user);
-  //   } on FirebaseAuthException catch (e) {
-  //     return left(
-  //       Failures(e.message!),
-  //     );
-  //   } catch (e) {
-  //     return left(
-  //       Failures(
-  //         e.toString(),
-  //       ),
-  //     );
-  //   }
-// }
+  FutureEither<UserModel> signInWithEmailAndPassword(UserModel user) async {
+    try {
+      late String userUid;
+      UserCredential userCredential =
+          await _firebaseAuth.createUserWithEmailAndPassword(
+              email: user.email, password: user.password!);
+      if (userCredential.additionalUserInfo!.isNewUser) {
+        await _firebaseAuth.signInWithEmailAndPassword(
+            email: user.email, password: user.password!);
+        userUid = userCredential.user!.uid;
+        final uid = userCredential.user!.uid;
+        user.uid = uid;
+        userUid = uid;
+        final hashedPassword = user.password;
+        user.password = hashedPassword;
+        await _user.doc(userUid).set(user.toMap());
+      } else {
+        userUid = userCredential.user!.uid;
+        user = await getUserData(userUid).first;
+      }
+      return right(user);
+    } on FirebaseAuthException catch (e) {
+      return left(
+        Failures(e.message!),
+      );
+    } catch (e) {
+      return left(
+        Failures(
+          e.toString(),
+        ),
+      );
+    }
+  }
 
   //get the user data from firebase
   Stream<UserModel> getUserData(String uid) {
     final snapshot = _user.doc(uid).snapshots();
     return snapshot.map(
       (event) => UserModel(
-        email: event['email'],
-        name: event['name'],
         uid: event['uid'],
+        name: event['name'],
+        email: event['email'],
+        password: event['password'],
         profileImage: event['profileImage'],
         bannerImage: event['bannerImage'],
         isAuthenticated: event['isAuthenticated'],

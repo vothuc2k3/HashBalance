@@ -1,4 +1,8 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:crypt/crypt.dart';
+import 'dart:convert';
 
 void showSnackBar(BuildContext context, String text) {
   ScaffoldMessenger.of(context)
@@ -20,4 +24,23 @@ String generateCommunityId() {
 String generateRandomString() {
   DateTime now = DateTime.now();
   return '${now.microsecond}';
+}
+
+String hashPassword(String plainPassword, String? salt) {
+  salt ??= generateSalt();
+  final c1 = Crypt.sha256('$salt$plainPassword');
+  return '$salt$c1';
+}
+
+bool comparePassword(String plainPassword, String hashedPassword) {
+  final salt = hashedPassword.substring(0, 16);
+  final hashed = hashedPassword.substring(16);
+  final c1 = Crypt.sha256('$salt$plainPassword');
+  return c1.toString() == hashed;
+}
+
+String generateSalt() {
+  final random = Random.secure();
+  final values = List<int>.generate(16, (i) => random.nextInt(256));
+  return base64Encode(values);
 }
