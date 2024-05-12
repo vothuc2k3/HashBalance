@@ -42,7 +42,7 @@ class AuthController extends StateNotifier<bool> {
     state = false;
     user.fold(
       (error) {
-        return showSnackBar(
+        return showCustomToast(
           ctx,
           error.message,
         );
@@ -55,9 +55,9 @@ class AuthController extends StateNotifier<bool> {
     );
   }
 
-  //sign in with email in controller
-  void signInWithEmailAndPassword(
-    BuildContext ctx,
+  //sign up with email in controller
+  void signUpWithEmailAndPassword(
+    BuildContext context,
     String email,
     String password,
     String name,
@@ -75,11 +75,35 @@ class AuthController extends StateNotifier<bool> {
       activityPoint: 0,
       achivements: ['New boy'],
     );
-    final user = await _authRepository.signInWithEmailAndPassword(userModel);
+    final user = await _authRepository.signUpWithEmailAndPassword(userModel);
     state = false;
     user.fold(
       (error) {
-        return showSnackBar(
+        return showCustomToast(
+          context,
+          error.message,
+        );
+      },
+      (userModel) {
+        _ref.read(userProvider.notifier).update(
+              (state) => userModel,
+            );
+      },
+    );
+  }
+
+  void signInWithEmailAndPassword(
+    BuildContext ctx,
+    String email,
+    String password,
+  ) async {
+    state = true;
+    final user =
+        await _authRepository.signInWithEmailAndPassword(email, password);
+    state = false;
+    user.fold(
+      (error) {
+        return showCustomToast(
           ctx,
           error.message,
         );

@@ -3,18 +3,18 @@ import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/theme/pallette.dart';
 import 'package:routemaster/routemaster.dart';
 
-class EmailSignInPushButton extends StatelessWidget {
-  const EmailSignInPushButton({super.key});
+class EmailSignUpPushButton extends StatelessWidget {
+  const EmailSignUpPushButton({super.key});
 
-  void navigateToEmailSignInScreen(BuildContext context) {
-    Routemaster.of(context).push('/email-sign-in');
+  void navigateToEmailSignUpScreen(BuildContext context) {
+    Routemaster.of(context).push('/email-sign-up');
   }
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton.icon(
       onPressed: () {
-        navigateToEmailSignInScreen(context);
+        navigateToEmailSignUpScreen(context);
       },
       icon: Image.asset(
         Constants.emailLogoPath,

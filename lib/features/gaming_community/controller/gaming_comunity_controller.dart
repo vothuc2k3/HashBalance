@@ -13,6 +13,12 @@ final userCommunitiesProvider = StreamProvider((ref) {
   return communityController.getUserCommunities();
 });
 
+final getCommunitiesByNameProvider = StreamProvider.family((ref, String name) {
+  return ref
+      .watch(gamingCommunityControllerProvider.notifier)
+      .getCommunitiesByName(name);
+});
+
 final gamingCommunityControllerProvider =
     StateNotifierProvider<GamingCommunityController, bool>(
   (ref) {
@@ -64,13 +70,13 @@ class GamingCommunityController extends StateNotifier<bool> {
 
     result.fold(
       (error) {
-        return showSnackBar(
+        return showCustomToast(
           context,
           error.message,
         );
       },
       (right) {
-        showSnackBar(
+        showCustomToast(
           context,
           'Your Community Created Successfully. Have Fun!',
         );
@@ -82,5 +88,9 @@ class GamingCommunityController extends StateNotifier<bool> {
   Stream<List<GamingCommunityModel>> getUserCommunities() {
     final uid = _ref.read(userProvider)!.uid;
     return _gamingCommunityRepository.getUserCommunities(uid);
+  }
+
+  Stream<GamingCommunityModel> getCommunitiesByName(String name) {
+    return _gamingCommunityRepository.getCommunitiesByName(name);
   }
 }

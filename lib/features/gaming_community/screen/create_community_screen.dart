@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/gaming_community/controller/gaming_comunity_controller.dart';
+import 'package:hash_balance/theme/pallette.dart';
 
 class CreateGamingCommunityScreen extends ConsumerStatefulWidget {
   const CreateGamingCommunityScreen({super.key});
@@ -25,10 +26,10 @@ class _CreateGameCommunityScreenState
     communityNameController.dispose();
   }
 
-  void _createCommunity() async {
+  void createCommunity() async {
     ref.read(gamingCommunityControllerProvider.notifier).createGamingCommunity(
           context,
-          '#=${communityNameController.text}'.trim(),
+          communityNameController.text.trim(),
           selectedCommunityType,
           containsExposureContents,
         );
@@ -110,7 +111,7 @@ class _CreateGameCommunityScreenState
                 prefixText: '#=',
                 hintText: 'Community_name',
                 filled: true,
-                fillColor: Color(0xFF111111),
+                fillColor: Pallete.blackColor,
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.all(18),
               ),
@@ -204,13 +205,13 @@ class _CreateGameCommunityScreenState
             ),
             const SizedBox(height: 30),
             ElevatedButton(
-              onPressed: !isLoading ? _createCommunity : null,
+              onPressed: !isLoading ? createCommunity : null,
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
-                backgroundColor: const Color(0xFF3690EA),
+                backgroundColor: Pallete.blueColor,
               ),
               child: isLoading
                   ? const LoadingCircular()

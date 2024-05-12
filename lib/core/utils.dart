@@ -4,14 +4,25 @@ import 'package:flutter/material.dart';
 import 'package:crypt/crypt.dart';
 import 'dart:convert';
 
+import 'package:toast/toast.dart';
+
 void showSnackBar(BuildContext context, String text) {
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(
-      SnackBar(
-        content: Text(text),
-      ),
-    );
+  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(text),
+    ),
+  );
+}
+
+void showCustomToast(BuildContext context, String text) {
+  final lmao = ToastContext();
+  lmao.init(context);
+  Toast.show(
+    text,
+    duration: Toast.lengthShort,
+    gravity: Toast.bottom,
+  );
 }
 
 String generateCommunityId() {

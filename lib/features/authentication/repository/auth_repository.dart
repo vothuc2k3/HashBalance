@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -89,21 +90,17 @@ class AuthRepository {
   }
 
   //Sign the user in with Email
-  FutureEither<UserModel> signInWithEmailAndPassword(UserModel user) async {
+  FutureEither<UserModel> signUpWithEmailAndPassword(UserModel user) async {
     try {
       late String userUid;
       UserCredential userCredential =
           await _firebaseAuth.createUserWithEmailAndPassword(
               email: user.email, password: user.password!);
       if (userCredential.additionalUserInfo!.isNewUser) {
-        await _firebaseAuth.signInWithEmailAndPassword(
-            email: user.email, password: user.password!);
         userUid = userCredential.user!.uid;
         final uid = userCredential.user!.uid;
         user.uid = uid;
         userUid = uid;
-        final hashedPassword = user.password;
-        user.password = hashedPassword;
         await _user.doc(userUid).set(user.toMap());
       } else {
         userUid = userCredential.user!.uid;
@@ -123,11 +120,35 @@ class AuthRepository {
     }
   }
 
+  //sign the user in with email and password
+  FutureEither<UserModel> signInWithEmailAndPassword(
+    String email,
+    String password,
+  ) async {
+    try {
+      final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      final user = await getUserData(userCredential.user!.uid).first;
+      return right(user);
+    } on FirebaseAuthException catch (e) {
+      return left(
+        Failures(e.message!),
+      );
+    } catch (e) {
+      return left(
+        Failures(
+          e.toString(),
+        ),
+      );
+    }
+  }
+
   //get the user data from firebase
   Stream<UserModel> getUserData(String uid) {
     final snapshot = _user.doc(uid).snapshots();
-    return snapshot.map(
-      (event) => UserModel(
+    return snapshot.map((event) => UserModel(
         uid: event['uid'],
         name: event['name'],
         email: event['email'],
@@ -138,9 +159,7 @@ class AuthRepository {
         activityPoint: event['activityPoint'],
         achivements: (event['achivements'] as List)
             .map((item) => item.toString())
-            .toList(),
-      ),
-    );
+            .toList()));
   }
 
   CollectionReference get _user =>

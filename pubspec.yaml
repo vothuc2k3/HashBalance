@@ -47,6 +47,7 @@ dependencies:
   crypto: ^3.0.3
   password_hash_plus: ^4.0.0
   crypt: ^4.3.1
+  toast: ^0.3.0
 
 dev_dependencies:
   flutter_test:

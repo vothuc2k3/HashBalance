@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/gaming_community/controller/gaming_comunity_controller.dart';
+import 'package:hash_balance/models/gaming_community_model.dart';
 import 'package:routemaster/routemaster.dart';
 
 class GameCommunityListDrawer extends ConsumerWidget {
@@ -10,6 +11,11 @@ class GameCommunityListDrawer extends ConsumerWidget {
 
   void navigateToCreateCommunityScreen(BuildContext context) {
     Routemaster.of(context).push('/create-community');
+  }
+
+  void navigateToCommunityScreen(
+      BuildContext context, GamingCommunityModel community) {
+    Routemaster.of(context).push('/#=/${community.name}');
   }
 
   @override
@@ -43,8 +49,10 @@ class GameCommunityListDrawer extends ConsumerWidget {
                               backgroundImage:
                                   NetworkImage(community.profileImage),
                             ),
-                            title: Text(community.name),
-                            onTap: () {},
+                            title: Text('#=${community.name}'),
+                            onTap: () {
+                              navigateToCommunityScreen(context, community);
+                            },
                           );
                         },
                       ),

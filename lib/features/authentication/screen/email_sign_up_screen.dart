@@ -7,24 +7,30 @@ import 'package:hash_balance/features/authentication/controller/auth_controller.
 import 'package:hash_balance/theme/pallette.dart';
 import 'package:routemaster/routemaster.dart';
 
-class EmailSignInScreen extends ConsumerWidget {
-  EmailSignInScreen({super.key});
+class EmailSignUpScreen extends ConsumerWidget {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final nameController = TextEditingController();
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
-  void signInWithEmail(BuildContext context, WidgetRef ref) {
-    ref.read(authControllerProvider.notifier).signInWithEmailAndPassword(
-          context,
+  EmailSignUpScreen({super.key});
+
+  void signUpWithEmail(GlobalKey<ScaffoldState> scaffoldKey, WidgetRef ref) {
+    ref.read(authControllerProvider.notifier).signUpWithEmailAndPassword(
+          scaffoldKey.currentContext!,
           emailController.text,
           passwordController.text,
+          nameController.text,
         );
-    Routemaster.of(context).push('/');
+    Routemaster.of(scaffoldKey.currentContext!).push('/');
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isLoading = ref.watch(authControllerProvider);
+
     return Scaffold(
+      key: scaffoldKey,
       appBar: AppBar(
         title: Image.asset(
           Constants.logoPath,
@@ -81,6 +87,26 @@ class EmailSignInScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 20),
 
+                //name input field
+                Padding(
+                  padding: const EdgeInsets.only(
+                    right: 30,
+                    left: 30,
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Pallete.greyColor,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: AuthTextField(
+                      controller: nameController,
+                      obscureText: false,
+                      hintText: 'User name',
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
                 //password input field
                 Padding(
                   padding: const EdgeInsets.only(
@@ -108,7 +134,9 @@ class EmailSignInScreen extends ConsumerWidget {
                     left: 30,
                   ),
                   child: ElevatedButton(
-                    onPressed: () => signInWithEmail(context, ref),
+                    onPressed: () {
+                      signUpWithEmail(scaffoldKey, ref);
+                    },
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 50),
                       shape: RoundedRectangleBorder(

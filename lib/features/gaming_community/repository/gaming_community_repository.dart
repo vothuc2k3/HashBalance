@@ -67,6 +67,30 @@ class GamingCommunityRepository {
     });
   }
 
+  Stream<GamingCommunityModel> getCommunitiesByName(String name) {
+    return _communities.where(name).snapshots().map(
+      (event) {
+        late GamingCommunityModel community;
+        for (var doc in event.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          final members = (data['members'] as List?)?.cast<String>() ?? [];
+          final mods = (data['mods'] as List?)?.cast<String>() ?? [];
+          community = GamingCommunityModel(
+            id: data['id'] as String,
+            name: data['name'] as String,
+            profileImage: data['profileImage'] as String,
+            bannerImage: data['bannerImage'] as String,
+            type: data['type'] as String,
+            containsExposureContents: data['containsExposureContents'] as bool,
+            members: members,
+            mods: mods,
+          );
+        }
+        return community;
+      },
+    );
+  }
+
   CollectionReference get _communities =>
       _firestore.collection(FirebaseConstants.communitiesCollection);
 }

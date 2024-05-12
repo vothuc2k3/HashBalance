@@ -5,6 +5,7 @@ import 'package:hash_balance/core/common/google_sign_in_button.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
+import 'package:routemaster/routemaster.dart';
 
 class SignInScreen extends ConsumerWidget {
   const SignInScreen({super.key});
@@ -68,7 +69,37 @@ class SignInScreen extends ConsumerWidget {
                     right: 30,
                     left: 30,
                   ),
-                  child: EmailSignInPushButton(),
+                  child: EmailSignUpPushButton(),
+                ),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'Already have an account? ',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Routemaster.of(context).push('/email-sign-in');
+                            },
+                            child: const Text(
+                              'Sign In',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
