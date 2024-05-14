@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:crypt/crypt.dart';
 import 'dart:convert';
@@ -54,4 +55,9 @@ String generateSalt() {
   final random = Random.secure();
   final values = List<int>.generate(16, (i) => random.nextInt(256));
   return base64Encode(values);
+}
+
+Future<FilePickerResult?> pickImage() async {
+  final image = await FilePicker.platform.pickFiles(type: FileType.image);
+  return image;
 }

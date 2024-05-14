@@ -48,6 +48,8 @@ dependencies:
   password_hash_plus: ^4.0.0
   crypt: ^4.3.1
   toast: ^0.3.0
+  dotted_border: ^2.1.0
+  file_picker: ^8.0.3
 
 dev_dependencies:
   flutter_test:
