@@ -36,14 +36,14 @@ class AuthController extends StateNotifier<bool> {
   Stream<User?> get authStageChange => _authRepository.authStageChange;
 
   //sign in with google in controller
-  void signInWithGoogle(BuildContext ctx) async {
+  void signInWithGoogle(BuildContext context) async {
     state = true;
     final user = await _authRepository.signInWithGoogle();
     state = false;
     user.fold(
       (error) {
-        return showCustomToast(
-          ctx,
+        return showSnackBar(
+          context,
           error.message,
         );
       },
@@ -79,7 +79,7 @@ class AuthController extends StateNotifier<bool> {
     state = false;
     user.fold(
       (error) {
-        return showCustomToast(
+        return showSnackBar(
           context,
           error.message,
         );
@@ -93,18 +93,15 @@ class AuthController extends StateNotifier<bool> {
   }
 
   void signInWithEmailAndPassword(
-    BuildContext ctx,
-    String email,
-    String password,
-  ) async {
+      BuildContext context, String email, String password) async {
     state = true;
     final user =
         await _authRepository.signInWithEmailAndPassword(email, password);
     state = false;
     user.fold(
       (error) {
-        return showCustomToast(
-          ctx,
+        return showSnackBar(
+          context,
           error.message,
         );
       },

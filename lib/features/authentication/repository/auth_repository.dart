@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -108,15 +107,9 @@ class AuthRepository {
       }
       return right(user);
     } on FirebaseAuthException catch (e) {
-      return left(
-        Failures(e.message!),
-      );
+      return left(Failures(e.message!));
     } catch (e) {
-      return left(
-        Failures(
-          e.toString(),
-        ),
-      );
+      return left(Failures(e.toString()));
     }
   }
 
@@ -133,15 +126,9 @@ class AuthRepository {
       final user = await getUserData(userCredential.user!.uid).first;
       return right(user);
     } on FirebaseAuthException catch (e) {
-      return left(
-        Failures(e.message!),
-      );
+      return left(Failures(e.message!));
     } catch (e) {
-      return left(
-        Failures(
-          e.toString(),
-        ),
-      );
+      return left(Failures(e.toString()));
     }
   }
 

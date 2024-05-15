@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
+import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/gaming_community/repository/gaming_community_repository.dart';
@@ -22,10 +25,12 @@ final getCommunitiesByNameProvider = StreamProvider.family((ref, String name) {
 final gamingCommunityControllerProvider =
     StateNotifierProvider<GamingCommunityController, bool>(
   (ref) {
+    final storageRepository = ref.watch(storageRepositoryProvider);
     final gamingCommunityRepository =
         ref.watch(gamingCommunityRepositoryProvider);
     return GamingCommunityController(
       gamingCommunityRepository: gamingCommunityRepository,
+      storageRepository: storageRepository,
       ref: ref,
     );
   },
@@ -34,12 +39,15 @@ final gamingCommunityControllerProvider =
 class GamingCommunityController extends StateNotifier<bool> {
   final GamingCommunityRepository _gamingCommunityRepository;
   final Ref _ref;
+  final StorageRepository _storageRepository;
 
   GamingCommunityController({
     required GamingCommunityRepository gamingCommunityRepository,
     required Ref ref,
+    required StorageRepository storageRepository,
   })  : _gamingCommunityRepository = gamingCommunityRepository,
         _ref = ref,
+        _storageRepository = storageRepository,
         super(false);
 
   void createGamingCommunity(
@@ -70,13 +78,13 @@ class GamingCommunityController extends StateNotifier<bool> {
 
     result.fold(
       (error) {
-        return showCustomToast(
+        return showSnackBar(
           context,
           error.message,
         );
       },
       (right) {
-        showCustomToast(
+        showSnackBar(
           context,
           'Your Community Created Successfully. Have Fun!',
         );
@@ -92,5 +100,39 @@ class GamingCommunityController extends StateNotifier<bool> {
 
   Stream<GamingCommunityModel> getCommunitiesByName(String name) {
     return _gamingCommunityRepository.getCommunitiesByName(name);
+  }
+
+  //submit the edit data of Community to Firebase
+  void editCommunityProfileOrBannerImage(
+      {required BuildContext context,
+      required GamingCommunityModel community,
+      required File? profileImage,
+      required File? bannerImage}) async {
+    if (profileImage != null) {
+      final result = await _storageRepository.storeFile(
+        path: 'communities/profile',
+        id: community.id,
+        file: profileImage,
+      );
+      result.fold((l) => showSnackBar(context, l.message),
+          (r) => community.copyWith(profileImage: r));
+    }
+
+    if (bannerImage != null) {
+      final result = await _storageRepository.storeFile(
+        path: 'communities/banner',
+        id: community.id,
+        file: bannerImage,
+      );
+      result.fold((l) => showSnackBar(context, l.message),
+          (r) => community.copyWith(bannerImage: r));
+    }
+
+    final result = await _gamingCommunityRepository
+        .editCommunityProfileOrBannerImage(community);
+    result.fold(
+      (l) => showSnackBar(context, l.message),
+      (r) => Routemaster.of(context).pop(),
+    );
   }
 }

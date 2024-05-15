@@ -14,7 +14,7 @@ class ModToolsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('CUSTOMIZING YOUR COMMUNITY'),
+        title: const Text('Customizing Your Community'),
       ),
       body: Column(
         children: [
@@ -25,10 +25,24 @@ class ModToolsScreen extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.edit),
-            title: const Text('Edit Community Information'),
+            title: const Text('Edit Community Visual'),
             onTap: () => navigateToEditCommunityScreen(context, name),
           ),
-          Text(name),
+          ListTile(
+            leading: const Icon(Icons.edit_document),
+            title: const Text('Describe about your Community'),
+            onTap: () {},
+          ),
+          ListTile(
+            leading: const Icon(Icons.privacy_tip),
+            title: const Text('Change Community type'),
+            onTap: () {},
+          ),
+          ListTile(
+            leading: const Icon(Icons.person),
+            title: const Text('Users Management'),
+            onTap: () {},
+          ),
         ],
       ),
     );

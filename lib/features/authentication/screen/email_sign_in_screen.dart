@@ -8,6 +8,7 @@ import 'package:hash_balance/theme/pallette.dart';
 import 'package:routemaster/routemaster.dart';
 
 class EmailSignInScreen extends ConsumerWidget {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   EmailSignInScreen({super.key});
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -25,6 +26,7 @@ class EmailSignInScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isLoading = ref.watch(authControllerProvider);
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: Image.asset(
           Constants.logoPath,

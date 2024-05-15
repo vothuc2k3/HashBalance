@@ -11,18 +11,17 @@ class EmailSignUpScreen extends ConsumerWidget {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final nameController = TextEditingController();
-  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
   EmailSignUpScreen({super.key});
 
-  void signUpWithEmail(GlobalKey<ScaffoldState> scaffoldKey, WidgetRef ref) {
+  void signUpWithEmail(BuildContext context, WidgetRef ref) {
     ref.read(authControllerProvider.notifier).signUpWithEmailAndPassword(
-          scaffoldKey.currentContext!,
+          context,
           emailController.text,
           passwordController.text,
           nameController.text,
         );
-    Routemaster.of(scaffoldKey.currentContext!).push('/');
+    Routemaster.of(context).push('/');
   }
 
   @override
@@ -30,7 +29,6 @@ class EmailSignUpScreen extends ConsumerWidget {
     final isLoading = ref.watch(authControllerProvider);
 
     return Scaffold(
-      key: scaffoldKey,
       appBar: AppBar(
         title: Image.asset(
           Constants.logoPath,
@@ -135,7 +133,7 @@ class EmailSignUpScreen extends ConsumerWidget {
                   ),
                   child: ElevatedButton(
                     onPressed: () {
-                      signUpWithEmail(scaffoldKey, ref);
+                      signUpWithEmail(context, ref);
                     },
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 50),

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hash_balance/features/authentication/screen/email_sign_in_screen.dart';
 import 'package:hash_balance/features/authentication/screen/email_sign_up_screen.dart';
-import 'package:hash_balance/features/authentication/screen/mod_tools/edit_community_screen.dart';
-import 'package:hash_balance/features/authentication/screen/mod_tools/mod_tools_screen.dart';
+import 'package:hash_balance/features/gaming_community/screen/mod_tools/edit_community_screen.dart';
+import 'package:hash_balance/features/gaming_community/screen/mod_tools/mod_tools_screen.dart';
 import 'package:hash_balance/features/authentication/screen/sign_in_screen.dart';
 import 'package:hash_balance/features/gaming_community/screen/community_screen.dart';
 import 'package:hash_balance/features/gaming_community/screen/create_community_screen.dart';
@@ -10,7 +10,7 @@ import 'package:hash_balance/features/home/screen/home_screen.dart';
 import 'package:routemaster/routemaster.dart';
 
 final loggedOutRoute = RouteMap(routes: {
-  '/': (_) => const MaterialPage(
+  '/': (_) => MaterialPage(
         child: SignInScreen(),
       ),
   '/email-sign-in': (_) => MaterialPage(

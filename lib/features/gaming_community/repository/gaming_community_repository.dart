@@ -40,6 +40,7 @@ class GamingCommunityRepository {
     }
   }
 
+  //get the communities by uid
   Stream<List<GamingCommunityModel>> getUserCommunities(String uid) {
     return _communities
         .where('members', arrayContains: uid)
@@ -67,6 +68,7 @@ class GamingCommunityRepository {
     });
   }
 
+  //get the community data by name
   Stream<GamingCommunityModel> getCommunitiesByName(String name) {
     return _communities.where(name).snapshots().map(
       (event) {
@@ -89,6 +91,19 @@ class GamingCommunityRepository {
         return community;
       },
     );
+  }
+
+  //submit the edit data to Firebase
+  FutureVoid editCommunityProfileOrBannerImage(
+      GamingCommunityModel community) async {
+    try {
+      return right(
+          await _communities.doc(community.name).update(community.toMap()));
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
   }
 
   CollectionReference get _communities =>

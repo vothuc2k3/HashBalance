@@ -8,13 +8,15 @@ import 'package:hash_balance/features/authentication/controller/auth_controller.
 import 'package:routemaster/routemaster.dart';
 
 class SignInScreen extends ConsumerWidget {
-  const SignInScreen({super.key});
+  SignInScreen({super.key});
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isLoading = ref.watch(authControllerProvider);
 
     return Scaffold(
+      key: scaffoldKey,
       appBar: AppBar(
         title: Image.asset(
           Constants.logoPath,
