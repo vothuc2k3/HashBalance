@@ -8,7 +8,6 @@ import 'package:hash_balance/theme/pallette.dart';
 import 'package:routemaster/routemaster.dart';
 
 class EmailSignInScreen extends ConsumerWidget {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   EmailSignInScreen({super.key});
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -19,14 +18,13 @@ class EmailSignInScreen extends ConsumerWidget {
           emailController.text,
           passwordController.text,
         );
-    Routemaster.of(context).push('/');
+    Routemaster.of(context).replace('/');
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isLoading = ref.watch(authControllerProvider);
     return Scaffold(
-      key: _scaffoldKey,
       appBar: AppBar(
         title: Image.asset(
           Constants.logoPath,
@@ -55,9 +53,9 @@ class EmailSignInScreen extends ConsumerWidget {
                   height: 30,
                 ),
                 const Text(
-                  'Hi our new friend, let\'s create your account!',
+                  'Hi our old friend, let\'s sign you back in!',
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 18,
                     letterSpacing: 0.5,
                   ),
                 ),

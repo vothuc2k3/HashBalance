@@ -1,7 +1,10 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/core/utils.dart';
@@ -103,33 +106,47 @@ class GamingCommunityController extends StateNotifier<bool> {
   }
 
   //submit the edit data of Community to Firebase
-  void editCommunityProfileOrBannerImage(
-      {required BuildContext context,
-      required GamingCommunityModel community,
-      required File? profileImage,
-      required File? bannerImage}) async {
+  void editCommunityProfileOrBannerImage({
+    required BuildContext context,
+    required GamingCommunityModel community,
+    required File? profileImage,
+    required File? bannerImage,
+  }) async {
+    late GamingCommunityModel updatedCommunity;
+
     if (profileImage != null) {
       final result = await _storageRepository.storeFile(
         path: 'communities/profile',
-        id: community.id,
+        id: community.name,
         file: profileImage,
       );
-      result.fold((l) => showSnackBar(context, l.message),
-          (r) => community.copyWith(profileImage: r));
+      String profileImageUrl = await FirebaseStorage.instance
+          .ref('communities/profile/${community.name}')
+          .getDownloadURL();
+      result.fold(
+          (error) => showSnackBar(context, error.message),
+          (right) => updatedCommunity =
+              community.copyWith(profileImage: profileImageUrl));
     }
 
     if (bannerImage != null) {
       final result = await _storageRepository.storeFile(
         path: 'communities/banner',
-        id: community.id,
+        id: community.name,
         file: bannerImage,
       );
-      result.fold((l) => showSnackBar(context, l.message),
-          (r) => community.copyWith(bannerImage: r));
+      String bannerImageUrl = await FirebaseStorage.instance
+          .ref('communities/banner/${community.name}')
+          .getDownloadURL();
+      result.fold(
+        (error) => showSnackBar(context, error.message),
+        (right) =>
+            updatedCommunity = community.copyWith(bannerImage: bannerImageUrl),
+      );
     }
 
     final result = await _gamingCommunityRepository
-        .editCommunityProfileOrBannerImage(community);
+        .editCommunityProfileOrBannerImage(updatedCommunity);
     result.fold(
       (l) => showSnackBar(context, l.message),
       (r) => Routemaster.of(context).pop(),

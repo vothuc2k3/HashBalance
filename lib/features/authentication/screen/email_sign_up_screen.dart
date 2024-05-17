@@ -5,7 +5,6 @@ import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/theme/pallette.dart';
-import 'package:routemaster/routemaster.dart';
 
 class EmailSignUpScreen extends ConsumerWidget {
   final emailController = TextEditingController();
@@ -14,14 +13,13 @@ class EmailSignUpScreen extends ConsumerWidget {
 
   EmailSignUpScreen({super.key});
 
-  void signUpWithEmail(BuildContext context, WidgetRef ref) {
+  void signUpWithEmailAndPassword(BuildContext context, WidgetRef ref) {
     ref.read(authControllerProvider.notifier).signUpWithEmailAndPassword(
           context,
           emailController.text,
           passwordController.text,
           nameController.text,
         );
-    Routemaster.of(context).push('/');
   }
 
   @override
@@ -57,9 +55,9 @@ class EmailSignUpScreen extends ConsumerWidget {
                   height: 30,
                 ),
                 const Text(
-                  'Hi our new friend, let\'s create your account!',
+                  'Hi new friend, let\'s create your account!',
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 18,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -133,7 +131,7 @@ class EmailSignUpScreen extends ConsumerWidget {
                   ),
                   child: ElevatedButton(
                     onPressed: () {
-                      signUpWithEmail(context, ref);
+                      signUpWithEmailAndPassword(context, ref);
                     },
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 50),

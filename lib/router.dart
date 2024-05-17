@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:hash_balance/features/authentication/screen/email_sign_in_screen.dart';
+import 'package:hash_balance/features/authentication/screen/email_sign_in_screennnn.dart';
 import 'package:hash_balance/features/authentication/screen/email_sign_up_screen.dart';
-import 'package:hash_balance/features/gaming_community/screen/mod_tools/edit_community_screen.dart';
+import 'package:hash_balance/features/gaming_community/screen/mod_tools/edit_community_visual_screen.dart';
 import 'package:hash_balance/features/gaming_community/screen/mod_tools/mod_tools_screen.dart';
 import 'package:hash_balance/features/authentication/screen/sign_in_screen.dart';
 import 'package:hash_balance/features/gaming_community/screen/community_screen.dart';
@@ -34,6 +34,6 @@ final loggedInRoute = RouteMap(routes: {
         child: ModToolsScreen(name: route.pathParameters['name']!),
       ),
   '/edit_community/:name': (route) => MaterialPage(
-        child: EditCommunityScreen(name: route.pathParameters['name']!),
+        child: EditCommunityVisualScreen(name: route.pathParameters['name']!),
       ),
 });

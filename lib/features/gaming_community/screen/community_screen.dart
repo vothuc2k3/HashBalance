@@ -68,7 +68,7 @@ class CommunityScreen extends ConsumerWidget {
                                             padding: const EdgeInsets.symmetric(
                                                 horizontal: 25)),
                                         child: const Text(
-                                          'JOIN',
+                                          'Join',
                                           style: TextStyle(
                                             color: Pallete.whiteColor,
                                           ),

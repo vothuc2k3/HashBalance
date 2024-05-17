@@ -11,16 +11,16 @@ import 'package:hash_balance/features/gaming_community/controller/gaming_comunit
 import 'package:hash_balance/models/gaming_community_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
-class EditCommunityScreen extends ConsumerStatefulWidget {
+class EditCommunityVisualScreen extends ConsumerStatefulWidget {
   final String name;
-  const EditCommunityScreen({super.key, required this.name});
+  const EditCommunityVisualScreen({super.key, required this.name});
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
       _EditCommunityScreenState();
 }
 
-class _EditCommunityScreenState extends ConsumerState<EditCommunityScreen> {
+class _EditCommunityScreenState extends ConsumerState<EditCommunityVisualScreen> {
   File? bannerImage;
   File? profileImage;
 
@@ -181,9 +181,9 @@ class _EditCommunityScreenState extends ConsumerState<EditCommunityScreen> {
                     height: 200,
                     child: Stack(
                       children: [
-                        GestureDetector(
+                        InkWell(
                           onTap: () {
-                            return showCommunityBannerImageActionModal(context);
+                            showCommunityBannerImageActionModal(context);
                           },
                           child: DottedBorder(
                             borderType: BorderType.RRect,
@@ -200,9 +200,8 @@ class _EditCommunityScreenState extends ConsumerState<EditCommunityScreen> {
                               ),
                               child: bannerImage != null
                                   ? Image.file(bannerImage!)
-                                  : community.bannerImage.isEmpty ||
-                                          community.bannerImage ==
-                                              Constants.bannerDefault
+                                  : community.bannerImage ==
+                                          Constants.bannerDefault
                                       ? const Center(
                                           child: Icon(
                                             Icons.camera_alt_outlined,
@@ -221,9 +220,10 @@ class _EditCommunityScreenState extends ConsumerState<EditCommunityScreen> {
                                 showCommunityProfilImageActionModal(context),
                             child: CircleAvatar(
                               radius: 30,
-                              backgroundImage: NetworkImage(
-                                community.profileImage,
-                              ),
+                              backgroundImage: profileImage != null
+                                  ? FileImage(profileImage!)
+                                  : NetworkImage(community.profileImage)
+                                      as ImageProvider<Object>,
                             ),
                           ),
                         ),

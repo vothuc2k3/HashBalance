@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/common/constants/firebase_constants.dart';
@@ -97,8 +98,20 @@ class GamingCommunityRepository {
   FutureVoid editCommunityProfileOrBannerImage(
       GamingCommunityModel community) async {
     try {
+      final Map<String, dynamic> communityAfterCast = {
+        'id': community.id,
+        'name': community.name,
+        'profileImage': community.profileImage,
+        'bannerImage': community.bannerImage,
+        'type': community.type,
+        'containsExposureContents': community.containsExposureContents,
+        'members': List<String>.from(community.members),
+        'mods': List<String>.from(community.mods),
+      };
+
       return right(
-          await _communities.doc(community.name).update(community.toMap()));
+        await _communities.doc(community.name).update(communityAfterCast),
+      );
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {
