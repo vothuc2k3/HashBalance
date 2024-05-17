@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hash_balance/features/authentication/screen/email_sign_in_screennnn.dart';
+import 'package:hash_balance/features/authentication/screen/email_sign_in_screen.dart';
 import 'package:hash_balance/features/authentication/screen/email_sign_up_screen.dart';
 import 'package:hash_balance/features/gaming_community/screen/mod_tools/edit_community_visual_screen.dart';
 import 'package:hash_balance/features/gaming_community/screen/mod_tools/mod_tools_screen.dart';

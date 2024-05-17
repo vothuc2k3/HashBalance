@@ -62,11 +62,13 @@ class CommunityScreen extends ConsumerWidget {
                                     ? OutlinedButton(
                                         onPressed: () {},
                                         style: ElevatedButton.styleFrom(
-                                            shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(30)),
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 25)),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(30),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 25),
+                                        ),
                                         child: const Text(
                                           'Join',
                                           style: TextStyle(

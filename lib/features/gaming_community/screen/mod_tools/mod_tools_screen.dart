@@ -4,7 +4,10 @@ import 'package:routemaster/routemaster.dart';
 
 class ModToolsScreen extends ConsumerWidget {
   final String name;
-  const ModToolsScreen({super.key, required this.name});
+  const ModToolsScreen({
+    super.key,
+    required this.name,
+  });
 
   void navigateToEditCommunityScreen(BuildContext context, String name) {
     Routemaster.of(context).push('/edit_community/$name');

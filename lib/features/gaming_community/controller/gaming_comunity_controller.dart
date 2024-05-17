@@ -1,10 +1,8 @@
 import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/core/utils.dart';
@@ -23,6 +21,12 @@ final getCommunitiesByNameProvider = StreamProvider.family((ref, String name) {
   return ref
       .watch(gamingCommunityControllerProvider.notifier)
       .getCommunitiesByName(name);
+});
+
+final searchCommunityProvider = StreamProvider.family((ref, String query) {
+  return ref
+      .watch(gamingCommunityControllerProvider.notifier)
+      .searchCommunity(query);
 });
 
 final gamingCommunityControllerProvider =
@@ -105,14 +109,15 @@ class GamingCommunityController extends StateNotifier<bool> {
     return _gamingCommunityRepository.getCommunitiesByName(name);
   }
 
-  //submit the edit data of Community to Firebase
+  //submit the edit visual data of Community to Firebase
   void editCommunityProfileOrBannerImage({
     required BuildContext context,
     required GamingCommunityModel community,
     required File? profileImage,
     required File? bannerImage,
   }) async {
-    late GamingCommunityModel updatedCommunity;
+    state = true;
+    late GamingCommunityModel updatedCommunity = community;
 
     if (profileImage != null) {
       final result = await _storageRepository.storeFile(
@@ -124,9 +129,10 @@ class GamingCommunityController extends StateNotifier<bool> {
           .ref('communities/profile/${community.name}')
           .getDownloadURL();
       result.fold(
-          (error) => showSnackBar(context, error.message),
-          (right) => updatedCommunity =
-              community.copyWith(profileImage: profileImageUrl));
+        (error) => showSnackBar(context, error.message),
+        (right) => updatedCommunity =
+            community.copyWith(profileImage: profileImageUrl),
+      );
     }
 
     if (bannerImage != null) {
@@ -147,9 +153,16 @@ class GamingCommunityController extends StateNotifier<bool> {
 
     final result = await _gamingCommunityRepository
         .editCommunityProfileOrBannerImage(updatedCommunity);
+    state = false;
+
     result.fold(
       (l) => showSnackBar(context, l.message),
       (r) => Routemaster.of(context).pop(),
     );
+  }
+
+  //pass the query in the repo
+  Stream<List<GamingCommunityModel>> searchCommunity(String query) {
+    return _gamingCommunityRepository.searchCommunity(query);
   }
 }

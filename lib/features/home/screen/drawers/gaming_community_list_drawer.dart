@@ -29,6 +29,8 @@ class GameCommunityListDrawer extends ConsumerWidget {
                 'Create your new Community',
                 style: TextStyle(
                   color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold
                 ),
               ),
               leading: const Icon(
@@ -49,7 +51,12 @@ class GameCommunityListDrawer extends ConsumerWidget {
                               backgroundImage:
                                   NetworkImage(community.profileImage),
                             ),
-                            title: Text('#=${community.name}'),
+                            title: Text(
+                              '#=${community.name}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                             onTap: () {
                               navigateToCommunityScreen(context, community);
                             },

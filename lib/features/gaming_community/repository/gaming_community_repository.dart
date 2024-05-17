@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/common/constants/firebase_constants.dart';
@@ -14,7 +13,7 @@ final gamingCommunityRepositoryProvider = Provider((ref) {
 });
 
 class GamingCommunityRepository {
-  FirebaseFirestore _firestore;
+  final FirebaseFirestore _firestore;
 
   GamingCommunityRepository({required FirebaseFirestore firestore})
       : _firestore = firestore;
@@ -117,6 +116,43 @@ class GamingCommunityRepository {
     } catch (e) {
       return left(Failures(e.toString()));
     }
+  }
+
+  Stream<List<GamingCommunityModel>> searchCommunity(String query) {
+    return _communities
+        .where(
+          'name',
+          isGreaterThanOrEqualTo: query.isEmpty ? 0 : query,
+          isLessThan: query.isEmpty
+              ? null
+              : query.substring(0, query.length - 1) +
+                  String.fromCharCode(query.codeUnitAt(query.length - 1) + 1),
+        )
+        .snapshots()
+        .map(
+      (event) {
+        List<GamingCommunityModel> communities = [];
+        for (var doc in event.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          final members = (data['members'] as List?)?.cast<String>() ?? [];
+          final mods = (data['mods'] as List?)?.cast<String>() ?? [];
+          communities.add(
+            GamingCommunityModel(
+              id: data['id'] as String,
+              name: data['name'] as String,
+              profileImage: data['profileImage'] as String,
+              bannerImage: data['bannerImage'] as String,
+              type: data['type'] as String,
+              containsExposureContents:
+                  data['containsExposureContents'] as bool,
+              members: members,
+              mods: mods,
+            ),
+          );
+        }
+        return communities;
+      },
+    );
   }
 
   CollectionReference get _communities =>

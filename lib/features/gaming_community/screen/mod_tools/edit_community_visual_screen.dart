@@ -20,7 +20,8 @@ class EditCommunityVisualScreen extends ConsumerStatefulWidget {
       _EditCommunityScreenState();
 }
 
-class _EditCommunityScreenState extends ConsumerState<EditCommunityVisualScreen> {
+class _EditCommunityScreenState
+    extends ConsumerState<EditCommunityVisualScreen> {
   File? bannerImage;
   File? profileImage;
 
@@ -157,6 +158,7 @@ class _EditCommunityScreenState extends ConsumerState<EditCommunityVisualScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isLoading = ref.watch(gamingCommunityControllerProvider);
     return ref.watch(getCommunitiesByNameProvider(widget.name)).when(
           data: (community) => Scaffold(
             backgroundColor: Pallete.darkModeAppTheme.colorScheme.background,
@@ -175,63 +177,67 @@ class _EditCommunityScreenState extends ConsumerState<EditCommunityVisualScreen>
             ),
             body: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  SizedBox(
-                    height: 200,
-                    child: Stack(
+              child: !isLoading
+                  ? Column(
                       children: [
-                        InkWell(
-                          onTap: () {
-                            showCommunityBannerImageActionModal(context);
-                          },
-                          child: DottedBorder(
-                            borderType: BorderType.RRect,
-                            radius: const Radius.circular(40),
-                            dashPattern: const [10, 4],
-                            strokeCap: StrokeCap.round,
-                            color: Pallete
-                                .darkModeAppTheme.textTheme.bodyMedium!.color!,
-                            child: Container(
-                              width: double.infinity,
-                              height: 150,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
+                        SizedBox(
+                          height: 200,
+                          child: Stack(
+                            children: [
+                              InkWell(
+                                onTap: () {
+                                  showCommunityBannerImageActionModal(context);
+                                },
+                                child: DottedBorder(
+                                  borderType: BorderType.RRect,
+                                  radius: const Radius.circular(40),
+                                  dashPattern: const [10, 4],
+                                  strokeCap: StrokeCap.round,
+                                  color: Pallete.darkModeAppTheme.textTheme
+                                      .bodyMedium!.color!,
+                                  child: Container(
+                                    width: double.infinity,
+                                    height: 150,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: bannerImage != null
+                                        ? Image.file(bannerImage!)
+                                        : community.bannerImage ==
+                                                Constants.bannerDefault
+                                            ? const Center(
+                                                child: Icon(
+                                                  Icons.camera_alt_outlined,
+                                                  size: 40,
+                                                ),
+                                              )
+                                            : Image.network(
+                                                community.bannerImage),
+                                  ),
+                                ),
                               ),
-                              child: bannerImage != null
-                                  ? Image.file(bannerImage!)
-                                  : community.bannerImage ==
-                                          Constants.bannerDefault
-                                      ? const Center(
-                                          child: Icon(
-                                            Icons.camera_alt_outlined,
-                                            size: 40,
-                                          ),
-                                        )
-                                      : Image.network(community.bannerImage),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 20,
-                          left: 20,
-                          child: GestureDetector(
-                            onTap: () =>
-                                showCommunityProfilImageActionModal(context),
-                            child: CircleAvatar(
-                              radius: 30,
-                              backgroundImage: profileImage != null
-                                  ? FileImage(profileImage!)
-                                  : NetworkImage(community.profileImage)
-                                      as ImageProvider<Object>,
-                            ),
+                              Positioned(
+                                bottom: 20,
+                                left: 20,
+                                child: GestureDetector(
+                                  onTap: () =>
+                                      showCommunityProfilImageActionModal(
+                                          context),
+                                  child: CircleAvatar(
+                                    radius: 30,
+                                    backgroundImage: profileImage != null
+                                        ? FileImage(profileImage!)
+                                        : NetworkImage(community.profileImage)
+                                            as ImageProvider<Object>,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
-                    ),
-                  ),
-                ],
-              ),
+                    )
+                  : const LoadingCircular(),
             ),
           ),
           error: (error, stackTrace) => ErrorText(
