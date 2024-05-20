@@ -75,7 +75,7 @@ class Community {
 
   @override
   String toString() {
-    return 'GamingCommunityModel(id: $id, name: $name, profileImage: $profileImage, bannerImage: $bannerImage, type: $type, containsExposureContents: $containsExposureContents, members: $members, mods: $mods)';
+    return 'Community(id: $id, name: $name, profileImage: $profileImage, bannerImage: $bannerImage, type: $type, containsExposureContents: $containsExposureContents, members: $members, mods: $mods)';
   }
 
   @override

@@ -7,18 +7,18 @@ import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/community_model.dart';
 
-final gamingCommunityRepositoryProvider = Provider((ref) {
-  return GamingCommunityRepository(
+final communityRepositoryProvider = Provider((ref) {
+  return CommunityRepository(
       firestore: ref.watch(firebaseFireStoreProvider));
 });
 
-class GamingCommunityRepository {
+class CommunityRepository {
   final FirebaseFirestore _firestore;
 
-  GamingCommunityRepository({required FirebaseFirestore firestore})
+  CommunityRepository({required FirebaseFirestore firestore})
       : _firestore = firestore;
 
-  FutureVoid createGamingCommunity(Community community) async {
+  FutureVoid createCommunity(Community community) async {
     try {
       var communityDoc = await _communities.doc(community.name).get();
       if (communityDoc.exists) {
@@ -67,8 +67,7 @@ class GamingCommunityRepository {
       return communities;
     });
   }
-
-  //get the community data by the name of its
+  //(OLD) get the community data by the name of its
   // Stream<Community> getCommunityByName(String name) {
   //   return _communities.where(name).snapshots().map(
   //     (community) {
@@ -87,6 +86,8 @@ class GamingCommunityRepository {
   //     },
   //   );
   // }
+
+  //get the community data by the name of its
   Stream<Community> getCommunityByName(String name) {
     return _communities.doc(name).snapshots().map(
           (event) => Community.fromMap(event.data() as Map<String, dynamic>),
@@ -117,41 +118,81 @@ class GamingCommunityRepository {
     }
   }
 
-  Stream<List<Community>> searchCommunity(String query) {
-    return _communities
-        .where(
-          'name',
-          isGreaterThanOrEqualTo: query.isEmpty ? 0 : query,
-          isLessThan: query.isEmpty
-              ? null
-              : query.substring(0, query.length - 1) +
-                  String.fromCharCode(query.codeUnitAt(query.length - 1) + 1),
-        )
-        .snapshots()
-        .map(
-      (event) {
-        List<Community> communities = [];
-        for (var doc in event.docs) {
-          final data = doc.data() as Map<String, dynamic>;
-          final members = (data['members'] as List?)?.cast<String>() ?? [];
-          final mods = (data['mods'] as List?)?.cast<String>() ?? [];
-          communities.add(
-            Community(
-              id: data['id'] as String,
-              name: data['name'] as String,
-              profileImage: data['profileImage'] as String,
-              bannerImage: data['bannerImage'] as String,
-              type: data['type'] as String,
-              containsExposureContents:
-                  data['containsExposureContents'] as bool,
-              members: members,
-              mods: mods,
-            ),
-          );
-        }
-        return communities;
-      },
-    );
+  Stream<List<Community>> search(String query) {
+    if (query.startsWith('#=')) {
+      String communityQuery = query.substring(2);
+      return _communities
+          .where(
+            'name',
+            isGreaterThanOrEqualTo: communityQuery.isEmpty ? 0 : communityQuery,
+            isLessThan: communityQuery.isEmpty
+                ? null
+                : communityQuery.substring(0, communityQuery.length - 1) +
+                    String.fromCharCode(
+                        communityQuery.codeUnitAt(communityQuery.length - 1) +
+                            1),
+          )
+          .snapshots()
+          .map(
+        (event) {
+          List<Community> communities = [];
+          for (var doc in event.docs) {
+            final data = doc.data() as Map<String, dynamic>;
+            final members = (data['members'] as List?)?.cast<String>() ?? [];
+            final mods = (data['mods'] as List?)?.cast<String>() ?? [];
+            communities.add(
+              Community(
+                id: data['id'] as String,
+                name: data['name'] as String,
+                profileImage: data['profileImage'] as String,
+                bannerImage: data['bannerImage'] as String,
+                type: data['type'] as String,
+                containsExposureContents:
+                    data['containsExposureContents'] as bool,
+                members: members,
+                mods: mods,
+              ),
+            );
+          }
+          return communities;
+        },
+      );
+    } else {
+      return _communities
+          .where(
+            'name',
+            isGreaterThanOrEqualTo: query.isEmpty ? 0 : query,
+            isLessThan: query.isEmpty
+                ? null
+                : query.substring(0, query.length - 1) +
+                    String.fromCharCode(query.codeUnitAt(query.length - 1) + 1),
+          )
+          .snapshots()
+          .map(
+        (event) {
+          List<Community> communities = [];
+          for (var doc in event.docs) {
+            final data = doc.data() as Map<String, dynamic>;
+            final members = (data['members'] as List?)?.cast<String>() ?? [];
+            final mods = (data['mods'] as List?)?.cast<String>() ?? [];
+            communities.add(
+              Community(
+                id: data['id'] as String,
+                name: data['name'] as String,
+                profileImage: data['profileImage'] as String,
+                bannerImage: data['bannerImage'] as String,
+                type: data['type'] as String,
+                containsExposureContents:
+                    data['containsExposureContents'] as bool,
+                members: members,
+                mods: mods,
+              ),
+            );
+          }
+          return communities;
+        },
+      );
+    }
   }
 
   CollectionReference get _communities =>

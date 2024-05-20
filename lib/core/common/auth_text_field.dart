@@ -5,12 +5,14 @@ class AuthTextField extends StatelessWidget {
   final bool obscureText;
   final String hintText;
   final TextInputType keyboardType;
+  final bool autofocus;
   const AuthTextField({
     super.key,
     required this.controller,
     required this.obscureText,
     required this.hintText,
     required this.keyboardType,
+    required this.autofocus,
   });
 
   @override
@@ -24,6 +26,7 @@ class AuthTextField extends StatelessWidget {
           hintText: hintText,
         ),
         keyboardType: keyboardType,
+        autofocus: autofocus,
       ),
     );
   }

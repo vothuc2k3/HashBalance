@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/features/search/controller/search_controller.dart';
 import 'package:routemaster/routemaster.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
-import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 
 class SearchCommunityDelegate extends SearchDelegate {
   final WidgetRef ref;
@@ -31,7 +31,7 @@ class SearchCommunityDelegate extends SearchDelegate {
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    return ref.watch(searchCommunityProvider(query)).when(
+    return ref.watch(searchProvider(query)).when(
           data: (communities) {
             return ListView.separated(
               itemCount: communities.length,

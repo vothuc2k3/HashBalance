@@ -14,30 +14,24 @@ import 'package:hash_balance/models/community_model.dart';
 
 final userCommunitiesProvider = StreamProvider((ref) {
   final communityController =
-      ref.watch(gamingCommunityControllerProvider.notifier);
+      ref.watch(communityControllerProvider.notifier);
   return communityController.getUserCommunities();
 });
 
 final getCommunitiesByNameProvider = StreamProvider.family((ref, String name) {
   return ref
-      .watch(gamingCommunityControllerProvider.notifier)
+      .watch(communityControllerProvider.notifier)
       .getCommunityByName(name);
 });
 
-final searchCommunityProvider = StreamProvider.family((ref, String query) {
-  return ref
-      .watch(gamingCommunityControllerProvider.notifier)
-      .searchCommunity(query);
-});
-
-final gamingCommunityControllerProvider =
+final communityControllerProvider =
     StateNotifierProvider<CommunityController, bool>(
   (ref) {
     final storageRepository = ref.watch(storageRepositoryProvider);
-    final gamingCommunityRepository =
-        ref.watch(gamingCommunityRepositoryProvider);
+    final communityRepository =
+        ref.watch(communityRepositoryProvider);
     return CommunityController(
-      gamingCommunityRepository: gamingCommunityRepository,
+      communityRepository: communityRepository,
       storageRepository: storageRepository,
       ref: ref,
     );
@@ -45,20 +39,20 @@ final gamingCommunityControllerProvider =
 );
 
 class CommunityController extends StateNotifier<bool> {
-  final GamingCommunityRepository _gamingCommunityRepository;
+  final CommunityRepository _communityRepository;
   final Ref _ref;
   final StorageRepository _storageRepository;
 
   CommunityController({
-    required GamingCommunityRepository gamingCommunityRepository,
+    required CommunityRepository communityRepository,
     required Ref ref,
     required StorageRepository storageRepository,
-  })  : _gamingCommunityRepository = gamingCommunityRepository,
+  })  : _communityRepository = communityRepository,
         _ref = ref,
         _storageRepository = storageRepository,
         super(false);
 
-  void createGamingCommunity(
+  void createCommunity(
     BuildContext context,
     String name,
     String type,
@@ -80,7 +74,7 @@ class CommunityController extends StateNotifier<bool> {
     );
 
     final result =
-        await _gamingCommunityRepository.createGamingCommunity(community);
+        await _communityRepository.createCommunity(community);
 
     state = false;
 
@@ -103,11 +97,11 @@ class CommunityController extends StateNotifier<bool> {
 
   Stream<List<Community>> getUserCommunities() {
     final uid = _ref.read(userProvider)!.uid;
-    return _gamingCommunityRepository.getUserCommunities(uid);
+    return _communityRepository.getUserCommunities(uid);
   }
 
   Stream<Community> getCommunityByName(String name) {
-    return _gamingCommunityRepository.getCommunityByName(name);
+    return _communityRepository.getCommunityByName(name);
   }
 
   //submit the edit visual data of Community to Firebase
@@ -152,7 +146,7 @@ class CommunityController extends StateNotifier<bool> {
       );
     }
 
-    final result = await _gamingCommunityRepository
+    final result = await _communityRepository
         .editCommunityProfileOrBannerImage(updatedCommunity);
     state = false;
 
@@ -162,8 +156,5 @@ class CommunityController extends StateNotifier<bool> {
     );
   }
 
-  //pass the query in the repo
-  Stream<List<Community>> searchCommunity(String query) {
-    return _gamingCommunityRepository.searchCommunity(query);
-  }
+
 }

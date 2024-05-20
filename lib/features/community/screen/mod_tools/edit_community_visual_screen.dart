@@ -147,7 +147,7 @@ class _EditCommunityScreenState
 
   void saveChanges(Community community) {
     ref
-        .read(gamingCommunityControllerProvider.notifier)
+        .read(communityControllerProvider.notifier)
         .editCommunityProfileOrBannerImage(
           context: context,
           community: community,
@@ -158,7 +158,7 @@ class _EditCommunityScreenState
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = ref.watch(gamingCommunityControllerProvider);
+    final isLoading = ref.watch(communityControllerProvider);
     return ref.watch(getCommunitiesByNameProvider(widget.name)).when(
           data: (community) => Scaffold(
             backgroundColor: Pallete.darkModeAppTheme.colorScheme.background,

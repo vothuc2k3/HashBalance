@@ -5,16 +5,16 @@ import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
-class CreateGamingCommunityScreen extends ConsumerStatefulWidget {
-  const CreateGamingCommunityScreen({super.key});
+class CreateCommunityScreen extends ConsumerStatefulWidget {
+  const CreateCommunityScreen({super.key});
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
-      _CreateGameCommunityScreenState();
+      _CreateCommunityScreenState();
 }
 
-class _CreateGameCommunityScreenState
-    extends ConsumerState<CreateGamingCommunityScreen> {
+class _CreateCommunityScreenState
+    extends ConsumerState<CreateCommunityScreen> {
   final communityNameController = TextEditingController();
   String selectedCommunityType = Constants.communityTypes[0];
   String? selectedCommunityTypeDesc = Constants.communityTypesDescMap['Public'];
@@ -27,7 +27,7 @@ class _CreateGameCommunityScreenState
   }
 
   void createCommunity() async {
-    ref.read(gamingCommunityControllerProvider.notifier).createGamingCommunity(
+    ref.read(communityControllerProvider.notifier).createCommunity(
           context,
           communityNameController.text.trim(),
           selectedCommunityType,
@@ -82,7 +82,7 @@ class _CreateGameCommunityScreenState
 
   @override
   Widget build(BuildContext context) {
-    bool isLoading = ref.watch(gamingCommunityControllerProvider);
+    bool isLoading = ref.watch(communityControllerProvider);
 
     return Scaffold(
       appBar: AppBar(

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/auth_text_field.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/theme/pallette.dart';
+import 'package:routemaster/routemaster.dart';
 
 class EmailSignUpScreen extends ConsumerWidget {
   final emailController = TextEditingController();
@@ -16,10 +18,13 @@ class EmailSignUpScreen extends ConsumerWidget {
   void signUpWithEmailAndPassword(BuildContext context, WidgetRef ref) {
     ref.read(authControllerProvider.notifier).signUpWithEmailAndPassword(
           context,
-          emailController.text,
+          emailController.text.toLowerCase().trim(),
           passwordController.text,
           nameController.text,
         );
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      Routemaster.of(context).replace('/');
+    });
   }
 
   @override
@@ -79,6 +84,7 @@ class EmailSignUpScreen extends ConsumerWidget {
                       obscureText: false,
                       hintText: 'Email',
                       keyboardType: TextInputType.emailAddress,
+                      autofocus: true,
                     ),
                   ),
                 ),
@@ -100,6 +106,7 @@ class EmailSignUpScreen extends ConsumerWidget {
                       obscureText: false,
                       hintText: 'User name',
                       keyboardType: TextInputType.name,
+                      autofocus: false,
                     ),
                   ),
                 ),
@@ -121,6 +128,7 @@ class EmailSignUpScreen extends ConsumerWidget {
                       obscureText: true,
                       hintText: 'Password',
                       keyboardType: TextInputType.visiblePassword,
+                      autofocus: false,
                     ),
                   ),
                 ),
