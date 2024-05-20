@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/constants/firebase_constants.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 final searchRepositoryProvider = Provider(
   (ref) {
@@ -19,7 +22,8 @@ class SearchRepository {
     required FirebaseFirestore firestore,
   }) : _firestore = firestore;
 
-  Stream<List<Community>> search(String query) {
+  Stream<List<dynamic>> search(String query) {
+    final streamController = StreamController<List<dynamic>>();
     if (query.startsWith('#=')) {
       String communityQuery = query.substring(2);
       return _communities
@@ -58,44 +62,50 @@ class SearchRepository {
           return communities;
         },
       );
-    } else {
-      return _communities
+    } else if (query.startsWith('#')) {
+      String userQuery = query.substring(1);
+      return _user
           .where(
             'name',
-            isGreaterThanOrEqualTo: query.isEmpty ? 0 : query,
-            isLessThan: query.isEmpty
+            isGreaterThanOrEqualTo: userQuery.isEmpty ? 0 : userQuery,
+            isLessThan: userQuery.isEmpty
                 ? null
-                : query.substring(0, query.length - 1) +
-                    String.fromCharCode(query.codeUnitAt(query.length - 1) + 1),
+                : userQuery.substring(0, userQuery.length - 1) +
+                    String.fromCharCode(
+                        userQuery.codeUnitAt(userQuery.length - 1) + 1),
           )
           .snapshots()
           .map(
         (event) {
-          List<Community> communities = [];
+          List<UserModel> users = [];
           for (var doc in event.docs) {
             final data = doc.data() as Map<String, dynamic>;
-            final members = (data['members'] as List?)?.cast<String>() ?? [];
-            final mods = (data['mods'] as List?)?.cast<String>() ?? [];
-            communities.add(
-              Community(
-                id: data['id'] as String,
+            final achivements =
+                (data['achivements'] as List?)?.cast<String>() ?? [];
+            users.add(
+              UserModel(
                 name: data['name'] as String,
                 profileImage: data['profileImage'] as String,
                 bannerImage: data['bannerImage'] as String,
-                type: data['type'] as String,
-                containsExposureContents:
-                    data['containsExposureContents'] as bool,
-                members: members,
-                mods: mods,
+                email: data['email'] as String,
+                uid: data['uid'] as String,
+                isAuthenticated: data['isAuthenticated'] as bool,
+                activityPoint: data['activityPoint'] as int,
+                achivements: achivements,
               ),
             );
           }
-          return communities;
+          return users;
         },
       );
+    } else {
+      streamController.close();
     }
+    return streamController.stream;
   }
 
   CollectionReference get _communities =>
       _firestore.collection(FirebaseConstants.communitiesCollection);
+  CollectionReference get _user =>
+      _firestore.collection(FirebaseConstants.usersCollection);
 }

@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:hash_balance/features/search/repository/search_repository.dart';
-import 'package:hash_balance/models/community_model.dart';
 
 final searchProvider = StreamProvider.family((ref, String query) {
   return ref.watch(searchControllerProvider.notifier).search(query);
@@ -26,7 +25,7 @@ class SearchController extends StateNotifier<bool> {
         super(false);
 
   //pass the query in the repo
-  Stream<List<Community>> search(String query) {
+  Stream<List<dynamic>> search(String query) {
     return _searchRepository.search(query);
   }
 }

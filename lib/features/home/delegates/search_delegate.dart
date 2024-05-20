@@ -32,24 +32,48 @@ class SearchCommunityDelegate extends SearchDelegate {
   @override
   Widget buildSuggestions(BuildContext context) {
     return ref.watch(searchProvider(query)).when(
-          data: (communities) {
-            return ListView.separated(
-              itemCount: communities.length,
-              itemBuilder: (BuildContext context, int index) {
-                final community = communities[index];
-                return ListTile(
+          data: (data) {
+            if (query.startsWith('#=')) {
+              return ListView.separated(
+                itemCount: data.length,
+                itemBuilder: (BuildContext context, int index) {
+                  final community = data[index];
+                  return ListTile(
                     leading: CircleAvatar(
                       backgroundImage: NetworkImage(community.profileImage),
                     ),
                     title: Text('#=${community.name}'),
                     onTap: () {
                       navigateToCommunityScreen(context, community.name);
-                    });
-              },
-              separatorBuilder: (BuildContext context, int index) {
-                return const Divider();
-              },
-            );
+                    },
+                  );
+                },
+                separatorBuilder: (BuildContext context, int index) {
+                  return const Divider();
+                },
+              );
+            } else if (query.startsWith('#')) {
+              return ListView.separated(
+                itemCount: data.length,
+                itemBuilder: (BuildContext context, int index) {
+                  final user = data[index];
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage: NetworkImage(user.profileImage),
+                    ),
+                    title: Text('#${user.name}'),
+                    onTap: () {
+                      // navigateToCommunityScreen(context, user.name);
+                    },
+                  );
+                },
+                separatorBuilder: (BuildContext context, int index) {
+                  return const Divider();
+                },
+              );
+            } else {
+              return const SizedBox();
+            }
           },
           error: (error, stackTrace) => ErrorText(
             error: error.toString(),

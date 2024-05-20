@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/features/home/delegates/search_community_delegate.dart';
+import 'package:hash_balance/features/home/delegates/search_delegate.dart';
 import 'package:hash_balance/features/home/screen/drawers/community_list_drawer.dart';
 
 class HomeScreen extends ConsumerWidget {
