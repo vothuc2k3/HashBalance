@@ -47,31 +47,30 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBcT1jbj0P75_q1Pgqlr9liT-lLxujqvXE',
-    appId: '1:1024351849204:web:638804045bb9926c2deca1',
-    messagingSenderId: '1024351849204',
-    projectId: 'hash-balance-24465',
-    authDomain: 'hash-balance-24465.firebaseapp.com',
-    storageBucket: 'hash-balance-24465.appspot.com',
+    apiKey: 'AIzaSyDZcCH-R-kUGwaxwXet0wBNtoD4pgODHTw',
+    appId: '1:491242368609:web:ae17fab22f7b41b6140420',
+    messagingSenderId: '491242368609',
+    projectId: 'hash-balance-6ee7d',
+    authDomain: 'hash-balance-6ee7d.firebaseapp.com',
+    storageBucket: 'hash-balance-6ee7d.appspot.com',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyD_5iZg-03Mc7lA9lsTxVSfWYfseEHuUe8',
-    appId: '1:1024351849204:android:0354ad612091fdbf2deca1',
-    messagingSenderId: '1024351849204',
-    projectId: 'hash-balance-24465',
-    storageBucket: 'hash-balance-24465.appspot.com',
+    apiKey: 'AIzaSyDK1f_lsGR6olRH4BrvXmx39R3D6K4EKgk',
+    appId: '1:491242368609:android:089e401aa7c7ef07140420',
+    messagingSenderId: '491242368609',
+    projectId: 'hash-balance-6ee7d',
+    storageBucket: 'hash-balance-6ee7d.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAVMsyljQ1zMLL2K-2m4404zF9eBKww3CE',
-    appId: '1:1024351849204:ios:2d77c963c2a659082deca1',
-    messagingSenderId: '1024351849204',
-    projectId: 'hash-balance-24465',
-    storageBucket: 'hash-balance-24465.appspot.com',
-    androidClientId: '1024351849204-8tsingfnieiem4t48fkle8dcksi0rdl5.apps.googleusercontent.com',
-    iosClientId: '1024351849204-a6j8lglddd5n7ff1p7mii6ar80blqbii.apps.googleusercontent.com',
+    apiKey: 'AIzaSyBkWoOtxUzDkHm4OYcAzDojswhT1TlPtcs',
+    appId: '1:491242368609:ios:b8aff2cc67235fb9140420',
+    messagingSenderId: '491242368609',
+    projectId: 'hash-balance-6ee7d',
+    storageBucket: 'hash-balance-6ee7d.appspot.com',
+    androidClientId: '491242368609-ab3u71uvqbfdcfmsjqmp2gbdo3sc3925.apps.googleusercontent.com',
+    iosClientId: '491242368609-gst4rkqfg159240mn6aer0hnsompsqqs.apps.googleusercontent.com',
     iosBundleId: 'com.example.hashBalance',
   );
-
 }

@@ -7,8 +7,8 @@ import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/core/utils.dart';
-import 'package:hash_balance/features/gaming_community/controller/gaming_comunity_controller.dart';
-import 'package:hash_balance/models/gaming_community_model.dart';
+import 'package:hash_balance/features/community/controller/comunity_controller.dart';
+import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
 class EditCommunityVisualScreen extends ConsumerStatefulWidget {
@@ -145,7 +145,7 @@ class _EditCommunityScreenState
     );
   }
 
-  void saveChanges(GamingCommunityModel community) {
+  void saveChanges(Community community) {
     ref
         .read(gamingCommunityControllerProvider.notifier)
         .editCommunityProfileOrBannerImage(

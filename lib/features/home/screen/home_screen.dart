@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/home/delegates/search_community_delegate.dart';
-import '../../authentication/repository/auth_repository.dart';
-import 'drawers/gaming_community_list_drawer.dart';
+import 'package:hash_balance/features/home/screen/drawers/community_list_drawer.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -47,7 +47,7 @@ class HomeScreen extends ConsumerWidget {
           ),
         ],
       ),
-      drawer: const GameCommunityListDrawer(),
+      drawer: const CommunityListDrawer(),
     );
   }
 }

@@ -45,7 +45,7 @@ class MyAppState extends ConsumerState<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return  ref.watch(authStageChangeProvider).when(
+    return ref.watch(authStageChangeProvider).when(
           data: (data) => MaterialApp.router(
             debugShowCheckedModeBanner: false,
             title: 'Hash Balance',

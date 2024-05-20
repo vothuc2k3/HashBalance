@@ -4,7 +4,7 @@ import 'package:routemaster/routemaster.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
-import 'package:hash_balance/features/gaming_community/controller/gaming_comunity_controller.dart';
+import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 
 class SearchCommunityDelegate extends SearchDelegate {
   final WidgetRef ref;
@@ -33,18 +33,21 @@ class SearchCommunityDelegate extends SearchDelegate {
   Widget buildSuggestions(BuildContext context) {
     return ref.watch(searchCommunityProvider(query)).when(
           data: (communities) {
-            return ListView.builder(
+            return ListView.separated(
               itemCount: communities.length,
               itemBuilder: (BuildContext context, int index) {
                 final community = communities[index];
                 return ListTile(
-                  leading: CircleAvatar(
-                    backgroundImage: NetworkImage(community.profileImage),
-                  ),
-                  title: Text('#=${community.name}'),
-                  onTap: () =>
-                      navigateToCommunityScreen(context, community.name),
-                );
+                    leading: CircleAvatar(
+                      backgroundImage: NetworkImage(community.profileImage),
+                    ),
+                    title: Text('#=${community.name}'),
+                    onTap: () {
+                      navigateToCommunityScreen(context, community.name);
+                    });
+              },
+              separatorBuilder: (BuildContext context, int index) {
+                return const Divider();
               },
             );
           },

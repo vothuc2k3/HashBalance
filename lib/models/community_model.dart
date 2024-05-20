@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-class GamingCommunityModel {
+class Community {
   final String id;
   final String name;
   final String profileImage;
@@ -9,7 +9,7 @@ class GamingCommunityModel {
   final bool containsExposureContents;
   final List<String> members;
   final List<String> mods;
-  GamingCommunityModel({
+  Community({
     required this.id,
     required this.name,
     required this.profileImage,
@@ -20,7 +20,7 @@ class GamingCommunityModel {
     required this.mods,
   });
 
-  GamingCommunityModel copyWith({
+  Community copyWith({
     String? id,
     String? name,
     String? profileImage,
@@ -30,7 +30,7 @@ class GamingCommunityModel {
     List<String>? members,
     List<String>? mods,
   }) {
-    return GamingCommunityModel(
+    return Community(
       id: id ?? this.id,
       name: name ?? this.name,
       profileImage: profileImage ?? this.profileImage,
@@ -56,18 +56,20 @@ class GamingCommunityModel {
     };
   }
 
-  factory GamingCommunityModel.fromMap(Map<String, dynamic> map) {
-    return GamingCommunityModel(
+  factory Community.fromMap(Map<String, dynamic> map) {
+    return Community(
       id: map['id'] as String,
       name: map['name'] as String,
       profileImage: map['profileImage'] as String,
       bannerImage: map['bannerImage'] as String,
       type: map['type'] as String,
       containsExposureContents: map['containsExposureContents'] as bool,
-      members: List<String>.from((map['members'] as List<String>)),
-      mods: List<String>.from(
-        (map['mods'] as List<String>),
-      ),
+      members: (map['members'] as List<dynamic>)
+          .map((item) => item.toString())
+          .toList(),
+      mods: (map['mods'] as List<dynamic>)
+          .map((item) => item.toString())
+          .toList(),
     );
   }
 
@@ -77,7 +79,7 @@ class GamingCommunityModel {
   }
 
   @override
-  bool operator ==(covariant GamingCommunityModel other) {
+  bool operator ==(covariant Community other) {
     if (identical(this, other)) return true;
 
     return other.id == id &&

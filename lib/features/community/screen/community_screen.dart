@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:routemaster/routemaster.dart';
+
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/features/gaming_community/controller/gaming_comunity_controller.dart';
+import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/theme/pallette.dart';
-import 'package:routemaster/routemaster.dart';
 
 class CommunityScreen extends ConsumerWidget {
   final String name;
 
-  const CommunityScreen({super.key, required this.name});
+  const CommunityScreen({
+    super.key,
+    required this.name,
+  });
 
   void navigateToModTools(BuildContext context, String name) {
     Routemaster.of(context).push('/mod-tools/$name');
