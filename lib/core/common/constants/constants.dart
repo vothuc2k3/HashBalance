@@ -7,9 +7,9 @@ class Constants {
   static const emailLogoPath = 'assets/images/emailLogo.png';
 
   static const bannerDefault =
-      'https://thumbs.dreamstime.com/b/abstract-stained-pattern-rectangle-background-blue-sky-over-fiery-red-orange-color-modern-painting-art-watercolor-effe-texture-123047399.jpg';
+      'https://i.imgur.com/gKLRsMZ.jpg';
   static const avatarDefault =
-      'https://external-preview.redd.it/5kh5OreeLd85QsqYO1Xz_4XSLYwZntfjqou-8fyBFoE.png?auto=webp&s=dbdabd04c399ce9c761ff899f5d38656d1de87c2';
+      'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/avatars/89/89496ab402ac222c0ddaed7add5d9eb6deb759f9_full.jpg';
 
   static const communityTypes = ['Public', 'Restricted', 'Private'];
 

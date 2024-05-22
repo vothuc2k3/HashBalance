@@ -35,10 +35,7 @@ class ModToolsScreen extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.edit),
             title: const Text('Edit Community Visual'),
-            onTap: () => navigateToEditCommunityScreen(
-              context,
-              name,
-            ),
+            onTap: () => navigateToEditCommunityScreen(context, name),
           ),
           ListTile(
             leading: const Icon(Icons.edit_document),

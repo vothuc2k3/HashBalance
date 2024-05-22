@@ -24,6 +24,9 @@ class SearchRepository {
 
   Stream<List<dynamic>> search(String query) {
     final streamController = StreamController<List<dynamic>>();
+    if (query.isEmpty) {
+      return const Stream.empty();
+    }
     if (query.startsWith('#=')) {
       String communityQuery = query.substring(2);
       return _communities
@@ -92,6 +95,7 @@ class SearchRepository {
                 isAuthenticated: data['isAuthenticated'] as bool,
                 activityPoint: data['activityPoint'] as int,
                 achivements: achivements,
+                createdAt: data['createdAt'] as Timestamp,
               ),
             );
           }

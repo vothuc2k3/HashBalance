@@ -1,8 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fpdart/fpdart.dart';
 
 import 'package:hash_balance/core/common/constants/constants.dart';
+import 'package:hash_balance/core/failures.dart';
+import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -42,10 +46,12 @@ class AuthController extends StateNotifier<bool> {
     state = false;
     user.fold(
       (error) {
-        return showSnackBar(
-          context,
-          error.message,
-        );
+        if (mounted) {
+          return showSnackBar(
+            context,
+            error.message,
+          );
+        }
       },
       (userModel) {
         _ref.read(userProvider.notifier).update(
@@ -56,7 +62,7 @@ class AuthController extends StateNotifier<bool> {
   }
 
   //sign up with email in controller
-  void signUpWithEmailAndPassword(
+  Future<Either<Failures, UserModel>> signUpWithEmailAndPassword(
     BuildContext context,
     String email,
     String password,
@@ -74,15 +80,14 @@ class AuthController extends StateNotifier<bool> {
       isAuthenticated: true,
       activityPoint: 0,
       achivements: ['New boy'],
+      createdAt: Timestamp.now(),
+      hashAge: 0,
     );
     final user = await _authRepository.signUpWithEmailAndPassword(userModel);
     state = false;
     user.fold(
       (error) {
-        return showSnackBar(
-          context,
-          error.message,
-        );
+        return user;
       },
       (userModel) {
         _ref.read(userProvider.notifier).update(
@@ -90,27 +95,33 @@ class AuthController extends StateNotifier<bool> {
             );
       },
     );
+    return user;
   }
 
-  void signInWithEmailAndPassword(
-      BuildContext context, String email, String password) async {
+  Future<Either<Failures, UserModel>> signInWithEmailAndPassword(
+    BuildContext context,
+    String email,
+    String password,
+  ) async {
     state = true;
     final user =
         await _authRepository.signInWithEmailAndPassword(email, password);
     state = false;
     user.fold(
       (error) {
-        return showSnackBar(
-          context,
-          error.message,
-        );
+        return user;
       },
       (userModel) {
-        _ref.read(userProvider.notifier).update(
+        return _ref.read(userProvider.notifier).update(
               (state) => userModel,
             );
       },
     );
+    return user;
+  }
+
+  void signOut() async {
+    _authRepository.signOut();
   }
 
   Stream<UserModel> getUserData(String uid) {

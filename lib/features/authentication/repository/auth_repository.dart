@@ -58,6 +58,8 @@ class AuthRepository {
       late UserModel userModel;
       //if the user logs in for the first time, new data is set
       if (userCredential.additionalUserInfo!.isNewUser) {
+        final createdAt = Timestamp.now();
+
         userModel = UserModel(
           email: userCredential.user!.email!,
           name: userCredential.user!.displayName ??
@@ -69,6 +71,8 @@ class AuthRepository {
           isAuthenticated: true,
           activityPoint: 0,
           achivements: ['New boy'],
+          createdAt: createdAt,
+          hashAge: 0,
         );
         await _user.doc(userCredential.user!.uid).set(
               userModel.toMap(),
@@ -132,21 +136,34 @@ class AuthRepository {
     }
   }
 
+  void signOut() async{
+    await _firebaseAuth.signOut();
+  }
+
   //get the user data from firebase
   Stream<UserModel> getUserData(String uid) {
     final snapshot = _user.doc(uid).snapshots();
-    return snapshot.map((event) => UserModel(
-        uid: event['uid'],
-        name: event['name'],
-        email: event['email'],
-        password: event['password'],
-        profileImage: event['profileImage'],
-        bannerImage: event['bannerImage'],
-        isAuthenticated: event['isAuthenticated'],
-        activityPoint: event['activityPoint'],
+    return snapshot.map((event) {
+      Timestamp createdAt = event['createdAt'];
+      int hashAge =
+          DateTime.now().difference(createdAt.toDate()).inSeconds ~/ 86400;
+
+      return UserModel(
+        uid: event['uid'] as String,
+        name: event['name'] as String,
+        email: event['email'] as String,
+        password: event['password'] as String,
+        profileImage: event['profileImage'] as String,
+        bannerImage: event['bannerImage'] as String,
+        isAuthenticated: event['isAuthenticated'] as bool,
+        activityPoint: event['activityPoint'] as int,
         achivements: (event['achivements'] as List)
             .map((item) => item.toString())
-            .toList()));
+            .toList(),
+        createdAt: event['createdAt'] as Timestamp,
+        hashAge: hashAge,
+      );
+    });
   }
 
   CollectionReference get _user =>

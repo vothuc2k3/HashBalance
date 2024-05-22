@@ -8,15 +8,13 @@ import 'package:hash_balance/features/authentication/controller/auth_controller.
 import 'package:routemaster/routemaster.dart';
 
 class SignInScreen extends ConsumerWidget {
-  SignInScreen({super.key});
-  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+  const SignInScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isLoading = ref.watch(authControllerProvider);
 
     return Scaffold(
-      key: scaffoldKey,
       appBar: AppBar(
         title: Image.asset(
           Constants.logoPath,
@@ -39,42 +37,37 @@ class SignInScreen extends ConsumerWidget {
       ),
       body: isLoading
           ? const LoadingCircular()
-          : Column(
-              children: [
-                const SizedBox(height: 30),
-                const Text(
-                  'Let\'s join the communities!',
-                  style: TextStyle(
-                    fontSize: 24,
-                    letterSpacing: 0.5,
+          : SingleChildScrollView(
+              child: Column(
+                children: [
+                  const SizedBox(height: 30),
+                  const Text(
+                    'Let\'s join the communities!',
+                    style: TextStyle(
+                      fontSize: 24,
+                      letterSpacing: 0.5,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 30),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Image.asset(
-                    Constants.signinEmotePath,
-                    height: 400,
+                  const SizedBox(height: 30),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Image.asset(
+                      Constants.signinEmotePath,
+                      height: 400,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                const Padding(
-                  padding: EdgeInsets.only(
-                    right: 30,
-                    left: 30,
+                  const SizedBox(height: 20),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 30),
+                    child: GoogleSignInButton(),
                   ),
-                  child: GoogleSignInButton(),
-                ),
-                const SizedBox(height: 10),
-                const Padding(
-                  padding: EdgeInsets.only(
-                    right: 30,
-                    left: 30,
+                  const SizedBox(height: 10),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 30),
+                    child: EmailSignUpPushButton(),
                   ),
-                  child: EmailSignUpPushButton(),
-                ),
-                Expanded(
-                  child: Align(
+                  const SizedBox(height: 100),
+                  Align(
                     alignment: Alignment.bottomCenter,
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 20),
@@ -102,8 +95,8 @@ class SignInScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
     );
   }

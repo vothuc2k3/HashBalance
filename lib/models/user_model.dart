@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
 class UserModel {
@@ -5,21 +6,25 @@ class UserModel {
   String? password;
   final String name;
   String uid;
+  final Timestamp createdAt;
   final String profileImage;
   final String bannerImage;
   final bool isAuthenticated;
   final int activityPoint;
   final List<String> achivements;
+  int? hashAge;
   UserModel({
     required this.email,
     this.password,
     required this.name,
     required this.uid,
+    required this.createdAt,
     required this.profileImage,
     required this.bannerImage,
     required this.isAuthenticated,
     required this.activityPoint,
     required this.achivements,
+    this.hashAge,
   });
 
   UserModel copyWith({
@@ -27,22 +32,26 @@ class UserModel {
     String? password,
     String? name,
     String? uid,
+    Timestamp? createdAt,
     String? profileImage,
     String? bannerImage,
     bool? isAuthenticated,
     int? activityPoint,
     List<String>? achivements,
+    int? hashAge,
   }) {
     return UserModel(
       email: email ?? this.email,
       password: password ?? this.password,
       name: name ?? this.name,
       uid: uid ?? this.uid,
+      createdAt: createdAt ?? this.createdAt,
       profileImage: profileImage ?? this.profileImage,
       bannerImage: bannerImage ?? this.bannerImage,
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
       activityPoint: activityPoint ?? this.activityPoint,
       achivements: achivements ?? this.achivements,
+      hashAge: hashAge ?? this.hashAge,
     );
   }
 
@@ -52,11 +61,13 @@ class UserModel {
       'password': password,
       'name': name,
       'uid': uid,
+      'createdAt': createdAt,
       'profileImage': profileImage,
       'bannerImage': bannerImage,
       'isAuthenticated': isAuthenticated,
       'activityPoint': activityPoint,
       'achivements': achivements,
+      'hashAge': hashAge,
     };
   }
 
@@ -66,10 +77,12 @@ class UserModel {
       password: map['password'] != null ? map['password'] as String : null,
       name: map['name'] as String,
       uid: map['uid'] as String,
+      createdAt: map['createdAt'] as Timestamp,
       profileImage: map['profileImage'] as String,
       bannerImage: map['bannerImage'] as String,
       isAuthenticated: map['isAuthenticated'] as bool,
       activityPoint: map['activityPoint'] as int,
+      hashAge: map['hashAge'] as int,
       achivements: List<String>.from(
         (map['achivements'] as List<String>),
       ),
@@ -78,7 +91,7 @@ class UserModel {
 
   @override
   String toString() {
-    return 'UserModel(email: $email, password: $password, name: $name, uid: $uid, profileImage: $profileImage, bannerImage: $bannerImage, isAuthenticated: $isAuthenticated, activityPoint: $activityPoint, achivements: $achivements)';
+    return 'UserModel(email: $email, password: $password, name: $name, uid: $uid, createdAt: $createdAt, profileImage: $profileImage, bannerImage: $bannerImage, isAuthenticated: $isAuthenticated, activityPoint: $activityPoint, achivements: $achivements, hashAge: $hashAge)';
   }
 
   @override
@@ -89,10 +102,12 @@ class UserModel {
         other.password == password &&
         other.name == name &&
         other.uid == uid &&
+        other.createdAt == createdAt &&
         other.profileImage == profileImage &&
         other.bannerImage == bannerImage &&
         other.isAuthenticated == isAuthenticated &&
         other.activityPoint == activityPoint &&
+        other.hashAge == hashAge &&
         listEquals(other.achivements, achivements);
   }
 
@@ -102,10 +117,12 @@ class UserModel {
         password.hashCode ^
         name.hashCode ^
         uid.hashCode ^
+        createdAt.hashCode ^
         profileImage.hashCode ^
         bannerImage.hashCode ^
         isAuthenticated.hashCode ^
         activityPoint.hashCode ^
+        hashAge.hashCode ^
         achivements.hashCode;
   }
 }

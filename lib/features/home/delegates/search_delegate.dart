@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/search/controller/search_controller.dart';
 import 'package:routemaster/routemaster.dart';
 
@@ -31,6 +32,10 @@ class SearchCommunityDelegate extends SearchDelegate {
 
   @override
   Widget buildSuggestions(BuildContext context) {
+    if (query.isEmpty) {
+      return const SizedBox();
+    }
+
     return ref.watch(searchProvider(query)).when(
           data: (data) {
             if (query.startsWith('#=')) {
@@ -56,7 +61,11 @@ class SearchCommunityDelegate extends SearchDelegate {
               return ListView.separated(
                 itemCount: data.length,
                 itemBuilder: (BuildContext context, int index) {
+                  final currentUser = ref.watch(userProvider);
                   final user = data[index];
+                  if(user.uid == currentUser!.uid){
+                    return const SizedBox(height: 1);
+                  }
                   return ListTile(
                     leading: CircleAvatar(
                       backgroundImage: NetworkImage(user.profileImage),
@@ -72,6 +81,7 @@ class SearchCommunityDelegate extends SearchDelegate {
                 },
               );
             } else {
+              // TODO: if query.startWith('='), returns posts
               return const SizedBox();
             }
           },

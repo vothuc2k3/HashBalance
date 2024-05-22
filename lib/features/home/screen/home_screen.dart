@@ -3,12 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/home/delegates/search_delegate.dart';
 import 'package:hash_balance/features/home/screen/drawers/community_list_drawer.dart';
+import 'package:hash_balance/features/home/screen/drawers/user_profile_drawer.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  void displayDrawer(BuildContext context) {
+  void displayCommunityListDrawer(BuildContext context) {
     Scaffold.of(context).openDrawer();
+  }
+
+  void displayUserProfileDrawer(BuildContext context) {
+    Scaffold.of(context).openEndDrawer();
   }
 
   @override
@@ -22,9 +27,7 @@ class HomeScreen extends ConsumerWidget {
         leading: Builder(builder: (context) {
           return IconButton(
             icon: const Icon(Icons.menu),
-            onPressed: () {
-              displayDrawer(context);
-            },
+            onPressed: () => displayCommunityListDrawer(context),
           );
         }),
         actions: [
@@ -39,15 +42,18 @@ class HomeScreen extends ConsumerWidget {
               Icons.search,
             ),
           ),
-          IconButton(
-            icon: CircleAvatar(
-              backgroundImage: NetworkImage(user!.profileImage),
-            ),
-            onPressed: () {},
-          ),
+          Builder(builder: (context) {
+            return IconButton(
+              icon: CircleAvatar(
+                backgroundImage: NetworkImage(user!.profileImage),
+              ),
+              onPressed: () => displayUserProfileDrawer(context),
+            );
+          }),
         ],
       ),
       drawer: const CommunityListDrawer(),
+      endDrawer: const UserProfileDrawer(),
     );
   }
 }

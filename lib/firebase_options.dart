@@ -47,30 +47,29 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDZcCH-R-kUGwaxwXet0wBNtoD4pgODHTw',
-    appId: '1:491242368609:web:ae17fab22f7b41b6140420',
-    messagingSenderId: '491242368609',
-    projectId: 'hash-balance-6ee7d',
-    authDomain: 'hash-balance-6ee7d.firebaseapp.com',
-    storageBucket: 'hash-balance-6ee7d.appspot.com',
+    apiKey: 'AIzaSyDrdjnBnMmb4iM_bUzYg0WOTSvbrCMMZoQ',
+    appId: '1:342717500493:web:9cdae62f99d93c34d0e004',
+    messagingSenderId: '342717500493',
+    projectId: 'hash-balance-official',
+    authDomain: 'hash-balance-official.firebaseapp.com',
+    storageBucket: 'hash-balance-official.appspot.com',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDK1f_lsGR6olRH4BrvXmx39R3D6K4EKgk',
-    appId: '1:491242368609:android:089e401aa7c7ef07140420',
-    messagingSenderId: '491242368609',
-    projectId: 'hash-balance-6ee7d',
-    storageBucket: 'hash-balance-6ee7d.appspot.com',
+    apiKey: 'AIzaSyA3tSQM2M4v8NEVN6Gs95k3-weaf3tWsjg',
+    appId: '1:342717500493:android:e5b8281843ea1886d0e004',
+    messagingSenderId: '342717500493',
+    projectId: 'hash-balance-official',
+    storageBucket: 'hash-balance-official.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBkWoOtxUzDkHm4OYcAzDojswhT1TlPtcs',
-    appId: '1:491242368609:ios:b8aff2cc67235fb9140420',
-    messagingSenderId: '491242368609',
-    projectId: 'hash-balance-6ee7d',
-    storageBucket: 'hash-balance-6ee7d.appspot.com',
-    androidClientId: '491242368609-ab3u71uvqbfdcfmsjqmp2gbdo3sc3925.apps.googleusercontent.com',
-    iosClientId: '491242368609-gst4rkqfg159240mn6aer0hnsompsqqs.apps.googleusercontent.com',
+    apiKey: 'AIzaSyDsGn_1rT4o-dAdJqBtSluJqnJ9TMdzusw',
+    appId: '1:342717500493:ios:3c9613ef45bdfd42d0e004',
+    messagingSenderId: '342717500493',
+    projectId: 'hash-balance-official',
+    storageBucket: 'hash-balance-official.appspot.com',
     iosBundleId: 'com.example.hashBalance',
   );
+
 }

@@ -6,13 +6,15 @@ import 'package:crypt/crypt.dart';
 import 'dart:convert';
 
 void showSnackBar(BuildContext context, String text) {
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(
-      SnackBar(
-        content: Text(text),
-      ),
-    );
+  if (context.mounted) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(text),
+        ),
+      );
+  }
 }
 
 String generateCommunityId() {
