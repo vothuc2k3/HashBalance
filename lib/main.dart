@@ -28,39 +28,68 @@ class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => MyAppState();
+  ConsumerState<ConsumerStatefulWidget> createState() {
+    return MyAppState();
+  }
 }
 
 class MyAppState extends ConsumerState<MyApp> {
-  UserModel? userModel;
+  bool _hasInitialized = false;
+  UserModel? userData;
 
-  void getData(WidgetRef ref, User user) async {
-    userModel = await ref
-        .watch(authControllerProvider.notifier)
-        .getUserData(user.uid)
-        .first;
-    ref.read(userProvider.notifier).update((state) => userModel);
+  void getData(WidgetRef ref, User? user) async {
+    if (user != null) {
+      userData = await ref
+          .read(authControllerProvider.notifier)
+          .getUserData(user.uid)
+          .first;
+    } else {
+      userData = null;
+    }
+    ref.read(userProvider.notifier).update((_) {
+      return userData;
+    });
     setState(() {});
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_hasInitialized) {
+      final data = ref.read(authStageChangeProvider);
+      data.whenOrNull(
+        data: (user) {
+          getData(ref, user);
+        },
+        error: (error, stackTrace) => ErrorText(
+          error: error.toString(),
+        ),
+        loading: () => const LoadingCircular(),
+      );
+      _hasInitialized = true;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return ref.watch(authStageChangeProvider).when(
-          data: (data) => MaterialApp.router(
-            debugShowCheckedModeBanner: false,
-            title: 'Hash Balance',
-            theme: Pallete.darkModeAppTheme,
-            routerDelegate: RoutemasterDelegate(routesBuilder: (context) {
-              if (data != null) {
-                getData(ref, data);
-                if (userModel != null) {
-                  return loggedInRoute;
+          data: (user) {
+            return MaterialApp.router(
+              debugShowCheckedModeBanner: false,
+              title: 'Hash Balance',
+              theme: Pallete.darkModeAppTheme,
+              routerDelegate: RoutemasterDelegate(routesBuilder: (context) {
+                if (user != null) {
+                  getData(ref, user);
+                  if (userData != null) {
+                    return loggedInRoute;
+                  }
                 }
-              }
-              return loggedOutRoute;
-            }),
-            routeInformationParser: const RoutemasterParser(),
-          ),
+                return loggedOutRoute;
+              }),
+              routeInformationParser: const RoutemasterParser(),
+            );
+          },
           error: (error, stackTrace) => ErrorText(
             error: error.toString(),
           ),

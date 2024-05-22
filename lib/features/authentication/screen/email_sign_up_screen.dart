@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/common/auth_text_field.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
@@ -9,12 +8,27 @@ import 'package:hash_balance/features/authentication/controller/auth_controller.
 import 'package:hash_balance/theme/pallette.dart';
 import 'package:routemaster/routemaster.dart';
 
-class EmailSignUpScreen extends ConsumerWidget {
+class EmailSignUpScreen extends ConsumerStatefulWidget {
+  const EmailSignUpScreen({super.key});
+
+  @override
+  EmailSignUpScreenState createState() {
+    return EmailSignUpScreenState();
+  }
+}
+
+class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final nameController = TextEditingController();
 
-  EmailSignUpScreen({super.key});
+  @override
+  void dispose() {
+    emailController.dispose();
+    nameController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   void signUpWithEmailAndPassword(BuildContext context, WidgetRef ref) async {
     final user = await ref
@@ -36,7 +50,7 @@ class EmailSignUpScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final isLoading = ref.watch(authControllerProvider);
 
     return Scaffold(

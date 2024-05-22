@@ -32,7 +32,7 @@ class SettingScreen extends ConsumerWidget {
               color: Pallete.redColor,
             ),
             title: const Text(
-              'Logout',
+              'Sign Out',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
               ),

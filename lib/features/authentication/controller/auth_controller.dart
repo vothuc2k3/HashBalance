@@ -6,7 +6,6 @@ import 'package:fpdart/fpdart.dart';
 
 import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -18,10 +17,10 @@ final authControllerProvider = StateNotifierProvider<AuthController, bool>(
   ),
 );
 
-final authStageChangeProvider = StreamProvider((ref) {
-  final authController = ref.watch(authControllerProvider.notifier);
-  return authController.authStageChange;
-});
+  final authStageChangeProvider = StreamProvider((ref) {
+    final authController = ref.watch(authControllerProvider.notifier);
+    return authController.authStageChange;
+  });
 
 final getUserDataProvider = StreamProvider.family((ref, String uid) {
   final authController = ref.watch(authControllerProvider.notifier);
@@ -90,7 +89,7 @@ class AuthController extends StateNotifier<bool> {
         return user;
       },
       (userModel) {
-        _ref.read(userProvider.notifier).update(
+        return _ref.read(userProvider.notifier).update(
               (state) => userModel,
             );
       },

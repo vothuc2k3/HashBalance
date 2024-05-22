@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hash_balance/core/common/unknown_route.dart';
 import 'package:hash_balance/features/authentication/screen/email_sign_in_screen.dart';
 import 'package:hash_balance/features/authentication/screen/email_sign_up_screen.dart';
 import 'package:hash_balance/features/community/screen/mod_tools/edit_community_visual_screen.dart';
@@ -18,10 +19,13 @@ final loggedOutRoute = RouteMap(
     '/email-sign-in': (_) => const MaterialPage(
           child: EmailSignInScreen(),
         ),
-    '/email-sign-up': (_) => MaterialPage(
+    '/email-sign-up': (_) => const MaterialPage(
           child: EmailSignUpScreen(),
         ),
   },
+  onUnknownRoute: (_) => const MaterialPage(
+    child: UnknownRouteScreen(),
+  ),
 );
 final loggedInRoute = RouteMap(
   routes: {
@@ -44,4 +48,7 @@ final loggedInRoute = RouteMap(
           child: SettingScreen(),
         ),
   },
+  onUnknownRoute: (_) => const MaterialPage(
+    child: UnknownRouteScreen(),
+  ),
 );
