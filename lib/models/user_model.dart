@@ -10,6 +10,7 @@ class UserModel {
   final String profileImage;
   final String bannerImage;
   final bool isAuthenticated;
+  final bool isRestricted;
   final int activityPoint;
   final List<String> achivements;
   int? hashAge;
@@ -21,6 +22,7 @@ class UserModel {
     required this.createdAt,
     required this.profileImage,
     required this.bannerImage,
+    required this.isRestricted,
     required this.isAuthenticated,
     required this.activityPoint,
     required this.achivements,
@@ -39,6 +41,7 @@ class UserModel {
     int? activityPoint,
     List<String>? achivements,
     int? hashAge,
+    bool? isRestricted,
   }) {
     return UserModel(
       email: email ?? this.email,
@@ -52,6 +55,7 @@ class UserModel {
       activityPoint: activityPoint ?? this.activityPoint,
       achivements: achivements ?? this.achivements,
       hashAge: hashAge ?? this.hashAge,
+      isRestricted: isRestricted ?? this.isRestricted,
     );
   }
 
@@ -68,6 +72,7 @@ class UserModel {
       'activityPoint': activityPoint,
       'achivements': achivements,
       'hashAge': hashAge,
+      'isRestricted': isRestricted,
     };
   }
 
@@ -80,6 +85,7 @@ class UserModel {
       createdAt: map['createdAt'] as Timestamp,
       profileImage: map['profileImage'] as String,
       bannerImage: map['bannerImage'] as String,
+      isRestricted: map['isRestricted'] as bool,
       isAuthenticated: map['isAuthenticated'] as bool,
       activityPoint: map['activityPoint'] as int,
       hashAge: map['hashAge'] as int,
@@ -108,6 +114,7 @@ class UserModel {
         other.isAuthenticated == isAuthenticated &&
         other.activityPoint == activityPoint &&
         other.hashAge == hashAge &&
+        other.isRestricted == isRestricted &&
         listEquals(other.achivements, achivements);
   }
 
@@ -123,6 +130,7 @@ class UserModel {
         isAuthenticated.hashCode ^
         activityPoint.hashCode ^
         hashAge.hashCode ^
+        isRestricted.hashCode ^
         achivements.hashCode;
   }
 }

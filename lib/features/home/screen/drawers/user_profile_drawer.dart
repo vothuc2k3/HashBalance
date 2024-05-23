@@ -1,18 +1,122 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/theme/pallette.dart';
 import 'package:routemaster/routemaster.dart';
 
-class UserProfileDrawer extends ConsumerWidget {
-  const UserProfileDrawer({super.key});
+class UserProfileDrawer extends ConsumerStatefulWidget {
+  final BuildContext _homeScreenContext;
 
+  const UserProfileDrawer({
+    super.key,
+    required BuildContext homeScreenContext,
+  }) : _homeScreenContext = homeScreenContext;
+
+  @override
+  UserProfileDrawerState createState() => UserProfileDrawerState();
+}
+
+class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
   void navigateToSettingScreen(BuildContext context) {
     Routemaster.of(context).push('/setting');
   }
 
+  void showChangePrivacyModal(BuildContext homeScreenContext,
+      BuildContext drawerContext, WidgetRef ref) {
+    final user = ref.watch(userProvider);
+    bool userIsRestricted = user!.isRestricted;
+    int isLoading = 0;
+
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext bottomSheetContext) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            height: 3,
+            width: 40,
+            color: Colors.grey,
+            margin: const EdgeInsets.symmetric(vertical: 8),
+          ),
+          ListTile(
+            leading: isLoading == 1
+                ? const CircularProgressIndicator()
+                : const Icon(Icons.public),
+            title: !userIsRestricted
+                ? const Text(
+                    'Current: Public',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                : const Text('Public'),
+            subtitle: const Text('Everybody can send you friend requests'),
+            onTap: !userIsRestricted
+                ? () {}
+                : () {
+                    setState(() {
+                      isLoading = 1;
+                    });
+                    Timer(
+                      const Duration(seconds: 1),
+                      () {
+                        Navigator.pop(bottomSheetContext);
+                        Scaffold.of(homeScreenContext).closeEndDrawer();
+                        ref
+                            .read(authControllerProvider.notifier)
+                            .changeUserPrivacy(
+                                setting: false,
+                                user: user,
+                                context: widget._homeScreenContext);
+                      },
+                    );
+                  },
+          ),
+          ListTile(
+            leading: isLoading == 2
+                ? const CircularProgressIndicator()
+                : const Icon(Icons.privacy_tip),
+            title: userIsRestricted
+                ? const Text(
+                    'Current: Private',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                : const Text('Private'),
+            subtitle: const Text('Only you can send friend requests to others'),
+            onTap: userIsRestricted
+                ? () {}
+                : () {
+                    setState(() {
+                      isLoading = 2;
+                    });
+                    Timer(
+                      const Duration(seconds: 1),
+                      () {
+                        Navigator.pop(bottomSheetContext);
+                        Scaffold.of(homeScreenContext).closeEndDrawer();
+                        ref
+                            .read(authControllerProvider.notifier)
+                            .changeUserPrivacy(
+                              setting: true,
+                              user: user,
+                              context: widget._homeScreenContext,
+                            );
+                      },
+                    );
+                  },
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
 
     return Drawer(
@@ -35,14 +139,15 @@ class UserProfileDrawer extends ConsumerWidget {
                       Text(
                         '#${user.name}',
                         style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
-                            fontStyle: FontStyle.italic),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
                       Text(
                         user.email,
                         style: const TextStyle(
-                          fontSize: 18,
+                          fontSize: 15,
                           fontStyle: FontStyle.italic,
                         ),
                       ),
@@ -61,10 +166,21 @@ class UserProfileDrawer extends ConsumerWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              leading: const Icon(
-                Icons.manage_accounts,
-              ),
+              leading: const Icon(Icons.manage_accounts),
               onTap: () {},
+            ),
+            ListTile(
+              title: const Text(
+                'Change Privacy Settings',
+                style: TextStyle(
+                  color: Pallete.whiteColor,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              leading: const Icon(Icons.privacy_tip),
+              onTap: () => showChangePrivacyModal(
+                  context, widget._homeScreenContext, ref),
             ),
             Expanded(child: Container()),
             ListTile(
@@ -76,9 +192,7 @@ class UserProfileDrawer extends ConsumerWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              leading: const Icon(
-                Icons.settings,
-              ),
+              leading: const Icon(Icons.settings),
               onTap: () => navigateToSettingScreen(context),
             ),
           ],

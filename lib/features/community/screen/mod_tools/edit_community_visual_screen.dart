@@ -94,7 +94,7 @@ class _EditCommunityScreenState
     );
   }
 
-  void showCommunityProfilImageActionModal(BuildContext context) {
+  void showCommunityProfileImageActionModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) => Column(
@@ -221,7 +221,7 @@ class _EditCommunityScreenState
                                 left: 20,
                                 child: GestureDetector(
                                   onTap: () =>
-                                      showCommunityProfilImageActionModal(
+                                      showCommunityProfileImageActionModal(
                                           context),
                                   child: CircleAvatar(
                                     radius: 30,

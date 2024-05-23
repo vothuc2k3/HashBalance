@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -17,10 +20,10 @@ final authControllerProvider = StateNotifierProvider<AuthController, bool>(
   ),
 );
 
-  final authStageChangeProvider = StreamProvider((ref) {
-    final authController = ref.watch(authControllerProvider.notifier);
-    return authController.authStageChange;
-  });
+final authStageChangeProvider = StreamProvider((ref) {
+  final authController = ref.watch(authControllerProvider.notifier);
+  return authController.authStageChange;
+});
 
 final getUserDataProvider = StreamProvider.family((ref, String uid) {
   final authController = ref.watch(authControllerProvider.notifier);
@@ -81,6 +84,7 @@ class AuthController extends StateNotifier<bool> {
       achivements: ['New boy'],
       createdAt: Timestamp.now(),
       hashAge: 0,
+      isRestricted: false,
     );
     final user = await _authRepository.signUpWithEmailAndPassword(userModel);
     state = false;
@@ -121,6 +125,24 @@ class AuthController extends StateNotifier<bool> {
 
   void signOut() async {
     _authRepository.signOut();
+  }
+
+  void changeUserPrivacy({
+    required bool setting,
+    required UserModel user,
+    required BuildContext context,
+  }) {
+    _authRepository.changeUserPrivacy(
+      setting: setting,
+      user: user,
+    );
+    showMaterialBanner(
+      context,
+      'Successfully Changed Your Privacy Setting!',
+    );
+    Timer(const Duration(seconds: 5), () {
+      ScaffoldMessenger.of(context).hideCurrentMaterialBanner();  
+    });
   }
 
   Stream<UserModel> getUserData(String uid) {

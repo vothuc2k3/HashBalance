@@ -53,7 +53,7 @@ class HomeScreen extends ConsumerWidget {
         ],
       ),
       drawer: const CommunityListDrawer(),
-      endDrawer: const UserProfileDrawer(),
+      endDrawer: UserProfileDrawer(homeScreenContext: context),
     );
   }
 }

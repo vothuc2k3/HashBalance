@@ -18,6 +18,7 @@ class CommunityRepository {
   CommunityRepository({required FirebaseFirestore firestore})
       : _firestore = firestore;
 
+  //CREATE A WHOLE NEW COMMUNITY
   FutureVoid createCommunity(Community community) async {
     try {
       var communityDoc = await _communities.doc(community.name).get();
@@ -40,7 +41,7 @@ class CommunityRepository {
     }
   }
 
-  //get the communities by uid
+  //GET THE COMMUNITIES BY CURRENT USER
   Stream<List<Community>> getUserCommunities(String uid) {
     return _communities
         .where('members', arrayContains: uid)
@@ -67,34 +68,15 @@ class CommunityRepository {
       return communities;
     });
   }
-  //(OLD) get the community data by the name of its
-  // Stream<Community> getCommunityByName(String name) {
-  //   return _communities.where(name).snapshots().map(
-  //     (community) {
-  //       final doc = community.docs.first;
-  //       final data = doc.data() as Map<String, dynamic>;
-  //       return Community(
-  //         id: data['id'] as String,
-  //         name: data['name'] as String,
-  //         profileImage: data['profileImage'] as String,
-  //         bannerImage: data['bannerImage'] as String,
-  //         type: data['type'] as String,
-  //         containsExposureContents: data['containsExposureContents'] as bool,
-  //         members: (data['members'] as List).cast<String>(),
-  //         mods: (data['mods'] as List).cast<String>(),
-  //       );
-  //     },
-  //   );
-  // }
 
-  //get the community data by the name of its
+  //GET THE COMMUNITY BY NAME
   Stream<Community> getCommunityByName(String name) {
     return _communities.doc(name).snapshots().map(
           (event) => Community.fromMap(event.data() as Map<String, dynamic>),
         );
   }
 
-  //submit the edit data to Firebase
+  //EDIT COMMUNITY VISUAL
   FutureVoid editCommunityProfileOrBannerImage(Community community) async {
     try {
       final Map<String, dynamic> communityAfterCast = {
@@ -118,83 +100,7 @@ class CommunityRepository {
     }
   }
 
-  Stream<List<Community>> search(String query) {
-    if (query.startsWith('#=')) {
-      String communityQuery = query.substring(2);
-      return _communities
-          .where(
-            'name',
-            isGreaterThanOrEqualTo: communityQuery.isEmpty ? 0 : communityQuery,
-            isLessThan: communityQuery.isEmpty
-                ? null
-                : communityQuery.substring(0, communityQuery.length - 1) +
-                    String.fromCharCode(
-                        communityQuery.codeUnitAt(communityQuery.length - 1) +
-                            1),
-          )
-          .snapshots()
-          .map(
-        (event) {
-          List<Community> communities = [];
-          for (var doc in event.docs) {
-            final data = doc.data() as Map<String, dynamic>;
-            final members = (data['members'] as List?)?.cast<String>() ?? [];
-            final mods = (data['mods'] as List?)?.cast<String>() ?? [];
-            communities.add(
-              Community(
-                id: data['id'] as String,
-                name: data['name'] as String,
-                profileImage: data['profileImage'] as String,
-                bannerImage: data['bannerImage'] as String,
-                type: data['type'] as String,
-                containsExposureContents:
-                    data['containsExposureContents'] as bool,
-                members: members,
-                mods: mods,
-              ),
-            );
-          }
-          return communities;
-        },
-      );
-    } else {
-      return _communities
-          .where(
-            'name',
-            isGreaterThanOrEqualTo: query.isEmpty ? 0 : query,
-            isLessThan: query.isEmpty
-                ? null
-                : query.substring(0, query.length - 1) +
-                    String.fromCharCode(query.codeUnitAt(query.length - 1) + 1),
-          )
-          .snapshots()
-          .map(
-        (event) {
-          List<Community> communities = [];
-          for (var doc in event.docs) {
-            final data = doc.data() as Map<String, dynamic>;
-            final members = (data['members'] as List?)?.cast<String>() ?? [];
-            final mods = (data['mods'] as List?)?.cast<String>() ?? [];
-            communities.add(
-              Community(
-                id: data['id'] as String,
-                name: data['name'] as String,
-                profileImage: data['profileImage'] as String,
-                bannerImage: data['bannerImage'] as String,
-                type: data['type'] as String,
-                containsExposureContents:
-                    data['containsExposureContents'] as bool,
-                members: members,
-                mods: mods,
-              ),
-            );
-          }
-          return communities;
-        },
-      );
-    }
-  }
-
+  //GET THE COMMUNITIES DATA
   CollectionReference get _communities =>
       _firestore.collection(FirebaseConstants.communitiesCollection);
 }

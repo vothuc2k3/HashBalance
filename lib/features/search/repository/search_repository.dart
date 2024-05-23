@@ -96,6 +96,7 @@ class SearchRepository {
                 activityPoint: data['activityPoint'] as int,
                 achivements: achivements,
                 createdAt: data['createdAt'] as Timestamp,
+                isRestricted: data['isRestricted'] as bool,
               ),
             );
           }

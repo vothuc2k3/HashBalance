@@ -13,8 +13,7 @@ import 'package:hash_balance/features/community/repository/community_repository.
 import 'package:hash_balance/models/community_model.dart';
 
 final userCommunitiesProvider = StreamProvider((ref) {
-  final communityController =
-      ref.watch(communityControllerProvider.notifier);
+  final communityController = ref.watch(communityControllerProvider.notifier);
   return communityController.getUserCommunities();
 });
 
@@ -28,8 +27,7 @@ final communityControllerProvider =
     StateNotifierProvider<CommunityController, bool>(
   (ref) {
     final storageRepository = ref.watch(storageRepositoryProvider);
-    final communityRepository =
-        ref.watch(communityRepositoryProvider);
+    final communityRepository = ref.watch(communityRepositoryProvider);
     return CommunityController(
       communityRepository: communityRepository,
       storageRepository: storageRepository,
@@ -52,6 +50,7 @@ class CommunityController extends StateNotifier<bool> {
         _storageRepository = storageRepository,
         super(false);
 
+  //CREATE A WHOLE NEW COMMUNITY
   void createCommunity(
     BuildContext context,
     String name,
@@ -73,8 +72,7 @@ class CommunityController extends StateNotifier<bool> {
       mods: [uid],
     );
 
-    final result =
-        await _communityRepository.createCommunity(community);
+    final result = await _communityRepository.createCommunity(community);
 
     state = false;
 
@@ -95,16 +93,18 @@ class CommunityController extends StateNotifier<bool> {
     );
   }
 
+  //GET THE COMMUNITIES BY CURRENT USER
   Stream<List<Community>> getUserCommunities() {
     final uid = _ref.read(userProvider)!.uid;
     return _communityRepository.getUserCommunities(uid);
   }
 
+  //GET THE COMMUNITY BY NAME
   Stream<Community> getCommunityByName(String name) {
     return _communityRepository.getCommunityByName(name);
   }
 
-  //submit the edit visual data of Community to Firebase
+  //EDIT COMMUNITY VISUAL
   void editCommunityProfileOrBannerImage({
     required BuildContext context,
     required Community community,
@@ -155,6 +155,4 @@ class CommunityController extends StateNotifier<bool> {
       (r) => Routemaster.of(context).pop(),
     );
   }
-
-
 }

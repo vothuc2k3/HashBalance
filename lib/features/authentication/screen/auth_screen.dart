@@ -42,6 +42,7 @@ class SignInScreen extends ConsumerWidget {
       body: isLoading
           ? const LoadingCircular()
           : SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
               child: Column(
                 children: [
                   const SizedBox(height: 30),
@@ -95,17 +96,19 @@ class SignInScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 100),
                   Align(
                     alignment: Alignment.bottomCenter,
                     child: Padding(
-                      padding: const EdgeInsets.only(bottom: 20),
+                      padding: const EdgeInsets.only(bottom: 40),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Text(
                             'Already have an account? ',
-                            style: TextStyle(fontSize: 16),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
                           TextButton(
                             onPressed: () {

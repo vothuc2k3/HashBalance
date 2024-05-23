@@ -17,6 +17,28 @@ void showSnackBar(BuildContext context, String text) {
   }
 }
 
+void showMaterialBanner(BuildContext context, String text) {
+  if (context.mounted) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentMaterialBanner()
+      ..showMaterialBanner(
+        MaterialBanner(
+          content: Text(text),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+                }
+              },
+              child: const Text('DISMISS'),
+            ),
+          ],
+        ),
+      );
+  }
+}
+
 String generateCommunityId() {
   DateTime now = DateTime.now();
   String communityId =

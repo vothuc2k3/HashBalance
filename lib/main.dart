@@ -37,7 +37,7 @@ class MyAppState extends ConsumerState<MyApp> {
   bool _hasInitialized = false;
   UserModel? userData;
 
-  void getData(WidgetRef ref, User? user) async {
+  void getUserData(WidgetRef ref, User? user) async {
     if (user != null) {
       userData = await ref
           .read(authControllerProvider.notifier)
@@ -59,12 +59,8 @@ class MyAppState extends ConsumerState<MyApp> {
       final data = ref.read(authStageChangeProvider);
       data.whenOrNull(
         data: (user) {
-          getData(ref, user);
+          getUserData(ref, user);
         },
-        error: (error, stackTrace) => ErrorText(
-          error: error.toString(),
-        ),
-        loading: () => const LoadingCircular(),
       );
       _hasInitialized = true;
     }
@@ -80,7 +76,7 @@ class MyAppState extends ConsumerState<MyApp> {
               theme: Pallete.darkModeAppTheme,
               routerDelegate: RoutemasterDelegate(routesBuilder: (context) {
                 if (user != null) {
-                  getData(ref, user);
+                  getUserData(ref, user);
                   if (userData != null) {
                     return loggedInRoute;
                   }

@@ -73,6 +73,7 @@ class AuthRepository {
           achivements: ['New boy'],
           createdAt: createdAt,
           hashAge: 0,
+          isRestricted: false,
         );
         await _user.doc(userCredential.user!.uid).set(
               userModel.toMap(),
@@ -136,11 +137,11 @@ class AuthRepository {
     }
   }
 
-  void signOut() async{
+  void signOut() async {
     await _firebaseAuth.signOut();
   }
 
-  //get the user data from firebase
+  //GET THE USER DATA
   Stream<UserModel> getUserData(String uid) {
     final snapshot = _user.doc(uid).snapshots();
     return snapshot.map((event) {
@@ -162,8 +163,18 @@ class AuthRepository {
             .toList(),
         createdAt: event['createdAt'] as Timestamp,
         hashAge: hashAge,
+        isRestricted: event['isRestricted'] as bool,
       );
     });
+  }
+
+  //CHANGE USER PRIVACY SETTING
+  void changeUserPrivacy({
+    required bool setting,
+    required UserModel user,
+  }) {
+    final updatedUser = user.copyWith(isRestricted: setting);
+    _user.doc(user.uid).update(updatedUser.toMap());
   }
 
   CollectionReference get _user =>
