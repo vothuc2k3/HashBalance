@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/type_defs.dart';
 import 'package:routemaster/routemaster.dart';
 
 import 'package:hash_balance/core/common/constants/constants.dart';
@@ -154,5 +155,24 @@ class CommunityController extends StateNotifier<bool> {
       (l) => showSnackBar(context, l.message),
       (r) => Routemaster.of(context).pop(),
     );
+  }
+
+  //LET USER JOIN COMMUNITY
+  FutureVoid joinCommunity(String uid, String communityName) async {
+    state = true;
+    final result = await _communityRepository.joinCommunity(uid, communityName);
+    state = false;
+
+    return result.fold((error) => result, (r) => result);
+  }
+
+  //LET USER LEAVE COMMUNITY
+  FutureVoid leaveCommunity(String uid, String communityName) async {
+    state = true;
+    final result =
+        await _communityRepository.leaveCommunity(uid, communityName);
+    state = false;
+
+    return result.fold((error) => result, (r) => result);
   }
 }

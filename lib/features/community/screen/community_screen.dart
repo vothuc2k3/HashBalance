@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/utils.dart';
 import 'package:routemaster/routemaster.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
@@ -8,7 +9,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
-class CommunityScreen extends ConsumerWidget {
+class CommunityScreen extends ConsumerStatefulWidget {
   final String name;
 
   const CommunityScreen({
@@ -16,15 +17,37 @@ class CommunityScreen extends ConsumerWidget {
     required this.name,
   });
 
+  @override
+  CommunityScreenState createState() => CommunityScreenState();
+}
+
+class CommunityScreenState extends ConsumerState<CommunityScreen> {
+  
+  void joinCommunity(String uid, String communityName, WidgetRef ref,
+      BuildContext communityScreenContext) async {
+    final result = await ref
+        .read(communityControllerProvider.notifier)
+        .joinCommunity(uid, communityName);
+    result.fold(
+        (l) => showMaterialBanner(
+              communityScreenContext,
+              'Successfully Joined The Community. Have Fun :)',
+            ),
+        (r) => showSnackBar(
+              communityScreenContext,
+              'Some error occurred :(',
+            ));
+  }
+
   void navigateToModTools(BuildContext context, String name) {
     Routemaster.of(context).push('/mod-tools/$name');
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
     return Scaffold(
-      body: ref.watch(getCommunitiesByNameProvider(name)).when(
+      body: ref.watch(getCommunitiesByNameProvider(widget.name)).when(
             data: (community) {
               return NestedScrollView(
                 headerSliverBuilder: (context, innerBoxIsScrolled) {
@@ -67,7 +90,12 @@ class CommunityScreen extends ConsumerWidget {
                                 ),
                                 !community.mods.contains(user!.uid)
                                     ? OutlinedButton(
-                                        onPressed: () {},
+                                        onPressed: () => joinCommunity(
+                                          user.uid,
+                                          community.name,
+                                          ref,
+                                          context,
+                                        ),
                                         style: ElevatedButton.styleFrom(
                                           shape: RoundedRectangleBorder(
                                             borderRadius:
@@ -84,8 +112,8 @@ class CommunityScreen extends ConsumerWidget {
                                         ),
                                       )
                                     : OutlinedButton(
-                                        onPressed: () =>
-                                            navigateToModTools(context, name),
+                                        onPressed: () => navigateToModTools(
+                                            context, widget.name),
                                         style: ElevatedButton.styleFrom(
                                           shape: RoundedRectangleBorder(
                                               borderRadius:

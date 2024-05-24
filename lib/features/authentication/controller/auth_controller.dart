@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -12,11 +11,12 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:routemaster/routemaster.dart';
 
 final authControllerProvider = StateNotifierProvider<AuthController, bool>(
   (ref) => AuthController(
     authRepository: ref.read(authRepositoryProvider),
-    ref: ref,
+    ref: ref, 
   ),
 );
 
@@ -65,7 +65,6 @@ class AuthController extends StateNotifier<bool> {
 
   //sign up with email in controller
   Future<Either<Failures, UserModel>> signUpWithEmailAndPassword(
-    BuildContext context,
     String email,
     String password,
     String name,
@@ -86,7 +85,8 @@ class AuthController extends StateNotifier<bool> {
       hashAge: 0,
       isRestricted: false,
     );
-    final user = await _authRepository.signUpWithEmailAndPassword(userModel);
+    final user =
+        await _authRepository.signUpWithEmailAndPassword(userModel);
     state = false;
     user.fold(
       (error) {
@@ -115,9 +115,10 @@ class AuthController extends StateNotifier<bool> {
         return user;
       },
       (userModel) {
-        return _ref.read(userProvider.notifier).update(
+        _ref.read(userProvider.notifier).update(
               (state) => userModel,
             );
+        Routemaster.of(context).replace('/');
       },
     );
     return user;
@@ -141,7 +142,7 @@ class AuthController extends StateNotifier<bool> {
       'Successfully Changed Your Privacy Setting!',
     );
     Timer(const Duration(seconds: 5), () {
-      ScaffoldMessenger.of(context).hideCurrentMaterialBanner();  
+      ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
     });
   }
 

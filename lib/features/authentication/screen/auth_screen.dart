@@ -7,12 +7,8 @@ import 'package:hash_balance/features/authentication/controller/auth_controller.
 import 'package:hash_balance/theme/pallette.dart';
 import 'package:routemaster/routemaster.dart';
 
-class SignInScreen extends ConsumerWidget {
-  const SignInScreen({super.key});
-
-  void navigateToEmailSignUpScreen(BuildContext context) {
-    Routemaster.of(context).push('/email-sign-up');
-  }
+class AuthScreen extends ConsumerWidget {
+  const AuthScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -71,7 +67,7 @@ class SignInScreen extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 30),
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        navigateToEmailSignUpScreen(context);
+                        Routemaster.of(context).push('/email-sign-up');
                       },
                       icon: Image.asset(
                         Constants.emailLogoPath,

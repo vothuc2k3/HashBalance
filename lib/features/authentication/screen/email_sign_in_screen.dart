@@ -25,11 +25,11 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
     setState(() {
       isPressed = true;
     });
-    final user = await ref
+  final user = await ref
         .read(authControllerProvider.notifier)
         .signInWithEmailAndPassword(
           context,
-          emailController.text,
+          emailController.text.toLowerCase().trim(),
           passwordController.text,
         );
     user.fold(
@@ -91,7 +91,7 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
                 ),
               ),
               const SizedBox(height: 40),
-      
+
               //email input field
               Padding(
                 padding: const EdgeInsets.only(
@@ -113,7 +113,7 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-      
+
               //password input field
               Padding(
                 padding: const EdgeInsets.only(
@@ -135,7 +135,7 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
                 ),
               ),
               const SizedBox(height: 30),
-      
+
               //submit sign up request button
               Padding(
                 padding: const EdgeInsets.only(
@@ -153,8 +153,7 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    backgroundColor: Pallete.blueColor
-      ,
+                    backgroundColor: Pallete.blueColor,
                   ),
                   child: isPressed
                       ? const CircularProgressIndicator()

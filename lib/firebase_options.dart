@@ -47,28 +47,28 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDrdjnBnMmb4iM_bUzYg0WOTSvbrCMMZoQ',
-    appId: '1:342717500493:web:9cdae62f99d93c34d0e004',
-    messagingSenderId: '342717500493',
-    projectId: 'hash-balance-official',
-    authDomain: 'hash-balance-official.firebaseapp.com',
-    storageBucket: 'hash-balance-official.appspot.com',
+    apiKey: 'AIzaSyCQjMV8-_CYvonMp3RMdNMEDTDg3r48ckI',
+    appId: '1:456581070342:web:52a99891dc873688c5cd87',
+    messagingSenderId: '456581070342',
+    projectId: 'hash-balance-official-2',
+    authDomain: 'hash-balance-official-2.firebaseapp.com',
+    storageBucket: 'hash-balance-official-2.appspot.com',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyA3tSQM2M4v8NEVN6Gs95k3-weaf3tWsjg',
-    appId: '1:342717500493:android:e5b8281843ea1886d0e004',
-    messagingSenderId: '342717500493',
-    projectId: 'hash-balance-official',
-    storageBucket: 'hash-balance-official.appspot.com',
+    apiKey: 'AIzaSyAt0vq2v6bpxhyw1iQutVDY8Aq21Z93gNM',
+    appId: '1:456581070342:android:b5b28a46f459edc7c5cd87',
+    messagingSenderId: '456581070342',
+    projectId: 'hash-balance-official-2',
+    storageBucket: 'hash-balance-official-2.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDsGn_1rT4o-dAdJqBtSluJqnJ9TMdzusw',
-    appId: '1:342717500493:ios:3c9613ef45bdfd42d0e004',
-    messagingSenderId: '342717500493',
-    projectId: 'hash-balance-official',
-    storageBucket: 'hash-balance-official.appspot.com',
+    apiKey: 'AIzaSyBvLiBZ3o8akkUSmxsPLtG9MVK9L1POKw4',
+    appId: '1:456581070342:ios:5d3a2d8f219950ebc5cd87',
+    messagingSenderId: '456581070342',
+    projectId: 'hash-balance-official-2',
+    storageBucket: 'hash-balance-official-2.appspot.com',
     iosBundleId: 'com.example.hashBalance',
   );
 

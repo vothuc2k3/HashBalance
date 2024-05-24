@@ -93,32 +93,31 @@ class AuthRepository {
     }
   }
 
-  //Sign the user in with Email
-  FutureEither<UserModel> signUpWithEmailAndPassword(UserModel user) async {
+  //SIGN UP WITH EMAIL AND PASSWORD
+  Future<Either<Failures, UserModel>> signUpWithEmailAndPassword(
+    UserModel user,
+  ) async {
     try {
-      late String userUid;
       UserCredential userCredential =
           await _firebaseAuth.createUserWithEmailAndPassword(
-              email: user.email, password: user.password!);
+        email: user.email,
+        password: user.password!,
+      );
+      String userUid = userCredential.user!.uid;
+      user.uid = userUid;
       if (userCredential.additionalUserInfo!.isNewUser) {
-        userUid = userCredential.user!.uid;
-        final uid = userCredential.user!.uid;
-        user.uid = uid;
-        userUid = uid;
-        await _user.doc(userUid).set(user.toMap());
-      } else {
-        userUid = userCredential.user!.uid;
-        user = await getUserData(userUid).first;
+        await _firestore.collection('users').doc(userUid).set(user.toMap());
       }
-      return right(user);
+      final userModelData = await getUserData(userUid).first;
+      return right(userModelData);
     } on FirebaseAuthException catch (e) {
-      return left(Failures(e.message!));
+      return left(Failures(e.message ?? 'An unknown error occurred.'));
     } catch (e) {
       return left(Failures(e.toString()));
     }
   }
 
-  //sign the user in with email and password
+  //SIGN THE USER IN WITH EMAIL AND PASSWORD
   FutureEither<UserModel> signInWithEmailAndPassword(
     String email,
     String password,
@@ -137,6 +136,7 @@ class AuthRepository {
     }
   }
 
+  //SIGN OUT
   void signOut() async {
     await _firebaseAuth.signOut();
   }
@@ -177,6 +177,7 @@ class AuthRepository {
     _user.doc(user.uid).update(updatedUser.toMap());
   }
 
+  //GET USER DATA
   CollectionReference get _user =>
       _firestore.collection(FirebaseConstants.usersCollection);
 }

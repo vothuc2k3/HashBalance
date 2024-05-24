@@ -34,7 +34,6 @@ class MyApp extends ConsumerStatefulWidget {
 }
 
 class MyAppState extends ConsumerState<MyApp> {
-  bool _hasInitialized = false;
   UserModel? userData;
 
   void getUserData(WidgetRef ref, User? user) async {
@@ -53,20 +52,6 @@ class MyAppState extends ConsumerState<MyApp> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_hasInitialized) {
-      final data = ref.read(authStageChangeProvider);
-      data.whenOrNull(
-        data: (user) {
-          getUserData(ref, user);
-        },
-      );
-      _hasInitialized = true;
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     return ref.watch(authStageChangeProvider).when(
           data: (user) {
@@ -74,15 +59,17 @@ class MyAppState extends ConsumerState<MyApp> {
               debugShowCheckedModeBanner: false,
               title: 'Hash Balance',
               theme: Pallete.darkModeAppTheme,
-              routerDelegate: RoutemasterDelegate(routesBuilder: (context) {
-                if (user != null) {
-                  getUserData(ref, user);
-                  if (userData != null) {
-                    return loggedInRoute;
+              routerDelegate: RoutemasterDelegate(
+                routesBuilder: (context) {
+                  if (user != null) {
+                    getUserData(ref, user);
+                    if (userData != null) {
+                      return loggedInRoute;
+                    }
                   }
-                }
-                return loggedOutRoute;
-              }),
+                  return loggedOutRoute;
+                },
+              ),
               routeInformationParser: const RoutemasterParser(),
             );
           },

@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "342717500493",
-    "project_id": "hash-balance-official",
-    "storage_bucket": "hash-balance-official.appspot.com"
+    "project_number": "456581070342",
+    "project_id": "hash-balance-official-2",
+    "storage_bucket": "hash-balance-official-2.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:342717500493:android:e5b8281843ea1886d0e004",
+        "mobilesdk_app_id": "1:456581070342:android:b5b28a46f459edc7c5cd87",
         "android_client_info": {
           "package_name": "com.example.hash_balance"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyA3tSQM2M4v8NEVN6Gs95k3-weaf3tWsjg"
+          "current_key": "AIzaSyAt0vq2v6bpxhyw1iQutVDY8Aq21Z93gNM"
         }
       ],
       "services": {

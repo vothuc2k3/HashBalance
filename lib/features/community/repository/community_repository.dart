@@ -8,8 +8,7 @@ import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/community_model.dart';
 
 final communityRepositoryProvider = Provider((ref) {
-  return CommunityRepository(
-      firestore: ref.watch(firebaseFireStoreProvider));
+  return CommunityRepository(firestore: ref.watch(firebaseFireStoreProvider));
 });
 
 class CommunityRepository {
@@ -93,6 +92,32 @@ class CommunityRepository {
       return right(
         await _communities.doc(community.name).update(communityAfterCast),
       );
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  //LET USER JOIN COMMUNITY
+  FutureVoid joinCommunity(String uid, String communityName) async {
+    try {
+      return right(_communities.doc(communityName).update({
+        'members': FieldValue.arrayUnion([uid]),
+      }));
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  //LET USER JOIN COMMUNITY
+  FutureVoid leaveCommunity(String uid, String communityName) async {
+    try {
+      return right(_communities.doc(communityName).update({
+        'members': FieldValue.arrayRemove([uid]),
+      }));
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {
