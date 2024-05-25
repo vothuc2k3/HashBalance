@@ -123,7 +123,9 @@ class AuthController extends StateNotifier<bool> {
       'Successfully Changed Your Privacy Setting!',
     );
     Timer(const Duration(seconds: 5), () {
-      ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+      }
     });
   }
 

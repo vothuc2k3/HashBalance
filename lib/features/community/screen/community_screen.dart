@@ -22,21 +22,43 @@ class CommunityScreen extends ConsumerStatefulWidget {
 }
 
 class CommunityScreenState extends ConsumerState<CommunityScreen> {
-  
+  @override
+  void initState() {
+    super.initState();
+  }
+
   void joinCommunity(String uid, String communityName, WidgetRef ref,
       BuildContext communityScreenContext) async {
     final result = await ref
         .read(communityControllerProvider.notifier)
         .joinCommunity(uid, communityName);
     result.fold(
-        (l) => showMaterialBanner(
-              communityScreenContext,
-              'Successfully Joined The Community. Have Fun :)',
-            ),
-        (r) => showSnackBar(
-              communityScreenContext,
-              'Some error occurred :(',
-            ));
+      (l) => showSnackBar(
+        communityScreenContext,
+        'Some error occurred :(',
+      ),
+      (r) => showMaterialBanner(
+        communityScreenContext,
+        'Successfully Joined The Community. Have Fun :)',
+      ),
+    );
+  }
+
+  void leaveCommunity(String uid, String communityName, WidgetRef ref,
+      BuildContext communityScreenContext) async {
+    final result = await ref
+        .read(communityControllerProvider.notifier)
+        .leaveCommunity(uid, communityName);
+    result.fold(
+      (l) => showSnackBar(
+        communityScreenContext,
+        'Some error occurred :(',
+      ),
+      (r) => showMaterialBanner(
+        communityScreenContext,
+        'Successfully left the community!',
+      ),
+    );
   }
 
   void navigateToModTools(BuildContext context, String name) {
@@ -49,6 +71,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     return Scaffold(
       body: ref.watch(getCommunitiesByNameProvider(widget.name)).when(
             data: (community) {
+              final joined = community.members.contains(user!.uid);
               return NestedScrollView(
                 headerSliverBuilder: (context, innerBoxIsScrolled) {
                   return [
@@ -88,14 +111,21 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold),
                                 ),
-                                !community.mods.contains(user!.uid)
+                                !community.mods.contains(user.uid)
                                     ? OutlinedButton(
-                                        onPressed: () => joinCommunity(
-                                          user.uid,
-                                          community.name,
-                                          ref,
-                                          context,
-                                        ),
+                                        onPressed: joined
+                                            ? () => leaveCommunity(
+                                                  user.uid,
+                                                  community.name,
+                                                  ref,
+                                                  context,
+                                                )
+                                            : () => joinCommunity(
+                                                  user.uid,
+                                                  community.name,
+                                                  ref,
+                                                  context,
+                                                ),
                                         style: ElevatedButton.styleFrom(
                                           shape: RoundedRectangleBorder(
                                             borderRadius:
@@ -104,20 +134,28 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 25),
                                         ),
-                                        child: const Text(
-                                          'Join',
-                                          style: TextStyle(
-                                            color: Pallete.whiteColor,
-                                          ),
-                                        ),
+                                        child: joined
+                                            ? const Text(
+                                                'Joined',
+                                                style: TextStyle(
+                                                  color: Pallete.whiteColor,
+                                                ),
+                                              )
+                                            : const Text(
+                                                'Join',
+                                                style: TextStyle(
+                                                  color: Pallete.whiteColor,
+                                                ),
+                                              ),
                                       )
                                     : OutlinedButton(
                                         onPressed: () => navigateToModTools(
                                             context, widget.name),
                                         style: ElevatedButton.styleFrom(
                                           shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(30)),
+                                            borderRadius:
+                                                BorderRadius.circular(30),
+                                          ),
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 25),
                                         ),

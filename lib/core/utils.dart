@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:file_picker/file_picker.dart';
@@ -19,23 +20,22 @@ void showSnackBar(BuildContext context, String text) {
 
 void showMaterialBanner(BuildContext context, String text) {
   if (context.mounted) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentMaterialBanner()
-      ..showMaterialBanner(
-        MaterialBanner(
-          content: Text(text),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-                }
-              },
-              child: const Text('DISMISS'),
-            ),
-          ],
-        ),
-      );
+    ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+    ScaffoldMessenger.of(context).showMaterialBanner(
+      MaterialBanner(
+        content: Text(text),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+              }
+            },
+            child: const Text('DISMISS'),
+          ),
+        ],
+      ),
+    );
   }
 }
 
