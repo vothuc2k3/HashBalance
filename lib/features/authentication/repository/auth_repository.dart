@@ -43,19 +43,15 @@ class AuthRepository {
     try {
       //try signing the google account of user in
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-
       final googleAuth = await googleUser?.authentication;
-
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth?.accessToken,
         idToken: googleAuth?.idToken,
       );
-
       //logging the user in
       UserCredential userCredential =
           await _firebaseAuth.signInWithCredential(credential);
-
-      late UserModel userModel;
+      UserModel? userModel;
       //if the user logs in for the first time, new data is set
       if (userCredential.additionalUserInfo!.isNewUser) {
         final createdAt = Timestamp.now();
@@ -83,35 +79,31 @@ class AuthRepository {
       }
       return right(userModel);
     } on FirebaseException catch (e) {
-      throw e.message!;
+      throw e.message ?? 'Unknown error occurred?';
     } catch (e) {
-      return left(
-        Failures(
-          e.toString(),
-        ),
-      );
+      return left(Failures(e.toString()));
     }
   }
 
   //SIGN UP WITH EMAIL AND PASSWORD
-  Future<Either<Failures, UserModel>> signUpWithEmailAndPassword(
-    UserModel user,
+  FutureEither<UserModel> signUpWithEmailAndPassword(
+    UserModel newUser,
   ) async {
     try {
-      UserCredential userCredential =
-          await _firebaseAuth.createUserWithEmailAndPassword(
-        email: user.email,
-        password: user.password!,
+      final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
+        email: newUser.email,
+        password: newUser.password!,
       );
+
       String userUid = userCredential.user!.uid;
-      user.uid = userUid;
+      newUser.uid = userUid;
       if (userCredential.additionalUserInfo!.isNewUser) {
-        await _firestore.collection('users').doc(userUid).set(user.toMap());
+        await _firestore.collection('users').doc(userUid).set(newUser.toMap());
       }
-      final userModelData = await getUserData(userUid).first;
-      return right(userModelData);
+      final user = await getUserData(userUid).first;
+      return right(user);
     } on FirebaseAuthException catch (e) {
-      return left(Failures(e.message ?? 'An unknown error occurred.'));
+      return left(Failures(e.message ?? 'Unknown error occurred?'));
     } catch (e) {
       return left(Failures(e.toString()));
     }
@@ -130,7 +122,7 @@ class AuthRepository {
       final user = await getUserData(userCredential.user!.uid).first;
       return right(user);
     } on FirebaseAuthException catch (e) {
-      return left(Failures(e.message!));
+      return left(Failures(e.message ?? 'Unknown error occurred?'));
     } catch (e) {
       return left(Failures(e.toString()));
     }
@@ -177,7 +169,7 @@ class AuthRepository {
     _user.doc(user.uid).update(updatedUser.toMap());
   }
 
-  //GET USER DATA
+  //REFERENCE ALL THE USERS
   CollectionReference get _user =>
       _firestore.collection(FirebaseConstants.usersCollection);
 }

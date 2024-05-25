@@ -11,12 +11,11 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/models/user_model.dart';
-import 'package:routemaster/routemaster.dart';
 
 final authControllerProvider = StateNotifierProvider<AuthController, bool>(
   (ref) => AuthController(
     authRepository: ref.read(authRepositoryProvider),
-    ref: ref, 
+    ref: ref,
   ),
 );
 
@@ -69,8 +68,6 @@ class AuthController extends StateNotifier<bool> {
     String password,
     String name,
   ) async {
-    state = true;
-
     UserModel userModel = UserModel(
       email: email,
       password: password,
@@ -85,24 +82,16 @@ class AuthController extends StateNotifier<bool> {
       hashAge: 0,
       isRestricted: false,
     );
-    final user =
-        await _authRepository.signUpWithEmailAndPassword(userModel);
+    state = true;
+    final user = await _authRepository.signUpWithEmailAndPassword(userModel);
     state = false;
-    user.fold(
-      (error) {
-        return user;
-      },
-      (userModel) {
-        return _ref.read(userProvider.notifier).update(
-              (state) => userModel,
-            );
-      },
-    );
+    user.fold((error) => user, (userModel) {
+      _ref.read(userProvider.notifier).update((state) => userModel);
+    });
     return user;
   }
 
   Future<Either<Failures, UserModel>> signInWithEmailAndPassword(
-    BuildContext context,
     String email,
     String password,
   ) async {
@@ -110,17 +99,9 @@ class AuthController extends StateNotifier<bool> {
     final user =
         await _authRepository.signInWithEmailAndPassword(email, password);
     state = false;
-    user.fold(
-      (error) {
-        return user;
-      },
-      (userModel) {
-        _ref.read(userProvider.notifier).update(
-              (state) => userModel,
-            );
-        Routemaster.of(context).replace('/');
-      },
-    );
+    user.fold((error) => user, (userModel) {
+      _ref.read(userProvider.notifier).update((state) => userModel);
+    });
     return user;
   }
 

@@ -36,47 +36,42 @@ class MyApp extends ConsumerStatefulWidget {
 class MyAppState extends ConsumerState<MyApp> {
   UserModel? userData;
 
-  void getUserData(WidgetRef ref, User? user) async {
-    if (user != null) {
-      userData = await ref
-          .read(authControllerProvider.notifier)
-          .getUserData(user.uid)
-          .first;
-    } else {
-      userData = null;
-    }
-    ref.read(userProvider.notifier).update((_) {
-      return userData;
-    });
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  void _getUserData(WidgetRef ref, User data) async {
+    userData = await ref
+        .watch(authControllerProvider.notifier)
+        .getUserData(data.uid)
+        .first;
+    ref.read(userProvider.notifier).update((state) => userData);
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return ref.watch(authStageChangeProvider).when(
-          data: (user) {
-            return MaterialApp.router(
-              debugShowCheckedModeBanner: false,
-              title: 'Hash Balance',
-              theme: Pallete.darkModeAppTheme,
-              routerDelegate: RoutemasterDelegate(
-                routesBuilder: (context) {
-                  if (user != null) {
-                    getUserData(ref, user);
-                    if (userData != null) {
-                      return loggedInRoute;
-                    }
+          data: (user) => MaterialApp.router(
+            debugShowCheckedModeBanner: false,
+            title: 'Hash Balance',
+            theme: Pallete.darkModeAppTheme,
+            routerDelegate: RoutemasterDelegate(
+              routesBuilder: (context) {
+                if (user != null) {
+                  _getUserData(ref, user);
+                  if (userData != null) {
+                    return loggedInRoute;
                   }
-                  return loggedOutRoute;
-                },
-              ),
-              routeInformationParser: const RoutemasterParser(),
-            );
-          },
-          error: (error, stackTrace) => ErrorText(
-            error: error.toString(),
+                }
+                return loggedOutRoute;
+              },
+            ),
+            routeInformationParser: const RoutemasterParser(),
           ),
-          loading: () => const LoadingCircular(),
+          error: (error, stackTrace) => ErrorText(error: error.toString()),
+          loading: () => const Loading(),
         );
   }
 }

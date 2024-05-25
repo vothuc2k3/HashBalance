@@ -1,20 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/common/google_sign_in_button.dart';
+import 'package:routemaster/routemaster.dart';
+
 import 'package:hash_balance/core/common/constants/constants.dart';
+import 'package:hash_balance/core/common/google_sign_in_button.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/theme/pallette.dart';
-import 'package:routemaster/routemaster.dart';
 
 class AuthScreen extends ConsumerWidget {
   const AuthScreen({super.key});
 
+  void navigateToEmailSignUpScreen(GlobalKey<ScaffoldState> key) {
+    Routemaster.of(key.currentContext!).push('/email-sign-up');
+  }
+
+  void navigateToEmailSignInScreen(GlobalKey<ScaffoldState> key) {
+    Routemaster.of(key.currentContext!).push('/email-sign-in');
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isLoading = ref.watch(authControllerProvider);
-
+    final scaffoldKey = GlobalKey<ScaffoldState>();
     return Scaffold(
+      key: scaffoldKey,
       appBar: AppBar(
         title: Image.asset(
           Constants.logoPath,
@@ -36,7 +46,7 @@ class AuthScreen extends ConsumerWidget {
         ],
       ),
       body: isLoading
-          ? const LoadingCircular()
+          ? const Loading()
           : SingleChildScrollView(
               physics: const NeverScrollableScrollPhysics(),
               child: Column(
@@ -67,7 +77,7 @@ class AuthScreen extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 30),
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        Routemaster.of(context).push('/email-sign-up');
+                        navigateToEmailSignUpScreen(scaffoldKey);
                       },
                       icon: Image.asset(
                         Constants.emailLogoPath,
@@ -108,7 +118,7 @@ class AuthScreen extends ConsumerWidget {
                           ),
                           TextButton(
                             onPressed: () {
-                              Routemaster.of(context).push('/email-sign-in');
+                              navigateToEmailSignInScreen(scaffoldKey);
                             },
                             child: const Text(
                               'Sign In',

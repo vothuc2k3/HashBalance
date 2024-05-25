@@ -214,7 +214,7 @@ class _CreateCommunityScreenState
                 backgroundColor: Pallete.blueColor,
               ),
               child: isLoading
-                  ? const LoadingCircular()
+                  ? const Loading()
                   : const Text(
                       'Create community',
                       style: TextStyle(

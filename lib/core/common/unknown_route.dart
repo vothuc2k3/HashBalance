@@ -6,6 +6,6 @@ class UnknownRouteScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const LoadingCircular();
+    return const Loading();
   }
 }

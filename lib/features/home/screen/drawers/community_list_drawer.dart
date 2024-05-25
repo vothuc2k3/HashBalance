@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:routemaster/routemaster.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
@@ -20,6 +21,8 @@ class CommunityListDrawer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // ignore: unused_result
+    ref.refresh(userCommunitiesProvider);
     return Drawer(
       child: SafeArea(
         child: Column(
@@ -43,7 +46,6 @@ class CommunityListDrawer extends ConsumerWidget {
             ref.watch(userCommunitiesProvider).when(
                   data: (communities) => Expanded(
                     child: ListView.separated(
-                      key: key,
                       itemCount: communities.length,
                       itemBuilder: (BuildContext context, int index) {
                         final community = communities[index];
@@ -77,7 +79,7 @@ class CommunityListDrawer extends ConsumerWidget {
                     );
                   }),
                   loading: () {
-                    return const LoadingCircular();
+                    return const Loading();
                   },
                 ),
           ],

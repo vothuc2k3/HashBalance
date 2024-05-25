@@ -113,48 +113,57 @@ class CommunityController extends StateNotifier<bool> {
     required File? bannerImage,
   }) async {
     state = true;
-    late Community updatedCommunity = community;
+    try {
+      Community updatedCommunity = community;
 
-    if (profileImage != null) {
-      final result = await _storageRepository.storeFile(
-        path: 'communities/profile',
-        id: community.name,
-        file: profileImage,
-      );
-      String profileImageUrl = await FirebaseStorage.instance
-          .ref('communities/profile/${community.name}')
-          .getDownloadURL();
+      if (profileImage != null) {
+        final result = await _storageRepository.storeFile(
+          path: 'communities/profile',
+          id: community.name,
+          file: profileImage,
+        );
+        result.fold(
+          (error) => throw Exception(error.message),
+          (right) async {
+            String profileImageUrl = await FirebaseStorage.instance
+                .ref('communities/profile/${community.name}')
+                .getDownloadURL();
+            updatedCommunity =
+                updatedCommunity.copyWith(profileImage: profileImageUrl);
+          },
+        );
+      }
+
+      if (bannerImage != null) {
+        final result = await _storageRepository.storeFile(
+          path: 'communities/banner',
+          id: community.name,
+          file: bannerImage,
+        );  
+        result.fold(
+          (error) => throw Exception(error.message),
+          (right) async {
+            String bannerImageUrl = await FirebaseStorage.instance
+                .ref('communities/banner/${community.name}')
+                .getDownloadURL();
+            updatedCommunity =
+                updatedCommunity.copyWith(bannerImage: bannerImageUrl);
+          },
+        );
+      }
+
+      final result = await _communityRepository
+          .editCommunityProfileOrBannerImage(updatedCommunity);
+
       result.fold(
-        (error) => showSnackBar(context, error.message),
-        (right) => updatedCommunity =
-            community.copyWith(profileImage: profileImageUrl),
+        (l) => throw Exception(l.message),
+        (r) => Routemaster.of(context).pop(),
       );
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    } finally {
+      state = false;
     }
-
-    if (bannerImage != null) {
-      final result = await _storageRepository.storeFile(
-        path: 'communities/banner',
-        id: community.name,
-        file: bannerImage,
-      );
-      String bannerImageUrl = await FirebaseStorage.instance
-          .ref('communities/banner/${community.name}')
-          .getDownloadURL();
-      result.fold(
-        (error) => showSnackBar(context, error.message),
-        (right) =>
-            updatedCommunity = community.copyWith(bannerImage: bannerImageUrl),
-      );
-    }
-
-    final result = await _communityRepository
-        .editCommunityProfileOrBannerImage(updatedCommunity);
-    state = false;
-
-    result.fold(
-      (l) => showSnackBar(context, l.message),
-      (r) => Routemaster.of(context).pop(),
-    );
   }
 
   //LET USER JOIN COMMUNITY

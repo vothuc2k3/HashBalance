@@ -13,7 +13,10 @@ import 'package:hash_balance/theme/pallette.dart';
 
 class EditCommunityVisualScreen extends ConsumerStatefulWidget {
   final String name;
-  const EditCommunityVisualScreen({super.key, required this.name});
+  const EditCommunityVisualScreen({
+    super.key,
+    required this.name,
+  });
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
@@ -22,14 +25,14 @@ class EditCommunityVisualScreen extends ConsumerStatefulWidget {
 
 class _EditCommunityScreenState
     extends ConsumerState<EditCommunityVisualScreen> {
-  File? bannerImage;
-  File? profileImage;
+  File? bannerImageFile;
+  File? profileImageFile;
 
   void selectBannerImage() async {
     final result = await pickImage();
     if (result != null) {
       setState(() {
-        bannerImage = File(result.files.first.path!);
+        bannerImageFile = File(result.files.first.path!);
       });
     }
   }
@@ -38,7 +41,7 @@ class _EditCommunityScreenState
     final result = await pickImage();
     if (result != null) {
       setState(() {
-        profileImage = File(result.files.first.path!);
+        profileImageFile = File(result.files.first.path!);
       });
     }
   }
@@ -62,7 +65,7 @@ class _EditCommunityScreenState
                 const Text('Have a good look at your community\'s banner'),
             onTap: () => setState(
               () {
-                //gonna do the view fucntion
+                // TODO: Do the view function
                 Navigator.pop(context);
               },
             ),
@@ -151,8 +154,8 @@ class _EditCommunityScreenState
         .editCommunityProfileOrBannerImage(
           context: context,
           community: community,
-          profileImage: profileImage,
-          bannerImage: bannerImage,
+          profileImage: profileImageFile,
+          bannerImage: bannerImageFile,
         );
   }
 
@@ -201,8 +204,8 @@ class _EditCommunityScreenState
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    child: bannerImage != null
-                                        ? Image.file(bannerImage!)
+                                    child: bannerImageFile != null
+                                        ? Image.file(bannerImageFile!)
                                         : community.bannerImage ==
                                                 Constants.bannerDefault
                                             ? const Center(
@@ -225,8 +228,8 @@ class _EditCommunityScreenState
                                           context),
                                   child: CircleAvatar(
                                     radius: 30,
-                                    backgroundImage: profileImage != null
-                                        ? FileImage(profileImage!)
+                                    backgroundImage: profileImageFile != null
+                                        ? FileImage(profileImageFile!)
                                         : NetworkImage(community.profileImage)
                                             as ImageProvider<Object>,
                                   ),
@@ -237,13 +240,13 @@ class _EditCommunityScreenState
                         ),
                       ],
                     )
-                  : const LoadingCircular(),
+                  : const Loading(),
             ),
           ),
           error: (error, stackTrace) => ErrorText(
             error: error.toString(),
           ),
-          loading: () => const LoadingCircular(),
+          loading: () => const Loading(),
         );
   }
 }

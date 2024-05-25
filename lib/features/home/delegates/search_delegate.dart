@@ -63,7 +63,7 @@ class SearchCommunityDelegate extends SearchDelegate {
                 itemBuilder: (BuildContext context, int index) {
                   final currentUser = ref.watch(userProvider);
                   final user = data[index];
-                  if(user.uid == currentUser!.uid){
+                  if (user.uid == currentUser!.uid) {
                     return const SizedBox(height: 1);
                   }
                   return ListTile(
@@ -82,13 +82,13 @@ class SearchCommunityDelegate extends SearchDelegate {
               );
             } else {
               // TODO: if query.startWith('='), returns posts
-              return const SizedBox();
+              return const SizedBox(height: 0);
             }
           },
           error: (error, stackTrace) => ErrorText(
             error: error.toString(),
           ),
-          loading: () => const LoadingCircular(),
+          loading: () => const Loading(),
         );
   }
 

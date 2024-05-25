@@ -71,6 +71,5 @@ String generateSalt() {
 }
 
 Future<FilePickerResult?> pickImage() async {
-  final image = await FilePicker.platform.pickFiles(type: FileType.image);
-  return image;
+  return await FilePicker.platform.pickFiles(type: FileType.image);
 }

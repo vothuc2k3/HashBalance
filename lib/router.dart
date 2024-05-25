@@ -19,11 +19,9 @@ final loggedOutRoute = RouteMap(
     '/email-sign-in': (_) => const MaterialPage(
           child: EmailSignInScreen(),
         ),
-    '/email-sign-up': (_) {
-      return const MaterialPage(
-        child: EmailSignUpScreen(),
-      );
-    }
+    '/email-sign-up': (_) => const MaterialPage(
+          child: EmailSignUpScreen(),
+        ),
   },
   onUnknownRoute: (_) => const MaterialPage(
     child: UnknownRouteScreen(),
