@@ -1,3 +1,5 @@
+// ignore_for_file: unused_result
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +11,8 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/features/community/controller/comunity_controller.dart';
+import 'package:hash_balance/features/community/repository/community_repository.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 final userProvider = StateProvider<UserModel?>((ref) => null);
@@ -39,7 +43,7 @@ class AuthRepository {
   Stream<User?> get authStageChange => _firebaseAuth.authStateChanges();
 
   //SIGN THE USER IN WITH GOOGLE
-  FutureEither<UserModel> signInWithGoogle() async {
+  FutureUserModel signInWithGoogle() async {
     try {
       //try signing the google account of user in
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
@@ -86,7 +90,7 @@ class AuthRepository {
   }
 
   //SIGN UP WITH EMAIL AND PASSWORD
-  FutureEither<UserModel> signUpWithEmailAndPassword(
+  FutureUserModel signUpWithEmailAndPassword(
     UserModel newUser,
   ) async {
     try {
@@ -110,7 +114,7 @@ class AuthRepository {
   }
 
   //SIGN THE USER IN WITH EMAIL AND PASSWORD
-  FutureEither<UserModel> signInWithEmailAndPassword(
+  FutureUserModel signInWithEmailAndPassword(
     String email,
     String password,
   ) async {
@@ -129,44 +133,59 @@ class AuthRepository {
   }
 
   //SIGN OUT
-  void signOut() async {
+  void signOut(WidgetRef ref) async {
     await _firebaseAuth.signOut();
+    ref.refresh(userProvider);
+    ref.refresh(communityRepositoryProvider);
+    ref.refresh(communityControllerProvider);
+    ref.refresh(userCommunitiesProvider);
   }
 
   //GET THE USER DATA
   Stream<UserModel> getUserData(String uid) {
     final snapshot = _user.doc(uid).snapshots();
-    return snapshot.map((event) {
-      Timestamp createdAt = event['createdAt'];
-      int hashAge =
-          DateTime.now().difference(createdAt.toDate()).inSeconds ~/ 86400;
+    return snapshot.map(
+      (event) {
+        Timestamp createdAt = event['createdAt'];
+        int hashAge =
+            DateTime.now().difference(createdAt.toDate()).inSeconds ~/ 86400;
 
-      return UserModel(
-        uid: event['uid'] as String,
-        name: event['name'] as String,
-        email: event['email'] as String,
-        password: event['password'] as String,
-        profileImage: event['profileImage'] as String,
-        bannerImage: event['bannerImage'] as String,
-        isAuthenticated: event['isAuthenticated'] as bool,
-        activityPoint: event['activityPoint'] as int,
-        achivements: (event['achivements'] as List)
-            .map((item) => item.toString())
-            .toList(),
-        createdAt: event['createdAt'] as Timestamp,
-        hashAge: hashAge,
-        isRestricted: event['isRestricted'] as bool,
-      );
-    });
+        return UserModel(
+          uid: event['uid'] as String,
+          name: event['name'] as String,
+          email: event['email'] as String,
+          password: event['password'] as String,
+          profileImage: event['profileImage'] as String,
+          bannerImage: event['bannerImage'] as String,
+          isAuthenticated: event['isAuthenticated'] as bool,
+          activityPoint: event['activityPoint'] as int,
+          achivements: (event['achivements'] as List)
+              .map((item) => item.toString())
+              .toList(),
+          createdAt: event['createdAt'] as Timestamp,
+          hashAge: hashAge,
+          isRestricted: event['isRestricted'] as bool,
+        );
+      },
+    );
   }
 
   //CHANGE USER PRIVACY SETTING
-  void changeUserPrivacy({
+  FutureVoid changeUserPrivacy({
     required bool setting,
     required UserModel user,
-  }) {
-    final updatedUser = user.copyWith(isRestricted: setting);
-    _user.doc(user.uid).update(updatedUser.toMap());
+  }) async {
+    try {
+      final updatedUser = user.copyWith(isRestricted: setting);
+      await _user.doc(user.uid).update({
+        'isRestricted': updatedUser.isRestricted,
+      });
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
   }
 
   //REFERENCE ALL THE USERS

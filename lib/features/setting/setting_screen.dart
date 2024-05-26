@@ -23,7 +23,7 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
       isTrySigningOut = true;
     });
     Timer(const Duration(seconds: 1), () {
-      ref.read(authControllerProvider.notifier).signOut();
+      ref.read(authControllerProvider.notifier).signOut(ref);
       Routemaster.of(context).replace('/');
     });
   }

@@ -35,11 +35,11 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     result.fold(
       (l) => showSnackBar(
         communityScreenContext,
-        'Some error occurred :(',
+        l.toString(),
       ),
       (r) => showMaterialBanner(
         communityScreenContext,
-        'Successfully Joined The Community. Have Fun :)',
+        r.toString(),
       ),
     );
   }
@@ -52,11 +52,11 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     result.fold(
       (l) => showSnackBar(
         communityScreenContext,
-        'Some error occurred :(',
+        l.toString(),
       ),
       (r) => showMaterialBanner(
         communityScreenContext,
-        'Successfully left the community!',
+        r.toString(),
       ),
     );
   }

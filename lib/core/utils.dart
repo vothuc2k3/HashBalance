@@ -16,6 +16,11 @@ void showSnackBar(BuildContext context, String text) {
         ),
       );
   }
+  Future.delayed(const Duration(seconds: 3), () {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    }
+  });
 }
 
 void showMaterialBanner(BuildContext context, String text) {
@@ -23,6 +28,7 @@ void showMaterialBanner(BuildContext context, String text) {
     ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
     ScaffoldMessenger.of(context).showMaterialBanner(
       MaterialBanner(
+        forceActionsBelow: false,
         content: Text(text),
         actions: <Widget>[
           TextButton(
@@ -37,6 +43,11 @@ void showMaterialBanner(BuildContext context, String text) {
       ),
     );
   }
+  Future.delayed(const Duration(seconds: 3), () {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+    }
+  });
 }
 
 String generateCommunityId() {

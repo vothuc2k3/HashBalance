@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:routemaster/routemaster.dart';
 
@@ -106,7 +108,7 @@ class CommunityController extends StateNotifier<bool> {
   }
 
   //EDIT COMMUNITY VISUAL
-  void editCommunityProfileOrBannerImage({
+  Future<Either<Failures, String>> editCommunityProfileOrBannerImage({
     required BuildContext context,
     required Community community,
     required File? profileImage,
@@ -122,8 +124,11 @@ class CommunityController extends StateNotifier<bool> {
           id: community.name,
           file: profileImage,
         );
-        result.fold(
-          (error) => throw Exception(error.message),
+        await result.fold(
+          (error) => throw FirebaseException(
+            plugin: 'Firebase Exception',
+            message: error.message,
+          ),
           (right) async {
             String profileImageUrl = await FirebaseStorage.instance
                 .ref('communities/profile/${community.name}')
@@ -139,9 +144,12 @@ class CommunityController extends StateNotifier<bool> {
           path: 'communities/banner',
           id: community.name,
           file: bannerImage,
-        );  
-        result.fold(
-          (error) => throw Exception(error.message),
+        );
+        await result.fold(
+          (error) => throw FirebaseException(
+            plugin: 'Firebase Exception',
+            message: error.message,
+          ),
           (right) async {
             String bannerImageUrl = await FirebaseStorage.instance
                 .ref('communities/banner/${community.name}')
@@ -155,33 +163,60 @@ class CommunityController extends StateNotifier<bool> {
       final result = await _communityRepository
           .editCommunityProfileOrBannerImage(updatedCommunity);
 
-      result.fold(
-        (l) => throw Exception(l.message),
-        (r) => Routemaster.of(context).pop(),
+      return result.fold(
+        (l) => left(Failures(l.message)),
+        (r) => right('Community profile or banner image updated successfully'),
       );
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
     } catch (e) {
-      showSnackBar(context, e.toString());
+      return left(Failures(e.toString()));
     } finally {
       state = false;
     }
   }
 
   //LET USER JOIN COMMUNITY
-  FutureVoid joinCommunity(String uid, String communityName) async {
+  FutureString joinCommunity(
+    String uid,
+    String communityName,
+  ) async {
     state = true;
-    final result = await _communityRepository.joinCommunity(uid, communityName);
-    state = false;
-
-    return result.fold((error) => result, (r) => result);
+    try {
+      final result =
+          await _communityRepository.joinCommunity(uid, communityName);
+      return result.fold(
+        (l) => left(Failures(l.message)),
+        (r) => right('Successfully Joined The Community!'),
+      );
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    } finally {
+      state = false;
+    }
   }
 
   //LET USER LEAVE COMMUNITY
-  FutureVoid leaveCommunity(String uid, String communityName) async {
+  FutureString leaveCommunity(
+    String uid,
+    String communityName,
+  ) async {
     state = true;
-    final result =
-        await _communityRepository.leaveCommunity(uid, communityName);
-    state = false;
-
-    return result.fold((error) => result, (r) => result);
+    try {
+      final result =
+          await _communityRepository.leaveCommunity(uid, communityName);
+      return result.fold(
+        (l) => left(Failures(l.message)),
+        (r) => right('Successfully Left The Community!'),
+      );
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    } finally {
+      state = false;
+    }
   }
 }

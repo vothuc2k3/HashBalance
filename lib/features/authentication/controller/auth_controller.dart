@@ -8,6 +8,7 @@ import 'package:fpdart/fpdart.dart';
 
 import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/failures.dart';
+import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -63,7 +64,7 @@ class AuthController extends StateNotifier<bool> {
   }
 
   //sign up with email in controller
-  Future<Either<Failures, UserModel>> signUpWithEmailAndPassword(
+  FutureUserModel signUpWithEmailAndPassword(
     String email,
     String password,
     String name,
@@ -91,7 +92,7 @@ class AuthController extends StateNotifier<bool> {
     return user;
   }
 
-  Future<Either<Failures, UserModel>> signInWithEmailAndPassword(
+  FutureUserModel signInWithEmailAndPassword(
     String email,
     String password,
   ) async {
@@ -105,28 +106,28 @@ class AuthController extends StateNotifier<bool> {
     return user;
   }
 
-  void signOut() async {
-    _authRepository.signOut();
+  void signOut(WidgetRef ref) async {
+    _authRepository.signOut(ref);
   }
 
-  void changeUserPrivacy({
+  FutureString changeUserPrivacy({
     required bool setting,
     required UserModel user,
     required BuildContext context,
-  }) {
-    _authRepository.changeUserPrivacy(
-      setting: setting,
-      user: user,
-    );
-    showMaterialBanner(
-      context,
-      'Successfully Changed Your Privacy Setting!',
-    );
-    Timer(const Duration(seconds: 5), () {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-      }
-    });
+  }) async {
+    try {
+      await _authRepository.changeUserPrivacy(
+        setting: setting,
+        user: user,
+      );
+      return right('User privacy setting updated successfully');
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    } finally {
+      state = false;
+    }
   }
 
   Stream<UserModel> getUserData(String uid) {

@@ -148,8 +148,8 @@ class _EditCommunityScreenState
     );
   }
 
-  void saveChanges(Community community) {
-    ref
+  void saveChanges(Community community) async {
+    final result = await ref
         .read(communityControllerProvider.notifier)
         .editCommunityProfileOrBannerImage(
           context: context,
@@ -157,6 +157,8 @@ class _EditCommunityScreenState
           profileImage: profileImageFile,
           bannerImage: bannerImageFile,
         );
+    result.fold((l) => showSnackBar(context, l.toString()),
+        (r) => showMaterialBanner(context, r.toString()));
   }
 
   @override

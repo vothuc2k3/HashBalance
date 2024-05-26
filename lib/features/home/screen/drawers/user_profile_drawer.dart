@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
 import 'package:routemaster/routemaster.dart';
 
@@ -24,8 +26,27 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
     Routemaster.of(context).push('/setting');
   }
 
-  void showChangePrivacyModal(BuildContext homeScreenContext,
-      BuildContext drawerContext, WidgetRef ref) {
+  void _changeUserPrivacy(
+    WidgetRef ref,
+    bool setting,
+    UserModel user,
+    BuildContext homeScreenContext,
+  ) async {
+    final result =
+        await ref.read(authControllerProvider.notifier).changeUserPrivacy(
+              setting: setting,
+              user: user,
+              context: widget._homeScreenContext,
+            );
+    result.fold((l) => showSnackBar(homeScreenContext, l.message),
+        (r) => showMaterialBanner(homeScreenContext, r.toString()));
+  }
+
+  void showChangePrivacyModal(
+    BuildContext homeScreenContext,
+    BuildContext drawerContext,
+    WidgetRef ref,
+  ) {
     final user = ref.watch(userProvider);
     bool userIsRestricted = user!.isRestricted;
     int isLoading = 0;
@@ -65,12 +86,12 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                       () {
                         Navigator.pop(bottomSheetContext);
                         Scaffold.of(homeScreenContext).closeEndDrawer();
-                        ref
-                            .read(authControllerProvider.notifier)
-                            .changeUserPrivacy(
-                                setting: false,
-                                user: user,
-                                context: widget._homeScreenContext);
+                        _changeUserPrivacy(
+                          ref,
+                          false,
+                          user,
+                          widget._homeScreenContext,
+                        );
                       },
                     );
                   },
@@ -99,13 +120,12 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                       () {
                         Navigator.pop(bottomSheetContext);
                         Scaffold.of(homeScreenContext).closeEndDrawer();
-                        ref
-                            .read(authControllerProvider.notifier)
-                            .changeUserPrivacy(
-                              setting: true,
-                              user: user,
-                              context: widget._homeScreenContext,
-                            );
+                        _changeUserPrivacy(
+                          ref,
+                          true,
+                          user,
+                          widget._homeScreenContext,
+                        );
                       },
                     );
                   },
