@@ -26,20 +26,20 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
     setState(() {
       isPressed = true;
     });
-    final user = await ref
+    final result = await ref
         .read(authControllerProvider.notifier)
         .signInWithEmailAndPassword(
           emailController.text.toLowerCase().trim(),
           passwordController.text,
         );
-    user.fold((error) {
+    result.fold((l) {
       if (context.mounted) {
-        showSnackBar(context, error.message);
+        showSnackBar(context, l.message);
       }
       setState(() {
         isPressed = false;
       });
-    }, (_) => Routemaster.of(context).replace('/'));
+    }, (r) => Routemaster.of(context).replace('/'));
   }
 
   @override

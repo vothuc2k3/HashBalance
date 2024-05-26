@@ -69,6 +69,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '456581070342',
     projectId: 'hash-balance-official-2',
     storageBucket: 'hash-balance-official-2.appspot.com',
+    androidClientId: '456581070342-f3e31i9gtmkh9ajvrm7g5drmo9b4srb2.apps.googleusercontent.com',
+    iosClientId: '456581070342-j45e7jajpt8gu89eiav11shvk6kmud2r.apps.googleusercontent.com',
     iosBundleId: 'com.example.hashBalance',
   );
 

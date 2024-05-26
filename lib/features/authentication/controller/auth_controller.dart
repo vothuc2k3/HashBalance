@@ -2,14 +2,12 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
 import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
-import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/models/user_model.dart';
 
@@ -41,26 +39,22 @@ class AuthController extends StateNotifier<bool> {
 
   Stream<User?> get authStageChange => _authRepository.authStageChange;
 
-  //sign in with google in controller
-  void signInWithGoogle(BuildContext context) async {
+  //SIGN THE USER IN WITH GOOGLE
+  FutureUserModel signInWithGoogle() async {
     state = true;
-    final user = await _authRepository.signInWithGoogle();
-    state = false;
-    user.fold(
-      (error) {
-        if (mounted) {
-          return showSnackBar(
-            context,
-            error.message,
-          );
-        }
-      },
-      (userModel) {
-        _ref.read(userProvider.notifier).update(
-              (state) => userModel,
-            );
-      },
-    );
+    try {
+      final result = await _authRepository.signInWithGoogle();
+      return result.fold((l) => left(Failures(l.message)), (userModel) {
+        _ref.read(userProvider.notifier).update((state) => userModel);
+        return right(userModel);
+      });
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    } finally {
+      state = false;
+    }
   }
 
   //sign up with email in controller
@@ -69,58 +63,72 @@ class AuthController extends StateNotifier<bool> {
     String password,
     String name,
   ) async {
-    UserModel userModel = UserModel(
-      email: email,
-      password: password,
-      name: name,
-      uid: '',
-      profileImage: Constants.avatarDefault,
-      bannerImage: Constants.bannerDefault,
-      isAuthenticated: true,
-      activityPoint: 0,
-      achivements: ['New boy'],
-      createdAt: Timestamp.now(),
-      hashAge: 0,
-      isRestricted: false,
-    );
     state = true;
-    final user = await _authRepository.signUpWithEmailAndPassword(userModel);
-    state = false;
-    user.fold((error) => user, (userModel) {
-      _ref.read(userProvider.notifier).update((state) => userModel);
-    });
-    return user;
+    try {
+      UserModel userModel = UserModel(
+        email: email,
+        password: password,
+        name: name,
+        uid: '',
+        profileImage: Constants.avatarDefault,
+        bannerImage: Constants.bannerDefault,
+        isAuthenticated: true,
+        activityPoint: 0,
+        achivements: ['New boy'],
+        createdAt: Timestamp.now(),
+        hashAge: 0,
+        isRestricted: false,
+      );
+      final result =
+          await _authRepository.signUpWithEmailAndPassword(userModel);
+      return result.fold((l) => left(Failures(l.message)), (userModel) {
+        _ref.read(userProvider.notifier).update((state) => userModel);
+        return right(userModel);
+      });
+    } on FirebaseAuthException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    } finally {
+      state = false;
+    }
   }
 
-  FutureUserModel signInWithEmailAndPassword(
-    String email,
-    String password,
-  ) async {
+  Future<Either<Failures, UserModel>> signInWithEmailAndPassword(
+      String email, String password,) async {
     state = true;
-    final user =
-        await _authRepository.signInWithEmailAndPassword(email, password);
-    state = false;
-    user.fold((error) => user, (userModel) {
-      _ref.read(userProvider.notifier).update((state) => userModel);
-    });
-    return user;
+    try {
+      final result =
+          await _authRepository.signInWithEmailAndPassword(email, password);
+      return result.fold((l) => left(Failures(l.message)), (userModel) {
+        _ref.read(userProvider.notifier).update((state) => userModel);
+        return right(userModel);
+      });
+    } on FirebaseAuthException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    } finally {
+      state = false;
+    }
   }
 
-  void signOut(WidgetRef ref) async {
+  void signOut(WidgetRef ref) {
     _authRepository.signOut(ref);
   }
 
   FutureString changeUserPrivacy({
     required bool setting,
     required UserModel user,
-    required BuildContext context,
   }) async {
+    state = true;
     try {
-      await _authRepository.changeUserPrivacy(
+      final result = await _authRepository.changeUserPrivacy(
         setting: setting,
         user: user,
       );
-      return right('User privacy setting updated successfully');
+      return result.fold((l) => left(Failures(l.message)),
+          (r) => right('Successfully Updated User Privacy Setting!'));
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {

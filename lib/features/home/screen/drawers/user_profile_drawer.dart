@@ -22,6 +22,7 @@ class UserProfileDrawer extends ConsumerStatefulWidget {
 }
 
 class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
+  
   void navigateToSettingScreen(BuildContext context) {
     Routemaster.of(context).push('/setting');
   }
@@ -36,7 +37,6 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
         await ref.read(authControllerProvider.notifier).changeUserPrivacy(
               setting: setting,
               user: user,
-              context: widget._homeScreenContext,
             );
     result.fold((l) => showSnackBar(homeScreenContext, l.message),
         (r) => showMaterialBanner(homeScreenContext, r.toString()));

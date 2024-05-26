@@ -45,22 +45,20 @@ class AuthRepository {
   //SIGN THE USER IN WITH GOOGLE
   FutureUserModel signInWithGoogle() async {
     try {
-      //try signing the google account of user in
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      final googleUser = await _googleSignIn.signIn();
       final googleAuth = await googleUser?.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth?.accessToken,
         idToken: googleAuth?.idToken,
       );
-      //logging the user in
-      UserCredential userCredential =
+
+      final userCredential =
           await _firebaseAuth.signInWithCredential(credential);
-      UserModel? userModel;
-      //if the user logs in for the first time, new data is set
+      UserModel? user;
+
       if (userCredential.additionalUserInfo!.isNewUser) {
         final createdAt = Timestamp.now();
-
-        userModel = UserModel(
+        user = UserModel(
           email: userCredential.user!.email!,
           name: userCredential.user!.displayName ??
               'nameless_user_${generateRandomString()}',
@@ -76,38 +74,39 @@ class AuthRepository {
           isRestricted: false,
         );
         await _user.doc(userCredential.user!.uid).set(
-              userModel.toMap(),
+              user.toMap(),
             );
       } else {
-        userModel = await getUserData(userCredential.user!.uid).first;
+        user = await getUserData(userCredential.user!.uid).first;
       }
-      return right(userModel);
+      return right(user);
     } on FirebaseException catch (e) {
-      throw e.message ?? 'Unknown error occurred?';
+      throw e.message!;
     } catch (e) {
       return left(Failures(e.toString()));
     }
   }
 
   //SIGN UP WITH EMAIL AND PASSWORD
-  FutureUserModel signUpWithEmailAndPassword(
-    UserModel newUser,
-  ) async {
+  FutureUserModel signUpWithEmailAndPassword(UserModel newUser) async {
     try {
       final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: newUser.email,
         password: newUser.password!,
       );
 
+      UserModel? user;
       String userUid = userCredential.user!.uid;
       newUser.uid = userUid;
       if (userCredential.additionalUserInfo!.isNewUser) {
         await _firestore.collection('users').doc(userUid).set(newUser.toMap());
+        user = newUser;
+      } else {
+        user = await getUserData(userUid).first;
       }
-      final user = await getUserData(userUid).first;
       return right(user);
     } on FirebaseAuthException catch (e) {
-      return left(Failures(e.message ?? 'Unknown error occurred?'));
+      return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
     }
@@ -154,7 +153,7 @@ class AuthRepository {
           uid: event['uid'] as String,
           name: event['name'] as String,
           email: event['email'] as String,
-          password: event['password'] as String,
+          password: event['password'] as String?,
           profileImage: event['profileImage'] as String,
           bannerImage: event['bannerImage'] as String,
           isAuthenticated: event['isAuthenticated'] as bool,

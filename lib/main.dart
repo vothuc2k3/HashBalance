@@ -36,11 +36,6 @@ class MyApp extends ConsumerStatefulWidget {
 class MyAppState extends ConsumerState<MyApp> {
   UserModel? userData;
 
-  @override
-  void initState() {
-    super.initState();
-  }
-
   void _getUserData(WidgetRef ref, User data) async {
     userData = await ref
         .watch(authControllerProvider.notifier)
@@ -48,6 +43,16 @@ class MyAppState extends ConsumerState<MyApp> {
         .first;
     ref.read(userProvider.notifier).update((state) => userData);
     setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
   }
 
   @override

@@ -1,20 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
+import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
 class GoogleSignInButton extends ConsumerWidget {
-  const GoogleSignInButton({super.key});
+  const GoogleSignInButton({
+    super.key,
+    required BuildContext authScreenContext,
+  }) : _authScreenContext = authScreenContext;
 
-  void signInWithGoogle(BuildContext context, WidgetRef ref) {
-    ref.read(authControllerProvider.notifier).signInWithGoogle(context);
+  final BuildContext _authScreenContext;
+
+  void signInWithGoogle(WidgetRef ref) async {
+    final result =
+        await ref.read(authControllerProvider.notifier).signInWithGoogle();
+    result.fold((l) {
+      showSnackBar(_authScreenContext, l.message);
+    }, (r) {});
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ElevatedButton.icon(
-      onPressed: () => signInWithGoogle(context, ref),
+      onPressed: () => signInWithGoogle(ref),
       icon: Image.asset(
         Constants.googleLogoPath,
         width: 35,

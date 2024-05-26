@@ -33,14 +33,19 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
           passwordController.text,
           nameController.text,
         );
-    user.fold((error) {
+    user.fold((l) {
       if (context.mounted) {
-        showSnackBar(context, error.message);
+        showSnackBar(context, l.message);
+        setState(() {
+          isPressed = false;
+        });
       }
-      setState(() {
-        isPressed = false;
-      });
-    }, (_) => Routemaster.of(context).replace('/'));
+    }, (r) => Routemaster.of(context).replace('/'));
+  }
+
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override

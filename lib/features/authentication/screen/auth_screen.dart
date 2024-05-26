@@ -68,9 +68,9 @@ class AuthScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 30),
-                    child: GoogleSignInButton(),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 30),
+                    child: GoogleSignInButton(authScreenContext: context),
                   ),
                   const SizedBox(height: 10),
                   Padding(
