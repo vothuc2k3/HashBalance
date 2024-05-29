@@ -72,7 +72,7 @@ class SearchCommunityDelegate extends SearchDelegate {
                     ),
                     title: Text('#${user.name}'),
                     onTap: () {
-                      // navigateToCommunityScreen(context, user.name);
+                      navigateToProfileScreen(context, user.uid);
                     },
                   );
                 },
@@ -94,5 +94,9 @@ class SearchCommunityDelegate extends SearchDelegate {
 
   void navigateToCommunityScreen(BuildContext context, String communityName) {
     Routemaster.of(context).push('/#=/$communityName');
+  }
+
+  void navigateToProfileScreen(BuildContext context, String uid) {
+    Routemaster.of(context).push('/user-profile/view/$uid');
   }
 }

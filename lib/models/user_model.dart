@@ -14,6 +14,8 @@ class UserModel {
   final int activityPoint;
   final List<String> achivements;
   int? hashAge;
+  final String? bio;
+  final String? description;
   UserModel({
     required this.email,
     this.password,
@@ -22,11 +24,13 @@ class UserModel {
     required this.createdAt,
     required this.profileImage,
     required this.bannerImage,
-    required this.isRestricted,
     required this.isAuthenticated,
+    required this.isRestricted,
     required this.activityPoint,
     required this.achivements,
     this.hashAge,
+    this.bio,
+    this.description,
   });
 
   UserModel copyWith({
@@ -38,10 +42,12 @@ class UserModel {
     String? profileImage,
     String? bannerImage,
     bool? isAuthenticated,
+    bool? isRestricted,
     int? activityPoint,
     List<String>? achivements,
     int? hashAge,
-    bool? isRestricted,
+    String? bio,
+    String? description,
   }) {
     return UserModel(
       email: email ?? this.email,
@@ -52,10 +58,12 @@ class UserModel {
       profileImage: profileImage ?? this.profileImage,
       bannerImage: bannerImage ?? this.bannerImage,
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
+      isRestricted: isRestricted ?? this.isRestricted,
       activityPoint: activityPoint ?? this.activityPoint,
       achivements: achivements ?? this.achivements,
       hashAge: hashAge ?? this.hashAge,
-      isRestricted: isRestricted ?? this.isRestricted,
+      bio: bio ?? this.bio,
+      description: description ?? this.description,
     );
   }
 
@@ -69,10 +77,12 @@ class UserModel {
       'profileImage': profileImage,
       'bannerImage': bannerImage,
       'isAuthenticated': isAuthenticated,
+      'isRestricted': isRestricted,
       'activityPoint': activityPoint,
       'achivements': achivements,
       'hashAge': hashAge,
-      'isRestricted': isRestricted,
+      'bio': bio,
+      'description': description,
     };
   }
 
@@ -80,24 +90,25 @@ class UserModel {
     return UserModel(
       email: map['email'] as String,
       password: map['password'] != null ? map['password'] as String : null,
+      description:
+          map['description'] != null ? map['description'] as String : null,
+      bio: map['bio'] != null ? map['bio'] as String : null,
       name: map['name'] as String,
       uid: map['uid'] as String,
       createdAt: map['createdAt'] as Timestamp,
       profileImage: map['profileImage'] as String,
       bannerImage: map['bannerImage'] as String,
-      isRestricted: map['isRestricted'] as bool,
       isAuthenticated: map['isAuthenticated'] as bool,
+      isRestricted: map['isRestricted'] as bool,
       activityPoint: map['activityPoint'] as int,
-      hashAge: map['hashAge'] as int,
       achivements: List<String>.from(
         (map['achivements'] as List<String>),
       ),
     );
   }
-
   @override
   String toString() {
-    return 'UserModel(email: $email, password: $password, name: $name, uid: $uid, createdAt: $createdAt, profileImage: $profileImage, bannerImage: $bannerImage, isAuthenticated: $isAuthenticated, activityPoint: $activityPoint, achivements: $achivements, hashAge: $hashAge)';
+    return 'UserModel(email: $email, password: $password, name: $name, uid: $uid, createdAt: $createdAt, profileImage: $profileImage, bannerImage: $bannerImage, isAuthenticated: $isAuthenticated, isRestricted: $isRestricted, activityPoint: $activityPoint, achivements: $achivements, hashAge: $hashAge, bio: $bio, description: $description)';
   }
 
   @override
@@ -112,10 +123,12 @@ class UserModel {
         other.profileImage == profileImage &&
         other.bannerImage == bannerImage &&
         other.isAuthenticated == isAuthenticated &&
-        other.activityPoint == activityPoint &&
-        other.hashAge == hashAge &&
         other.isRestricted == isRestricted &&
-        listEquals(other.achivements, achivements);
+        other.activityPoint == activityPoint &&
+        listEquals(other.achivements, achivements) &&
+        other.hashAge == hashAge &&
+        other.bio == bio &&
+        other.description == description;
   }
 
   @override
@@ -128,9 +141,11 @@ class UserModel {
         profileImage.hashCode ^
         bannerImage.hashCode ^
         isAuthenticated.hashCode ^
-        activityPoint.hashCode ^
-        hashAge.hashCode ^
         isRestricted.hashCode ^
-        achivements.hashCode;
+        activityPoint.hashCode ^
+        achivements.hashCode ^
+        hashAge.hashCode ^
+        bio.hashCode ^
+        description.hashCode;
   }
 }

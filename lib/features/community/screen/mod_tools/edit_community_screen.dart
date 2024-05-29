@@ -11,9 +11,9 @@ import 'package:hash_balance/features/community/controller/comunity_controller.d
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
-class EditCommunityVisualScreen extends ConsumerStatefulWidget {
+class EditCommunityScreen extends ConsumerStatefulWidget {
   final String name;
-  const EditCommunityVisualScreen({
+  const EditCommunityScreen({
     super.key,
     required this.name,
   });
@@ -24,7 +24,7 @@ class EditCommunityVisualScreen extends ConsumerStatefulWidget {
 }
 
 class _EditCommunityScreenState
-    extends ConsumerState<EditCommunityVisualScreen> {
+    extends ConsumerState<EditCommunityScreen> {
   File? bannerImageFile;
   File? profileImageFile;
 
@@ -166,7 +166,7 @@ class _EditCommunityScreenState
     final isLoading = ref.watch(communityControllerProvider);
     return ref.watch(getCommunitiesByNameProvider(widget.name)).when(
           data: (community) => Scaffold(
-            backgroundColor: Pallete.darkModeAppTheme.colorScheme.background,
+            backgroundColor: Pallete.darkModeAppTheme.colorScheme.surface,
             appBar: AppBar(
               title: const Text('Edit Community'),
               centerTitle: false,
@@ -245,9 +245,7 @@ class _EditCommunityScreenState
                   : const Loading(),
             ),
           ),
-          error: (error, stackTrace) => ErrorText(
-            error: error.toString(),
-          ),
+          error: (error, stackTrace) => ErrorText(error: error.toString()),
           loading: () => const Loading(),
         );
   }

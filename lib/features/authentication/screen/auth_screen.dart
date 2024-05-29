@@ -1,30 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:routemaster/routemaster.dart';
 
 import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/common/google_sign_in_button.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/theme/pallette.dart';
+import 'package:routemaster/routemaster.dart';
 
 class AuthScreen extends ConsumerWidget {
   const AuthScreen({super.key});
 
-  void navigateToEmailSignUpScreen(GlobalKey<ScaffoldState> key) {
-    Routemaster.of(key.currentContext!).push('/email-sign-up');
+  void navigateToEmailSignUpScreen(BuildContext context) {
+    Routemaster.of(context).push('/email-sign-up');
   }
 
-  void navigateToEmailSignInScreen(GlobalKey<ScaffoldState> key) {
-    Routemaster.of(key.currentContext!).push('/email-sign-in');
+  void navigateToEmailSignInScreen(BuildContext context) {
+    Routemaster.of(context).push('/email-sign-in');
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isLoading = ref.watch(authControllerProvider);
-    final scaffoldKey = GlobalKey<ScaffoldState>();
     return Scaffold(
-      key: scaffoldKey,
       appBar: AppBar(
         title: Image.asset(
           Constants.logoPath,
@@ -77,7 +75,7 @@ class AuthScreen extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 30),
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        navigateToEmailSignUpScreen(scaffoldKey);
+                        navigateToEmailSignUpScreen(context);
                       },
                       icon: Image.asset(
                         Constants.emailLogoPath,
@@ -118,7 +116,7 @@ class AuthScreen extends ConsumerWidget {
                           ),
                           TextButton(
                             onPressed: () {
-                              navigateToEmailSignInScreen(scaffoldKey);
+                              navigateToEmailSignInScreen(context);
                             },
                             child: const Text(
                               'Sign In',

@@ -7,8 +7,7 @@ class Pallete {
   static const drawerColor = Color.fromRGBO(18, 18, 18, 1);
   static const whiteColor = Colors.white;
   static var redColor = Colors.red.shade500;
-  static var blueColor = const Color(0xFF023047)
-;
+  static var blueColor = const Color(0xFF023047);
 
   // Themes
   static var darkModeAppTheme = ThemeData.dark().copyWith(
@@ -24,8 +23,17 @@ class Pallete {
       backgroundColor: drawerColor,
     ),
     primaryColor: redColor,
-    backgroundColor:
-        drawerColor, // will be used as alternative background color
+    colorScheme: ColorScheme(
+      brightness: Brightness.dark,
+      primary: Colors.blueGrey[800]!,
+      onPrimary: Colors.white,
+      secondary: Colors.teal[700]!,
+      onSecondary: Colors.white,
+      error: Colors.red[700]!,
+      onError: Colors.white,
+      surface: Colors.grey[850]!,
+      onSurface: Colors.white,
+    ),
   );
 
   static var lightModeAppTheme = ThemeData.light().copyWith(
@@ -42,6 +50,16 @@ class Pallete {
       backgroundColor: whiteColor,
     ),
     primaryColor: redColor,
-    backgroundColor: whiteColor,
+    colorScheme: const ColorScheme(
+      brightness: Brightness.light,
+      primary: Colors.blue,
+      onPrimary: Colors.white,
+      secondary: Colors.teal,
+      onSecondary: Colors.white,
+      error: Colors.red,
+      onError: Colors.white,
+      surface: Colors.white,
+      onSurface: Colors.black,
+    ),
   );
 }

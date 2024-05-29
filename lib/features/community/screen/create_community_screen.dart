@@ -35,7 +35,7 @@ class _CreateCommunityScreenState
         );
   }
 
-  void _showCommunityTypeModal(BuildContext context) {
+  void _showCommunityTypeModal() {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -129,7 +129,7 @@ class _CreateCommunityScreenState
             ),
             InkWell(
               onTap: () {
-                _showCommunityTypeModal(context);
+                _showCommunityTypeModal();
               },
               child: Padding(
                 padding: const EdgeInsets.only(

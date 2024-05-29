@@ -11,9 +11,7 @@ class EmailSignInScreen extends ConsumerStatefulWidget {
   const EmailSignInScreen({super.key});
 
   @override
-  EmailSignInScreenState createState() {
-    return EmailSignInScreenState();
-  }
+  EmailSignInScreenState createState() => EmailSignInScreenState();
 }
 
 class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
@@ -42,6 +40,10 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
     }, (r) => Routemaster.of(context).replace('/'));
   }
 
+  void navigateToSignUpScreen(BuildContext context) {
+    Routemaster.of(context).replace('/email-sign-up');
+  }
+
   @override
   void dispose() {
     emailController.dispose();
@@ -63,9 +65,9 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
             centerTitle: true,
             actions: [
               TextButton(
-                onPressed: () {},
+                onPressed: () => navigateToSignUpScreen(context),
                 child: const Text(
-                  'Skip',
+                  'Sign Up',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,

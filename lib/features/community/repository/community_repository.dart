@@ -8,7 +8,7 @@ import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/community_model.dart';
 
 final communityRepositoryProvider = Provider((ref) {
-  return CommunityRepository(firestore: ref.watch(firebaseFireStoreProvider));
+  return CommunityRepository(firestore: ref.watch(firebaseFirestoreProvider));
 });
 
 class CommunityRepository {
@@ -16,6 +16,8 @@ class CommunityRepository {
 
   CommunityRepository({required FirebaseFirestore firestore})
       : _firestore = firestore;
+
+  
 
   //CREATE A WHOLE NEW COMMUNITY
   FutureVoid createCommunity(Community community) async {

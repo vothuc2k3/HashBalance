@@ -10,7 +10,7 @@ import 'package:hash_balance/models/user_model.dart';
 final searchRepositoryProvider = Provider(
   (ref) {
     return SearchRepository(
-      firestore: ref.watch(firebaseFireStoreProvider),
+      firestore: ref.watch(firebaseFirestoreProvider),
     );
   },
 );

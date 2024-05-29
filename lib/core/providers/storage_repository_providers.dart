@@ -17,7 +17,7 @@ class StorageRepository {
   StorageRepository({required FirebaseStorage firebaseStorage})
       : _firebaseStorage = firebaseStorage;
 
-  FutureEither<String> storeFile({
+  FutureString storeFile({
     required String path,
     required String id,
     required File? file,
@@ -30,15 +30,9 @@ class StorageRepository {
         await snapshot.ref.getDownloadURL(),
       );
     } on FirebaseException catch (e) {
-      return left(
-        Failures(e.message!),
-      );
+      return left(Failures(e.message!));
     } catch (e) {
-      return left(
-        Failures(
-          e.toString(),
-        ),
-      );
+      return left(Failures(e.toString()));
     }
   }
 }

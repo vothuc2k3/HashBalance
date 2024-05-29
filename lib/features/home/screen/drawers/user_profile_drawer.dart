@@ -22,7 +22,10 @@ class UserProfileDrawer extends ConsumerStatefulWidget {
 }
 
 class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
-  
+  void navigateToProfileScreen(BuildContext context, String uid) {
+    Routemaster.of(context).push('/user-profile/$uid');
+  }
+
   void navigateToSettingScreen(BuildContext context) {
     Routemaster.of(context).push('/setting');
   }
@@ -144,36 +147,43 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    backgroundImage: NetworkImage(user!.profileImage),
-                    radius: 50,
-                  ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '#${user.name}',
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                          fontStyle: FontStyle.italic,
+            InkWell(
+              onTap: () {
+                Timer(const Duration(milliseconds: 200), () {
+                  navigateToProfileScreen(context, user.uid);
+                });
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundImage: NetworkImage(user!.profileImage),
+                      radius: 50,
+                    ),
+                    const SizedBox(width: 10),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '#${user.name}',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
-                      ),
-                      Text(
-                        user.email,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontStyle: FontStyle.italic,
+                        Text(
+                          user.email,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
             const Divider(),
@@ -200,7 +210,10 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
               ),
               leading: const Icon(Icons.privacy_tip),
               onTap: () => showChangePrivacyModal(
-                  context, widget._homeScreenContext, ref),
+                context,
+                widget._homeScreenContext,
+                ref,
+              ),
             ),
             Expanded(child: Container()),
             ListTile(

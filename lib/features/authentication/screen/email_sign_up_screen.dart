@@ -8,7 +8,10 @@ import 'package:hash_balance/theme/pallette.dart';
 import 'package:routemaster/routemaster.dart';
 
 class EmailSignUpScreen extends ConsumerStatefulWidget {
-  const EmailSignUpScreen({super.key});
+  const EmailSignUpScreen({
+    super.key,
+    BuildContext? context,
+  });
 
   @override
   EmailSignUpScreenState createState() {
@@ -23,6 +26,7 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
   bool isPressed = false;
 
   void signUpWithEmailAndPassword(BuildContext context, WidgetRef ref) async {
+    Routemaster.of(context).pop();
     setState(() {
       isPressed = true;
     });
@@ -38,9 +42,13 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
         showSnackBar(context, l.message);
         setState(() {
           isPressed = false;
-        });
+        });  
       }
-    }, (r) => Routemaster.of(context).replace('/'));
+    }, (r) {});
+  }
+
+  void navigateToSignInScreen(BuildContext context) {
+    Routemaster.of(context).replace('/email-sign-in');
   }
 
   @override
@@ -70,9 +78,9 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
             centerTitle: true,
             actions: [
               TextButton(
-                onPressed: () {},
+                onPressed: () => navigateToSignInScreen(context),
                 child: const Text(
-                  'Skip',
+                  'Sign In',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,

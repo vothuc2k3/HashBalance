@@ -81,16 +81,10 @@ class CommunityController extends StateNotifier<bool> {
 
     result.fold(
       (error) {
-        return showSnackBar(
-          context,
-          error.message,
-        );
+        return showSnackBar(context, error.message);
       },
       (right) {
-        showSnackBar(
-          context,
-          'Your Community Created Successfully. Have Fun!',
-        );
+        showSnackBar(context, 'Your Community Created Successfully. Have Fun!');
         Routemaster.of(context).pop();
       },
     );
@@ -108,7 +102,7 @@ class CommunityController extends StateNotifier<bool> {
   }
 
   //EDIT COMMUNITY VISUAL
-  Future<Either<Failures, String>> editCommunityProfileOrBannerImage({
+  FutureString editCommunityProfileOrBannerImage({
     required BuildContext context,
     required Community community,
     required File? profileImage,

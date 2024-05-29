@@ -32,8 +32,10 @@ class AuthController extends StateNotifier<bool> {
   final AuthRepository _authRepository;
   final Ref _ref;
 
-  AuthController({required AuthRepository authRepository, required Ref ref})
-      : _authRepository = authRepository,
+  AuthController({
+    required AuthRepository authRepository,
+    required Ref ref,
+  })  : _authRepository = authRepository,
         _ref = ref,
         super(false);
 
@@ -57,7 +59,7 @@ class AuthController extends StateNotifier<bool> {
     }
   }
 
-  //sign up with email in controller
+  //SIGN UP WITH EMAIL AND PASSWORD
   FutureUserModel signUpWithEmailAndPassword(
     String email,
     String password,
@@ -94,8 +96,11 @@ class AuthController extends StateNotifier<bool> {
     }
   }
 
-  Future<Either<Failures, UserModel>> signInWithEmailAndPassword(
-      String email, String password,) async {
+  //SIGN IN WITH EMAIL AND PASSWORD
+  FutureUserModel signInWithEmailAndPassword(
+    String email,
+    String password,
+  ) async {
     state = true;
     try {
       final result =

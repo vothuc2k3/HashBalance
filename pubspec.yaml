@@ -51,6 +51,7 @@ dependencies:
   dotted_border: ^2.1.0
   file_picker: ^8.0.3
   platform_file: ^0.1.0
+  font_awesome_flutter: ^10.7.0
 
 dev_dependencies:
   flutter_test:
@@ -80,6 +81,7 @@ flutter:
     - assets/images/googleLogo.png
     - assets/images/signinEmote.png
     - assets/images/emailLogo.png
+    - assets/images/facebookLogo.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

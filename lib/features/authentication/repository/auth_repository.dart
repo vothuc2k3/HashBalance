@@ -20,7 +20,7 @@ final userProvider = StateProvider<UserModel?>((ref) => null);
 final authRepositoryProvider = Provider(
   (ref) {
     return AuthRepository(
-      firestore: ref.read(firebaseFireStoreProvider),
+      firestore: ref.read(firebaseFirestoreProvider),
       firebaseAuth: ref.read(firebaseAuthProvider),
       googleSignIn: ref.read(googleSignInProvider),
     );
