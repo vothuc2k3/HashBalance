@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hash_balance/core/common/animations/custom_page_transition.dart';
 
 class Pallete {
   // Colors
@@ -11,6 +12,9 @@ class Pallete {
 
   // Themes
   static var darkModeAppTheme = ThemeData.dark().copyWith(
+    pageTransitionsTheme: PageTransitionsTheme(builders: {
+      TargetPlatform.android: CustomPageTransitionsBuilder(),
+    }),
     scaffoldBackgroundColor: blackColor,
     cardColor: greyColor,
     appBarTheme: const AppBarTheme(

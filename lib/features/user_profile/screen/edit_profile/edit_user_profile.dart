@@ -12,6 +12,7 @@ import 'package:hash_balance/features/authentication/controller/auth_controller.
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
+import 'package:routemaster/routemaster.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   final String uid;
@@ -53,8 +54,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     }
   }
 
-  void checkName(String name) async {
-    final result = await checkExistingUserName(name);
+  void checkName(String name, String uid) async {
+    if (name.length < 5) {
+      setState(() {
+        isNameValid = false;
+      });
+      return;
+    }
+
+    final result = await checkExistingUserName(name, uid);
     result.fold((l) {}, (r) {
       setState(() {
         isNameValid = r;
@@ -73,14 +81,21 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   void saveChanges(UserModel user) async {
+    FocusScope.of(context).unfocus;
     final result =
         await ref.read(userControllerProvider.notifier).editUserProfile(
               user,
               profileImageFile,
               bannerImageFile,
-              nameController.text,
-              bioController.text,
-              descController.text,
+              nameController.text.trim() == ''
+                  ? user.name
+                  : nameController.text.trim(),
+              bioController.text.trim() == ''
+                  ? user.bio
+                  : bioController.text.trim(),
+              descController.text.trim() == ''
+                  ? user.description
+                  : descController.text.trim(),
             );
     result.fold((l) => showSnackBar(context, l.toString()),
         (r) => showMaterialBanner(context, r.toString()));
@@ -95,15 +110,21 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ? const Loading()
                 : Scaffold(
                     appBar: AppBar(
+                      leading: IconButton(
+                        icon: const Icon(Icons.arrow_back),
+                        onPressed: () {
+                          Routemaster.of(context)
+                              .push('/user-profile/${user.uid}');
+                        },
+                      ),
                       title: const Text('Edit Profile'),
                       centerTitle: false,
                       actions: [
-                        
                         TextButton(
                           onPressed: () {
                             if (isNameValid) {
                               saveChanges(user);
-                            } else {}
+                            }
                           },
                           child: const Text(
                             'Save',
@@ -150,7 +171,25 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                                     ),
                                                   )
                                                 : Image.network(
-                                                    user.bannerImage),
+                                                    user.bannerImage,
+                                                    loadingBuilder: (context,
+                                                        child,
+                                                        loadingProgress) {
+                                                      if (loadingProgress ==
+                                                          null) {
+                                                        return child;
+                                                      }
+                                                      return Container(
+                                                        width: double.infinity,
+                                                        height: 150,
+                                                        color: Colors.black,
+                                                        child: const Center(
+                                                          child:
+                                                              CircularProgressIndicator(),
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
                                       ),
                                     ),
                                   ),
@@ -163,11 +202,22 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                       },
                                       child: CircleAvatar(
                                         radius: 30,
-                                        backgroundImage: profileImageFile !=
-                                                null
-                                            ? FileImage(profileImageFile!)
-                                            : NetworkImage(user.profileImage)
-                                                as ImageProvider<Object>,
+                                        backgroundImage:
+                                            profileImageFile != null
+                                                ? FileImage(profileImageFile!)
+                                                : !(user.profileImage ==
+                                                        Constants.avatarDefault)
+                                                    ? NetworkImage(
+                                                            user.profileImage)
+                                                        as ImageProvider
+                                                    : null,
+                                        child: user.profileImage ==
+                                                Constants.avatarDefault
+                                            ? const Icon(
+                                                Icons.camera_alt_outlined,
+                                                size: 30,
+                                              )
+                                            : null,
                                       ),
                                     ),
                                   ),
@@ -197,8 +247,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                   maxLength: 15,
                                   decoration: InputDecoration(
                                     labelText: 'Enter your name',
+                                    labelStyle: const TextStyle(
+                                      color: Color(0xFF38464E),
+                                    ),
                                     hintText: user.name,
                                     prefixText: '#',
+                                    enabledBorder: const OutlineInputBorder(
+                                      borderSide:
+                                          BorderSide(color: Colors.grey),
+                                    ),
                                     border: OutlineInputBorder(
                                       borderSide: BorderSide(
                                         color: isNameValid
@@ -210,7 +267,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                         isNameValid ? null : 'Invalid name',
                                   ),
                                   onChanged: (value) {
-                                    checkName(value);
+                                    checkName(value, user.uid);
                                   },
                                   textInputAction: TextInputAction.done,
                                   inputFormatters: [
@@ -240,8 +297,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                   maxLength: 50,
                                   decoration: InputDecoration(
                                     labelText: 'Enter your bio',
+                                    labelStyle: const TextStyle(
+                                      color: Color(0xFF38464E),
+                                    ),
                                     hintText:
                                         'I\'m the best gamer ever lived....',
+                                    enabledBorder: const OutlineInputBorder(
+                                      borderSide:
+                                          BorderSide(color: Colors.grey),
+                                    ),
                                     border: OutlineInputBorder(
                                       borderSide: BorderSide(
                                         color: isNameValid
@@ -274,8 +338,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                   maxLength: 100,
                                   decoration: InputDecoration(
                                     labelText: 'Enter your description',
+                                    labelStyle: const TextStyle(
+                                      color: Color(0xFF38464E),
+                                    ),
                                     hintText:
                                         'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam risus justo, auctor non libero eget, pharetra suscipit leo. Nam posuere, nisl nec faucibus mattis, lacus quam tincidunt lacus....',
+                                    enabledBorder: const OutlineInputBorder(
+                                      borderSide:
+                                          BorderSide(color: Colors.grey),
+                                    ),
                                     border: const OutlineInputBorder(
                                       borderSide:
                                           BorderSide(color: Colors.grey),

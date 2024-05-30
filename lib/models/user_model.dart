@@ -13,6 +13,7 @@ class UserModel {
   final bool isRestricted;
   final int activityPoint;
   final List<String> achivements;
+  final List<String> friends;
   int? hashAge;
   final String? bio;
   final String? description;
@@ -28,6 +29,7 @@ class UserModel {
     required this.isRestricted,
     required this.activityPoint,
     required this.achivements,
+    required this.friends,
     this.hashAge,
     this.bio,
     this.description,
@@ -45,6 +47,7 @@ class UserModel {
     bool? isRestricted,
     int? activityPoint,
     List<String>? achivements,
+    List<String>? friends,
     int? hashAge,
     String? bio,
     String? description,
@@ -61,6 +64,7 @@ class UserModel {
       isRestricted: isRestricted ?? this.isRestricted,
       activityPoint: activityPoint ?? this.activityPoint,
       achivements: achivements ?? this.achivements,
+      friends: friends ?? this.friends,
       hashAge: hashAge ?? this.hashAge,
       bio: bio ?? this.bio,
       description: description ?? this.description,
@@ -80,6 +84,7 @@ class UserModel {
       'isRestricted': isRestricted,
       'activityPoint': activityPoint,
       'achivements': achivements,
+      'friends': friends,
       'hashAge': hashAge,
       'bio': bio,
       'description': description,
@@ -88,27 +93,29 @@ class UserModel {
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
-      email: map['email'] as String,
-      password: map['password'] != null ? map['password'] as String : null,
-      description:
-          map['description'] != null ? map['description'] as String : null,
-      bio: map['bio'] != null ? map['bio'] as String : null,
-      name: map['name'] as String,
-      uid: map['uid'] as String,
-      createdAt: map['createdAt'] as Timestamp,
-      profileImage: map['profileImage'] as String,
-      bannerImage: map['bannerImage'] as String,
-      isAuthenticated: map['isAuthenticated'] as bool,
-      isRestricted: map['isRestricted'] as bool,
-      activityPoint: map['activityPoint'] as int,
-      achivements: List<String>.from(
-        (map['achivements'] as List<String>),
-      ),
-    );
+        email: map['email'] as String,
+        password: map['password'] != null ? map['password'] as String : null,
+        name: map['name'] as String,
+        uid: map['uid'] as String,
+        createdAt: map['createdAt'] as Timestamp,
+        profileImage: map['profileImage'] as String,
+        bannerImage: map['bannerImage'] as String,
+        isAuthenticated: map['isAuthenticated'] as bool,
+        isRestricted: map['isRestricted'] as bool,
+        activityPoint: map['activityPoint'] as int,
+        hashAge: map['hashAge'] != null ? map['hashAge'] as int : null,
+        bio: map['bio'] != null ? map['bio'] as String : null,
+        description:
+            map['description'] != null ? map['description'] as String : null,
+        achivements: List<String>.from((map['achivements'] as List<String>)),
+        friends: List<String>.from(
+          (map['friends'] as List<String>),
+        ));
   }
+
   @override
   String toString() {
-    return 'UserModel(email: $email, password: $password, name: $name, uid: $uid, createdAt: $createdAt, profileImage: $profileImage, bannerImage: $bannerImage, isAuthenticated: $isAuthenticated, isRestricted: $isRestricted, activityPoint: $activityPoint, achivements: $achivements, hashAge: $hashAge, bio: $bio, description: $description)';
+    return 'UserModel(email: $email, password: $password, name: $name, uid: $uid, createdAt: $createdAt, profileImage: $profileImage, bannerImage: $bannerImage, isAuthenticated: $isAuthenticated, isRestricted: $isRestricted, activityPoint: $activityPoint, achivements: $achivements, friends: $friends, hashAge: $hashAge, bio: $bio, description: $description)';
   }
 
   @override
@@ -126,6 +133,7 @@ class UserModel {
         other.isRestricted == isRestricted &&
         other.activityPoint == activityPoint &&
         listEquals(other.achivements, achivements) &&
+        listEquals(other.friends, friends) &&
         other.hashAge == hashAge &&
         other.bio == bio &&
         other.description == description;
@@ -144,6 +152,7 @@ class UserModel {
         isRestricted.hashCode ^
         activityPoint.hashCode ^
         achivements.hashCode ^
+        friends.hashCode ^
         hashAge.hashCode ^
         bio.hashCode ^
         description.hashCode;

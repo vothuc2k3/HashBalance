@@ -8,6 +8,7 @@ class Constants {
   static const emailLogoPath = 'assets/images/emailLogo.png';
 
   static const bannerDefault = 'https://i.imgur.com/gKLRsMZ.jpg';
+  static const cameraIcon = 'https://i.imgur.com/cqjP4oR.png';
   static const avatarDefault =
       'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/avatars/89/89496ab402ac222c0ddaed7add5d9eb6deb759f9_full.jpg';
 

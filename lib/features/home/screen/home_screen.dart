@@ -1,9 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/home/delegates/search_delegate.dart';
 import 'package:hash_balance/features/home/screen/drawers/community_list_drawer.dart';
 import 'package:hash_balance/features/home/screen/drawers/user_profile_drawer.dart';
+import 'package:hash_balance/theme/pallette.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -54,6 +56,9 @@ class HomeScreen extends ConsumerWidget {
       ),
       drawer: const CommunityListDrawer(),
       endDrawer: UserProfileDrawer(homeScreenContext: context),
+      bottomNavigationBar: const CupertinoNavigationBar(
+        backgroundColor: Color(0xFF141414),
+      ),
     );
   }
 }

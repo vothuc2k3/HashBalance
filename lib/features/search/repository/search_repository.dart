@@ -85,6 +85,8 @@ class SearchRepository {
             final data = doc.data() as Map<String, dynamic>;
             final achivements =
                 (data['achivements'] as List?)?.cast<String>() ?? [];
+            final friends = 
+                (data['friends'] as List?)?.cast<String>() ?? [];
             users.add(
               UserModel(
                 name: data['name'] as String,
@@ -95,6 +97,7 @@ class SearchRepository {
                 isAuthenticated: data['isAuthenticated'] as bool,
                 activityPoint: data['activityPoint'] as int,
                 achivements: achivements,
+                friends: friends,
                 createdAt: data['createdAt'] as Timestamp,
                 isRestricted: data['isRestricted'] as bool,
               ),

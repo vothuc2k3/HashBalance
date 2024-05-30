@@ -68,7 +68,7 @@ class _CurrentUserProfileScreenState
                     alignment: Alignment.center,
                     children: [
                       Container(
-                        color: Colors.grey,
+                        color: Colors.black,
                         child: Image.network(
                           user.bannerImage,
                           width: double.infinity,
@@ -91,8 +91,9 @@ class _CurrentUserProfileScreenState
                       ),
                       Positioned(
                         top: top,
+                        left: 10,
                         child: CircleAvatar(
-                          radius: profileHeight / 2,
+                          radius: (profileHeight / 2) - 10,
                           backgroundColor: Colors.grey.shade800,
                           backgroundImage: NetworkImage(user.profileImage),
                         ),
@@ -102,35 +103,67 @@ class _CurrentUserProfileScreenState
                 ),
                 Column(
                   children: [
-                    const SizedBox(height: 8),
-                    Text(
-                      user.bio ?? 'You haven\'t said anything yet...',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      user.description ??
-                          'You haven\'t describe about yourself yet...',
-                      style: const TextStyle(
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildSocialIcon(FontAwesomeIcons.slack),
-                        const SizedBox(width: 12),
-                        _buildSocialIcon(FontAwesomeIcons.github),
-                        const SizedBox(width: 12),
-                        _buildSocialIcon(FontAwesomeIcons.twitter),
-                        const SizedBox(width: 12),
-                        _buildSocialIcon(FontAwesomeIcons.linkedin),
-                        const SizedBox(width: 12),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 10),
+                          child: Text(
+                            '#${user.name}',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                       ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(left: 10),
+                          child: Text(
+                            user.bio ?? 'You haven\'t said anything yet...',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(left: 10),
+                          child: Text(
+                            user.description ??
+                                'You haven\'t describe about yourself yet...',
+                            style: const TextStyle(
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          _buildSocialIcon(FontAwesomeIcons.slack),
+                          const SizedBox(width: 12),
+                          _buildSocialIcon(FontAwesomeIcons.github),
+                          const SizedBox(width: 12),
+                          _buildSocialIcon(FontAwesomeIcons.twitter),
+                          const SizedBox(width: 12),
+                          _buildSocialIcon(FontAwesomeIcons.linkedin),
+                          const SizedBox(width: 12),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 16),
                     const Divider(),
@@ -138,7 +171,8 @@ class _CurrentUserProfileScreenState
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildButton(text: 'Friends', value: 52),
+                        _buildButton(
+                            text: 'Friends', value: user.friends.length - 1),
                         _buildVerticalDivider(),
                         _buildButton(
                             text: 'Activity Points', value: user.activityPoint),
@@ -147,7 +181,7 @@ class _CurrentUserProfileScreenState
                             text: 'Achivements',
                             value: user.achivements.length),
                         _buildVerticalDivider(),
-                        _buildButton(text: 'Followers', value: 5834),
+                        _buildButton(text: 'Points', value: user.activityPoint),
                       ],
                     ),
                     const SizedBox(height: 16),

@@ -28,14 +28,15 @@ void showSnackBar(BuildContext context, String text) {
   });
 }
 
-FutureBool checkExistingUserName(String name) async {
+FutureBool checkExistingUserName(String name, String uid) async {
   try {
     final result = await FirebaseFirestore.instance
         .collection('users')
         .where('name', isEqualTo: name)
         .get();
+    final filteredDocs = result.docs.where((doc) => doc.id != uid).toList();
 
-    if (result.docs.isNotEmpty) {
+    if (filteredDocs.isNotEmpty) {
       return right(false);
     } else {
       return right(true);

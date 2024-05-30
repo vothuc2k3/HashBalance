@@ -23,8 +23,7 @@ class EditCommunityScreen extends ConsumerStatefulWidget {
       _EditCommunityScreenState();
 }
 
-class _EditCommunityScreenState
-    extends ConsumerState<EditCommunityScreen> {
+class _EditCommunityScreenState extends ConsumerState<EditCommunityScreen> {
   File? bannerImageFile;
   File? profileImageFile;
 
@@ -217,7 +216,23 @@ class _EditCommunityScreenState
                                                 ),
                                               )
                                             : Image.network(
-                                                community.bannerImage),
+                                                community.bannerImage,
+                                                loadingBuilder: (context, child,
+                                                    loadingProgress) {
+                                                  if (loadingProgress == null) {
+                                                    return child;
+                                                  }
+                                                  return Container(
+                                                    width: double.infinity,
+                                                    height: 150,
+                                                    color: Colors.black,
+                                                    child: const Center(
+                                                      child:
+                                                          CircularProgressIndicator(),
+                                                    ),
+                                                  );
+                                                },
+                                              ),
                                   ),
                                 ),
                               ),

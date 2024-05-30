@@ -69,6 +69,7 @@ class AuthRepository {
           isAuthenticated: true,
           activityPoint: 0,
           achivements: ['New boy'],
+          friends: ['nofrienduid'],
           createdAt: createdAt,
           hashAge: 0,
           isRestricted: false,
@@ -143,6 +144,7 @@ class AuthRepository {
   //GET THE USER DATA
   Stream<UserModel> getUserData(String uid) {
     final snapshot = _user.doc(uid).snapshots();
+
     return snapshot.map(
       (event) {
         Timestamp createdAt = event['createdAt'];
@@ -150,22 +152,27 @@ class AuthRepository {
             DateTime.now().difference(createdAt.toDate()).inSeconds ~/ 86400;
 
         return UserModel(
-          uid: event['uid'] as String,
-          name: event['name'] as String,
-          email: event['email'] as String,
+          uid: event['uid'] as String? ?? '',
+          name: event['name'] as String? ?? '',
+          email: event['email'] as String? ?? '',
           password: event['password'] as String?,
-          profileImage: event['profileImage'] as String,
-          bannerImage: event['bannerImage'] as String,
-          isAuthenticated: event['isAuthenticated'] as bool,
-          activityPoint: event['activityPoint'] as int,
-          achivements: (event['achivements'] as List)
-              .map((item) => item.toString())
-              .toList(),
-          createdAt: event['createdAt'] as Timestamp,
+          profileImage: event['profileImage'] as String? ?? '',
+          bannerImage: event['bannerImage'] as String? ?? '',
+          isAuthenticated: event['isAuthenticated'] as bool? ?? false,
+          activityPoint: event['activityPoint'] as int? ?? 0,
+          achivements: (event['achivements'] as List?)
+                  ?.map((item) => item.toString())
+                  .toList() ??
+              [],
+          friends: (event['friends'] as List?)
+                  ?.map((item) => item.toString())
+                  .toList() ??
+              [],
+          createdAt: createdAt,
           hashAge: hashAge,
-          isRestricted: event['isRestricted'] as bool,
-          bio: event['bio'] as String,
-          description: event['description'] as String,
+          isRestricted: event['isRestricted'] as bool? ?? false,
+          bio: event['bio'] as String? ?? '',
+          description: event['description'] as String? ?? '',
         );
       },
     );

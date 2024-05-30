@@ -77,9 +77,12 @@ class AuthController extends StateNotifier<bool> {
         isAuthenticated: true,
         activityPoint: 0,
         achivements: ['New boy'],
+        friends: ['nofrienduid'],
         createdAt: Timestamp.now(),
         hashAge: 0,
         isRestricted: false,
+        bio: 'New user',
+        description: 'Nothing, I\'m a new user here....',
       );
       final result =
           await _authRepository.signUpWithEmailAndPassword(userModel);
