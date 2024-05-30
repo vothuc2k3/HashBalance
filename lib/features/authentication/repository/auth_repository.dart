@@ -164,6 +164,8 @@ class AuthRepository {
           createdAt: event['createdAt'] as Timestamp,
           hashAge: hashAge,
           isRestricted: event['isRestricted'] as bool,
+          bio: event['bio'] as String,
+          description: event['description'] as String,
         );
       },
     );

@@ -43,8 +43,7 @@ class _CurrentUserProfileScreenState
             child: const Text(
               'Edit',
               style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
+                fontSize: 15,
                 color: Colors.white,
               ),
             ),
@@ -104,18 +103,19 @@ class _CurrentUserProfileScreenState
                 Column(
                   children: [
                     const SizedBox(height: 8),
-                    const Text(
-                      'Short description',
-                      style: TextStyle(
-                        fontSize: 20,
+                    Text(
+                      user.bio ?? 'You haven\'t said anything yet...',
+                      style: const TextStyle(
+                        fontSize: 15,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Long description',
-                      style: TextStyle(
-                        fontSize: 16,
+                    Text(
+                      user.description ??
+                          'You haven\'t describe about yourself yet...',
+                      style: const TextStyle(
+                        fontSize: 12,
                       ),
                     ),
                     const SizedBox(height: 16),

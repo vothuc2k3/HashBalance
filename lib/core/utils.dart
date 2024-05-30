@@ -1,10 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:crypt/crypt.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:crypt/crypt.dart';
-import 'dart:convert';
+import 'package:fpdart/fpdart.dart';
+import 'package:hash_balance/core/failures.dart';
+
+import 'package:hash_balance/core/type_defs.dart';
 
 void showSnackBar(BuildContext context, String text) {
   if (context.mounted) {
@@ -21,6 +26,25 @@ void showSnackBar(BuildContext context, String text) {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
     }
   });
+}
+
+FutureBool checkExistingUserName(String name) async {
+  try {
+    final result = await FirebaseFirestore.instance
+        .collection('users')
+        .where('name', isEqualTo: name)
+        .get();
+
+    if (result.docs.isNotEmpty) {
+      return right(false);
+    } else {
+      return right(true);
+    }
+  } on FirebaseException catch (e) {
+    return left(Failures(e.message!));
+  } catch (e) {
+    return left(Failures(e.toString()));
+  }
 }
 
 void showMaterialBanner(BuildContext context, String text) {

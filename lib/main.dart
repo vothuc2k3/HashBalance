@@ -91,7 +91,7 @@ class MyAppState extends ConsumerState<MyApp> {
             child: OtherUserProfileScreen(uid: route.pathParameters['uid']!),
           ),
       '/user-profile/edit/:uid': (route) => MaterialPage(
-            child: EditUserProfileScreen(uid: route.pathParameters['uid']!),
+            child: EditProfileScreen(uid: route.pathParameters['uid']!),
           ),
     },
     onUnknownRoute: (_) => const MaterialPage(

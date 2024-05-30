@@ -1,8 +1,10 @@
 import 'dart:io';
 
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/core/utils.dart';
@@ -10,34 +12,54 @@ import 'package:hash_balance/features/authentication/controller/auth_controller.
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
-import 'package:routemaster/routemaster.dart';
 
-class EditUserProfileScreen extends ConsumerStatefulWidget {
+class EditProfileScreen extends ConsumerStatefulWidget {
   final String uid;
-
-  const EditUserProfileScreen({
+  const EditProfileScreen({
     super.key,
     required this.uid,
   });
 
   @override
-  EditUserProfileScreenState createState() => EditUserProfileScreenState();
+  ConsumerState<ConsumerStatefulWidget> createState() =>
+      _EditProfileScreenState();
 }
 
-class EditUserProfileScreenState extends ConsumerState<EditUserProfileScreen> {
+class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   File? bannerImageFile;
   File? profileImageFile;
-  String? name;
-  String? bio;
-  String? description;
+
+  final nameController = TextEditingController();
+  final bioController = TextEditingController();
+  final descController = TextEditingController();
+
+  bool isSetting = false;
+
+  bool isNameValid = true;
+
+  void setting() {
+    setState(() {
+      isSetting = true;
+    });
+  }
 
   void selectBannerImage() async {
     final result = await pickImage();
     if (result != null) {
       setState(() {
         bannerImageFile = File(result.files.first.path!);
+        isSetting = false;
       });
     }
+  }
+
+  void checkName(String name) async {
+    final result = await checkExistingUserName(name);
+    result.fold((l) {}, (r) {
+      setState(() {
+        isNameValid = r;
+      });
+    });
   }
 
   void selectProfileImage() async {
@@ -45,212 +67,234 @@ class EditUserProfileScreenState extends ConsumerState<EditUserProfileScreen> {
     if (result != null) {
       setState(() {
         profileImageFile = File(result.files.first.path!);
+        isSetting = false;
       });
     }
   }
 
-  void setName() {}
-
-  void setBio() {}
-
-  void setDescription() {}
-
   void saveChanges(UserModel user) async {
-    final result = await ref
-        .read(userControllerProvider.notifier)
-        .editUserProfile(
-            user, profileImageFile, bannerImageFile, name, bio, description);
+    final result =
+        await ref.read(userControllerProvider.notifier).editUserProfile(
+              user,
+              profileImageFile,
+              bannerImageFile,
+              nameController.text,
+              bioController.text,
+              descController.text,
+            );
     result.fold((l) => showSnackBar(context, l.toString()),
         (r) => showMaterialBanner(context, r.toString()));
   }
 
-  void _showEditProfileModal() {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext bottomSheetContext) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            height: 3,
-            width: 40,
-            color: Colors.grey,
-            margin: const EdgeInsets.symmetric(vertical: 8),
-          ),
-          ListTile(
-              leading: const Icon(Icons.change_circle_rounded),
-              title: const Text('Name'),
-              subtitle: const Text('Make a change for your displaying name'),
-              onTap: () {
-                setName();
-                Navigator.pop(context);
-              }),
-          ListTile(
-              leading: const Icon(Icons.edit),
-              title: const Text('Bio'),
-              subtitle: const Text('Click here to refine your bio'),
-              onTap: () {
-                setBio();
-                Navigator.pop(context);
-              }),
-          ListTile(
-              leading: const Icon(Icons.info),
-              title: const Text('Description'),
-              subtitle: const Text('Enhance your profile details'),
-              onTap: () {
-                setDescription();
-                Navigator.pop(context);
-              }),
-          ListTile(
-              leading: const Icon(Icons.add_a_photo),
-              title: const Text('Profile Image'),
-              subtitle: const Text('Refresh your profile look'),
-              onTap: () {
-                selectProfileImage();
-                Navigator.pop(context);
-              }),
-          ListTile(
-              leading: const Icon(Icons.add_photo_alternate),
-              title: const Text('Banner Image'),
-              subtitle: const Text('Change your banner photo'),
-              onTap: () {
-                selectBannerImage();
-                Navigator.pop(context);
-              }),
-        ],
-      ),
-    );
-  }
-
-  @override
-  void initState() => super.initState();
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: ref.watch(getUserDataProvider(widget.uid)).when(
-            data: (user) => NestedScrollView(
-              headerSliverBuilder: (context, innerBoxIsScrolled) {
-                return [
-                  SliverAppBar(
-                    actions: [
-                      TextButton(
-                        onPressed: () => saveChanges(user),
-                        child: const Text(
-                          'Save',
-                          style: TextStyle(color: Pallete.whiteColor),
-                        ),
-                      ),
-                    ],
-                    leading: IconButton(
-                      icon: const Icon(Icons.arrow_back),
-                      onPressed: () {
-                        Routemaster.of(context).push('/user-profile/${widget.uid}');
-                      },
-                    ),
-                    expandedHeight: 250,
-                    floating: true,
-                    snap: true,
-                    flexibleSpace: Stack(
-                      children: [
-                        Positioned.fill(
-                          child: bannerImageFile != null
-                              ? Image.file(bannerImageFile!)
-                              : Image.network(
-                                  user.bannerImage,
-                                  fit: BoxFit.cover,
-                                ),
-                        ),
-                        Container(
-                          alignment: Alignment.bottomLeft,
-                          padding:
-                              const EdgeInsets.all(20).copyWith(bottom: 70),
-                          child: CircleAvatar(
-                            backgroundImage: profileImageFile != null
-                                ? FileImage(profileImageFile!) as ImageProvider
-                                : NetworkImage(user.profileImage),
-                            radius: 45,
-                          ),
-                        ),
-                        Container(
-                          alignment: Alignment.bottomLeft,
-                          padding: const EdgeInsets.all(20),
-                          child: OutlinedButton(
-                            onPressed: () => _showEditProfileModal(),
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 25),
-                            ),
-                            child: const Text(
-                              'Edit Profile',
-                              style: TextStyle(color: Pallete.whiteColor),
-                            ),
+    return ref.watch(getUserDataProvider(widget.uid)).when(
+          data: (user) => GestureDetector(
+            onTap: FocusScope.of(context).unfocus,
+            child: isSetting
+                ? const Loading()
+                : Scaffold(
+                    appBar: AppBar(
+                      title: const Text('Edit Profile'),
+                      centerTitle: false,
+                      actions: [
+                        
+                        TextButton(
+                          onPressed: () {
+                            if (isNameValid) {
+                              saveChanges(user);
+                            } else {}
+                          },
+                          child: const Text(
+                            'Save',
+                            style: TextStyle(color: Pallete.whiteColor),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  SliverPadding(
-                    padding: const EdgeInsets.all(16),
-                    sliver: SliverList(
-                      delegate: SliverChildListDelegate(
-                        [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'u/${user.name}',
-                                style: const TextStyle(
-                                  fontSize: 19,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                    body: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            SizedBox(
+                              height: 200,
+                              child: Stack(
+                                children: [
+                                  DottedBorder(
+                                    borderType: BorderType.RRect,
+                                    radius: const Radius.circular(40),
+                                    dashPattern: const [10, 4],
+                                    strokeCap: StrokeCap.round,
+                                    color: Pallete.darkModeAppTheme.textTheme
+                                        .bodyMedium!.color!,
+                                    child: Container(
+                                      width: double.infinity,
+                                      height: 150,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: InkWell(
+                                        radius: 40.0,
+                                        onTap: () {
+                                          selectBannerImage();
+                                        },
+                                        child: bannerImageFile != null
+                                            ? Image.file(bannerImageFile!)
+                                            : user.bannerImage ==
+                                                    Constants.bannerDefault
+                                                ? const Center(
+                                                    child: Icon(
+                                                      Icons.camera_alt_outlined,
+                                                      size: 40,
+                                                    ),
+                                                  )
+                                                : Image.network(
+                                                    user.bannerImage),
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    bottom: 20,
+                                    left: 20,
+                                    child: InkWell(
+                                      onTap: () {
+                                        selectProfileImage();
+                                      },
+                                      child: CircleAvatar(
+                                        radius: 30,
+                                        backgroundImage: profileImageFile !=
+                                                null
+                                            ? FileImage(profileImageFile!)
+                                            : NetworkImage(user.profileImage)
+                                                as ImageProvider<Object>,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          const Divider(thickness: 2),
-                          const SizedBox(height: 10),
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                user.bio ?? 'No bio provided yet.',
-                                style: TextStyle(
-                                  color: user.bio != null
-                                      ? Colors.black
-                                      : Colors.grey,
-                                  fontStyle: user.bio != null
-                                      ? FontStyle.normal
-                                      : FontStyle.italic,
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 3),
+                                //Start of Name input text field
+                                const Padding(
+                                  padding:
+                                      EdgeInsets.only(left: 10, bottom: 10),
+                                  child: Text(
+                                    'Name',
+                                    style: TextStyle(
+                                        fontSize: 15,
+                                        fontStyle: FontStyle.italic),
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                user.bio ?? 'No description provided yet.',
-                                style: TextStyle(
-                                  color: user.bio != null
-                                      ? Colors.black
-                                      : Colors.grey,
-                                  fontStyle: user.bio != null
-                                      ? FontStyle.normal
-                                      : FontStyle.italic,
+                                const SizedBox(height: 3),
+                                TextField(
+                                  controller: nameController,
+                                  keyboardType: TextInputType.text,
+                                  autocorrect: false,
+                                  maxLength: 15,
+                                  decoration: InputDecoration(
+                                    labelText: 'Enter your name',
+                                    hintText: user.name,
+                                    prefixText: '#',
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: isNameValid
+                                            ? Colors.grey
+                                            : Colors.red,
+                                      ),
+                                    ),
+                                    errorText:
+                                        isNameValid ? null : 'Invalid name',
+                                  ),
+                                  onChanged: (value) {
+                                    checkName(value);
+                                  },
+                                  textInputAction: TextInputAction.done,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(
+                                      RegExp(r'[a-zA-Z]'),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                                const SizedBox(height: 10),
+                                const Divider(),
+                                //Start of Bio input text field
+                                const Padding(
+                                  padding:
+                                      EdgeInsets.only(left: 10, bottom: 10),
+                                  child: Text(
+                                    'Bio',
+                                    style: TextStyle(
+                                        fontSize: 15,
+                                        fontStyle: FontStyle.italic),
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                TextField(
+                                  controller: bioController,
+                                  keyboardType: TextInputType.text,
+                                  autocorrect: false,
+                                  maxLength: 50,
+                                  decoration: InputDecoration(
+                                    labelText: 'Enter your bio',
+                                    hintText:
+                                        'I\'m the best gamer ever lived....',
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: isNameValid
+                                            ? Colors.grey
+                                            : Colors.red,
+                                      ),
+                                    ),
+                                  ),
+                                  textInputAction: TextInputAction.done,
+                                ),
+                                const SizedBox(height: 10),
+                                const Divider(),
+                                //Start of Description input text field
+                                const Padding(
+                                  padding:
+                                      EdgeInsets.only(left: 10, bottom: 10),
+                                  child: Text(
+                                    'Description',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                TextField(
+                                  controller: descController,
+                                  keyboardType: TextInputType.text,
+                                  autocorrect: false,
+                                  maxLength: 100,
+                                  decoration: InputDecoration(
+                                    labelText: 'Enter your description',
+                                    hintText:
+                                        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam risus justo, auctor non libero eget, pharetra suscipit leo. Nam posuere, nisl nec faucibus mattis, lacus quam tincidunt lacus....',
+                                    border: const OutlineInputBorder(
+                                      borderSide:
+                                          BorderSide(color: Colors.grey),
+                                    ),
+                                    errorText:
+                                        isNameValid ? null : 'Invalid name',
+                                  ),
+                                  textInputAction: TextInputAction.done,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ];
-              },
-              body: const SizedBox(),
-            ),
-            error: (error, stackTrace) => ErrorText(error: error.toString()),
-            loading: () => const Loading(),
           ),
-    );
+          error: (error, stackTrace) => ErrorText(error: error.toString()),
+          loading: () => const Loading(),
+        );
   }
 }
