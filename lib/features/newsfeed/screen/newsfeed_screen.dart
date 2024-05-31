@@ -28,6 +28,13 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
           SliverToBoxAdapter(
             child: _buildCreatePostContainer(user!),
           ),
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                
+              },
+            ),
+          ),
         ],
       ),
     );
@@ -50,7 +57,9 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: GestureDetector(
-                  onTap: () {},
+                  onTap: () {
+                    navigateToCreatePostScreen();
+                  },
                   child: const TextField(
                     decoration: InputDecoration(
                       labelText: 'Share your moments....',

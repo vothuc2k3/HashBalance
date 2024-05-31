@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/features/post/screen/create_post_screen.dart';
 import 'package:routemaster/routemaster.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
@@ -18,7 +19,6 @@ import 'package:hash_balance/features/community/screen/mod_tools/edit_community_
 import 'package:hash_balance/features/community/screen/mod_tools/mod_tools_screen.dart';
 import 'package:hash_balance/features/community/screen/other_community_screen.dart';
 import 'package:hash_balance/features/home/screen/home_screen.dart';
-import 'package:hash_balance/features/post/screen/create_post/create_post_type_screen.dart';
 import 'package:hash_balance/features/setting/setting_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/edit_profile/edit_user_profile.dart';
@@ -56,6 +56,7 @@ class MyAppState extends ConsumerState<MyApp> {
           ),
       '/email-sign-up': (_) => const MaterialPage(
             child: EmailSignUpScreen(),
+            maintainState: true,
           ),
       '/email-sign-in': (_) => const MaterialPage(
             child: EmailSignInScreen(),
@@ -99,7 +100,7 @@ class MyAppState extends ConsumerState<MyApp> {
             child: EditProfileScreen(uid: route.pathParameters['uid']!),
           ),
       '/post/create': (_) => const MaterialPage(
-            child: CreatePostTypeScreen(),
+            child: CreatePostScreen(),
           ),
     },
     onUnknownRoute: (_) => const MaterialPage(
