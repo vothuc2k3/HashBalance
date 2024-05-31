@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hash_balance/features/newsfeed/screen/newsfeed_screen.dart';
+import 'package:hash_balance/features/post/screen/create_post/create_post_screen.dart';
 
 class Constants {
   static const logoPath = 'assets/images/logo.png';
@@ -26,4 +28,9 @@ class Constants {
     'Restricted': Icons.lock,
     'Private': Icons.privacy_tip,
   };
+
+  static const tabWidgets = [
+    NewsfeedScreen(),
+    CreatePostScreen(),
+  ];
 }

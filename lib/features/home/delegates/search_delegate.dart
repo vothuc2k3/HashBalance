@@ -93,7 +93,7 @@ class SearchCommunityDelegate extends SearchDelegate {
   }
 
   void navigateToCommunityScreen(BuildContext context, String communityName) {
-    Routemaster.of(context).push('/#=/$communityName');
+    Routemaster.of(context).push('/community/view/$communityName');
   }
 
   void navigateToProfileScreen(BuildContext context, String uid) {

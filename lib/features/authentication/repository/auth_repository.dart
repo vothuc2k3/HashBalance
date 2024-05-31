@@ -135,6 +135,7 @@ class AuthRepository {
   //SIGN OUT
   void signOut(WidgetRef ref) async {
     await _firebaseAuth.signOut();
+    
     ref.refresh(userProvider);
     ref.refresh(communityRepositoryProvider);
     ref.refresh(communityControllerProvider);

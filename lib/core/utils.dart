@@ -109,3 +109,5 @@ String generateSalt() {
 Future<FilePickerResult?> pickImage() async {
   return await FilePicker.platform.pickFiles(type: FileType.image);
 }
+
+

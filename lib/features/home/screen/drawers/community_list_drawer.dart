@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/models/community_model.dart';
 import 'package:routemaster/routemaster.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
@@ -11,17 +13,24 @@ class CommunityListDrawer extends ConsumerWidget {
   const CommunityListDrawer({super.key});
 
   void navigateToCreateCommunityScreen(BuildContext context) {
-    Routemaster.of(context).push('/create-community');
+    Routemaster.of(context).push('/community/create');
   }
 
-  void navigateToCommunityScreen(BuildContext context, String communityName) {
-    Routemaster.of(context).push('/#=/$communityName');
+  void navigateToCommunityScreen(
+      BuildContext context, Community community, WidgetRef ref) async {
+    final user = ref.watch(userProvider);
+    if (community.mods.contains(user!.uid)) {
+      Routemaster.of(context).push('/community/my-community/${community.name}');
+    } else {
+      Routemaster.of(context).push('/community/view/${community.name}');
+    }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // ignore: unused_result
     ref.refresh(userCommunitiesProvider);
+
     return Drawer(
       child: SafeArea(
         child: Column(
@@ -62,7 +71,8 @@ class CommunityListDrawer extends ConsumerWidget {
                           onTap: () {
                             navigateToCommunityScreen(
                               context,
-                              community.name,
+                              community,
+                              ref
                             );
                           },
                         );

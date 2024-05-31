@@ -1,14 +1,21 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/home/delegates/search_delegate.dart';
 import 'package:hash_balance/features/home/screen/drawers/community_list_drawer.dart';
 import 'package:hash_balance/features/home/screen/drawers/user_profile_drawer.dart';
-import 'package:hash_balance/theme/pallette.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  HomeScreenState createState() => HomeScreenState();
+}
+
+class HomeScreenState extends ConsumerState<HomeScreen> {
+  int _page = 0;
 
   void displayCommunityListDrawer(BuildContext context) {
     Scaffold.of(context).openDrawer();
@@ -18,8 +25,14 @@ class HomeScreen extends ConsumerWidget {
     Scaffold.of(context).openEndDrawer();
   }
 
+  void onPageChanged(int page) {
+    setState(() {
+      _page = page;
+    });
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
 
     return Scaffold(
@@ -54,10 +67,34 @@ class HomeScreen extends ConsumerWidget {
           }),
         ],
       ),
+      body: Constants.tabWidgets[_page],
       drawer: const CommunityListDrawer(),
       endDrawer: UserProfileDrawer(homeScreenContext: context),
-      bottomNavigationBar: const CupertinoNavigationBar(
-        backgroundColor: Color(0xFF141414),
+      bottomNavigationBar: CupertinoTabBar(
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_search_outlined),
+            label: 'Communities',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.add_circle_outline_outlined),
+            label: 'Create',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.message_outlined),
+            label: 'Chat',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notification_add_outlined),
+            label: 'Inbox',
+          ),
+        ],
+        onTap: onPageChanged,
+        currentIndex: _page,
       ),
     );
   }

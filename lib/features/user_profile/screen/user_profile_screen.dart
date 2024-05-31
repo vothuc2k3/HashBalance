@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -6,8 +7,8 @@ import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:routemaster/routemaster.dart';
 
-class CurrentUserProfileScreen extends ConsumerStatefulWidget {
-  const CurrentUserProfileScreen({
+class UserProfileScreen extends ConsumerStatefulWidget {
+  const UserProfileScreen({
     super.key,
     required this.uid,
   });
@@ -16,11 +17,10 @@ class CurrentUserProfileScreen extends ConsumerStatefulWidget {
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
-      _CurrentUserProfileScreenState();
+      _UserProfileScreenScreenState();
 }
 
-class _CurrentUserProfileScreenState
-    extends ConsumerState<CurrentUserProfileScreen> {
+class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
   final double coverHeight = 250;
   final double profileHeight = 120;
 
@@ -69,24 +69,11 @@ class _CurrentUserProfileScreenState
                     children: [
                       Container(
                         color: Colors.black,
-                        child: Image.network(
-                          user.bannerImage,
+                        child: CachedNetworkImage(
+                          imageUrl: user.bannerImage,
                           width: double.infinity,
                           height: coverHeight,
                           fit: BoxFit.cover,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) {
-                              return child;
-                            }
-                            return Container(
-                              width: double.infinity,
-                              height: coverHeight,
-                              color: Colors.black,
-                              child: const Center(
-                                child: CircularProgressIndicator(),
-                              ),
-                            );
-                          },
                         ),
                       ),
                       Positioned(
