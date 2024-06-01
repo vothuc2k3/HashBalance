@@ -27,10 +27,6 @@ class PostRepository {
   })  : _firestore = firestore,
         _storageRepository = storageRepository;
 
-  // Stream<Post> getPostsByUserCommunities(List<String> communitiesName) {
-
-  // }
-
   FutureVoid createPost(
     Post post,
     File? image,
@@ -82,7 +78,16 @@ class PostRepository {
     }
   }
 
+  // GET THE POSTS BY USER COMMUNITIES
+  // Stream<List<Post>> getPostsByUserCommunities(String uid) {
+
+  // }
+
   //REFERENCE ALL THE POSTS
   CollectionReference get _posts =>
       _firestore.collection(FirebaseConstants.postsCollection);
+
+  //REFERENCE ALL THE MEMBERS IN COMMUNITIES
+  CollectionReference get _membership =>
+      _firestore.collection(FirebaseConstants.membershipCollection);
 }

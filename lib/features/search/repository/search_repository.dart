@@ -46,19 +46,16 @@ class SearchRepository {
           List<Community> communities = [];
           for (var doc in event.docs) {
             final data = doc.data() as Map<String, dynamic>;
-            final members = (data['members'] as List?)?.cast<String>() ?? [];
-            final mods = (data['mods'] as List?)?.cast<String>() ?? [];
             communities.add(
               Community(
-                id: data['id'] as String,
                 name: data['name'] as String,
                 profileImage: data['profileImage'] as String,
                 bannerImage: data['bannerImage'] as String,
                 type: data['type'] as String,
                 containsExposureContents:
                     data['containsExposureContents'] as bool,
-                members: members,
-                mods: mods,
+                membersCount: data['membersCount'] as int,
+                createdAt: data['createdAt'] as Timestamp,
               ),
             );
           }
@@ -85,8 +82,7 @@ class SearchRepository {
             final data = doc.data() as Map<String, dynamic>;
             final achivements =
                 (data['achivements'] as List?)?.cast<String>() ?? [];
-            final friends = 
-                (data['friends'] as List?)?.cast<String>() ?? [];
+            final friends = (data['friends'] as List?)?.cast<String>() ?? [];
             users.add(
               UserModel(
                 name: data['name'] as String,

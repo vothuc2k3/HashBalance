@@ -5,7 +5,6 @@ import 'package:routemaster/routemaster.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
-import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
@@ -145,7 +144,7 @@ class MyCommunityScreenState extends ConsumerState<MyCommunityScreen> {
                             Padding(
                               padding: const EdgeInsets.only(top: 10),
                               child:
-                                  Text('${community.members.length} members'),
+                                  Text('${community.membersCount} members'),
                             ),
                           ],
                         ),

@@ -27,9 +27,9 @@ class PostController extends StateNotifier<bool> {
   })  : _postRepository = postRepository,
         super(false);
 
-  //GET THE POSTS BY UID
-  // Stream<Post> getPostsByUserCommunities(List<String> communityName) {
-  //   return _postRepository.getPostsByUserCommunities(communityName);
+  //GET THE POSTS BY USER COMMUNITIES
+  // Stream<List<Post>> getPostsByUserCommunities(String uid) {
+  //   return _postRepository.getPostsByUserCommunities(uid);
   // }
 
   FutureString createPost(
@@ -45,6 +45,8 @@ class PostController extends StateNotifier<bool> {
         communityName: communityName,
         uid: uid,
         content: content,
+        image: '',
+        video: '',
         createdAt: Timestamp.now(),
         upvotes: 0,
         downvotes: 0,
