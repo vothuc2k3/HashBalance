@@ -13,7 +13,7 @@ import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/community/repository/community_repository.dart';
-import 'package:hash_balance/models/user_model.dart';
+import 'package:hash_balance/models/user.dart';
 
 final userProvider = StateProvider<UserModel?>((ref) => null);
 

@@ -24,7 +24,7 @@ import 'package:hash_balance/features/user_profile/screen/user_profile_screen.da
 import 'package:hash_balance/features/user_profile/screen/edit_profile/edit_user_profile.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/firebase_options.dart';
-import 'package:hash_balance/models/user_model.dart';
+import 'package:hash_balance/models/user.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
 void main() async {

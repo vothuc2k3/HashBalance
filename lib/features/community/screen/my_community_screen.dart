@@ -67,11 +67,9 @@ class MyCommunityScreenState extends ConsumerState<MyCommunityScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(userProvider);
     return Scaffold(
       body: ref.watch(getCommunitiesByNameProvider(widget.name)).when(
             data: (community) {
-              final joined = community.members.contains(user!.uid);
               return NestedScrollView(
                 headerSliverBuilder: (context, innerBoxIsScrolled) {
                   return [
@@ -125,61 +123,23 @@ class MyCommunityScreenState extends ConsumerState<MyCommunityScreen> {
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold),
                                 ),
-                                !community.mods.contains(user.uid)
-                                    ? OutlinedButton(
-                                        onPressed: joined
-                                            ? () => leaveCommunity(
-                                                  user.uid,
-                                                  community.name,
-                                                  ref,
-                                                  context,
-                                                )
-                                            : () => joinCommunity(
-                                                  user.uid,
-                                                  community.name,
-                                                  ref,
-                                                  context,
-                                                ),
-                                        style: ElevatedButton.styleFrom(
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(30),
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 25),
-                                        ),
-                                        child: joined
-                                            ? const Text(
-                                                'Joined',
-                                                style: TextStyle(
-                                                  color: Pallete.whiteColor,
-                                                ),
-                                              )
-                                            : const Text(
-                                                'Join',
-                                                style: TextStyle(
-                                                  color: Pallete.whiteColor,
-                                                ),
-                                              ),
-                                      )
-                                    : OutlinedButton(
-                                        onPressed: () => navigateToModTools(
-                                            context, widget.name),
-                                        style: ElevatedButton.styleFrom(
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(30),
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 25),
-                                        ),
-                                        child: const Text(
-                                          'Mod Tools',
-                                          style: TextStyle(
-                                            color: Pallete.whiteColor,
-                                          ),
-                                        ),
-                                      ),
+                                OutlinedButton(
+                                  onPressed: () =>
+                                      navigateToModTools(context, widget.name),
+                                  style: ElevatedButton.styleFrom(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 25),
+                                  ),
+                                  child: const Text(
+                                    'Mod Tools',
+                                    style: TextStyle(
+                                      color: Pallete.whiteColor,
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                             Padding(

@@ -5,7 +5,8 @@ import 'package:hash_balance/core/common/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
-import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/community.dart';
+import 'package:hash_balance/models/community_membership.dart';
 
 final communityRepositoryProvider = Provider((ref) {
   return CommunityRepository(firestore: ref.watch(firebaseFirestoreProvider));
@@ -16,8 +17,6 @@ class CommunityRepository {
 
   CommunityRepository({required FirebaseFirestore firestore})
       : _firestore = firestore;
-
-  
 
   //CREATE A WHOLE NEW COMMUNITY
   FutureVoid createCommunity(Community community) async {
@@ -30,15 +29,9 @@ class CommunityRepository {
         _communities.doc(community.name).set(community.toMap()),
       );
     } on FirebaseException catch (e) {
-      return left(
-        Failures(e.message!),
-      );
+      return left(Failures(e.message!));
     } catch (e) {
-      return left(
-        Failures(
-          e.toString(),
-        ),
-      );
+      return left(Failures(e.toString()));
     }
   }
 
@@ -102,11 +95,15 @@ class CommunityRepository {
   }
 
   //LET USER JOIN COMMUNITY
-  FutureVoid joinCommunity(String uid, String communityName) async {
+  FutureVoid joinCommunity(
+      String uid, String communityName, CommunityMembership membership) async {
     try {
-      return right(_communities.doc(communityName).update({
+      right(_communities.doc(communityName).update({
         'members': FieldValue.arrayUnion([uid]),
       }));
+      final membershipId = uid + communityName;
+      right(_membership.doc(membershipId).set(membership.toMap()));
+      return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {
@@ -117,9 +114,12 @@ class CommunityRepository {
   //LET USER JOIN COMMUNITY
   FutureVoid leaveCommunity(String uid, String communityName) async {
     try {
-      return right(_communities.doc(communityName).update({
+      right(_communities.doc(communityName).update({
         'members': FieldValue.arrayRemove([uid]),
       }));
+      final membershipId = uid + communityName;
+      right(_membership.doc(membershipId).delete());
+      return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {
@@ -130,4 +130,6 @@ class CommunityRepository {
   //GET THE COMMUNITIES DATA
   CollectionReference get _communities =>
       _firestore.collection(FirebaseConstants.communitiesCollection);
+  CollectionReference get _membership =>
+      _firestore.collection(FirebaseConstants.membershipCollection);
 }

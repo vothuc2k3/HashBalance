@@ -1,5 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/common/error_text.dart';
+import 'package:hash_balance/core/common/loading_circular.dart';
+import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/community/controller/comunity_controller.dart';
+import 'package:hash_balance/features/post/controller/post_controller.dart';
 
 class CreatePostScreen extends ConsumerStatefulWidget {
   const CreatePostScreen({super.key});
@@ -10,71 +18,69 @@ class CreatePostScreen extends ConsumerStatefulWidget {
 }
 
 class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
-  var cardHeightWidth = 120.0;
-  var iconSize = 60.0;
+  final contentController = TextEditingController();
+  String? communityName;
+  File? image;
+  File? video;
+
+  void createPost(String uid) async {
+    final result = await ref.read(postControllerProvider.notifier).createPost(
+          uid,
+          communityName!,
+          image,
+          video,
+          contentController.text,
+        );
+    result.fold((l) => showSnackBar(context, l.toString()),
+        (r) => showMaterialBanner(context, r.toString()));
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
+    final user = ref.watch(userProvider);
+    return Column(
       children: [
-        GestureDetector(
-          onTap: () {},
-          child: SizedBox(
-            height: cardHeightWidth,
-            width: cardHeightWidth,
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              elevation: 16,
-              child: Center(
-                child: Icon(
-                  Icons.image_outlined,
-                  size: iconSize,
-                ),
-              ),
-            ),
-          ),
+        TextField(
+          controller: contentController,
         ),
-        GestureDetector(
-          onTap: () {},
-          child: SizedBox(
-            height: cardHeightWidth,
-            width: cardHeightWidth,
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              elevation: 16,
-              child: Center(
-                child: Icon(
-                  Icons.image_outlined,
-                  size: iconSize,
+        ref.watch(userCommunitiesProvider).when(
+              data: (communities) => Expanded(
+                child: ListView.separated(
+                  itemCount: communities.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    final community = communities[index];
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundImage: NetworkImage(community.profileImage),
+                      ),
+                      title: Text(
+                        '#=${community.name}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onTap: () {
+                        communityName = community.name;
+                      },
+                    );
+                  },
+                  separatorBuilder: (context, index) {
+                    return const Divider();
+                  },
                 ),
               ),
+              error: ((error, stackTrace) {
+                return ErrorText(error: error.toString());
+              }),
+              loading: () {
+                return const Loading();
+              },
             ),
-          ),
-        ),
-        GestureDetector(
-          onTap: () {},
-          child: SizedBox(
-            height: cardHeightWidth,
-            width: cardHeightWidth,
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              elevation: 16,
-              child: Center(
-                child: Icon(
-                  Icons.image_outlined,
-                  size: iconSize,
-                ),
-              ),
-            ),
-          ),
+        IconButton(
+          onPressed: () {
+            createPost(user!.uid);
+          },
+          icon: const Icon(Icons.add),
         ),
       ],
     );

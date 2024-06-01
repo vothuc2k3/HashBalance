@@ -6,7 +6,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/features/user_profile/repository/user_repository.dart';
-import 'package:hash_balance/models/user_model.dart';
+import 'package:hash_balance/models/user.dart';
 
 final userControllerProvider =
     StateNotifierProvider<UserController, bool>((ref) => UserController(
@@ -34,16 +34,10 @@ class UserController extends StateNotifier<bool> {
     state = true;
     try {
       final result = await _userRepository.editUserProfile(
-        user,
-        profileImage,
-        bannerImage,
-        name,
-        bio,
-        description
-      );
+          user, profileImage, bannerImage, name, bio, description);
       return result.fold(
         (l) => left((Failures(l.message))),
-        (r) => right('Successfully Updated Your Profile'),
+        (r) => right('Successfully Updated Your Profile!'),
       );
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));

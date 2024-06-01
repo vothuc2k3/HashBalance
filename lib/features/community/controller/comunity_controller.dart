@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
+import 'package:hash_balance/models/community_membership.dart';
 import 'package:routemaster/routemaster.dart';
 
 import 'package:hash_balance/core/common/constants/constants.dart';
@@ -13,7 +14,7 @@ import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/repository/community_repository.dart';
-import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/community.dart';
 
 final userCommunitiesProvider = StreamProvider((ref) {
   final communityController = ref.watch(communityControllerProvider.notifier);
@@ -177,8 +178,15 @@ class CommunityController extends StateNotifier<bool> {
   ) async {
     state = true;
     try {
-      final result =
-          await _communityRepository.joinCommunity(uid, communityName);
+      CommunityMembership membership = CommunityMembership(
+        uid: uid,
+        communityName: communityName,
+      );
+      final result = await _communityRepository.joinCommunity(
+        uid,
+        communityName,
+        membership,
+      );
       return result.fold(
         (l) => left(Failures(l.message)),
         (r) => right('Successfully Joined The Community!'),

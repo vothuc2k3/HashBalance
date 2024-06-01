@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
 class Post {
-  final String id;
-  final String userId;
+  final String communityName;
+  final String uid;
   final String? content;
   final String? image;
   final String? video;
@@ -12,8 +12,8 @@ class Post {
   final int downvotes;
   final List<String> comments;
   Post({
-    required this.id,
-    required this.userId,
+    required this.communityName,
+    required this.uid,
     this.content,
     this.image,
     this.video,
@@ -24,8 +24,8 @@ class Post {
   });
 
   Post copyWith({
-    String? id,
-    String? userId,
+    String? communityName,
+    String? uid,
     String? content,
     String? image,
     String? video,
@@ -35,8 +35,8 @@ class Post {
     List<String>? comments,
   }) {
     return Post(
-      id: id ?? this.id,
-      userId: userId ?? this.userId,
+      communityName: communityName ?? this.communityName,
+      uid: uid ?? this.uid,
       content: content ?? this.content,
       image: image ?? this.image,
       video: video ?? this.video,
@@ -49,8 +49,8 @@ class Post {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id': id,
-      'userId': userId,
+      'communityName': communityName,
+      'uid': uid,
       'content': content,
       'image': image,
       'video': video,
@@ -63,8 +63,8 @@ class Post {
 
   factory Post.fromMap(Map<String, dynamic> map) {
     return Post(
-      id: map['id'] as String,
-      userId: map['userId'] as String,
+      communityName: map['communityName'] as String,
+      uid: map['uid'] as String,
       content: map['content'] != null ? map['content'] as String : null,
       image: map['image'] != null ? map['image'] as String : null,
       video: map['video'] != null ? map['video'] as String : null,
@@ -76,17 +76,18 @@ class Post {
       ),
     );
   }
+  
   @override
   String toString() {
-    return 'Post(id: $id, userId: $userId, content: $content, image: $image, video: $video, createdAt: $createdAt, upvotes: $upvotes, downvotes: $downvotes, comments: $comments)';
+    return 'Post(communityName: $communityName, uid: $uid, content: $content, image: $image, video: $video, createdAt: $createdAt, upvotes: $upvotes, downvotes: $downvotes, comments: $comments)';
   }
 
   @override
   bool operator ==(covariant Post other) {
     if (identical(this, other)) return true;
 
-    return other.id == id &&
-        other.userId == userId &&
+    return other.communityName == communityName &&
+        other.uid == uid &&
         other.content == content &&
         other.image == image &&
         other.video == video &&
@@ -98,8 +99,8 @@ class Post {
 
   @override
   int get hashCode {
-    return id.hashCode ^
-        userId.hashCode ^
+    return communityName.hashCode ^
+        uid.hashCode ^
         content.hashCode ^
         image.hashCode ^
         video.hashCode ^

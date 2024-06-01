@@ -10,7 +10,7 @@ import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
-import 'package:hash_balance/models/user_model.dart';
+import 'package:hash_balance/models/user.dart';
 import 'package:hash_balance/theme/pallette.dart';
 import 'package:routemaster/routemaster.dart';
 
