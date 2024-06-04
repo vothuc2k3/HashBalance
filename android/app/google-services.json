@@ -1,51 +1,26 @@
 {
   "project_info": {
-    "project_number": "456581070342",
-    "project_id": "hash-balance-official-2",
-    "storage_bucket": "hash-balance-official-2.appspot.com"
+    "project_number": "1006311081570",
+    "project_id": "hash-balance-3",
+    "storage_bucket": "hash-balance-3.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:456581070342:android:b5b28a46f459edc7c5cd87",
+        "mobilesdk_app_id": "1:1006311081570:android:aaade926b99742fb03733b",
         "android_client_info": {
           "package_name": "com.example.hash_balance"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "456581070342-f3e31i9gtmkh9ajvrm7g5drmo9b4srb2.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.hash_balance",
-            "certificate_hash": "2c3198bf18a5c4490e0d52eed9f3190b7d0542c7"
-          }
-        },
-        {
-          "client_id": "456581070342-b157pc9hr7ta88gsapi0mhd5ecmaav4a.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAt0vq2v6bpxhyw1iQutVDY8Aq21Z93gNM"
+          "current_key": "AIzaSyCG_gQyTltAHBWM_nqm5xjj9QD49Lvf0wc"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "456581070342-b157pc9hr7ta88gsapi0mhd5ecmaav4a.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "456581070342-j45e7jajpt8gu89eiav11shvk6kmud2r.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.example.hashBalance"
-              }
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

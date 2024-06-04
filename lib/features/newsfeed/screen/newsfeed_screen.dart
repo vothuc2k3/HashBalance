@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:mdi/mdi.dart';
 import 'package:routemaster/routemaster.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
@@ -38,6 +39,11 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
         slivers: [
           SliverToBoxAdapter(
             child: _buildCreatePostContainer(user!),
+          ),
+          const SliverToBoxAdapter(
+            child: SizedBox(
+              height: 20,
+            ),
           ),
           ref.watch(getCommunitiesPostsProvider).when(
                 data: (posts) {
@@ -79,45 +85,185 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
     required UserModel user,
     required Post post,
   }) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
+    return Flexible(
+      child: Column(
         children: [
-          CircleAvatar(
-            backgroundImage: CachedNetworkImageProvider(user.profileImage),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildPostHeader(post, user),
+                const SizedBox(height: 4),
+                Text(post.content ?? ''),
+                post.image != null
+                    ? const SizedBox.shrink()
+                    : const SizedBox(height: 6),
+              ],
+            ),
           ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(user.name),
-              const Row(
-                children: [
-                  Text(
-                    'Time post ago',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 12,
-                    ),
-                  ),
-                  Icon(
-                    Icons.public,
-                    color: Colors.white,
-                    size: 12,
-                  )
-                ],
-              )
-            ],
-          ),
-          const Spacer(),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.more_horiz),
+          post.image != null
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: CachedNetworkImage(imageUrl: post.image!),
+                )
+              : const SizedBox.shrink(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: _buildPostStat(post),
           ),
         ],
       ),
     );
   }
+
+  Widget _buildPostStat(Post post) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Pallete.blueColor,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.arrow_upward_sharp,
+                size: 10,
+                color: Pallete.whiteColor,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                post.upvotes > 0 ? '${post.upvotes}' : '',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                ),
+              ),
+            ),
+            Text(
+              '${post.comments.length} Comments',
+              style: TextStyle(
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '69 Shares',
+              style: TextStyle(
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+        const Divider(),
+        Row(
+          children: [
+            _buildPostButton(
+              icon: Icon(
+                Mdi.thumbUpOutline,
+                color: Colors.grey[600],
+                size: 20,
+              ),
+              ontap: () {},
+              label: 'Upvote',
+            ),
+            _buildPostButton(
+              icon: Icon(
+                Mdi.commentOutline,
+                color: Colors.grey[600],
+                size: 20,
+              ),
+              ontap: () {},
+              label: 'Comment',
+            ),
+            _buildPostButton(
+              icon: Icon(
+                Mdi.shareOutline,
+                color: Colors.grey[600],
+                size: 25,
+              ),
+              ontap: () {},
+              label: 'Share',
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPostButton({
+    required icon,
+    required ontap,
+    required label,
+  }) {
+    return Expanded(
+      child: Material(
+        color: Colors.grey,
+        child: InkWell(
+          onTap: ontap(),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            height: 25,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                icon,
+                const SizedBox(width: 4),
+                Text(label),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+    Widget _buildPostHeader(Post post, UserModel user) {
+      return Row(
+        children: [
+          CircleAvatar(
+            backgroundImage: CachedNetworkImageProvider(user.profileImage),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  user.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Row(
+                  children: [
+                    Text(
+                      (post.createdAt.toDate()).toString(),
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                      ),
+                    ),
+                    const Icon(
+                      Icons.public,
+                      color: Colors.grey,
+                      size: 12,
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.more_horiz),
+          ),
+        ],
+      );
+    }
 
   Widget _buildCreatePostContainer(UserModel user) {
     return Container(

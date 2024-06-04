@@ -27,11 +27,12 @@ class NewsfeedRepository {
       final List<Post> posts = [];
       for (var communityName in communityNames) {
         final communityPosts =
-            await _posts.where('communityName', isEqualTo: communityName).get();
+            await _posts.where('communityName', isEqualTo: communityName, ).get();
         for (var postDoc in communityPosts.docs) {
           final comments = (postDoc['comments'] as List?)?.cast<String>() ?? [];
           posts.add(
             Post(
+              content: postDoc['content'] as String,
               communityName: postDoc['communityName'] as String,
               uid: postDoc['uid'] as String,
               createdAt: postDoc['createdAt'] as Timestamp,
