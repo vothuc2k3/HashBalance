@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
@@ -21,34 +22,30 @@ class OtherCommunityScreen extends ConsumerStatefulWidget {
 }
 
 class OtherCommunityScreenState extends ConsumerState<OtherCommunityScreen> {
-  bool isMember = false;
-
   @override
   void initState() {
     super.initState();
   }
 
-  void joinCommunity(
-    String uid,
-    String communityName,
-    WidgetRef ref,
-    BuildContext communityScreenContext,
-  ) async {
+  void joinCommunity(String uid, String communityName, WidgetRef ref,
+      BuildContext communityScreenContext) async {
     final result = await ref
         .read(communityControllerProvider.notifier)
         .joinCommunity(uid, communityName);
     result.fold(
-      (l) => showSnackBar(communityScreenContext, l.toString()),
-      (r) => showMaterialBanner(communityScreenContext, r.toString()),
+      (l) => showSnackBar(
+        communityScreenContext,
+        l.toString(),
+      ),
+      (r) => showMaterialBanner(
+        communityScreenContext,
+        r.toString(),
+      ),
     );
   }
 
-  void leaveCommunity(
-    String uid,
-    String communityName,
-    WidgetRef ref,
-    BuildContext communityScreenContext,
-  ) async {
+  void leaveCommunity(String uid, String communityName, WidgetRef ref,
+      BuildContext communityScreenContext) async {
     final result = await ref
         .read(communityControllerProvider.notifier)
         .leaveCommunity(uid, communityName);
@@ -70,6 +67,7 @@ class OtherCommunityScreenState extends ConsumerState<OtherCommunityScreen> {
     return Scaffold(
       body: ref.watch(getCommunitiesByNameProvider(widget.name)).when(
             data: (community) {
+              final joined = community.members.contains(user!.uid);
               return NestedScrollView(
                 headerSliverBuilder: (context, innerBoxIsScrolled) {
                   return [
@@ -109,7 +107,7 @@ class OtherCommunityScreenState extends ConsumerState<OtherCommunityScreen> {
                               alignment: Alignment.topLeft,
                               child: CircleAvatar(
                                 backgroundImage:
-                                    NetworkImage(community.profileImage),
+                                    CachedNetworkImageProvider(community.profileImage),
                                 radius: 35,
                               ),
                             ),
@@ -124,15 +122,15 @@ class OtherCommunityScreenState extends ConsumerState<OtherCommunityScreen> {
                                       fontWeight: FontWeight.bold),
                                 ),
                                 OutlinedButton(
-                                  onPressed: isMember
+                                  onPressed: joined
                                       ? () => leaveCommunity(
-                                            user!.uid,
+                                            user.uid,
                                             community.name,
                                             ref,
                                             context,
                                           )
                                       : () => joinCommunity(
-                                            user!.uid,
+                                            user.uid,
                                             community.name,
                                             ref,
                                             context,
@@ -144,7 +142,7 @@ class OtherCommunityScreenState extends ConsumerState<OtherCommunityScreen> {
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 25),
                                   ),
-                                  child: isMember
+                                  child: joined
                                       ? const Text(
                                           'Joined',
                                           style: TextStyle(
@@ -162,7 +160,8 @@ class OtherCommunityScreenState extends ConsumerState<OtherCommunityScreen> {
                             ),
                             Padding(
                               padding: const EdgeInsets.only(top: 10),
-                              child: Text('${community.membersCount} members'),
+                              child:
+                                  Text('${community.members.length} members'),
                             ),
                           ],
                         ),

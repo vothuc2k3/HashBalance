@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/error_text.dart';
@@ -13,11 +12,10 @@ class CreatePostScreen extends ConsumerStatefulWidget {
   const CreatePostScreen({super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() =>
-      _CreatePostScreenState();
+  CreatePostScreenState createState() => CreatePostScreenState();
 }
 
-class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
+class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   final contentController = TextEditingController();
   String? communityName;
   File? image;
@@ -38,47 +36,53 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
+    final communityProvider = ref.watch(userCommunitiesProvider);
+
     return Column(
       children: [
         TextField(
           controller: contentController,
         ),
-        ref.watch(userCommunitiesProvider).when(
-              data: (communities) => Expanded(
-                child: ListView.separated(
-                  itemCount: communities.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    final community = communities[index];
-                    return ListTile(
-                      leading: CircleAvatar(
+        communityProvider.when(
+          data: (communities) {
+            return DropdownButton<String>(
+              value: communityName,
+              onChanged: (String? newValue) {
+                setState(() {
+                  communityName = newValue;
+                });
+              },
+              items: communities.map<DropdownMenuItem<String>>((community) {
+                return DropdownMenuItem<String>(
+                  value: community.name,
+                  child: Row(
+                    children: [
+                      CircleAvatar(
                         backgroundImage: NetworkImage(community.profileImage),
                       ),
-                      title: Text(
+                      const SizedBox(width: 8),
+                      Text(
                         '#=${community.name}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      onTap: () {
-                        communityName = community.name;
-                      },
-                    );
-                  },
-                  separatorBuilder: (context, index) {
-                    return const Divider();
-                  },
-                ),
-              ),
-              error: ((error, stackTrace) {
-                return ErrorText(error: error.toString());
-              }),
-              loading: () {
-                return const Loading();
-              },
-            ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            );
+          },
+          error: (error, stackTrace) {
+            return ErrorText(error: error.toString());
+          },
+          loading: () => const Loading(),
+        ),
         IconButton(
           onPressed: () {
-            createPost(user!.uid);
+            if (communityName != null) {
+              createPost(user!.uid);
+            } else {
+              showSnackBar(context, 'Please select a community');
+            }
           },
           icon: const Icon(Icons.add),
         ),

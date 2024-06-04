@@ -9,7 +9,7 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
-import 'package:hash_balance/models/user.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 final userRepositoryProvider = Provider((ref) {
   return UserRepository(
@@ -95,7 +95,7 @@ class UserRepository {
         'hashAge': updatedUser.hashAge,
         'bio': updatedUser.bio,
         'description': updatedUser.description,
-        'achivements': List<String>.from(updatedUser.achivements),
+        'achivements': List<String>.from(updatedUser.achivements).toList(),
       };
       await _user.doc(user.uid).update(updatedUserAfterCast);
       return right(null);
@@ -104,6 +104,25 @@ class UserRepository {
     } catch (e) {
       return left(Failures(e.toString()));
     }
+  }
+
+  Stream<UserModel> getUserByUid(String uid) {
+    return _user.doc(uid).snapshots().map((event) {
+      return UserModel(
+        email: event['email'] as String,
+        name: event['name'] as String,
+        uid: uid,
+        createdAt: event['createdAt'] as Timestamp,
+        profileImage: event['profileImage'] as String,
+        bannerImage: event['bannerImage'] as String,
+        isAuthenticated: event['isAuthenticated'] as bool,
+        isRestricted: event['isRestricted'] as bool,
+        activityPoint: event['activityPoint'] as int,
+        achivements: List<String>.from(event['achivements']).toList(),
+        friends: List<String>.from(event['friends']).toList(),
+        followers: List<String>.from(event['followers']).toList(),
+      );
+    });
   }
 
   //REFERENCE ALL THE USERS

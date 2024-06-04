@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
@@ -5,6 +6,7 @@ import 'package:routemaster/routemaster.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
@@ -66,9 +68,11 @@ class MyCommunityScreenState extends ConsumerState<MyCommunityScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(userProvider);
     return Scaffold(
       body: ref.watch(getCommunitiesByNameProvider(widget.name)).when(
             data: (community) {
+              final joined = community.members.contains(user!.uid);
               return NestedScrollView(
                 headerSliverBuilder: (context, innerBoxIsScrolled) {
                   return [
@@ -108,7 +112,7 @@ class MyCommunityScreenState extends ConsumerState<MyCommunityScreen> {
                               alignment: Alignment.topLeft,
                               child: CircleAvatar(
                                 backgroundImage:
-                                    NetworkImage(community.profileImage),
+                                    CachedNetworkImageProvider(community.profileImage),
                                 radius: 35,
                               ),
                             ),
@@ -122,29 +126,67 @@ class MyCommunityScreenState extends ConsumerState<MyCommunityScreen> {
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold),
                                 ),
-                                OutlinedButton(
-                                  onPressed: () =>
-                                      navigateToModTools(context, widget.name),
-                                  style: ElevatedButton.styleFrom(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 25),
-                                  ),
-                                  child: const Text(
-                                    'Mod Tools',
-                                    style: TextStyle(
-                                      color: Pallete.whiteColor,
-                                    ),
-                                  ),
-                                ),
+                                !community.moderators.contains(user.uid)
+                                    ? OutlinedButton(
+                                        onPressed: joined
+                                            ? () => leaveCommunity(
+                                                  user.uid,
+                                                  community.name,
+                                                  ref,
+                                                  context,
+                                                )
+                                            : () => joinCommunity(
+                                                  user.uid,
+                                                  community.name,
+                                                  ref,
+                                                  context,
+                                                ),
+                                        style: ElevatedButton.styleFrom(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(30),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 25),
+                                        ),
+                                        child: joined
+                                            ? const Text(
+                                                'Joined',
+                                                style: TextStyle(
+                                                  color: Pallete.whiteColor,
+                                                ),
+                                              )
+                                            : const Text(
+                                                'Join',
+                                                style: TextStyle(
+                                                  color: Pallete.whiteColor,
+                                                ),
+                                              ),
+                                      )
+                                    : OutlinedButton(
+                                        onPressed: () => navigateToModTools(
+                                            context, widget.name),
+                                        style: ElevatedButton.styleFrom(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(30),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 25),
+                                        ),
+                                        child: const Text(
+                                          'Mod Tools',
+                                          style: TextStyle(
+                                            color: Pallete.whiteColor,
+                                          ),
+                                        ),
+                                      ),
                               ],
                             ),
                             Padding(
                               padding: const EdgeInsets.only(top: 10),
                               child:
-                                  Text('${community.membersCount} members'),
+                                  Text('${community.members.length} members'),
                             ),
                           ],
                         ),

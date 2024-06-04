@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -60,7 +61,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
           Builder(builder: (context) {
             return IconButton(
               icon: CircleAvatar(
-                backgroundImage: NetworkImage(user!.profileImage),
+                backgroundImage: CachedNetworkImageProvider(user!.profileImage),
               ),
               onPressed: () => displayUserProfileDrawer(context),
             );

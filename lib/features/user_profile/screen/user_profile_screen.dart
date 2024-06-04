@@ -82,7 +82,8 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
                         child: CircleAvatar(
                           radius: (profileHeight / 2) - 10,
                           backgroundColor: Colors.grey.shade800,
-                          backgroundImage: NetworkImage(user.profileImage),
+                          backgroundImage:
+                              CachedNetworkImageProvider(user.profileImage),
                         ),
                       ),
                     ],
@@ -162,13 +163,15 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
                             text: 'Friends', value: user.friends.length - 1),
                         _buildVerticalDivider(),
                         _buildButton(
+                            text: 'Followers',
+                            value: user.followers.length - 1),
+                        _buildVerticalDivider(),
+                        _buildButton(
                             text: 'Activity Points', value: user.activityPoint),
                         _buildVerticalDivider(),
                         _buildButton(
                             text: 'Achivements',
                             value: user.achivements.length),
-                        _buildVerticalDivider(),
-                        _buildButton(text: 'Points', value: user.activityPoint),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -232,7 +235,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
             '$value',
             style: const TextStyle(
               fontWeight: FontWeight.bold,
-              fontSize: 15,
+              fontSize: 10,
             ),
           ),
           const SizedBox(height: 2),
@@ -247,7 +250,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
 
   Widget _buildVerticalDivider() {
     return const VerticalDivider(
-      width: 16,
+      width: 0.1,
       thickness: 1,
       color: Colors.grey,
     );

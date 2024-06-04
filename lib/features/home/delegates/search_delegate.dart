@@ -1,7 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/search/controller/search_controller.dart';
 import 'package:routemaster/routemaster.dart';
 
@@ -36,6 +36,7 @@ class SearchCommunityDelegate extends SearchDelegate {
     if (query.isEmpty) {
       return const SizedBox();
     }
+
     return ref.watch(searchProvider(query)).when(
           data: (data) {
             if (query.startsWith('#=')) {
@@ -43,17 +44,13 @@ class SearchCommunityDelegate extends SearchDelegate {
                 itemCount: data.length,
                 itemBuilder: (BuildContext context, int index) {
                   final community = data[index];
-
                   return ListTile(
                     leading: CircleAvatar(
-                      backgroundImage: NetworkImage(community.profileImage),
+                      backgroundImage: CachedNetworkImageProvider(community.profileImage),
                     ),
                     title: Text('#=${community.name}'),
                     onTap: () {
-                      navigateToCommunityScreen(
-                        context,
-                        community.name,
-                      );
+                      navigateToCommunityScreen(context, community.name);
                     },
                   );
                 },
@@ -72,7 +69,7 @@ class SearchCommunityDelegate extends SearchDelegate {
                   }
                   return ListTile(
                     leading: CircleAvatar(
-                      backgroundImage: NetworkImage(user.profileImage),
+                      backgroundImage: CachedNetworkImageProvider(user.profileImage),
                     ),
                     title: Text('#${user.name}'),
                     onTap: () {
@@ -89,23 +86,15 @@ class SearchCommunityDelegate extends SearchDelegate {
               return const SizedBox(height: 0);
             }
           },
-          error: (error, stackTrace) => ErrorText(error: error.toString()),
+          error: (error, stackTrace) => ErrorText(
+            error: error.toString(),
+          ),
           loading: () => const Loading(),
         );
   }
 
-  void navigateToCommunityScreen(
-    BuildContext context,
-    String communityName,
-  ) {
-    _navigateToMyCommunityScreen(context, communityName);
-  }
-
-  void _navigateToMyCommunityScreen(
-    BuildContext context,
-    String communityName,
-  ) {
-    Routemaster.of(context).push('/community/my-community/$communityName');
+  void navigateToCommunityScreen(BuildContext context, String communityName) {
+    Routemaster.of(context).push('/community/view/$communityName');
   }
 
   void navigateToProfileScreen(BuildContext context, String uid) {

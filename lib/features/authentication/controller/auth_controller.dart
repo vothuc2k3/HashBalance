@@ -9,7 +9,7 @@ import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/models/user.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 final authControllerProvider = StateNotifierProvider<AuthController, bool>(
   (ref) => AuthController(
@@ -83,6 +83,7 @@ class AuthController extends StateNotifier<bool> {
         isRestricted: false,
         bio: 'New user',
         description: 'Nothing, I\'m a new user here....',
+        followers: ['NoFollowers'],
       );
       final result =
           await _authRepository.signUpWithEmailAndPassword(userModel);

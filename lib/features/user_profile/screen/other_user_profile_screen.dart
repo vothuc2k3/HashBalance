@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -81,7 +82,7 @@ class _OtherUserProfileScreenState
                         child: CircleAvatar(
                           radius: profileHeight / 2,
                           backgroundColor: Colors.grey.shade800,
-                          backgroundImage: NetworkImage(user.profileImage),
+                          backgroundImage: CachedNetworkImageProvider(user.profileImage),
                         ),
                       ),
                     ],

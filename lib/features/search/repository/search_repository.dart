@@ -4,8 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/constants/firebase_constants.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
-import 'package:hash_balance/models/community.dart';
-import 'package:hash_balance/models/user.dart';
+import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 final searchRepositoryProvider = Provider(
   (ref) {
@@ -46,15 +46,19 @@ class SearchRepository {
           List<Community> communities = [];
           for (var doc in event.docs) {
             final data = doc.data() as Map<String, dynamic>;
+            final members = (data['members'] as List?)?.cast<String>() ?? [];
+            final moderators = (data['mods'] as List?)?.cast<String>() ?? [];
             communities.add(
               Community(
+                id: data['id'] as String,
                 name: data['name'] as String,
                 profileImage: data['profileImage'] as String,
                 bannerImage: data['bannerImage'] as String,
                 type: data['type'] as String,
                 containsExposureContents:
                     data['containsExposureContents'] as bool,
-                membersCount: data['membersCount'] as int,
+                members: members,
+                moderators: moderators,
                 createdAt: data['createdAt'] as Timestamp,
               ),
             );
@@ -96,6 +100,7 @@ class SearchRepository {
                 friends: friends,
                 createdAt: data['createdAt'] as Timestamp,
                 isRestricted: data['isRestricted'] as bool,
+                followers: data['followers'],
               ),
             );
           }

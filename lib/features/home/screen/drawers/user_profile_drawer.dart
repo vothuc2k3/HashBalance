@@ -1,11 +1,12 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/models/user.dart';
+import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
 import 'package:routemaster/routemaster.dart';
 
@@ -158,7 +159,7 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                 child: Row(
                   children: [
                     CircleAvatar(
-                      backgroundImage: NetworkImage(user!.profileImage),
+                      backgroundImage: CachedNetworkImageProvider(user!.profileImage),
                       radius: 50,
                     ),
                     const SizedBox(width: 10),

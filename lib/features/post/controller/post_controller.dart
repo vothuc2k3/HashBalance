@@ -6,7 +6,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/features/post/repository/post_repository.dart';
-import 'package:hash_balance/models/post.dart';
+import 'package:hash_balance/models/post_model.dart';
 
 // final postsProvider = StreamProvider.family((ref, List<String> communityName) {
 //   return ref

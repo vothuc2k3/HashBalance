@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,7 +9,7 @@ import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
-import 'package:hash_balance/models/community.dart';
+import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
 class EditCommunityScreen extends ConsumerStatefulWidget {
@@ -247,7 +248,7 @@ class _EditCommunityScreenState extends ConsumerState<EditCommunityScreen> {
                                     radius: 30,
                                     backgroundImage: profileImageFile != null
                                         ? FileImage(profileImageFile!)
-                                        : NetworkImage(community.profileImage)
+                                        : CachedNetworkImageProvider(community.profileImage)
                                             as ImageProvider<Object>,
                                   ),
                                 ),

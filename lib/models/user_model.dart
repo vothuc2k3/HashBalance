@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 
 class UserModel {
   final String email;
-  String? password;
+  final String? password;
   final String name;
   String uid;
   final Timestamp createdAt;
@@ -14,7 +14,8 @@ class UserModel {
   final int activityPoint;
   final List<String> achivements;
   final List<String> friends;
-  int? hashAge;
+  final List<String> followers;
+  final int? hashAge;
   final String? bio;
   final String? description;
   UserModel({
@@ -30,6 +31,7 @@ class UserModel {
     required this.activityPoint,
     required this.achivements,
     required this.friends,
+    required this.followers,
     this.hashAge,
     this.bio,
     this.description,
@@ -48,6 +50,7 @@ class UserModel {
     int? activityPoint,
     List<String>? achivements,
     List<String>? friends,
+    List<String>? followers,
     int? hashAge,
     String? bio,
     String? description,
@@ -65,6 +68,7 @@ class UserModel {
       activityPoint: activityPoint ?? this.activityPoint,
       achivements: achivements ?? this.achivements,
       friends: friends ?? this.friends,
+      followers: followers ?? this.followers,
       hashAge: hashAge ?? this.hashAge,
       bio: bio ?? this.bio,
       description: description ?? this.description,
@@ -85,6 +89,7 @@ class UserModel {
       'activityPoint': activityPoint,
       'achivements': achivements,
       'friends': friends,
+      'followers': followers,
       'hashAge': hashAge,
       'bio': bio,
       'description': description,
@@ -93,29 +98,29 @@ class UserModel {
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
-        email: map['email'] as String,
-        password: map['password'] != null ? map['password'] as String : null,
-        name: map['name'] as String,
-        uid: map['uid'] as String,
-        createdAt: map['createdAt'] as Timestamp,
-        profileImage: map['profileImage'] as String,
-        bannerImage: map['bannerImage'] as String,
-        isAuthenticated: map['isAuthenticated'] as bool,
-        isRestricted: map['isRestricted'] as bool,
-        activityPoint: map['activityPoint'] as int,
-        hashAge: map['hashAge'] != null ? map['hashAge'] as int : null,
-        bio: map['bio'] != null ? map['bio'] as String : null,
-        description:
-            map['description'] != null ? map['description'] as String : null,
-        achivements: List<String>.from((map['achivements'] as List<String>)),
-        friends: List<String>.from(
-          (map['friends'] as List<String>),
-        ));
+      email: map['email'] as String,
+      password: map['password'] != null ? map['password'] as String : null,
+      name: map['name'] as String,
+      uid: map['uid'] as String,
+      createdAt: map['createdAt'] as Timestamp,
+      profileImage: map['profileImage'] as String,
+      bannerImage: map['bannerImage'] as String,
+      isAuthenticated: map['isAuthenticated'] as bool,
+      isRestricted: map['isRestricted'] as bool,
+      activityPoint: map['activityPoint'] as int,
+      achivements: List<String>.from((map['achivements'] as List<String>)),
+      friends: List<String>.from((map['friends'] as List<String>)),
+      followers: List<String>.from((map['followers'] as List<String>)),
+      hashAge: map['hashAge'] != null ? map['hashAge'] as int : null,
+      bio: map['bio'] != null ? map['bio'] as String : null,
+      description:
+          map['description'] != null ? map['description'] as String : null,
+    );
   }
 
   @override
   String toString() {
-    return 'UserModel(email: $email, password: $password, name: $name, uid: $uid, createdAt: $createdAt, profileImage: $profileImage, bannerImage: $bannerImage, isAuthenticated: $isAuthenticated, isRestricted: $isRestricted, activityPoint: $activityPoint, achivements: $achivements, friends: $friends, hashAge: $hashAge, bio: $bio, description: $description)';
+    return 'UserModel(email: $email, password: $password, name: $name, uid: $uid, createdAt: $createdAt, profileImage: $profileImage, bannerImage: $bannerImage, isAuthenticated: $isAuthenticated, isRestricted: $isRestricted, activityPoint: $activityPoint, achivements: $achivements, friends: $friends, followers: $followers, hashAge: $hashAge, bio: $bio, description: $description)';
   }
 
   @override
@@ -134,6 +139,7 @@ class UserModel {
         other.activityPoint == activityPoint &&
         listEquals(other.achivements, achivements) &&
         listEquals(other.friends, friends) &&
+        listEquals(other.followers, followers) &&
         other.hashAge == hashAge &&
         other.bio == bio &&
         other.description == description;
@@ -153,6 +159,7 @@ class UserModel {
         activityPoint.hashCode ^
         achivements.hashCode ^
         friends.hashCode ^
+        followers.hashCode ^
         hashAge.hashCode ^
         bio.hashCode ^
         description.hashCode;

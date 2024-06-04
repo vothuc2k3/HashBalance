@@ -1,11 +1,17 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/models/user.dart';
-import 'package:hash_balance/theme/pallette.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:routemaster/routemaster.dart';
+
+import 'package:hash_balance/core/common/error_text.dart';
+import 'package:hash_balance/core/common/loading_circular.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
+import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
+import 'package:hash_balance/models/post_model.dart';
+import 'package:hash_balance/models/user_model.dart';
+import 'package:hash_balance/theme/pallette.dart';
 
 class NewsfeedScreen extends ConsumerStatefulWidget {
   const NewsfeedScreen({super.key});
@@ -15,6 +21,11 @@ class NewsfeedScreen extends ConsumerStatefulWidget {
 }
 
 class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
   void navigateToCreatePostScreen() {
     Routemaster.of(context).push('/post/create');
   }
@@ -28,12 +39,80 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
           SliverToBoxAdapter(
             child: _buildCreatePostContainer(user!),
           ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                
-              },
-            ),
+          ref.watch(getCommunitiesPostsProvider).when(
+                data: (posts) {
+                  final hasPost = posts.isNotEmpty;
+                  return !hasPost
+                      ? const SliverToBoxAdapter(child: Text('NOTHING'))
+                      : SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final post = posts[index];
+                              return ref
+                                  .watch(getUserByUidProvider(post.uid))
+                                  .when(
+                                    data: (user) {
+                                      return _buildPostContainer(
+                                          user: user, post: post);
+                                    },
+                                    error: (error, stackTrace) => Container(
+                                      padding: const EdgeInsets.all(16),
+                                      child: ErrorText(error: error.toString()),
+                                    ),
+                                    loading: () => const Loading(),
+                                  );
+                            },
+                            childCount: posts.length,
+                          ),
+                        );
+                },
+                error: (error, stackTrace) => SliverToBoxAdapter(
+                    child: ErrorText(error: error.toString())),
+                loading: () => const SliverToBoxAdapter(child: Loading()),
+              ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPostContainer({
+    required UserModel user,
+    required Post post,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundImage: CachedNetworkImageProvider(user.profileImage),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(user.name),
+              const Row(
+                children: [
+                  Text(
+                    'Time post ago',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 12,
+                    ),
+                  ),
+                  Icon(
+                    Icons.public,
+                    color: Colors.white,
+                    size: 12,
+                  )
+                ],
+              )
+            ],
+          ),
+          const Spacer(),
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.more_horiz),
           ),
         ],
       ),
@@ -54,12 +133,12 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
                 backgroundColor: Colors.blueGrey,
                 backgroundImage: CachedNetworkImageProvider(user.profileImage),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(
+                width: 8,
+              ),
               Expanded(
                 child: GestureDetector(
-                  onTap: () {
-                    navigateToCreatePostScreen();
-                  },
+                  onTap: navigateToCreatePostScreen,
                   child: const TextField(
                     decoration: InputDecoration(
                       labelText: 'Share your moments....',
@@ -74,7 +153,10 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
               ),
             ],
           ),
-          const Divider(height: 10, thickness: 0.5),
+          const Divider(
+            height: 10,
+            thickness: 0.5,
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

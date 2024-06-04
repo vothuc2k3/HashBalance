@@ -6,13 +6,16 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/features/user_profile/repository/user_repository.dart';
-import 'package:hash_balance/models/user.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 final userControllerProvider =
     StateNotifierProvider<UserController, bool>((ref) => UserController(
           userRepository: ref.read(userRepositoryProvider),
           ref: ref,
         ));
+final getUserByUidProvider = StreamProvider.family((ref, String uid) {
+  return ref.read(userControllerProvider.notifier).getUserByUid(uid);
+});
 
 class UserController extends StateNotifier<bool> {
   final UserRepository _userRepository;
@@ -37,7 +40,7 @@ class UserController extends StateNotifier<bool> {
           user, profileImage, bannerImage, name, bio, description);
       return result.fold(
         (l) => left((Failures(l.message))),
-        (r) => right('Successfully Updated Your Profile!'),
+        (r) => right('Successfully Updated Your Profile'),
       );
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -46,5 +49,9 @@ class UserController extends StateNotifier<bool> {
     } finally {
       state = false;
     }
+  }
+
+  Stream<UserModel> getUserByUid(String uid) {
+    return _userRepository.getUserByUid(uid);
   }
 }

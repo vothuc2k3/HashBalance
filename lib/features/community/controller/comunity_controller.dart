@@ -5,18 +5,21 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:hash_balance/core/failures.dart';
+import 'package:hash_balance/core/type_defs.dart';
 import 'package:routemaster/routemaster.dart';
 
 import 'package:hash_balance/core/common/constants/constants.dart';
-import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/repository/community_repository.dart';
-import 'package:hash_balance/models/community.dart';
-import 'package:hash_balance/models/community_membership.dart';
-import 'package:hash_balance/models/community_moderators.dart';
+import 'package:hash_balance/models/community_model.dart';
+
+final myCommunitiesProvider = StreamProvider((ref) {
+  final communityController = ref.watch(communityControllerProvider.notifier);
+  return communityController.getMyCommunities();
+});
 
 final userCommunitiesProvider = StreamProvider((ref) {
   final communityController = ref.watch(communityControllerProvider.notifier);
@@ -64,49 +67,45 @@ class CommunityController extends StateNotifier<bool> {
     bool containsExposureContents,
   ) async {
     state = true;
-    try {
-      final uid = _ref.read(userProvider)!.uid;
-      Community community = Community(
-        name: name,
-        profileImage: Constants.avatarDefault,
-        bannerImage: Constants.bannerDefault,
-        type: type,
-        containsExposureContents: containsExposureContents,
-        membersCount: 1,
-        createdAt: Timestamp.now(),
-      );
-      final membership = CommunityMembership(
-        uid: uid,
-        communityName: name,
-      );
-      final moderator = CommunityModerators(
-        uid: uid,
-        communityName: name,
-      );
-      final result = await _communityRepository.createCommunity(
-        community,
-        membership,
-        moderator,
-        uid,
-      );
 
-      result.fold((error) {
-        showSnackBar(context, error.message);
-      }, (right) {
+    final uid = _ref.read(userProvider)?.uid ?? '';
+
+    Community community = Community(
+      id: generateCommunityId(),
+      name: name,
+      profileImage: Constants.avatarDefault,
+      bannerImage: Constants.bannerDefault,
+      type: type,
+      containsExposureContents: containsExposureContents,
+      members: [uid],
+      moderators: [uid],
+      createdAt: Timestamp.now(),
+    );
+
+    final result = await _communityRepository.createCommunity(community);
+
+    state = false;
+
+    result.fold(
+      (error) {
+        return showSnackBar(context, error.message);
+      },
+      (right) {
         showSnackBar(context, 'Your Community Created Successfully. Have Fun!');
         Routemaster.of(context).pop();
-      });
-    } catch (e) {
-      showSnackBar(context, 'An error occurred: ${e.toString()}');
-    } finally {
-      state = false;
-    }
+      },
+    );
   }
 
   //GET THE COMMUNITIES BY CURRENT USER
   Stream<List<Community>> getUserCommunities() {
     final uid = _ref.read(userProvider)!.uid;
     return _communityRepository.getUserCommunities(uid);
+  }
+
+  Stream<List<Community>> getMyCommunities() {
+    final uid = _ref.read(userProvider)!.uid;
+    return _communityRepository.getMyCommunities(uid);
   }
 
   //GET THE COMMUNITY BY NAME
@@ -190,15 +189,8 @@ class CommunityController extends StateNotifier<bool> {
   ) async {
     state = true;
     try {
-      CommunityMembership membership = CommunityMembership(
-        uid: uid,
-        communityName: communityName,
-      );
-      final result = await _communityRepository.joinCommunity(
-        uid,
-        communityName,
-        membership,
-      );
+      final result =
+          await _communityRepository.joinCommunity(uid, communityName);
       return result.fold(
         (l) => left(Failures(l.message)),
         (r) => right('Successfully Joined The Community!'),
@@ -232,17 +224,5 @@ class CommunityController extends StateNotifier<bool> {
     } finally {
       state = false;
     }
-  }
-
-  //CHECK IF USER IS IN THE COMMUNITY
-  bool isMember(String communityName) {
-    final uid = _ref.watch(userProvider)!.uid;
-    return _communityRepository.isMember(uid, communityName);
-  }
-
-  //CHECK IF USER IS THE MODERATOR
-  Future<bool> isMod(String communityName) async {
-    final uid = _ref.watch(userProvider)!.uid;
-    return await _communityRepository.isMod(uid, communityName);
   }
 }

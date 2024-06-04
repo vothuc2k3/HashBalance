@@ -13,7 +13,7 @@ import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/community/repository/community_repository.dart';
-import 'package:hash_balance/models/user.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 final userProvider = StateProvider<UserModel?>((ref) => null);
 
@@ -73,6 +73,7 @@ class AuthRepository {
           createdAt: createdAt,
           hashAge: 0,
           isRestricted: false,
+          followers: ['NoFollower'],
         );
         await _user.doc(userCredential.user!.uid).set(
               user.toMap(),
@@ -135,7 +136,7 @@ class AuthRepository {
   //SIGN OUT
   void signOut(WidgetRef ref) async {
     await _firebaseAuth.signOut();
-    
+
     ref.refresh(userProvider);
     ref.refresh(communityRepositoryProvider);
     ref.refresh(communityControllerProvider);
@@ -174,6 +175,10 @@ class AuthRepository {
           isRestricted: event['isRestricted'] as bool? ?? false,
           bio: event['bio'] as String? ?? '',
           description: event['description'] as String? ?? '',
+          followers: (event['followers'] as List?)
+                  ?.map((item) => item.toString())
+                  .toList() ??
+              [],
         );
       },
     );

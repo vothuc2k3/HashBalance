@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/features/post/screen/create_post_screen.dart';
+import 'package:hash_balance/features/post/screen/create_post/create_post_screen.dart';
 import 'package:routemaster/routemaster.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
@@ -24,7 +24,7 @@ import 'package:hash_balance/features/user_profile/screen/user_profile_screen.da
 import 'package:hash_balance/features/user_profile/screen/edit_profile/edit_user_profile.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/firebase_options.dart';
-import 'package:hash_balance/models/user.dart';
+import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
 void main() async {
@@ -56,7 +56,6 @@ class MyAppState extends ConsumerState<MyApp> {
           ),
       '/email-sign-up': (_) => const MaterialPage(
             child: EmailSignUpScreen(),
-            maintainState: true,
           ),
       '/email-sign-in': (_) => const MaterialPage(
             child: EmailSignInScreen(),

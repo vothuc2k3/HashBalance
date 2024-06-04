@@ -9,7 +9,7 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
-import 'package:hash_balance/models/post.dart';
+import 'package:hash_balance/models/post_model.dart';
 
 final postRepositoryProvider = Provider((ref) {
   return PostRepository(
@@ -69,7 +69,10 @@ class PostRepository {
           updatedPost = updatedPost.copyWith(video: videoUrl);
         });
       }
-      right(_posts.doc().set(updatedPost.toMap()));
+      await _posts.doc().set(updatedPost.toMap());
+      await _user.doc(post.uid).update({
+        'activityPoint': FieldValue.increment(1),
+      });
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -86,8 +89,7 @@ class PostRepository {
   //REFERENCE ALL THE POSTS
   CollectionReference get _posts =>
       _firestore.collection(FirebaseConstants.postsCollection);
-
-  //REFERENCE ALL THE MEMBERS IN COMMUNITIES
-  CollectionReference get _membership =>
-      _firestore.collection(FirebaseConstants.membershipCollection);
+  //REFERENCE ALL THE USERS
+  CollectionReference get _user =>
+      _firestore.collection(FirebaseConstants.usersCollection);
 }
