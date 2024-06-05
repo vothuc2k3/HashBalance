@@ -85,35 +85,33 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
     required UserModel user,
     required Post post,
   }) {
-    return Flexible(
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildPostHeader(post, user),
-                const SizedBox(height: 4),
-                Text(post.content ?? ''),
-                post.image != null
-                    ? const SizedBox.shrink()
-                    : const SizedBox(height: 6),
-              ],
-            ),
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildPostHeader(post, user),
+              const SizedBox(height: 4),
+              Text(post.content ?? ''),
+              post.image != null
+                  ? const SizedBox.shrink()
+                  : const SizedBox(height: 6),
+            ],
           ),
-          post.image != null
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: CachedNetworkImage(imageUrl: post.image!),
-                )
-              : const SizedBox.shrink(),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: _buildPostStat(post),
-          ),
-        ],
-      ),
+        ),
+        post.image != null
+            ? Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: CachedNetworkImage(imageUrl: post.image!),
+              )
+            : const SizedBox.shrink(),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: _buildPostStat(post),
+        ),
+      ],
     );
   }
 
@@ -196,14 +194,14 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
 
   Widget _buildPostButton({
     required icon,
-    required ontap,
-    required label,
+    required Function ontap,
+    required String label,
   }) {
     return Expanded(
       child: Material(
         color: Colors.grey,
         child: InkWell(
-          onTap: ontap(),
+          onTap: () {},
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             height: 25,
@@ -221,49 +219,49 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
     );
   }
 
-    Widget _buildPostHeader(Post post, UserModel user) {
-      return Row(
-        children: [
-          CircleAvatar(
-            backgroundImage: CachedNetworkImageProvider(user.profileImage),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  user.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                  ),
+  Widget _buildPostHeader(Post post, UserModel user) {
+    return Row(
+      children: [
+        CircleAvatar(
+          backgroundImage: CachedNetworkImageProvider(user.profileImage),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                user.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
                 ),
-                Row(
-                  children: [
-                    Text(
-                      (post.createdAt.toDate()).toString(),
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                      ),
+              ),
+              Row(
+                children: [
+                  Text(
+                    (post.createdAt.toDate()).toString(),
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
                     ),
-                    const Icon(
-                      Icons.public,
-                      color: Colors.grey,
-                      size: 12,
-                    ),
-                  ],
-                )
-              ],
-            ),
+                  ),
+                  const Icon(
+                    Icons.public,
+                    color: Colors.grey,
+                    size: 12,
+                  ),
+                ],
+              )
+            ],
           ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.more_horiz),
-          ),
-        ],
-      );
-    }
+        ),
+        IconButton(
+          onPressed: () {},
+          icon: const Icon(Icons.more_horiz),
+        ),
+      ],
+    );
+  }
 
   Widget _buildCreatePostContainer(UserModel user) {
     return Container(
