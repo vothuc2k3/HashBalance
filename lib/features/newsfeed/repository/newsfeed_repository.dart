@@ -32,6 +32,8 @@ class NewsfeedRepository {
           final comments = (postDoc['comments'] as List?)?.cast<String>() ?? [];
           posts.add(
             Post(
+              video: postDoc['video'] as String,
+              image: postDoc['image'] as String,
               content: postDoc['content'] as String,
               communityName: postDoc['communityName'] as String,
               uid: postDoc['uid'] as String,

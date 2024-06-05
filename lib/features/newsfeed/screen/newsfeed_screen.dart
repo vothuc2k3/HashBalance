@@ -95,22 +95,31 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
               _buildPostHeader(post, user),
               const SizedBox(height: 4),
               Text(post.content ?? ''),
-              post.image != null
+              post.image != ''
                   ? const SizedBox.shrink()
                   : const SizedBox(height: 6),
             ],
           ),
         ),
-        post.image != null
+        post.image != ''
             ? Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
-                child: CachedNetworkImage(imageUrl: post.image!),
+                child: Image.network(
+                  post.image!,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(
+                      Icons.error,
+                      color: Colors.red,
+                    );
+                  },
+                ),
               )
             : const SizedBox.shrink(),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: _buildPostStat(post),
         ),
+        const SizedBox(height: 20),
       ],
     );
   }
@@ -129,7 +138,7 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
               child: const Icon(
                 Icons.arrow_upward_sharp,
                 size: 10,
-                color: Pallete.whiteColor,
+                color: Pallete.blackColor,
               ),
             ),
             const SizedBox(width: 4),
@@ -199,7 +208,7 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
   }) {
     return Expanded(
       child: Material(
-        color: Colors.grey,
+        color: Colors.black,
         child: InkWell(
           onTap: () {},
           child: Container(
@@ -245,6 +254,7 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
                       fontSize: 12,
                     ),
                   ),
+                  const SizedBox(width: 3),
                   const Icon(
                     Icons.public,
                     color: Colors.grey,
