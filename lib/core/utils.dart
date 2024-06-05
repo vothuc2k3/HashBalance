@@ -111,6 +111,10 @@ Future<FilePickerResult?> pickImage() async {
   return await FilePicker.platform.pickFiles(type: FileType.image);
 }
 
+Future<FilePickerResult?> pickVideo() async {
+  return await FilePicker.platform.pickFiles(type: FileType.video);
+}
+
 String generateRandomPostId() {
   var uuid = const Uuid();
   return uuid.v4();
