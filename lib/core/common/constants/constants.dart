@@ -31,6 +31,7 @@ class Constants {
 
   static const tabWidgets = [
     NewsfeedScreen(),
+    Scaffold(),
     CreatePostScreen(),
   ];
 }

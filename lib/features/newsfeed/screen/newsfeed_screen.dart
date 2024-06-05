@@ -151,7 +151,7 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
               ),
             ),
             Text(
-              '${post.comments.length} Comments',
+              '14 Comments',
               style: TextStyle(
                 color: Colors.grey[600],
               ),

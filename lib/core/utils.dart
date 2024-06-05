@@ -10,6 +10,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
 
 import 'package:hash_balance/core/type_defs.dart';
+import 'package:uuid/uuid.dart';
 
 void showSnackBar(BuildContext context, String text) {
   if (context.mounted) {
@@ -110,4 +111,7 @@ Future<FilePickerResult?> pickImage() async {
   return await FilePicker.platform.pickFiles(type: FileType.image);
 }
 
-
+String generateRandomPostId() {
+  var uuid = const Uuid();
+  return uuid.v4();
+}
