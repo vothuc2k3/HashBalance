@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+import 'package:timeago/timeago.dart' as timeago;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypt/crypt.dart';
@@ -118,4 +119,14 @@ Future<FilePickerResult?> pickVideo() async {
 String generateRandomPostId() {
   var uuid = const Uuid();
   return uuid.v4();
+}
+
+String formatTime(Timestamp timestamp) {
+  final now = DateTime.now();
+  final difference = now.difference(timestamp.toDate());
+  if (difference.inDays > 3) {
+    return '${timestamp.toDate().day}/${timestamp.toDate().month}/${timestamp.toDate().year}';
+  } else {
+    return timeago.format(timestamp.toDate(), locale: 'en_short');
+  }
 }

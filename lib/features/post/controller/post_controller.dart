@@ -38,8 +38,6 @@ class PostController extends StateNotifier<bool> {
         communityName: communityName,
         uid: uid,
         content: content,
-        image: '',
-        video: '',
         createdAt: Timestamp.now(),
         upvotes: 0,
         downvotes: 0,

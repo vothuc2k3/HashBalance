@@ -65,7 +65,7 @@ class OtherCommunityScreenState extends ConsumerState<OtherCommunityScreen> {
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
     return Scaffold(
-      body: ref.watch(getCommunitiesByNameProvider(widget.name)).when(
+      body: ref.watch(getCommunityByNameProvider(widget.name)).when(
             data: (community) {
               final joined = community.members.contains(user!.uid);
               return NestedScrollView(

@@ -1,10 +1,15 @@
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/common/error_text.dart';
+import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
+import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
 import 'package:video_player/video_player.dart';
 
@@ -20,15 +25,20 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   String? communityName;
   File? image;
   File? video;
+  String? selectedCommunity;
 
   bool isSelectingImage = false;
   bool isSelectingVideo = false;
-  late VideoPlayerController _videoPlayerController;
+  VideoPlayerController? _videoPlayerController;
+
+  bool isCreatingPost = false;
 
   @override
   void dispose() {
     contentController.dispose();
-    _videoPlayerController.dispose();
+    if (_videoPlayerController != null) {
+      _videoPlayerController!.dispose();
+    }
     super.dispose();
   }
 
@@ -50,7 +60,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         _videoPlayerController = VideoPlayerController.file(video!)
           ..initialize().then((_) {
             setState(() {});
-            _videoPlayerController.play();
+            _videoPlayerController!.play();
           });
       });
     }
@@ -59,13 +69,22 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   void createPost(String uid) async {
     final result = await ref.read(postControllerProvider.notifier).createPost(
           uid,
-          communityName!,
+          selectedCommunity!,
           image,
           video,
           contentController.text,
         );
-    result.fold((l) => showSnackBar(context, l.toString()),
-        (r) => showMaterialBanner(context, r.toString()));
+    result.fold((l) {
+      setState(() {
+        isCreatingPost = false;
+      });
+      return showSnackBar(context, l.toString());
+    }, (r) {
+      setState(() {
+        isCreatingPost = false;
+      });
+      return showMaterialBanner(context, r);
+    });
   }
 
   @override
@@ -97,14 +116,18 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(user.name,
-                            style: const TextStyle(color: Colors.white)),
+                        Text(
+                          user.name,
+                          style: const TextStyle(color: Colors.white),
+                        ),
                         const Row(
                           children: [
                             Icon(Icons.public, size: 16, color: Colors.white),
                             SizedBox(width: 5),
-                            Text('Public',
-                                style: TextStyle(color: Colors.white)),
+                            Text(
+                              'Public',
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ],
                         )
                       ],
@@ -147,7 +170,8 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                     return AlertDialog(
                                       title: const Text('Confirm'),
                                       content: const Text(
-                                          'Do you want to cancel the image selection?'),
+                                        'Do you want to cancel the image selection?',
+                                      ),
                                       actions: [
                                         TextButton(
                                           onPressed: () {
@@ -268,10 +292,11 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                           ? Center(
                                               child: AspectRatio(
                                                 aspectRatio:
-                                                    _videoPlayerController
+                                                    _videoPlayerController!
                                                         .value.aspectRatio,
                                                 child: VideoPlayer(
-                                                    _videoPlayerController),
+                                                  _videoPlayerController!,
+                                                ),
                                               ),
                                             )
                                           : const Center(
@@ -300,6 +325,78 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                               ),
                             )
                           : const SizedBox.shrink(),
+                      ref.watch(userCommunitiesProvider).when(
+                        data: (communities) {
+                          if (communities.isEmpty) {
+                            return const Text('No communities available.');
+                          } else {
+                            if (selectedCommunity == null ||
+                                !communities.any((community) =>
+                                    community.name == selectedCommunity)) {
+                              selectedCommunity = null;
+                            }
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Select a community to post in',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                DropdownButtonFormField<String>(
+                                  value: selectedCommunity,
+                                  hint: const Text('Choose community'),
+                                  onChanged: (newValue) {
+                                    setState(() {
+                                      selectedCommunity = newValue;
+                                    });
+                                  },
+                                  items: communities
+                                      .map<DropdownMenuItem<String>>(
+                                          (Community community) {
+                                    return DropdownMenuItem<String>(
+                                      value: community.name,
+                                      child: Row(
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 16,
+                                            backgroundImage:
+                                                CachedNetworkImageProvider(
+                                                    community.profileImage),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text('#=${community.name}'),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 12),
+                                    filled: true,
+                                    fillColor: Colors
+                                        .black,
+                                    errorText: selectedCommunity == null
+                                        ? 'This field is required'
+                                        : null,
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+                        },
+                        error: (error, stackTrace) {
+                          return ErrorText(error: error.toString());
+                        },
+                        loading: () {
+                          return const Loading();
+                        },
+                      ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 1),
                         child: Row(
@@ -347,15 +444,22 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                       ),
                       Padding(
                         padding: const EdgeInsets.all(10),
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey,
-                          ),
-                          onPressed: () {},
-                          child: const Center(
-                              child: Text('Post',
-                                  style: TextStyle(color: Colors.black))),
-                        ),
+                        child: isCreatingPost
+                            ? const Loading()
+                            : ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.grey,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    isCreatingPost = true;
+                                    createPost(user.uid);
+                                  });
+                                },
+                                child: const Center(
+                                    child: Text('Post',
+                                        style: TextStyle(color: Colors.black))),
+                              ),
                       ),
                       const SizedBox(height: 16),
                     ],

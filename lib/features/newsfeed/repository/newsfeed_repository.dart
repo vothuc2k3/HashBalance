@@ -34,17 +34,21 @@ class NewsfeedRepository {
             )
             .get();
         for (var postDoc in communityPosts.docs) {
+          var content = postDoc['content'] ?? '';
+          var image = postDoc['image'] ?? '';
+          var video = postDoc['video'] ?? '';
+
           posts.add(
             Post(
-              video: postDoc['video'] as String,
-              image: postDoc['image'] as String,
-              content: postDoc['content'] as String,
+              video: video as String,
+              image: image as String,
+              content: content as String,
               communityName: postDoc['communityName'] as String,
               uid: postDoc['uid'] as String,
               createdAt: postDoc['createdAt'] as Timestamp,
               upvotes: postDoc['upvotes'] as int,
               downvotes: postDoc['downvotes'] as int,
-              id: '',
+              id: postDoc['id'] as String,
             ),
           );
         }
