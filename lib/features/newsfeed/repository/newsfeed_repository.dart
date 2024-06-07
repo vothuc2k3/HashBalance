@@ -37,7 +37,12 @@ class NewsfeedRepository {
           var content = postDoc['content'] ?? '';
           var image = postDoc['image'] ?? '';
           var video = postDoc['video'] ?? '';
-
+          var upvotes = postDoc['upvotes'] != null
+              ? List<String>.from(postDoc['upvotes'])
+              : <String>[''];
+          var downvotes = postDoc['downvotes'] != null
+              ? List<String>.from(postDoc['downvotes'])
+              : <String>[''];
           posts.add(
             Post(
               video: video as String,
@@ -46,8 +51,8 @@ class NewsfeedRepository {
               communityName: postDoc['communityName'] as String,
               uid: postDoc['uid'] as String,
               createdAt: postDoc['createdAt'] as Timestamp,
-              upvotes: postDoc['upvotes'] as int,
-              downvotes: postDoc['downvotes'] as int,
+              upvotes: upvotes,
+              downvotes: downvotes,
               id: postDoc['id'] as String,
             ),
           );

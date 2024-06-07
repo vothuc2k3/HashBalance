@@ -32,9 +32,6 @@ final getCommunityByNameProvider = StreamProvider.family((ref, String name) {
       .getCommunityByName(name);
 });
 
-final communityProvider =
-    StateProvider.family<Community?, String>((ref, communityName) => null);
-
 final communityControllerProvider =
     StateNotifierProvider<CommunityController, bool>(
   (ref) {

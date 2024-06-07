@@ -6,22 +6,26 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/post/repository/post_repository.dart';
 import 'package:hash_balance/models/comment_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 final postControllerProvider = StateNotifierProvider<PostController, bool>(
-    (ref) => PostController(
-        postRepository: ref.read(postRepositoryProvider), ref: ref));
+  (ref) => PostController(
+      postRepository: ref.read(postRepositoryProvider), ref: ref),
+);
 
 class PostController extends StateNotifier<bool> {
   final PostRepository _postRepository;
+  final Ref _ref;
 
   PostController({
     required PostRepository postRepository,
     required Ref ref,
   })  : _postRepository = postRepository,
+        _ref = ref,
         super(false);
 
   //CREATE A NEW POST
@@ -34,13 +38,17 @@ class PostController extends StateNotifier<bool> {
   ) async {
     state = true;
     try {
+      List<String> upvotes = [''];
+      List<String> downvotes = [''];
+      upvotes.clear();
+      downvotes.clear();
       final post = Post(
         communityName: communityName,
         uid: uid,
         content: content,
         createdAt: Timestamp.now(),
-        upvotes: 0,
-        downvotes: 0,
+        upvotes: upvotes,
+        downvotes: downvotes,
         id: generateRandomPostId(),
       );
       final result = await _postRepository.createPost(post, image, video);
@@ -93,6 +101,36 @@ class PostController extends StateNotifier<bool> {
       return left(Failures(e.toString()));
     } finally {
       state = false;
+    }
+  }
+
+  FutureVoid upvote(String postId) async {
+    state = true;
+    try {
+      final user = _ref.read(userProvider);
+      await _postRepository.upvote(postId, user!.uid);
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    } finally {
+      state = false;
+    }
+  }
+
+  FutureBool checkDidUpvote(String postId, String uid) async {
+    try {
+      final result = await _postRepository.checkDidUpvote(postId, uid);
+      return result.fold((l) {
+        return left(Failures(l.message));
+      }, (r) {
+        return right(r);
+      });
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
     }
   }
 }

@@ -325,78 +325,75 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                               ),
                             )
                           : const SizedBox.shrink(),
-                      ref.watch(userCommunitiesProvider).when(
-                        data: (communities) {
-                          if (communities.isEmpty) {
-                            return const Text('No communities available.');
-                          } else {
-                            if (selectedCommunity == null ||
-                                !communities.any((community) =>
-                                    community.name == selectedCommunity)) {
-                              selectedCommunity = null;
-                            }
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Select a community to post in',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                DropdownButtonFormField<String>(
-                                  value: selectedCommunity,
-                                  hint: const Text('Choose community'),
-                                  onChanged: (newValue) {
-                                    setState(() {
-                                      selectedCommunity = newValue;
-                                    });
-                                  },
-                                  items: communities
-                                      .map<DropdownMenuItem<String>>(
-                                          (Community community) {
-                                    return DropdownMenuItem<String>(
-                                      value: community.name,
-                                      child: Row(
-                                        children: [
-                                          CircleAvatar(
-                                            radius: 16,
-                                            backgroundImage:
-                                                CachedNetworkImageProvider(
-                                                    community.profileImage),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text('#=${community.name}'),
-                                        ],
+                      if (!(contentController.text.trim() == '' &&
+                          image == null &&
+                          video == null))
+                        ref.watch(userCommunitiesProvider).when(
+                          data: (communities) {
+                            if (communities.isEmpty) {
+                              return const Text('No communities available.');
+                            } else {
+                              if (selectedCommunity == null ||
+                                  !communities.any((community) =>
+                                      community.name == selectedCommunity)) {
+                                selectedCommunity = null;
+                              }
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 15),
+                                  DropdownButtonFormField<String>(
+                                    value: selectedCommunity,
+                                    hint: const Text('Choose community'),
+                                    onChanged: (newValue) {
+                                      setState(() {
+                                        selectedCommunity = newValue;
+                                      });
+                                    },
+                                    items: communities
+                                        .map<DropdownMenuItem<String>>(
+                                            (Community community) {
+                                      return DropdownMenuItem<String>(
+                                        value: community.name,
+                                        child: Row(
+                                          children: [
+                                            CircleAvatar(
+                                              radius: 16,
+                                              backgroundImage:
+                                                  CachedNetworkImageProvider(
+                                                      community.profileImage),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text('#=${community.name}'),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                                    decoration: InputDecoration(
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
                                       ),
-                                    );
-                                  }).toList(),
-                                  decoration: InputDecoration(
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 12),
+                                      filled: true,
+                                      fillColor: Colors.black,
+                                      errorText: selectedCommunity == null
+                                          ? 'This field is required'
+                                          : null,
                                     ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 12),
-                                    filled: true,
-                                    fillColor: Colors
-                                        .black,
-                                    errorText: selectedCommunity == null
-                                        ? 'This field is required'
-                                        : null,
                                   ),
-                                ),
-                              ],
-                            );
-                          }
-                        },
-                        error: (error, stackTrace) {
-                          return ErrorText(error: error.toString());
-                        },
-                        loading: () {
-                          return const Loading();
-                        },
-                      ),
+                                ],
+                              );
+                            }
+                          },
+                          error: (error, stackTrace) {
+                            return ErrorText(error: error.toString());
+                          },
+                          loading: () {
+                            return const Loading();
+                          },
+                        ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 1),
                         child: Row(

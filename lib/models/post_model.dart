@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 class Post {
   final String id;
@@ -8,8 +9,8 @@ class Post {
   final String? image;
   final String? video;
   final Timestamp createdAt;
-  final int upvotes;
-  final int downvotes;
+  final List<String> upvotes;
+  final List<String> downvotes;
   Post({
     required this.id,
     required this.communityName,
@@ -30,8 +31,8 @@ class Post {
     String? image,
     String? video,
     Timestamp? createdAt,
-    int? upvotes,
-    int? downvotes,
+    List<String>? upvotes,
+    List<String>? downvotes,
   }) {
     return Post(
       id: id ?? this.id,
@@ -69,8 +70,12 @@ class Post {
       image: map['image'] != null ? map['image'] as String : null,
       video: map['video'] != null ? map['video'] as String : null,
       createdAt: map['createdAt'] as Timestamp,
-      upvotes: map['upvotes'] as int,
-      downvotes: map['downvotes'] as int,
+      upvotes: List<String>.from(
+        (map['upvotes'] as List<String>),
+      ),
+      downvotes: List<String>.from(
+        (map['downvotes'] as List<String>),
+      ),
     );
   }
 
@@ -90,8 +95,8 @@ class Post {
         other.image == image &&
         other.video == video &&
         other.createdAt == createdAt &&
-        other.upvotes == upvotes &&
-        other.downvotes == downvotes;
+        listEquals(other.upvotes, upvotes) &&
+        listEquals(other.downvotes, downvotes);
   }
 
   @override

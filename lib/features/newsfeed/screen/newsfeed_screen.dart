@@ -1,10 +1,12 @@
 import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
+import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:mdi/mdi.dart';
@@ -29,10 +31,6 @@ class NewsfeedScreen extends ConsumerStatefulWidget {
 }
 
 class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
-  void upvote() {}
-
-  void downvote() {}
-
   Future<void> _refreshPosts() async {
     // ignore: unused_result
     ref.refresh(getCommunitiesPostsProvider);
@@ -63,7 +61,10 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
                     final hasPost = posts.isNotEmpty;
                     return !hasPost
                         ? const SliverToBoxAdapter(
-                            child: Text('NOTHING'),
+                            child: Text(
+                              'NOTHING',
+                              textAlign: TextAlign.center,
+                            ),
                           )
                         : SliverList(
                             delegate: SliverChildBuilderDelegate(
@@ -233,7 +234,14 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   String? _currentPosition;
   Uint8List? _thumbnailBytes;
 
-  void upvote() {}
+  void upvote() async {
+    final result =
+        await ref.read(postControllerProvider.notifier).upvote(widget.post.id);
+    result.fold((l) {
+      showSnackBar(context, l.toString());
+    }, (_) {});
+  }
+
   void downvote() {}
 
   @override
@@ -502,7 +510,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
             const SizedBox(width: 4),
             Expanded(
               child: Text(
-                post.upvotes > 0 ? '${post.upvotes}' : '',
+                post.upvotes.isNotEmpty ? '${post.upvotes.length}' : '',
                 style: TextStyle(
                   color: Colors.grey[600],
                 ),
@@ -518,28 +526,35 @@ class _PostContainerState extends ConsumerState<PostContainer> {
             const SizedBox(width: 8),
             Text(
               '69 Shares',
-              style: TextStyle(color: Colors.grey[600], fontSize: 10),
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 10,
+              ),
             ),
           ],
         ),
         const Divider(),
         Row(
           children: [
-            _buildPostButton(
-              ontap: upvote,
+            _buildVoteButton(
+              onTap: upvote,
               icon: Icon(
                 Icons.arrow_upward,
                 color: Colors.grey[600],
                 size: 18,
               ),
+              uid: widget.user.uid,
+              post: widget.post,
             ),
-            _buildPostButton(
-              ontap: downvote,
+            _buildVoteButton(
+              onTap: downvote,
               icon: Icon(
                 Icons.arrow_downward,
                 color: Colors.grey[600],
                 size: 18,
               ),
+              uid: widget.user.uid,
+              post: widget.post,
             ),
             _buildPostButton(
               icon: Icon(
@@ -547,7 +562,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                 color: Colors.grey[600],
                 size: 18,
               ),
-              ontap: () {},
+              onTap: () {},
             ),
             _buildPostButton(
               icon: Icon(
@@ -555,7 +570,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                 color: Colors.grey[600],
                 size: 18,
               ),
-              ontap: () {},
+              onTap: () {},
             ),
           ],
         ),
@@ -563,8 +578,38 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     );
   }
 
+  Widget _buildVoteButton({
+    required onTap,
+    required Icon icon,
+    required String uid,
+    required Post post,
+  }) {
+    final didUpvote = post.upvotes.contains(uid);
+    return Expanded(
+      child: Material(
+        color: Colors.black,
+        child: InkWell(
+          onTap: () {
+            didUpvote ? () {} : onTap();
+          },
+          child: Container(
+            color: didUpvote ? Pallete.whiteColor : null,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            height: 25,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                icon,
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildPostButton({
-    required ontap,
+    required onTap,
     required Icon icon,
   }) {
     return Expanded(
@@ -572,14 +617,16 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         color: Colors.black,
         child: InkWell(
           onTap: () {
-            ontap();
+            onTap();
           },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             height: 25,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [icon],
+              children: [
+                icon,
+              ],
             ),
           ),
         ),
