@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,6 +19,7 @@ import 'package:hash_balance/features/user_profile/controller/user_controller.da
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 
 class NewsfeedScreen extends ConsumerStatefulWidget {
   const NewsfeedScreen({super.key});
@@ -225,6 +228,10 @@ class PostContainer extends ConsumerStatefulWidget {
 
 class _PostContainerState extends ConsumerState<PostContainer> {
   VideoPlayerController? _videoController;
+  bool _isPlaying = false;
+  String? _videoDuration;
+  String? _currentPosition;
+  Uint8List? _thumbnailBytes;
 
   void upvote() {}
   void downvote() {}
@@ -233,13 +240,62 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   void initState() {
     super.initState();
     if (widget.post.video != '') {
-      _videoController = VideoPlayerController.networkUrl(
-        Uri.parse(widget.post.video!),
-      )..initialize().then((_) {
+      _initializeVideo();
+    }
+  }
+
+  Future<void> _initializeVideo() async {
+    _videoController = VideoPlayerController.networkUrl(
+      Uri.parse(widget.post.video!),
+    )..initialize().then((_) {
+        if (mounted) {
           setState(() {
-            _videoController!.play();
+            _videoDuration = _formatDuration(_videoController!.value.duration);
           });
+        }
+      });
+
+    _videoController!.addListener(_videoListener);
+
+    _thumbnailBytes = await VideoThumbnail.thumbnailData(
+      video: widget.post.video!,
+      imageFormat: ImageFormat.JPEG,
+      maxWidth: 1280,
+      quality: 25,
+    );
+
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
+  }
+
+  @override
+  void dispose() {
+    _videoController?.removeListener(_videoListener);
+    _videoController?.dispose();
+    super.dispose();
+  }
+
+  void _videoListener() {
+    if (_videoController!.value.position == _videoController!.value.duration) {
+      if (mounted) {
+        setState(() {
+          _isPlaying = false;
         });
+      }
+    } else {
+      if (mounted) {
+        setState(() {
+          _currentPosition = _formatDuration(_videoController!.value.position);
+        });
+      }
     }
   }
 
@@ -317,9 +373,60 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: _videoController != null &&
                           _videoController!.value.isInitialized
-                      ? AspectRatio(
-                          aspectRatio: _videoController!.value.aspectRatio,
-                          child: VideoPlayer(_videoController!),
+                      ? Column(
+                          children: [
+                            AspectRatio(
+                              aspectRatio: _videoController!.value.aspectRatio,
+                              child: GestureDetector(
+                                onTap: _togglePlayPause,
+                                child: Stack(
+                                  alignment: Alignment.bottomCenter,
+                                  children: [
+                                    _isPlaying
+                                        ? VideoPlayer(_videoController!)
+                                        : _thumbnailBytes != null
+                                            ? Image.memory(_thumbnailBytes!)
+                                            : const CircularProgressIndicator(),
+                                    if (!_isPlaying)
+                                      const Center(
+                                        child: Icon(
+                                          Icons.play_arrow,
+                                          color: Colors.white,
+                                          size: 100.0,
+                                        ),
+                                      ),
+                                    VideoProgressIndicator(
+                                      _videoController!,
+                                      allowScrubbing: true,
+                                      colors: const VideoProgressColors(
+                                        playedColor: Colors.red,
+                                        backgroundColor: Colors.black,
+                                        bufferedColor: Colors.grey,
+                                      ),
+                                    ),
+                                    Positioned(
+                                      bottom: 8,
+                                      left: 8,
+                                      child: Text(
+                                        _currentPosition ?? '0:00',
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                    ),
+                                    Positioned(
+                                      bottom: 8,
+                                      right: 8,
+                                      child: Text(
+                                        _videoDuration ?? '0:00',
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         )
                       : const CircularProgressIndicator(),
                 )
@@ -478,5 +585,16 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         ),
       ),
     );
+  }
+
+  void _togglePlayPause() {
+    setState(() {
+      if (_videoController!.value.isPlaying) {
+        _videoController!.pause();
+      } else {
+        _videoController!.play();
+      }
+      _isPlaying = _videoController!.value.isPlaying;
+    });
   }
 }
