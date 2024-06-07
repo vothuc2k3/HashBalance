@@ -7,6 +7,7 @@ import 'package:hash_balance/models/community_model.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:mdi/mdi.dart';
 import 'package:routemaster/routemaster.dart';
+import 'package:video_player/video_player.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
@@ -25,11 +26,6 @@ class NewsfeedScreen extends ConsumerStatefulWidget {
 }
 
 class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
   void upvote() {}
 
   void downvote() {}
@@ -80,7 +76,7 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
                                                 post.communityName))
                                             .whenOrNull(
                                           data: (community) {
-                                            return _buildPostContainer(
+                                            return PostContainer(
                                               user: user,
                                               post: post,
                                               community: community,
@@ -107,240 +103,6 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildPostContainer({
-    required UserModel user,
-    required Post post,
-    required Community community,
-  }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-      padding: const EdgeInsets.all(5),
-      decoration: BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.white,
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundImage: NetworkImage(community.profileImage),
-                      radius: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '#=${community.name}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.more_horiz),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildPostHeader(post, user),
-                const SizedBox(height: 4),
-                Text(post.content ?? ''),
-                post.image != ''
-                    ? const SizedBox.shrink()
-                    : const SizedBox(height: 6),
-              ],
-            ),
-          ),
-          post.image != ''
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Image.network(
-                    post.image!,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Icon(
-                        Icons.error,
-                        color: Color.fromARGB(255, 239, 156, 150),
-                      );
-                    },
-                  ),
-                )
-              : const SizedBox.shrink(),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: _buildPostStat(post),
-          ),
-          const SizedBox(height: 20),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPostStat(Post post) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: const BoxDecoration(
-                color: Pallete.greyColor,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.arrow_upward_sharp,
-                size: 10,
-                color: Pallete.blackColor,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Expanded(
-              child: Text(
-                post.upvotes > 0 ? '${post.upvotes}' : '',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                ),
-              ),
-            ),
-            Text(
-              '14 Comments',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 10,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              '69 Shares',
-              style: TextStyle(color: Colors.grey[600], fontSize: 10),
-            ),
-          ],
-        ),
-        const Divider(),
-        Row(
-          children: [
-            _buildPostButton(
-              ontap: upvote,
-              icon: Icon(
-                Icons.arrow_upward,
-                color: Colors.grey[600],
-                size: 18,
-              ),
-            ),
-            _buildPostButton(
-              ontap: downvote,
-              icon: Icon(
-                Icons.arrow_downward,
-                color: Colors.grey[600],
-                size: 18,
-              ),
-            ),
-            _buildPostButton(
-              icon: Icon(
-                Icons.comment,
-                color: Colors.grey[600],
-                size: 18,
-              ),
-              ontap: () {},
-            ),
-            _buildPostButton(
-              icon: Icon(
-                Mdi.shareOutline,
-                color: Colors.grey[600],
-                size: 18,
-              ),
-              ontap: () {},
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPostButton({
-    required ontap,
-    required Icon icon,
-  }) {
-    return Expanded(
-      child: Material(
-        color: Colors.black,
-        child: InkWell(
-          onTap: () {
-            ontap;
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            height: 25,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [icon],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPostHeader(Post post, UserModel user) {
-    return Row(
-      children: [
-        CircleAvatar(
-          backgroundImage: CachedNetworkImageProvider(
-            user.profileImage,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '#${user.name}',
-                style:
-                    const TextStyle(fontWeight: FontWeight.w600, fontSize: 11),
-              ),
-              Row(
-                children: [
-                  Text(
-                    formatTime(post.createdAt),
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(width: 3),
-                  const Icon(
-                    Icons.public,
-                    color: Colors.grey,
-                    size: 12,
-                  ),
-                ],
-              )
-            ],
-          ),
-        ),
-      ],
     );
   }
 
@@ -439,6 +201,280 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class PostContainer extends ConsumerStatefulWidget {
+  final UserModel user;
+  final Post post;
+  final Community community;
+
+  const PostContainer({
+    super.key,
+    required this.user,
+    required this.post,
+    required this.community,
+  });
+
+  @override
+  ConsumerState<PostContainer> createState() => _PostContainerState();
+}
+
+class _PostContainerState extends ConsumerState<PostContainer> {
+  VideoPlayerController? _videoController;
+
+  void upvote() {}
+  void downvote() {}
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.post.video != '') {
+      _videoController = VideoPlayerController.networkUrl(
+        Uri.parse(widget.post.video!),
+      )..initialize().then((_) {
+          setState(() {
+            _videoController!.play();
+          });
+        });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      padding: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.white,
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundImage:
+                          NetworkImage(widget.community.profileImage),
+                      radius: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '#=${widget.community.name}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.more_horiz),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildPostHeader(widget.post, widget.user),
+                const SizedBox(height: 4),
+                Text(widget.post.content ?? ''),
+                widget.post.image != ''
+                    ? const SizedBox.shrink()
+                    : const SizedBox(height: 6),
+              ],
+            ),
+          ),
+          widget.post.image != ''
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Image.network(
+                    widget.post.image!,
+                  ),
+                )
+              : const SizedBox.shrink(),
+          widget.post.video != ''
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: _videoController != null &&
+                          _videoController!.value.isInitialized
+                      ? AspectRatio(
+                          aspectRatio: _videoController!.value.aspectRatio,
+                          child: VideoPlayer(_videoController!),
+                        )
+                      : const CircularProgressIndicator(),
+                )
+              : const SizedBox.shrink(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: _buildPostStat(widget.post),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPostHeader(Post post, UserModel user) {
+    return Row(
+      children: [
+        CircleAvatar(
+          backgroundImage: CachedNetworkImageProvider(
+            user.profileImage,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '#${user.name}',
+                style:
+                    const TextStyle(fontWeight: FontWeight.w600, fontSize: 11),
+              ),
+              Row(
+                children: [
+                  Text(
+                    formatTime(post.createdAt),
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(width: 3),
+                  const Icon(
+                    Icons.public,
+                    color: Colors.grey,
+                    size: 12,
+                  ),
+                ],
+              )
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPostStat(Post post) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: Pallete.greyColor,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.arrow_upward_sharp,
+                size: 10,
+                color: Pallete.blackColor,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                post.upvotes > 0 ? '${post.upvotes}' : '',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                ),
+              ),
+            ),
+            Text(
+              '14 Comments',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 10,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '69 Shares',
+              style: TextStyle(color: Colors.grey[600], fontSize: 10),
+            ),
+          ],
+        ),
+        const Divider(),
+        Row(
+          children: [
+            _buildPostButton(
+              ontap: upvote,
+              icon: Icon(
+                Icons.arrow_upward,
+                color: Colors.grey[600],
+                size: 18,
+              ),
+            ),
+            _buildPostButton(
+              ontap: downvote,
+              icon: Icon(
+                Icons.arrow_downward,
+                color: Colors.grey[600],
+                size: 18,
+              ),
+            ),
+            _buildPostButton(
+              icon: Icon(
+                Icons.comment,
+                color: Colors.grey[600],
+                size: 18,
+              ),
+              ontap: () {},
+            ),
+            _buildPostButton(
+              icon: Icon(
+                Mdi.shareOutline,
+                color: Colors.grey[600],
+                size: 18,
+              ),
+              ontap: () {},
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPostButton({
+    required ontap,
+    required Icon icon,
+  }) {
+    return Expanded(
+      child: Material(
+        color: Colors.black,
+        child: InkWell(
+          onTap: () {
+            ontap();
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            height: 25,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [icon],
+            ),
+          ),
         ),
       ),
     );
