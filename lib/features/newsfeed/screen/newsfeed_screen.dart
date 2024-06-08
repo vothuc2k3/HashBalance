@@ -237,7 +237,14 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     }, (_) {});
   }
 
-  void downvote() {}
+  void downvote() async {
+    final result = await ref
+        .read(postControllerProvider.notifier)
+        .downvote(widget.post.id);
+    result.fold((l) {
+      showSnackBar(context, l.toString());
+    }, (_) {});
+  }
 
   @override
   void initState() {
@@ -427,7 +434,12 @@ class _PostContainerState extends ConsumerState<PostContainer> {
               : const SizedBox.shrink(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: _buildPostStat(widget.post),
+            child: ref.watch(getUpvoteCountProvider(widget.post.id)).whenOrNull(
+                  data: (count) {
+                    return _buildPostStat();
+                  },
+                  loading: () => const Loading(),
+                ),
           ),
         ],
       ),
@@ -479,31 +491,14 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     );
   }
 
-  Widget _buildPostStat(Post post) {
+  Widget _buildPostStat() {
     return Column(
       children: [
         Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: const BoxDecoration(
-                color: Pallete.greyColor,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.arrow_upward_sharp,
-                size: 10,
-                color: Pallete.blackColor,
-              ),
-            ),
             const SizedBox(width: 4),
-            Expanded(
-              child: Text(
-                post.upvotes.isNotEmpty ? '${post.upvotes.length}' : '',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                ),
-              ),
+            const Expanded(
+              child: Text(''),
             ),
             Text(
               '14 Comments',
@@ -523,148 +518,14 @@ class _PostContainerState extends ConsumerState<PostContainer> {
           ],
         ),
         const Divider(),
-        Row(
-          children: [
-            InkWell(
-              child: ref.watch(getUpvoteStatusProvider(widget.post.id)).whenOrNull(
-                    data: ((status) {
-                      return _buildUpVoteButton(
-                        onTap: upvote,
-                        icon: Icon(
-                          Mdi.arrowUp,
-                          color: Colors.grey[600],
-                          size: 18,
-                        ),
-                        status: status,
-                        uid: widget.user.uid,
-                        post: widget.post,
-                      );
-                    }),
-                    loading: () => const Loading(),
-                  ),
-            ),
-            InkWell(
-              child: _buildDownVoteButton(
-                onTap: downvote,
-                icon: Icon(
-                  Icons.arrow_downward,
-                  color: Colors.grey[600],
-                  size: 18,
-                ),
-                uid: widget.user.uid,
-                post: widget.post,
-              ),
-            ),
-            _buildPostButton(
-              icon: Icon(
-                Mdi.comment,
-                color: Colors.grey[600],
-                size: 18,
-              ),
-              onTap: () {},
-              label: 'Comments',
-            ),
-            _buildPostButton(
-              icon: Icon(
-                Mdi.shareOutline,
-                color: Colors.grey[600],
-                size: 18,
-              ),
-              onTap: () {},
-              label: 'Shares',
-            ),
-          ],
+        PostActions(
+          post: widget.post,
+          onUpvote: upvote,
+          onDownvote: downvote,
+          onComment: () {},
+          onShare: () {},
         ),
       ],
-    );
-  }
-
-  Widget _buildUpVoteButton({
-    required Function onTap,
-    required Icon icon,
-    required String uid,
-    required Post post,
-    required bool status,
-  }) {
-    return Expanded(
-      child: Material(
-        color: Colors.black,
-        child: InkWell(
-          onTap: () {
-            onTap();
-          },
-          child: Container(
-            color: status ? Colors.blueGrey : null,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            height: 25,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                icon,
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDownVoteButton({
-    required Function onTap,
-    required Icon icon,
-    required String uid,
-    required Post post,
-  }) {
-    final didDownvote = post.downvotes.contains(uid);
-    return Expanded(
-      child: Material(
-        color: Colors.black,
-        child: InkWell(
-          onTap: () {
-            didDownvote ? () {} : onTap();
-          },
-          child: Container(
-            color: didDownvote ? Pallete.whiteColor : null,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            height: 25,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                icon,
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPostButton({
-    required onTap,
-    required Icon icon,
-    required String label,
-  }) {
-    return Expanded(
-      child: Material(
-        color: Colors.black,
-        child: InkWell(
-          onTap: () {
-            onTap();
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            height: 25,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                icon,
-                const SizedBox(width: 4),
-                Text(label),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -677,5 +538,126 @@ class _PostContainerState extends ConsumerState<PostContainer> {
       }
       _isPlaying = _videoController!.value.isPlaying;
     });
+  }
+}
+
+class PostActions extends ConsumerWidget {
+  final Post _post;
+  final Function _onUpvote;
+  final Function _onDownvote;
+  final Function _onComment;
+  final Function _onShare;
+
+  const PostActions({
+    super.key,
+    required Post post,
+    required Function onUpvote,
+    required Function onDownvote,
+    required Function onComment,
+    required Function onShare,
+  })  : _post = post,
+        _onUpvote = onUpvote,
+        _onDownvote = onDownvote,
+        _onComment = onComment,
+        _onShare = onShare;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _buildVoteButton(
+          icon: Icons.arrow_upward_rounded,
+          count: (ref.watch(getUpvoteCountProvider(_post.id)).whenOrNull(
+              data: (count) {
+            return count;
+          }))!,
+          color: ref.watch(getUpvoteStatusProvider(_post.id)).whenOrNull(
+            data: (status) {
+              return status ? Colors.orange : Colors.grey[600];
+            },
+          ),
+          onTap: _onUpvote,
+        ),
+        _buildVoteButton(
+          icon: Mdi.arrowDown,
+          count: (ref.watch(getDownvoteCountProvider(_post.id)).whenOrNull(
+              data: (count) {
+            return count;
+          }))!,
+          color: ref.watch(getDownvoteStatusProvider(_post.id)).whenOrNull(
+            data: (status) {
+              return status ? Colors.blue : Colors.grey[600];
+            },
+          ),
+          onTap: _onDownvote,
+        ),
+        _buildActionButton(
+          icon: Mdi.commentOutline,
+          label: 'Comments',
+          onTap: _onComment,
+        ),
+        _buildActionButton(
+          icon: Mdi.shareOutline,
+          label: 'Share',
+          onTap: _onShare,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVoteButton({
+    required IconData icon,
+    required int count,
+    required Color? color,
+    required Function onTap,
+  }) {
+    return InkWell(
+      onTap: () => onTap(),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 4),
+            Text(
+              count.toString(),
+              style: const TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required Function onTap,
+  }) {
+    return InkWell(
+      onTap: () => onTap(),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.white, size: 20),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -21,6 +21,18 @@ final getUpvoteStatusProvider = StreamProvider.family((ref, String postId) {
   return ref.watch(postControllerProvider.notifier).checkDidUpvote(postId);
 });
 
+final getDownvoteStatusProvider = StreamProvider.family((ref, String postId) {
+  return ref.watch(postControllerProvider.notifier).checkDidDownvote(postId);
+});
+
+final getUpvoteCountProvider = StreamProvider.family((ref, String postId) {
+  return ref.watch(postControllerProvider.notifier).getUpvotes(postId);
+});
+
+final getDownvoteCountProvider = StreamProvider.family((ref, String postId) {
+  return ref.watch(postControllerProvider.notifier).getDownvotes(postId);
+});
+
 class PostController extends StateNotifier<bool> {
   final PostRepository _postRepository;
   final Ref _ref;
@@ -123,8 +135,36 @@ class PostController extends StateNotifier<bool> {
     }
   }
 
+  FutureVoid downvote(String postId) async {
+    state = true;
+    try {
+      final user = _ref.read(userProvider);
+      await _postRepository.downvote(postId, user!.uid);
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    } finally {
+      state = false;
+    }
+  }
+
   Stream<bool> checkDidUpvote(String postId) {
     final user = _ref.read(userProvider);
     return _postRepository.checkDidUpvote(postId, user!.uid);
+  }
+
+  Stream<int> getUpvotes(String postId) {
+    return _postRepository.getUpvotes(postId);
+  }
+
+  Stream<bool> checkDidDownvote(String postId) {
+    final user = _ref.read(userProvider);
+    return _postRepository.checkDidDownvote(postId, user!.uid);
+  }
+
+  Stream<int> getDownvotes(String postId) {
+    return _postRepository.getDownvotes(postId);
   }
 }
