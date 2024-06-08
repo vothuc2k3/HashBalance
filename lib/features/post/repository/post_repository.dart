@@ -35,12 +35,11 @@ class PostRepository {
     File? video,
   ) async {
     try {
-      final postId = post.uid + Timestamp.now().toString();
       Post updatedPost = post;
       if (image != null) {
         final result = await _storageRepository.storeFile(
           path: 'posts/images',
-          id: postId,
+          id: post.id,
           file: image,
         );
         await result.fold(
@@ -49,7 +48,7 @@ class PostRepository {
                   message: error.message,
                 ), (right) async {
           String imageUrl = await FirebaseStorage.instance
-              .ref('posts/images/$postId')
+              .ref('posts/images/${post.id}')
               .getDownloadURL();
           updatedPost = updatedPost.copyWith(image: imageUrl);
         });
@@ -57,7 +56,7 @@ class PostRepository {
       if (video != null) {
         final result = await _storageRepository.storeFile(
           path: 'posts/videos',
-          id: postId,
+          id: post.id,
           file: video,
         );
         await result.fold(
@@ -66,12 +65,12 @@ class PostRepository {
                   message: error.message,
                 ), (right) async {
           String videoUrl = await FirebaseStorage.instance
-              .ref('posts/videos/$postId')
+              .ref('posts/videos/${post.id}')
               .getDownloadURL();
           updatedPost = updatedPost.copyWith(video: videoUrl);
         });
       }
-      await _posts.doc().set(updatedPost.toMap());
+      await _posts.doc(post.id).set(updatedPost.toMap());
       await _users.doc(post.uid).update({
         'activityPoint': FieldValue.increment(1),
       });
@@ -143,22 +142,16 @@ class PostRepository {
   }
 
   //CHECK IF THE USER UPVOTED THE POST
-  FutureBool checkDidUpvote(String postId, String uid) async {
-    try {
-      final postDoc = await _posts.doc(postId).get();
-      final data = postDoc.data();
-      final postData = data as Map<String, dynamic>;
-      var upvotes = List<String>.from(postData['upvotes'] ?? <String>[]);
+  Stream<bool> checkDidUpvote(String postId, String uid) {
+    return _posts.doc(postId).snapshots().map((event) {
+      final data = event.data() as Map<String, dynamic>;
+      final upvotes = List<String>.from(data['upvotes']);
       if (upvotes.contains(uid)) {
-        return right(true);
+        return true;
       } else {
-        return right(false);
+        return false;
       }
-    } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
-    } catch (e) {
-      return left(Failures(e.toString()));
-    }
+    });
   }
 
   //REFERENCE ALL THE POSTS

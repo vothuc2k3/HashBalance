@@ -1,7 +1,4 @@
-import 'dart:typed_data';
-
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
@@ -21,7 +18,6 @@ import 'package:hash_balance/features/user_profile/controller/user_controller.da
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
-import 'package:video_thumbnail/video_thumbnail.dart';
 
 class NewsfeedScreen extends ConsumerStatefulWidget {
   const NewsfeedScreen({super.key});
@@ -232,7 +228,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   bool _isPlaying = false;
   String? _videoDuration;
   String? _currentPosition;
-  Uint8List? _thumbnailBytes;
 
   void upvote() async {
     final result =
@@ -264,13 +259,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
       });
 
     _videoController!.addListener(_videoListener);
-
-    _thumbnailBytes = await VideoThumbnail.thumbnailData(
-      video: widget.post.video!,
-      imageFormat: ImageFormat.JPEG,
-      maxWidth: 1280,
-      quality: 25,
-    );
 
     if (mounted) {
       setState(() {});
@@ -390,11 +378,9 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                                 child: Stack(
                                   alignment: Alignment.bottomCenter,
                                   children: [
-                                    _isPlaying
-                                        ? VideoPlayer(_videoController!)
-                                        : _thumbnailBytes != null
-                                            ? Image.memory(_thumbnailBytes!)
-                                            : const CircularProgressIndicator(),
+                                    VideoPlayer(
+                                      _videoController!,
+                                    ),
                                     if (!_isPlaying)
                                       const Center(
                                         child: Icon(
@@ -448,7 +434,10 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     );
   }
 
-  Widget _buildPostHeader(Post post, UserModel user) {
+  Widget _buildPostHeader(
+    Post post,
+    UserModel user,
+  ) {
     return Row(
       children: [
         CircleAvatar(
@@ -536,33 +525,44 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         const Divider(),
         Row(
           children: [
-            _buildVoteButton(
-              onTap: upvote,
-              icon: Icon(
-                Icons.arrow_upward,
-                color: Colors.grey[600],
-                size: 18,
-              ),
-              uid: widget.user.uid,
-              post: widget.post,
+            InkWell(
+              child: ref.watch(getUpvoteStatusProvider(widget.post.id)).whenOrNull(
+                    data: ((status) {
+                      return _buildUpVoteButton(
+                        onTap: upvote,
+                        icon: Icon(
+                          Mdi.arrowUp,
+                          color: Colors.grey[600],
+                          size: 18,
+                        ),
+                        status: status,
+                        uid: widget.user.uid,
+                        post: widget.post,
+                      );
+                    }),
+                    loading: () => const Loading(),
+                  ),
             ),
-            _buildVoteButton(
-              onTap: downvote,
-              icon: Icon(
-                Icons.arrow_downward,
-                color: Colors.grey[600],
-                size: 18,
+            InkWell(
+              child: _buildDownVoteButton(
+                onTap: downvote,
+                icon: Icon(
+                  Icons.arrow_downward,
+                  color: Colors.grey[600],
+                  size: 18,
+                ),
+                uid: widget.user.uid,
+                post: widget.post,
               ),
-              uid: widget.user.uid,
-              post: widget.post,
             ),
             _buildPostButton(
               icon: Icon(
-                Icons.comment,
+                Mdi.comment,
                 color: Colors.grey[600],
                 size: 18,
               ),
               onTap: () {},
+              label: 'Comments',
             ),
             _buildPostButton(
               icon: Icon(
@@ -571,6 +571,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                 size: 18,
               ),
               onTap: () {},
+              label: 'Shares',
             ),
           ],
         ),
@@ -578,22 +579,52 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     );
   }
 
-  Widget _buildVoteButton({
-    required onTap,
+  Widget _buildUpVoteButton({
+    required Function onTap,
     required Icon icon,
     required String uid,
     required Post post,
+    required bool status,
   }) {
-    final didUpvote = post.upvotes.contains(uid);
     return Expanded(
       child: Material(
         color: Colors.black,
         child: InkWell(
           onTap: () {
-            didUpvote ? () {} : onTap();
+            onTap();
           },
           child: Container(
-            color: didUpvote ? Pallete.whiteColor : null,
+            color: status ? Colors.blueGrey : null,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            height: 25,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                icon,
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDownVoteButton({
+    required Function onTap,
+    required Icon icon,
+    required String uid,
+    required Post post,
+  }) {
+    final didDownvote = post.downvotes.contains(uid);
+    return Expanded(
+      child: Material(
+        color: Colors.black,
+        child: InkWell(
+          onTap: () {
+            didDownvote ? () {} : onTap();
+          },
+          child: Container(
+            color: didDownvote ? Pallete.whiteColor : null,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             height: 25,
             child: Row(
@@ -611,6 +642,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   Widget _buildPostButton({
     required onTap,
     required Icon icon,
+    required String label,
   }) {
     return Expanded(
       child: Material(
@@ -626,6 +658,8 @@ class _PostContainerState extends ConsumerState<PostContainer> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 icon,
+                const SizedBox(width: 4),
+                Text(label),
               ],
             ),
           ),

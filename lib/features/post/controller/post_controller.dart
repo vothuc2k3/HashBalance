@@ -17,6 +17,10 @@ final postControllerProvider = StateNotifierProvider<PostController, bool>(
       postRepository: ref.read(postRepositoryProvider), ref: ref),
 );
 
+final getUpvoteStatusProvider = StreamProvider.family((ref, String postId) {
+  return ref.watch(postControllerProvider.notifier).checkDidUpvote(postId);
+});
+
 class PostController extends StateNotifier<bool> {
   final PostRepository _postRepository;
   final Ref _ref;
@@ -119,18 +123,8 @@ class PostController extends StateNotifier<bool> {
     }
   }
 
-  FutureBool checkDidUpvote(String postId, String uid) async {
-    try {
-      final result = await _postRepository.checkDidUpvote(postId, uid);
-      return result.fold((l) {
-        return left(Failures(l.message));
-      }, (r) {
-        return right(r);
-      });
-    } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
-    } catch (e) {
-      return left(Failures(e.toString()));
-    }
+  Stream<bool> checkDidUpvote(String postId) {
+    final user = _ref.read(userProvider);
+    return _postRepository.checkDidUpvote(postId, user!.uid);
   }
 }

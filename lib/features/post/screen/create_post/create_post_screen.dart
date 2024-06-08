@@ -12,6 +12,7 @@ import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
 import 'package:video_player/video_player.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class CreatePostScreen extends ConsumerStatefulWidget {
   const CreatePostScreen({super.key});
@@ -42,27 +43,45 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     super.dispose();
   }
 
+  Future<bool> _requestPermission(Permission permission) async {
+    PermissionStatus status = await permission.status;
+    if (status.isDenied) {
+      status = await permission.request();
+    }
+    return status.isGranted;
+  }
+
   void selectImage() async {
-    final result = await pickImage();
-    if (result != null) {
-      setState(() {
-        image = File(result.files.first.path!);
-      });
+    if (await _requestPermission(Permission.photos)) {
+      final result = await pickImage();
+      if (result != null) {
+        setState(() {
+          image = File(result.files.first.path!);
+        });
+      }
+    } else {
+      // ignore: use_build_context_synchronously
+      showSnackBar(context, 'Storage permission denied');
     }
   }
 
   void selectVideo() async {
-    final result = await pickVideo();
-    if (result != null) {
-      setState(() {
-        isSelectingVideo = true;
-        video = File(result.files.first.path!);
-        _videoPlayerController = VideoPlayerController.file(video!)
-          ..initialize().then((_) {
-            setState(() {});
-            _videoPlayerController!.play();
-          });
-      });
+    if (await _requestPermission(Permission.videos)) {
+      final result = await pickVideo();
+      if (result != null) {
+        setState(() {
+          isSelectingVideo = true;
+          video = File(result.files.first.path!);
+          _videoPlayerController = VideoPlayerController.file(video!)
+            ..initialize().then((_) {
+              setState(() {});
+              _videoPlayerController!.play();
+            });
+        });
+      }
+    } else {
+      // ignore: use_build_context_synchronously
+      showSnackBar(context, 'Storage permission denied');
     }
   }
 
@@ -90,7 +109,6 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.black,
@@ -136,9 +154,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                 ),
               ),
               Expanded(
-                // Wrap with Expanded
                 child: SingleChildScrollView(
-                  // Wrap with SingleChildScrollView
                   child: Column(
                     children: [
                       Container(
@@ -175,8 +191,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                       actions: [
                                         TextButton(
                                           onPressed: () {
-                                            Navigator.of(context)
-                                                .pop(); // Close the dialog
+                                            Navigator.of(context).pop();
                                           },
                                           child: const Text('No'),
                                         ),
@@ -186,8 +201,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                               isSelectingImage = false;
                                               image = null;
                                             });
-                                            Navigator.of(context)
-                                                .pop(); // Close the dialog
+                                            Navigator.of(context).pop();
                                           },
                                           child: const Text('Yes'),
                                         ),
@@ -253,8 +267,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                       actions: [
                                         TextButton(
                                           onPressed: () {
-                                            Navigator.of(context)
-                                                .pop(); // Close the dialog
+                                            Navigator.of(context).pop();
                                           },
                                           child: const Text('No'),
                                         ),
@@ -264,8 +277,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                               isSelectingVideo = false;
                                               video = null;
                                             });
-                                            Navigator.of(context)
-                                                .pop(); // Close the dialog
+                                            Navigator.of(context).pop();
                                           },
                                           child: const Text('Yes'),
                                         ),
@@ -364,7 +376,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                                       community.profileImage),
                                             ),
                                             const SizedBox(width: 8),
-                                            Text('#=${community.name}'),
+                                            Text('#${community.name}'),
                                           ],
                                         ),
                                       );
