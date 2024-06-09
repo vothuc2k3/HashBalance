@@ -36,8 +36,6 @@ class CommentRepository {
     Post post,
     Comment comment,
     String? content,
-    File? image,
-    File? video,
   ) async {
     try {
       await _comments.doc().set(comment.toMap());
@@ -50,7 +48,7 @@ class CommentRepository {
   }
 
   //GET COMMENTS BY POST
-  Stream<List<Comment>> getCommentsByPost(String postId) {
+  Stream<List<Comment>?> getCommentsByPost(String postId) {
     try {
       return _comments
           .where(
@@ -60,6 +58,9 @@ class CommentRepository {
           .snapshots()
           .map(
         (event) {
+          if (event.docs.isEmpty) {
+            return null;
+          }
           List<Comment> comments = [];
           for (var comment in event.docs) {
             final data = comment.data() as Map<String, dynamic>;
@@ -90,7 +91,7 @@ class CommentRepository {
   }
 
   //GET THE COMMENT WITH HIGHEST UPVOTES
-  Stream<Comment> getTopComment(String postId) {
+  Stream<Comment?> getTopComment(String postId) {
     try {
       return FirebaseFirestore.instance
           .collection('comments')
@@ -101,7 +102,7 @@ class CommentRepository {
           .snapshots()
           .map((event) {
         if (event.docs.isEmpty) {
-          throw Exception("No comments found");
+          return null;
         }
 
         var doc = event.docs.first;

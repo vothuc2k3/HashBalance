@@ -54,8 +54,6 @@ class PostController extends StateNotifier<bool> {
     try {
       List<String> upvotes = ['empty'];
       List<String> downvotes = ['empty'];
-      upvotes.clear();
-      downvotes.clear();
       final post = Post(
         communityName: communityName,
         uid: uid,

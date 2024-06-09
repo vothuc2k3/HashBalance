@@ -5,7 +5,6 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
-import 'package:hash_balance/models/comment_model.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:mdi/mdi.dart';
@@ -68,6 +67,7 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
                                 final post = posts[index];
+
                                 return ref
                                     .watch(getUserByUidProvider(post.uid))
                                     .when(
@@ -81,7 +81,6 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
                                               user: user,
                                               post: post,
                                               community: community,
-                                              comments: const [],
                                             );
                                           },
                                         );
@@ -213,14 +212,12 @@ class PostContainer extends ConsumerStatefulWidget {
   final UserModel user;
   final Post post;
   final Community community;
-  final List<Comment> comments;
 
   const PostContainer({
     super.key,
     required this.user,
     required this.post,
     required this.community,
-    required this.comments,
   });
 
   @override
@@ -451,7 +448,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: ref.watch(getUpvoteCountProvider(widget.post.id)).whenOrNull(
                   data: (count) {
-                    return _buildPostFooter(user: widget.user);
+                    return _buildPostStat(user: widget.user);
                   },
                   loading: () => const Loading(),
                 ),
@@ -506,7 +503,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     );
   }
 
-  Widget _buildPostFooter({required UserModel user}) {
+  Widget _buildPostStat({required UserModel user}) {
     return Column(
       children: [
         Row(
@@ -541,119 +538,143 @@ class _PostContainerState extends ConsumerState<PostContainer> {
           onShare: () {},
         ),
         const Divider(),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: 1,
-          itemBuilder: (context, index) {
-            return Column(
-              children: [
-                const ListTile(
-                  leading: CircleAvatar(
-                    backgroundImage:
-                        NetworkImage('https://via.placeholder.com/50.png'),
-                  ),
-                  title: Text('Lô Hoàng Khôi Nguyễn'),
-                  subtitle: Text(
-                    'Là người chưa có kinh nghiệm, còn trẻ, khỏe là phải biết chấp nhận đánh đổi để có được kinh nghiệm, hiểu không? Đã là sức trẻ thì phải cống hiến hết mình chứ đừng vì đồng tiền blah blah blah...',
-                  ),
-                ),
-                Row(
+        ref.watch(getTopCommentProvider(widget.post.id)).when(
+              data: (comment) {
+                if (comment == null) {
+                  return const Text('Không có bình luận nào');
+                }
+                return Column(
                   children: [
-                    _buildVoteButton(
-                      icon: Icons.arrow_upward_outlined,
-                      count: 0,
-                      color: Colors.white,
-                      onTap: () {},
-                    ),
-                    _buildVoteButton(
-                      icon: Icons.arrow_downward_outlined,
-                      count: 0,
-                      color: Colors.white,
-                      onTap: () {},
-                    ),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 50.0),
-                  child: ref
-                      .watch(getCommentsByPostProvider(widget.post.id))
-                      .whenOrNull(
-                    data: (comments) {
-                      return ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: 1,
-                        itemBuilder: (context, replyIndex) {
-                          return Column(
-                            children: [
-                              const ListTile(
-                                leading: CircleAvatar(
-                                  backgroundImage: NetworkImage(
-                                    'https://via.placeholder.com/50.png',
-                                  ),
+                    Container(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        children: [
+                          const CircleAvatar(
+                            backgroundImage: NetworkImage(
+                                'https://via.placeholder.com/50.png'),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Lô Hoàng Khôi Nguyễn',
+                                    style:
+                                        Theme.of(context).textTheme.titleSmall),
+                                const SizedBox(height: 4),
+                                const Text(
+                                  'Là người chưa có kinh nghiệm, còn trẻ, khỏe là phải biết chấp nhận đánh đổi để có được kinh nghiệm, hiểu không? Đã là sức trẻ thì phải cống hiến hết mình chứ đừng vì đồng tiền blah blah blah...',
                                 ),
-                                title: Text('Hoàng Lê'),
-                                subtitle:
-                                    Text('Chuẩn văn mẫu luôn ông ơi :)))'),
-                              ),
-                              Row(
-                                children: [
-                                  _buildVoteButton(
-                                    icon: Icons.arrow_upward_outlined,
-                                    count: 0,
-                                    color: Colors.white,
-                                    onTap: () {},
-                                  ),
-                                  _buildVoteButton(
-                                    icon: Icons.arrow_downward_outlined,
-                                    count: 0,
-                                    color: Colors.white,
-                                    onTap: () {},
-                                  ),
-                                ],
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 0.0),
-                  child: Row(
-                    children: [
-                      const CircleAvatar(
-                        backgroundImage:
-                            NetworkImage('https://via.placeholder.com/50.png'),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: TextField(
-                          decoration: InputDecoration(
-                            hintText: 'Viết bình luận...',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
+                              ],
                             ),
                           ),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        _buildVoteButton(
+                          icon: Icons.arrow_upward_outlined,
+                          count: 0,
+                          color: Colors.white,
+                          onTap: () {},
                         ),
+                        _buildVoteButton(
+                          icon: Icons.arrow_downward_outlined,
+                          count: 0,
+                          color: Colors.white,
+                          onTap: () {},
+                        ),
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 50.0),
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              children: [
+                                const CircleAvatar(
+                                  backgroundImage: NetworkImage(
+                                      'https://via.placeholder.com/50.png'),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Hoàng Lê',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleSmall,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      const Text(
+                                          'Chuẩn văn mẫu luôn ông ơi :)))'),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              _buildVoteButton(
+                                icon: Icons.arrow_upward_outlined,
+                                count: 0,
+                                color: Colors.white,
+                                onTap: () {},
+                              ),
+                              _buildVoteButton(
+                                icon: Icons.arrow_downward_outlined,
+                                count: 0,
+                                color: Colors.white,
+                                onTap: () {},
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.send),
-                        onPressed: () {
-                          // Logic gửi bình luận
-                        },
-                      ),
-                    ],
+                    ),
+                  ],
+                );
+              },
+              error: (error, stackTrace) => ErrorText(error: error.toString()),
+              loading: () => const Loading(),
+            ),
+        Padding(
+          padding: const EdgeInsets.only(left: 0.0),
+          child: Row(
+            children: [
+              const CircleAvatar(
+                backgroundImage:
+                    NetworkImage('https://via.placeholder.com/50.png'),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Viết bình luận...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                    ),
                   ),
                 ),
-              ],
-            );
-          },
+              ),
+              IconButton(
+                icon: const Icon(Icons.send),
+                onPressed: () {
+                  // Logic gửi bình luận
+                },
+              ),
+            ],
+          ),
         ),
       ],
     );

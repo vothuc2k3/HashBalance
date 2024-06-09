@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
@@ -14,6 +12,10 @@ final getCommentsByPostProvider = StreamProvider.family((ref, String postId) {
   return ref
       .watch(commentControllerProvider.notifier)
       .getCommentsByPost(postId);
+});
+
+final getTopCommentProvider = StreamProvider.family((ref, String postId) {
+  return ref.watch(commentControllerProvider.notifier).getTopComment(postId);
 });
 
 final commentControllerProvider =
@@ -40,8 +42,6 @@ class CommentController extends StateNotifier<bool> {
     UserModel user,
     Post post,
     String? content,
-    File? image,
-    File? video,
   ) async {
     state = true;
     try {
@@ -62,8 +62,6 @@ class CommentController extends StateNotifier<bool> {
         post,
         comment,
         content,
-        image,
-        video,
       );
       return result.fold(
         (l) => left((Failures(l.message))),
@@ -79,16 +77,24 @@ class CommentController extends StateNotifier<bool> {
   }
 
   //GET COMMENTS BY POSTS
-  Stream<List<Comment>> getCommentsByPost(String postId) {
-    state = true;
+  Stream<List<Comment>?> getCommentsByPost(String postId) {
     try {
       return _commentRepository.getCommentsByPost(postId);
     } on FirebaseException catch (e) {
       throw Failures(e.message!);
     } catch (e) {
       throw Failures(e.toString());
-    } finally {
-      state = false;
+    }
+  }
+
+  //GET TOP COMMENT
+  Stream<Comment?> getTopComment(String postId) {
+    try {
+      return _commentRepository.getTopComment(postId);
+    } on FirebaseException catch (e) {
+      throw Failures(e.message!);
+    } catch (e) {
+      throw Failures(e.toString());
     }
   }
 }
