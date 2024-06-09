@@ -9,17 +9,26 @@ class CustomPageTransitionsBuilder extends PageTransitionsBuilder {
     Animation<double> secondaryAnimation,
     Widget child,
   ) {
-    if (animation.status == AnimationStatus.reverse) {
-      return FadeTransition(opacity: animation, child: child);
-    } else {
-      final offsetAnimation = Tween<Offset>(
-        begin: const Offset(-1.0, 0.0),
-        end: Offset.zero,
-      ).animate(animation);
-      return SlideTransition(
-        position: offsetAnimation,
-        child: child,
-      );
-    }
+    return FadeTransition(
+      opacity: animation,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0.0, 1.0),
+          end: Offset.zero,
+        ).animate(animation),
+        child: ScaleTransition(
+          scale: Tween<double>(
+            begin: 0.9,
+            end: 1.0,
+          ).animate(
+            CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOut,
+            ),
+          ),
+          child: child,
+        ),
+      ),
+    );
   }
 }

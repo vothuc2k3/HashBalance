@@ -17,6 +17,19 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class HomeScreenState extends ConsumerState<HomeScreen> {
   int _page = 0;
+  late PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   void displayCommunityListDrawer(BuildContext context) {
     Scaffold.of(context).openDrawer();
@@ -30,6 +43,14 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
     setState(() {
       _page = page;
     });
+  }
+
+  void onTabTapped(int index) {
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
   }
 
   @override
@@ -68,7 +89,11 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
           }),
         ],
       ),
-      body: Constants.tabWidgets[_page],
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: onPageChanged,
+        children: Constants.tabWidgets,
+      ),
       drawer: const CommunityListDrawer(),
       endDrawer: UserProfileDrawer(homeScreenContext: context),
       bottomNavigationBar: CupertinoTabBar(
@@ -94,7 +119,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
             label: 'Inbox',
           ),
         ],
-        onTap: onPageChanged,
+        onTap: onTabTapped,
         currentIndex: _page,
       ),
     );

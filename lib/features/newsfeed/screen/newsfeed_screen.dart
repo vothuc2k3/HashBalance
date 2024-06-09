@@ -2,8 +2,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
+import 'package:hash_balance/models/comment_model.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:mdi/mdi.dart';
@@ -66,7 +68,6 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
                                 final post = posts[index];
-
                                 return ref
                                     .watch(getUserByUidProvider(post.uid))
                                     .when(
@@ -80,6 +81,7 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
                                               user: user,
                                               post: post,
                                               community: community,
+                                              comments: const [],
                                             );
                                           },
                                         );
@@ -211,12 +213,14 @@ class PostContainer extends ConsumerStatefulWidget {
   final UserModel user;
   final Post post;
   final Community community;
+  final List<Comment> comments;
 
   const PostContainer({
     super.key,
     required this.user,
     required this.post,
     required this.community,
+    required this.comments,
   });
 
   @override
@@ -228,6 +232,17 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   bool _isPlaying = false;
   String? _videoDuration;
   String? _currentPosition;
+
+  void _togglePlayPause() {
+    setState(() {
+      if (_videoController!.value.isPlaying) {
+        _videoController!.pause();
+      } else {
+        _videoController!.play();
+      }
+      _isPlaying = _videoController!.value.isPlaying;
+    });
+  }
 
   void upvote() async {
     final result =
@@ -436,7 +451,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: ref.watch(getUpvoteCountProvider(widget.post.id)).whenOrNull(
                   data: (count) {
-                    return _buildPostStat();
+                    return _buildPostFooter(user: widget.user);
                   },
                   loading: () => const Loading(),
                 ),
@@ -491,7 +506,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     );
   }
 
-  Widget _buildPostStat() {
+  Widget _buildPostFooter({required UserModel user}) {
     return Column(
       children: [
         Row(
@@ -525,19 +540,151 @@ class _PostContainerState extends ConsumerState<PostContainer> {
           onComment: () {},
           onShare: () {},
         ),
+        const Divider(),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: 1,
+          itemBuilder: (context, index) {
+            return Column(
+              children: [
+                const ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage:
+                        NetworkImage('https://via.placeholder.com/50.png'),
+                  ),
+                  title: Text('Lô Hoàng Khôi Nguyễn'),
+                  subtitle: Text(
+                    'Là người chưa có kinh nghiệm, còn trẻ, khỏe là phải biết chấp nhận đánh đổi để có được kinh nghiệm, hiểu không? Đã là sức trẻ thì phải cống hiến hết mình chứ đừng vì đồng tiền blah blah blah...',
+                  ),
+                ),
+                Row(
+                  children: [
+                    _buildVoteButton(
+                      icon: Icons.arrow_upward_outlined,
+                      count: 0,
+                      color: Colors.white,
+                      onTap: () {},
+                    ),
+                    _buildVoteButton(
+                      icon: Icons.arrow_downward_outlined,
+                      count: 0,
+                      color: Colors.white,
+                      onTap: () {},
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 50.0),
+                  child: ref
+                      .watch(getCommentsByPostProvider(widget.post.id))
+                      .whenOrNull(
+                    data: (comments) {
+                      return ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: 1,
+                        itemBuilder: (context, replyIndex) {
+                          return Column(
+                            children: [
+                              const ListTile(
+                                leading: CircleAvatar(
+                                  backgroundImage: NetworkImage(
+                                    'https://via.placeholder.com/50.png',
+                                  ),
+                                ),
+                                title: Text('Hoàng Lê'),
+                                subtitle:
+                                    Text('Chuẩn văn mẫu luôn ông ơi :)))'),
+                              ),
+                              Row(
+                                children: [
+                                  _buildVoteButton(
+                                    icon: Icons.arrow_upward_outlined,
+                                    count: 0,
+                                    color: Colors.white,
+                                    onTap: () {},
+                                  ),
+                                  _buildVoteButton(
+                                    icon: Icons.arrow_downward_outlined,
+                                    count: 0,
+                                    color: Colors.white,
+                                    onTap: () {},
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 0.0),
+                  child: Row(
+                    children: [
+                      const CircleAvatar(
+                        backgroundImage:
+                            NetworkImage('https://via.placeholder.com/50.png'),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextField(
+                          decoration: InputDecoration(
+                            hintText: 'Viết bình luận...',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.send),
+                        onPressed: () {
+                          // Logic gửi bình luận
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ],
     );
   }
 
-  void _togglePlayPause() {
-    setState(() {
-      if (_videoController!.value.isPlaying) {
-        _videoController!.pause();
-      } else {
-        _videoController!.play();
-      }
-      _isPlaying = _videoController!.value.isPlaying;
-    });
+  Widget _buildVoteButton({
+    required IconData icon,
+    required int? count,
+    required Color? color,
+    required Function onTap,
+  }) {
+    return InkWell(
+      onTap: () => onTap(),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 4),
+            Text(
+              count == null ? '0' : count.toString(),
+              style: const TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -581,10 +728,11 @@ class PostActions extends ConsumerWidget {
         ),
         _buildVoteButton(
           icon: Mdi.arrowDown,
-          count: (ref.watch(getDownvoteCountProvider(_post.id)).whenOrNull(
-              data: (count) {
-            return count;
-          }))!,
+          count: ref.watch(getDownvoteCountProvider(_post.id)).whenOrNull(
+            data: (count) {
+              return count;
+            },
+          ),
           color: ref.watch(getDownvoteStatusProvider(_post.id)).whenOrNull(
             data: (status) {
               return status ? Colors.blue : Colors.grey[600];
@@ -608,7 +756,7 @@ class PostActions extends ConsumerWidget {
 
   Widget _buildVoteButton({
     required IconData icon,
-    required int count,
+    required int? count,
     required Color? color,
     required Function onTap,
   }) {
@@ -625,7 +773,7 @@ class PostActions extends ConsumerWidget {
             Icon(icon, color: color, size: 20),
             const SizedBox(width: 4),
             Text(
-              count.toString(),
+              count == null ? '0' : count.toString(),
               style: const TextStyle(color: Colors.white),
             ),
           ],

@@ -8,9 +8,7 @@ import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/post/repository/post_repository.dart';
-import 'package:hash_balance/models/comment_model.dart';
 import 'package:hash_balance/models/post_model.dart';
-import 'package:hash_balance/models/user_model.dart';
 
 final postControllerProvider = StateNotifierProvider<PostController, bool>(
   (ref) => PostController(
@@ -54,8 +52,8 @@ class PostController extends StateNotifier<bool> {
   ) async {
     state = true;
     try {
-      List<String> upvotes = [''];
-      List<String> downvotes = [''];
+      List<String> upvotes = ['empty'];
+      List<String> downvotes = ['empty'];
       upvotes.clear();
       downvotes.clear();
       final post = Post(
@@ -81,44 +79,7 @@ class PostController extends StateNotifier<bool> {
     }
   }
 
-  //COMMENT
-  FutureString comment(
-    UserModel user,
-    Post post,
-    String? content,
-    File? image,
-    File? video,
-  ) async {
-    state = true;
-    try {
-      final comment = Comment(
-        uid: user.uid,
-        postId: post.id,
-        createdAt: Timestamp.now(),
-        content: content,
-        image: '',
-        video: '',
-      );
-      final result = await _postRepository.comment(
-        user,
-        post,
-        comment,
-        content,
-        image,
-        video,
-      );
-      return result.fold(
-        (l) => left((Failures(l.message))),
-        (r) => right('Comment Was Successfully Done!'),
-      );
-    } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
-    } catch (e) {
-      return left(Failures(e.toString()));
-    } finally {
-      state = false;
-    }
-  }
+
 
   FutureVoid upvote(String postId) async {
     state = true;
@@ -166,5 +127,24 @@ class PostController extends StateNotifier<bool> {
 
   Stream<int> getDownvotes(String postId) {
     return _postRepository.getDownvotes(postId);
+  }
+
+  FutureString deletePost(Post post) async {
+    state = true;
+    try {
+      final user = _ref.read(userProvider);
+      final result = await _postRepository.deletePost(post, user!.uid);
+      return result.fold((l) {
+        return left(Failures(l.message));
+      }, (r) {
+        return right('Successfully Deleted Post');
+      });
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    } finally {
+      state = false;
+    }
   }
 }

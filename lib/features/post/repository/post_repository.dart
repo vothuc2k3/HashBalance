@@ -8,9 +8,7 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
-import 'package:hash_balance/models/comment_model.dart';
 import 'package:hash_balance/models/post_model.dart';
-import 'package:hash_balance/models/user_model.dart';
 
 final postRepositoryProvider = Provider((ref) {
   return PostRepository(
@@ -21,6 +19,7 @@ final postRepositoryProvider = Provider((ref) {
 class PostRepository {
   final FirebaseFirestore _firestore;
   final StorageRepository _storageRepository;
+  final batch = FirebaseFirestore.instance.batch();
 
   PostRepository({
     required FirebaseFirestore firestore,
@@ -82,25 +81,6 @@ class PostRepository {
     }
   }
 
-  //COMMENT ON A POST
-  FutureVoid comment(
-    UserModel user,
-    Post post,
-    Comment comment,
-    String? content,
-    File? image,
-    File? video,
-  ) async {
-    try {
-      await _comments.doc().set(comment.toMap());
-      return right(null);
-    } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
-    } catch (e) {
-      return left(Failures(e.toString()));
-    }
-  }
-
   //UPVOTE A POST
   FutureVoid upvote(String postId, String uid) async {
     try {
@@ -110,6 +90,7 @@ class PostRepository {
         final postData = data as Map<String, dynamic>;
         var upvotes = List<String>.from(postData['upvotes'] ?? <String>[]);
         var downvotes = List<String>.from(postData['downvotes'] ?? <String>[]);
+        var upvoteCount = postData['upvoteCount'] as int;
 
         final batch = FirebaseFirestore.instance.batch();
 
@@ -122,16 +103,20 @@ class PostRepository {
 
         if (upvotes.contains(uid)) {
           upvotes.remove(uid);
+          upvoteCount -= 1;
           batch.update(_posts.doc(postId), {
             'upvotes': upvotes,
+            'upvoteCount': upvoteCount,
           });
           batch.update(_users.doc(uid), {
             'activityPoint': FieldValue.increment(-1),
           });
         } else {
           upvotes.add(uid);
+          upvoteCount += 1;
           batch.update(_posts.doc(postId), {
             'upvotes': upvotes,
+            'upvoteCount': upvoteCount,
           });
           batch.update(_users.doc(uid), {
             'activityPoint': FieldValue.increment(1),
@@ -158,11 +143,16 @@ class PostRepository {
         final postData = data as Map<String, dynamic>;
         var downvotes = List<String>.from(postData['downvotes'] ?? <String>[]);
         var upvotes = List<String>.from(postData['upvotes'] ?? <String>[]);
+        var upvoteCount = postData['upvoteCount'] as int;
 
         final batch = FirebaseFirestore.instance.batch();
         if (upvotes.contains(uid)) {
           upvotes.remove(uid);
-          batch.update(_posts.doc(postId), {'upvotes': upvotes});
+          upvoteCount -= 1;
+          batch.update(_posts.doc(postId), {
+            'upvotes': upvotes,
+            'upvoteCount': upvoteCount,
+          });
           batch.update(_users.doc(uid), {
             'activityPoint': FieldValue.increment(-1),
           });
@@ -220,7 +210,7 @@ class PostRepository {
   Stream<int> getUpvotes(String postId) {
     return _posts.doc(postId).snapshots().map((event) {
       final data = event.data() as Map<String, dynamic>;
-      return List<String>.from(data['upvotes']).length;
+      return List<String>.from(data['upvotes']).length - 1;
     });
   }
 
@@ -228,8 +218,29 @@ class PostRepository {
   Stream<int> getDownvotes(String postId) {
     return _posts.doc(postId).snapshots().map((event) {
       final data = event.data() as Map<String, dynamic>;
-      return List<String>.from(data['downvotes']).length;
+      if (List<String>.from(data['downvotes']).isEmpty) {
+        return 0;
+      } else {
+        return List<String>.from(data['downvotes']).length - 1;
+      }
     });
+  }
+
+  //DELETE THE POST
+  FutureVoid deletePost(Post post, String uid) async {
+    try {
+      if (post.uid == uid) {
+        batch.delete(_posts.doc(post.id));
+        await batch.commit();
+        return right(null);
+      } else {
+        return left(Failures('You are not the owner of the post'));
+      }
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
   }
 
   //REFERENCE ALL THE POSTS
@@ -238,7 +249,4 @@ class PostRepository {
   //REFERENCE ALL THE USERS
   CollectionReference get _users =>
       _firestore.collection(FirebaseConstants.usersCollection);
-  //REFERENCE ALL THE COMMENTS
-  CollectionReference get _comments =>
-      _firestore.collection(FirebaseConstants.commentsCollection);
 }
