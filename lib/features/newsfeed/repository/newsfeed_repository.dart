@@ -54,6 +54,7 @@ class NewsfeedRepository {
               upvotes: upvotes,
               downvotes: downvotes,
               id: postDoc['id'] as String,
+              upvoteCount: 0,
             ),
           );
         }

@@ -13,6 +13,7 @@ final userControllerProvider =
           userRepository: ref.read(userRepositoryProvider),
           ref: ref,
         ));
+        
 final getUserByUidProvider = StreamProvider.family((ref, String uid) {
   return ref.read(userControllerProvider.notifier).getUserByUid(uid);
 });

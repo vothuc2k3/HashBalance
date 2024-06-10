@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
@@ -225,6 +226,7 @@ class PostContainer extends ConsumerStatefulWidget {
 }
 
 class _PostContainerState extends ConsumerState<PostContainer> {
+  TextEditingController commentTextController = TextEditingController();
   VideoPlayerController? _videoController;
   bool _isPlaying = false;
   String? _videoDuration;
@@ -241,18 +243,37 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     });
   }
 
-  void upvote() async {
-    final result =
-        await ref.read(postControllerProvider.notifier).upvote(widget.post.id);
+  void upvotePost() async {
+    final result = await ref
+        .read(postControllerProvider.notifier)
+        .upvote(widget.post.id, widget.post.uid);
     result.fold((l) {
       showSnackBar(context, l.toString());
     }, (_) {});
   }
 
-  void downvote() async {
+  void downvotePost() async {
     final result = await ref
         .read(postControllerProvider.notifier)
-        .downvote(widget.post.id);
+        .downvote(widget.post.id, widget.post.uid);
+    result.fold((l) {
+      showSnackBar(context, l.toString());
+    }, (_) {});
+  }
+
+  void upvoteComment(String commentId, String authorUid) async {
+    final result = await ref
+        .read(commentControllerProvider.notifier)
+        .upvote(commentId, authorUid);
+    result.fold((l) {
+      showSnackBar(context, l.toString());
+    }, (_) {});
+  }
+
+  void downvoteComment(String commentId, String authorUid) async {
+    final result = await ref
+        .read(commentControllerProvider.notifier)
+        .downvote(commentId, authorUid);
     result.fold((l) {
       showSnackBar(context, l.toString());
     }, (_) {});
@@ -446,8 +467,10 @@ class _PostContainerState extends ConsumerState<PostContainer> {
               : const SizedBox.shrink(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: ref.watch(getUpvoteCountProvider(widget.post.id)).whenOrNull(
-                  data: (count) {
+            child: ref
+                .watch(getPostUpvoteCountProvider(widget.post.id))
+                .whenOrNull(
+                  data: (_) {
                     return _buildPostStat(user: widget.user);
                   },
                   loading: () => const Loading(),
@@ -512,13 +535,20 @@ class _PostContainerState extends ConsumerState<PostContainer> {
             const Expanded(
               child: Text(''),
             ),
-            Text(
-              '14 Comments',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 10,
-              ),
-            ),
+            ref.watch(commentCountProvider(widget.post.id)).when(
+                  data: (count) {
+                    return Text(
+                      '$count Comments',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 10,
+                      ),
+                    );
+                  },
+                  error: (error, stackTrace) =>
+                      ErrorText(error: error.toString()),
+                  loading: () => const Loading(),
+                ),
             const SizedBox(width: 8),
             Text(
               '69 Shares',
@@ -532,16 +562,16 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         const Divider(),
         PostActions(
           post: widget.post,
-          onUpvote: upvote,
-          onDownvote: downvote,
+          onUpvote: upvotePost,
+          onDownvote: downvotePost,
           onComment: () {},
           onShare: () {},
         ),
         const Divider(),
         ref.watch(getTopCommentProvider(widget.post.id)).when(
               data: (comment) {
-                if (comment == null) {
-                  return const Text('Không có bình luận nào');
+                if (comment.isEmpty) {
+                  return const SizedBox.shrink();
                 }
                 return Column(
                   children: [
@@ -549,23 +579,38 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                       padding: const EdgeInsets.all(8.0),
                       child: Row(
                         children: [
-                          const CircleAvatar(
-                            backgroundImage: NetworkImage(
-                                'https://via.placeholder.com/50.png'),
+                          CircleAvatar(
+                            backgroundImage: ref
+                                .read(getUserByUidProvider(comment.first.uid))
+                                .whenOrNull(
+                              data: (user) {
+                                return CachedNetworkImageProvider(
+                                  user.profileImage,
+                                ) as ImageProvider;
+                              },
+                            ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Lô Hoàng Khôi Nguyễn',
-                                    style:
-                                        Theme.of(context).textTheme.titleSmall),
-                                const SizedBox(height: 4),
-                                const Text(
-                                  'Là người chưa có kinh nghiệm, còn trẻ, khỏe là phải biết chấp nhận đánh đổi để có được kinh nghiệm, hiểu không? Đã là sức trẻ thì phải cống hiến hết mình chứ đừng vì đồng tiền blah blah blah...',
-                                ),
-                              ],
+                              children: ref
+                                  .watch(
+                                      getUserByUidProvider(comment.first.uid))
+                                  .whenOrNull(
+                                data: (user) {
+                                  return <Widget>[
+                                    Text(user.name,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleSmall),
+                                    const SizedBox(height: 4),
+                                    Text(comment.first.content == null
+                                        ? ''
+                                        : comment.first.content!),
+                                  ];
+                                },
+                              )!,
                             ),
                           ),
                         ],
@@ -575,89 +620,72 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                       children: [
                         _buildVoteButton(
                           icon: Icons.arrow_upward_outlined,
-                          count: 0,
-                          color: Colors.white,
-                          onTap: () {},
+                          count: ref
+                              .watch(getCommentUpvoteCountProvider(
+                                  comment.first.id))
+                              .whenOrNull(data: (count) {
+                            return count;
+                          }),
+                          color: ref
+                              .watch(getCommentUpvoteStatusProvider(
+                                  comment.first.id))
+                              .whenOrNull(
+                            data: (status) {
+                              return status ? Colors.orange : Colors.grey[600];
+                            },
+                          ),
+                          onTap: () {
+                            upvoteComment(comment.first.id, comment.first.uid);
+                          },
                         ),
                         _buildVoteButton(
                           icon: Icons.arrow_downward_outlined,
-                          count: 0,
-                          color: Colors.white,
-                          onTap: () {},
+                          count: ref
+                              .watch(getCommentDownvoteCountProvider(
+                                  comment.first.id))
+                              .whenOrNull(data: (count) {
+                            return count;
+                          }),
+                          color: ref
+                              .watch(getCommentDownvoteStatusProvider(
+                                  comment.first.id))
+                              .whenOrNull(
+                            data: (status) {
+                              return status ? Colors.blue : Colors.grey[600];
+                            },
+                          ),
+                          onTap: () {
+                            downvoteComment(
+                                comment.first.id, comment.first.uid);
+                          },
                         ),
                       ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 50.0),
-                      child: Column(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              children: [
-                                const CircleAvatar(
-                                  backgroundImage: NetworkImage(
-                                      'https://via.placeholder.com/50.png'),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Hoàng Lê',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleSmall,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      const Text(
-                                          'Chuẩn văn mẫu luôn ông ơi :)))'),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              _buildVoteButton(
-                                icon: Icons.arrow_upward_outlined,
-                                count: 0,
-                                color: Colors.white,
-                                onTap: () {},
-                              ),
-                              _buildVoteButton(
-                                icon: Icons.arrow_downward_outlined,
-                                count: 0,
-                                color: Colors.white,
-                                onTap: () {},
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
                     ),
                   ],
                 );
               },
-              error: (error, stackTrace) => ErrorText(error: error.toString()),
-              loading: () => const Loading(),
+              error: (Object error, StackTrace stackTrace) {
+                return ErrorText(error: error.toString(),);
+              },
+              loading: () {
+                return const SizedBox();
+              },
             ),
         Padding(
           padding: const EdgeInsets.only(left: 0.0),
           child: Row(
             children: [
-              const CircleAvatar(
-                backgroundImage:
-                    NetworkImage('https://via.placeholder.com/50.png'),
+              CircleAvatar(
+                backgroundImage: CachedNetworkImageProvider(
+                  widget.user.profileImage,
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: TextField(
+                  controller: commentTextController,
                   decoration: InputDecoration(
-                    hintText: 'Viết bình luận...',
+                    hintText: 'Leave a comment...',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -670,7 +698,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
               IconButton(
                 icon: const Icon(Icons.send),
                 onPressed: () {
-                  // Logic gửi bình luận
+                  comment(widget.post.id, commentTextController.text.trim());
                 },
               ),
             ],
@@ -707,6 +735,24 @@ class _PostContainerState extends ConsumerState<PostContainer> {
       ),
     );
   }
+
+  void comment(String postId, String content) async {
+    FocusScope.of(context).unfocus();
+    final result = await ref
+        .read(commentControllerProvider.notifier)
+        .comment(postId, content);
+    result.fold((l) {
+      showSnackBar(
+        context,
+        l.message,
+      );
+    }, (r) {
+      showSnackBar(
+        context,
+        r,
+      );
+    });
+  }
 }
 
 class PostActions extends ConsumerWidget {
@@ -736,11 +782,11 @@ class PostActions extends ConsumerWidget {
       children: [
         _buildVoteButton(
           icon: Icons.arrow_upward_rounded,
-          count: (ref.watch(getUpvoteCountProvider(_post.id)).whenOrNull(
+          count: (ref.watch(getPostUpvoteCountProvider(_post.id)).whenOrNull(
               data: (count) {
             return count;
           }))!,
-          color: ref.watch(getUpvoteStatusProvider(_post.id)).whenOrNull(
+          color: ref.watch(getPostUpvoteStatusProvider(_post.id)).whenOrNull(
             data: (status) {
               return status ? Colors.orange : Colors.grey[600];
             },
@@ -749,12 +795,12 @@ class PostActions extends ConsumerWidget {
         ),
         _buildVoteButton(
           icon: Mdi.arrowDown,
-          count: ref.watch(getDownvoteCountProvider(_post.id)).whenOrNull(
+          count: ref.watch(getPostDownvoteCountProvider(_post.id)).whenOrNull(
             data: (count) {
               return count;
             },
           ),
-          color: ref.watch(getDownvoteStatusProvider(_post.id)).whenOrNull(
+          color: ref.watch(getPostDownvoteStatusProvider(_post.id)).whenOrNull(
             data: (status) {
               return status ? Colors.blue : Colors.grey[600];
             },

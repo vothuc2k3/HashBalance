@@ -3,10 +3,34 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
+import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/comment/repository/comment_repository.dart';
 import 'package:hash_balance/models/comment_model.dart';
-import 'package:hash_balance/models/post_model.dart';
-import 'package:hash_balance/models/user_model.dart';
+
+final getCommentUpvoteStatusProvider =
+    StreamProvider.family((ref, String postId) {
+  return ref.watch(commentControllerProvider.notifier).checkDidUpvote(postId);
+});
+
+final getCommentDownvoteStatusProvider =
+    StreamProvider.family((ref, String postId) {
+  return ref.watch(commentControllerProvider.notifier).checkDidDownvote(postId);
+});
+
+final getCommentUpvoteCountProvider =
+    StreamProvider.family((ref, String postId) {
+  return ref.watch(commentControllerProvider.notifier).getUpvotes(postId);
+});
+
+final getCommentDownvoteCountProvider =
+    StreamProvider.family((ref, String postId) {
+  return ref.watch(commentControllerProvider.notifier).getDownvotes(postId);
+});
+
+final commentCountProvider = StreamProvider.family((ref, String postId) {
+  return ref.watch(commentControllerProvider.notifier).getCommentCount(postId);
+});
 
 final getCommentsByPostProvider = StreamProvider.family((ref, String postId) {
   return ref
@@ -39,30 +63,23 @@ class CommentController extends StateNotifier<bool> {
 
   //COMMENT
   FutureString comment(
-    UserModel user,
-    Post post,
+    String postId,
     String? content,
   ) async {
     state = true;
     try {
+      final user = _ref.read(userProvider);
       final comment = Comment(
-        uid: user.uid,
-        postId: post.id,
+        uid: user!.uid,
+        postId: postId,
         createdAt: Timestamp.now(),
         content: content,
-        image: '',
-        video: '',
         upvotes: ['empty'],
         downvotes: ['empty'],
-        replies: ['empty'],
         upvoteCount: 0,
+        id: generateRandomCommentId(),
       );
-      final result = await _commentRepository.comment(
-        user,
-        post,
-        comment,
-        content,
-      );
+      final result = await _commentRepository.comment(comment);
       return result.fold(
         (l) => left((Failures(l.message))),
         (r) => right('Comment Was Successfully Done!'),
@@ -77,7 +94,7 @@ class CommentController extends StateNotifier<bool> {
   }
 
   //GET COMMENTS BY POSTS
-  Stream<List<Comment>?> getCommentsByPost(String postId) {
+  Stream<List<Comment>> getCommentsByPost(String postId) {
     try {
       return _commentRepository.getCommentsByPost(postId);
     } on FirebaseException catch (e) {
@@ -88,7 +105,7 @@ class CommentController extends StateNotifier<bool> {
   }
 
   //GET TOP COMMENT
-  Stream<Comment?> getTopComment(String postId) {
+  Stream<List<Comment>> getTopComment(String postId) {
     try {
       return _commentRepository.getTopComment(postId);
     } on FirebaseException catch (e) {
@@ -96,5 +113,76 @@ class CommentController extends StateNotifier<bool> {
     } catch (e) {
       throw Failures(e.toString());
     }
+  }
+
+  //GET COMMENT COUNT
+  Stream<int> getCommentCount(String postId) {
+    try {
+      return _commentRepository.getCommentCount(postId);
+    } on FirebaseException catch (e) {
+      throw Failures(e.message!);
+    } catch (e) {
+      throw Failures(e.toString());
+    }
+  }
+
+  //UPVOTE A COMMENT
+  FutureVoid upvote(String commentId, String authorUid) async {
+    try {
+      final user = _ref.watch(userProvider);
+      final result =
+          await _commentRepository.upvote(commentId, user!.uid, authorUid);
+      return result.fold(
+        (l) {
+          return left(Failures(l.message));
+        },
+        (r) {
+          return right(null);
+        },
+      );
+    } on FirebaseException catch (e) {
+      throw Failures(e.message!);
+    } catch (e) {
+      throw Failures(e.toString());
+    }
+  }
+
+  //DOWNVOTE A COMMENT
+  FutureVoid downvote(String commentId, String authorUid) async {
+    try {
+      final user = _ref.watch(userProvider);
+      final result =
+          await _commentRepository.downvote(commentId, user!.uid, authorUid);
+      return result.fold(
+        (l) {
+          return left(Failures(l.message));
+        },
+        (r) {
+          return right(null);
+        },
+      );
+    } on FirebaseException catch (e) {
+      throw Failures(e.message!);
+    } catch (e) {
+      throw Failures(e.toString());
+    }
+  }
+
+  Stream<bool> checkDidUpvote(String commentId) {
+    final user = _ref.read(userProvider);
+    return _commentRepository.checkDidUpvote(commentId, user!.uid);
+  }
+
+  Stream<int> getUpvotes(String commentId) {
+    return _commentRepository.getUpvotes(commentId);
+  }
+
+  Stream<bool> checkDidDownvote(String commentId) {
+    final user = _ref.read(userProvider);
+    return _commentRepository.checkDidDownvote(commentId, user!.uid);
+  }
+
+  Stream<int> getDownvotes(String commentId) {
+    return _commentRepository.getDownvotes(commentId);
   }
 }

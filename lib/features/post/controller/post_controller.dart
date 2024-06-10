@@ -15,19 +15,19 @@ final postControllerProvider = StateNotifierProvider<PostController, bool>(
       postRepository: ref.read(postRepositoryProvider), ref: ref),
 );
 
-final getUpvoteStatusProvider = StreamProvider.family((ref, String postId) {
+final getPostUpvoteStatusProvider = StreamProvider.family((ref, String postId) {
   return ref.watch(postControllerProvider.notifier).checkDidUpvote(postId);
 });
 
-final getDownvoteStatusProvider = StreamProvider.family((ref, String postId) {
+final getPostDownvoteStatusProvider = StreamProvider.family((ref, String postId) {
   return ref.watch(postControllerProvider.notifier).checkDidDownvote(postId);
 });
 
-final getUpvoteCountProvider = StreamProvider.family((ref, String postId) {
+final getPostUpvoteCountProvider = StreamProvider.family((ref, String postId) {
   return ref.watch(postControllerProvider.notifier).getUpvotes(postId);
 });
 
-final getDownvoteCountProvider = StreamProvider.family((ref, String postId) {
+final getPostDownvoteCountProvider = StreamProvider.family((ref, String postId) {
   return ref.watch(postControllerProvider.notifier).getDownvotes(postId);
 });
 
@@ -62,6 +62,7 @@ class PostController extends StateNotifier<bool> {
         upvotes: upvotes,
         downvotes: downvotes,
         id: generateRandomPostId(),
+        upvoteCount: 0,
       );
       final result = await _postRepository.createPost(post, image, video);
       return result.fold(
@@ -77,14 +78,19 @@ class PostController extends StateNotifier<bool> {
     }
   }
 
-
-
-  FutureVoid upvote(String postId) async {
+  FutureVoid upvote(String postId, String authorUid) async {
     state = true;
     try {
       final user = _ref.read(userProvider);
-      await _postRepository.upvote(postId, user!.uid);
-      return right(null);
+      final result = await _postRepository.upvote(postId, user!.uid, authorUid);
+      return result.fold(
+        (l) {
+          return left(Failures(l.message));
+        },
+        (r) {
+          return right(null);
+        },
+      );
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {
@@ -94,12 +100,20 @@ class PostController extends StateNotifier<bool> {
     }
   }
 
-  FutureVoid downvote(String postId) async {
+  FutureVoid downvote(String postId, String authorUid) async {
     state = true;
     try {
       final user = _ref.read(userProvider);
-      await _postRepository.downvote(postId, user!.uid);
-      return right(null);
+      final result =
+          await _postRepository.downvote(postId, user!.uid, authorUid);
+      return result.fold(
+        (l) {
+          return left(Failures(l.message));
+        },
+        (r) {
+          return right(null);
+        },
+      );
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {

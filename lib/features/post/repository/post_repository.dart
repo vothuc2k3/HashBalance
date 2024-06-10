@@ -19,7 +19,6 @@ final postRepositoryProvider = Provider((ref) {
 class PostRepository {
   final FirebaseFirestore _firestore;
   final StorageRepository _storageRepository;
-  final batch = FirebaseFirestore.instance.batch();
 
   PostRepository({
     required FirebaseFirestore firestore,
@@ -82,7 +81,8 @@ class PostRepository {
   }
 
   //UPVOTE A POST
-  FutureVoid upvote(String postId, String uid) async {
+  FutureVoid upvote(String postId, String upvoteUid, String authorUid) async {
+    final batch = FirebaseFirestore.instance.batch();
     try {
       final postDoc = await _posts.doc(postId).get();
       if (postDoc.exists) {
@@ -92,33 +92,30 @@ class PostRepository {
         var downvotes = List<String>.from(postData['downvotes'] ?? <String>[]);
         var upvoteCount = postData['upvoteCount'] as int;
 
-        final batch = FirebaseFirestore.instance.batch();
-
-        if (downvotes.contains(uid)) {
-          downvotes.remove(uid);
+        if (downvotes.contains(upvoteUid)) {
+          downvotes.remove(upvoteUid);
           batch.update(_posts.doc(postId), {
             'downvotes': downvotes,
           });
         }
-
-        if (upvotes.contains(uid)) {
-          upvotes.remove(uid);
+        if (upvotes.contains(upvoteUid)) {
+          upvotes.remove(upvoteUid);
           upvoteCount -= 1;
           batch.update(_posts.doc(postId), {
             'upvotes': upvotes,
             'upvoteCount': upvoteCount,
           });
-          batch.update(_users.doc(uid), {
+          batch.update(_users.doc(authorUid), {
             'activityPoint': FieldValue.increment(-1),
           });
         } else {
-          upvotes.add(uid);
+          upvotes.add(upvoteUid);
           upvoteCount += 1;
           batch.update(_posts.doc(postId), {
             'upvotes': upvotes,
             'upvoteCount': upvoteCount,
           });
-          batch.update(_users.doc(uid), {
+          batch.update(_users.doc(authorUid), {
             'activityPoint': FieldValue.increment(1),
           });
         }
@@ -135,7 +132,9 @@ class PostRepository {
   }
 
 // DOWNVOTE A POST
-  FutureVoid downvote(String postId, String uid) async {
+  FutureVoid downvote(
+      String postId, String downvoteUid, String authorUid) async {
+    final batch = FirebaseFirestore.instance.batch();
     try {
       final postDoc = await _posts.doc(postId).get();
       if (postDoc.exists) {
@@ -144,29 +143,27 @@ class PostRepository {
         var downvotes = List<String>.from(postData['downvotes'] ?? <String>[]);
         var upvotes = List<String>.from(postData['upvotes'] ?? <String>[]);
         var upvoteCount = postData['upvoteCount'] as int;
-
-        final batch = FirebaseFirestore.instance.batch();
-        if (upvotes.contains(uid)) {
-          upvotes.remove(uid);
+        if (upvotes.contains(downvoteUid)) {
+          upvotes.remove(downvoteUid);
           upvoteCount -= 1;
           batch.update(_posts.doc(postId), {
             'upvotes': upvotes,
             'upvoteCount': upvoteCount,
           });
-          batch.update(_users.doc(uid), {
+          batch.update(_users.doc(authorUid), {
             'activityPoint': FieldValue.increment(-1),
           });
         }
-        if (downvotes.contains(uid)) {
-          downvotes.remove(uid);
+        if (downvotes.contains(downvoteUid)) {
+          downvotes.remove(downvoteUid);
           batch.update(_posts.doc(postId), {
             'downvotes': downvotes,
           });
         } else {
-          downvotes.add(uid);
+          downvotes.add(downvoteUid);
           batch.update(_posts.doc(postId), {
             'downvotes': downvotes,
-          });
+          });   
         }
         await batch.commit();
         return right(null);
@@ -194,7 +191,10 @@ class PostRepository {
   }
 
   //CHECK IF THE USER DOWNVOTED THE POST
-  Stream<bool> checkDidDownvote(String postId, String uid) {
+  Stream<bool> checkDidDownvote(
+    String postId,
+    String uid,
+  ) {
     return _posts.doc(postId).snapshots().map((event) {
       final data = event.data() as Map<String, dynamic>;
       final downvotes = List<String>.from(data['downvotes']);
@@ -228,6 +228,7 @@ class PostRepository {
 
   //DELETE THE POST
   FutureVoid deletePost(Post post, String uid) async {
+    final batch = FirebaseFirestore.instance.batch();
     try {
       if (post.uid == uid) {
         batch.delete(_posts.doc(post.id));

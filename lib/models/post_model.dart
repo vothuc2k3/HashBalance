@@ -11,6 +11,7 @@ class Post {
   final Timestamp createdAt;
   final List<String> upvotes;
   final List<String> downvotes;
+  final int upvoteCount;
   Post({
     required this.id,
     required this.communityName,
@@ -21,6 +22,7 @@ class Post {
     required this.createdAt,
     required this.upvotes,
     required this.downvotes,
+    required this.upvoteCount,
   });
 
   Post copyWith({
@@ -33,6 +35,7 @@ class Post {
     Timestamp? createdAt,
     List<String>? upvotes,
     List<String>? downvotes,
+    int? upvoteCount,
   }) {
     return Post(
       id: id ?? this.id,
@@ -44,6 +47,7 @@ class Post {
       createdAt: createdAt ?? this.createdAt,
       upvotes: upvotes ?? this.upvotes,
       downvotes: downvotes ?? this.downvotes,
+      upvoteCount: upvoteCount ?? this.upvoteCount,
     );
   }
 
@@ -58,6 +62,7 @@ class Post {
       'createdAt': createdAt,
       'upvotes': upvotes,
       'downvotes': downvotes,
+      'upvoteCount': upvoteCount,
     };
   }
 
@@ -70,18 +75,15 @@ class Post {
       image: map['image'] != null ? map['image'] as String : null,
       video: map['video'] != null ? map['video'] as String : null,
       createdAt: map['createdAt'] as Timestamp,
-      upvotes: List<String>.from(
-        (map['upvotes'] as List<String>),
-      ),
-      downvotes: List<String>.from(
-        (map['downvotes'] as List<String>),
-      ),
+      upvotes: List<String>.from((map['upvotes'] as List<String>)),
+      downvotes: List<String>.from((map['downvotes'] as List<String>)),
+      upvoteCount: map['upvoteCount'] as int,
     );
   }
 
   @override
   String toString() {
-    return 'Post(id: $id, communityName: $communityName, uid: $uid, content: $content, image: $image, video: $video, createdAt: $createdAt, upvotes: $upvotes, downvotes: $downvotes)';
+    return 'Post(id: $id, communityName: $communityName, uid: $uid, content: $content, image: $image, video: $video, createdAt: $createdAt, upvotes: $upvotes, downvotes: $downvotes, upvoteCount: $upvoteCount)';
   }
 
   @override
@@ -96,7 +98,8 @@ class Post {
         other.video == video &&
         other.createdAt == createdAt &&
         listEquals(other.upvotes, upvotes) &&
-        listEquals(other.downvotes, downvotes);
+        listEquals(other.downvotes, downvotes) &&
+        other.upvoteCount == upvoteCount;
   }
 
   @override
@@ -109,6 +112,7 @@ class Post {
         video.hashCode ^
         createdAt.hashCode ^
         upvotes.hashCode ^
-        downvotes.hashCode;
+        downvotes.hashCode ^
+        upvoteCount.hashCode;
   }
 }
