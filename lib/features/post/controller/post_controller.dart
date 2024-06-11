@@ -15,11 +15,16 @@ final postControllerProvider = StateNotifierProvider<PostController, bool>(
       postRepository: ref.read(postRepositoryProvider), ref: ref),
 );
 
+final getPostByIdProvider = StreamProvider.family((ref, String postId) {
+  return ref.watch(postControllerProvider.notifier).getPostById(postId);
+});
+
 final getPostUpvoteStatusProvider = StreamProvider.family((ref, String postId) {
   return ref.watch(postControllerProvider.notifier).checkDidUpvote(postId);
 });
 
-final getPostDownvoteStatusProvider = StreamProvider.family((ref, String postId) {
+final getPostDownvoteStatusProvider =
+    StreamProvider.family((ref, String postId) {
   return ref.watch(postControllerProvider.notifier).checkDidDownvote(postId);
 });
 
@@ -27,7 +32,8 @@ final getPostUpvoteCountProvider = StreamProvider.family((ref, String postId) {
   return ref.watch(postControllerProvider.notifier).getUpvotes(postId);
 });
 
-final getPostDownvoteCountProvider = StreamProvider.family((ref, String postId) {
+final getPostDownvoteCountProvider =
+    StreamProvider.family((ref, String postId) {
   return ref.watch(postControllerProvider.notifier).getDownvotes(postId);
 });
 
@@ -158,5 +164,9 @@ class PostController extends StateNotifier<bool> {
     } finally {
       state = false;
     }
+  }
+
+  Stream<Post> getPostById(String postId) {
+    return _postRepository.getPostById(postId);
   }
 }

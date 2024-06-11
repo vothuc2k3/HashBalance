@@ -42,13 +42,7 @@ class CommentRepository {
   //GET COMMENTS BY POST
   Stream<List<Comment>> getCommentsByPost(String postId) {
     try {
-      return _comments
-          .where(
-            'postId',
-            isEqualTo: postId,
-          )
-          .snapshots()
-          .map(
+      return _comments.where('postId', isEqualTo: postId).snapshots().map(
         (event) {
           List<Comment> comments = [];
           for (var comment in event.docs) {
@@ -58,6 +52,7 @@ class CommentRepository {
             comments.add(
               Comment(
                 uid: data['uid'] as String,
+                content: data['content'] as String,
                 postId: postId,
                 createdAt: data['createdAt'] as Timestamp,
                 upvotes: upvotes,

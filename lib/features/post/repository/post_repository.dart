@@ -163,7 +163,7 @@ class PostRepository {
           downvotes.add(downvoteUid);
           batch.update(_posts.doc(postId), {
             'downvotes': downvotes,
-          });   
+          });
         }
         await batch.commit();
         return right(null);
@@ -242,6 +242,22 @@ class PostRepository {
     } catch (e) {
       return left(Failures(e.toString()));
     }
+  }
+
+  //GET POST DATA BY ID
+  Stream<Post> getPostById(String postId) {
+    return _posts.doc(postId).snapshots().map((event) {
+      final data = event.data() as Map<String, dynamic>;
+      return Post(
+        id: postId,
+        communityName: data['communityName'] as String,
+        uid: data['uid'] as String,
+        createdAt: data['createdAt'] as Timestamp,
+        upvotes: List<String>.from(data['upvotes']),
+        downvotes: List<String>.from(data['downvotes']),
+        upvoteCount: data['upvoteCount'] as int,
+      );
+    });
   }
 
   //REFERENCE ALL THE POSTS
