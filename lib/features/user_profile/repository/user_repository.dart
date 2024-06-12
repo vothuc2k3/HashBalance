@@ -125,6 +125,8 @@ class UserRepository {
     });
   }
 
+  //SEND FRIEND REQUEST
+
   //REFERENCE ALL THE USERS
   CollectionReference get _user =>
       _firestore.collection(FirebaseConstants.usersCollection);

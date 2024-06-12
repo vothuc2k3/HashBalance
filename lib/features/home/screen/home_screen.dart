@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,17 +19,25 @@ class HomeScreen extends ConsumerStatefulWidget {
 class HomeScreenState extends ConsumerState<HomeScreen> {
   int _page = 0;
   late PageController _pageController;
+  final fcm = FirebaseMessaging.instance;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+    setupNotification();
   }
 
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  void setupNotification() async {
+    await fcm.requestPermission();
+    final token = await fcm.getToken();
+    print(token);
   }
 
   void displayCommunityListDrawer(BuildContext context) {

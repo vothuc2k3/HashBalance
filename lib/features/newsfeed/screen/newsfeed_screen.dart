@@ -67,27 +67,35 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
                                   return ref
                                       .watch(getUserByUidProvider(post.uid))
                                       .when(
-                                        data: (user) {
-                                          return ref
-                                              .watch(getCommunityByNameProvider(
-                                                  post.communityName))
-                                              .whenOrNull(
-                                            data: (community) {
-                                              return PostContainer(
-                                                user: user,
-                                                post: post,
-                                                community: community,
-                                              );
-                                            },
-                                          );
-                                        },
-                                        error: (error, stackTrace) => Container(
-                                          padding: const EdgeInsets.all(16),
-                                          child: ErrorText(
-                                              error: error.toString()),
-                                        ),
-                                        loading: () => const Loading(),
-                                      );
+                                          data: (user) {
+                                            return ref
+                                                .watch(
+                                                    getCommunityByNameProvider(
+                                                        post.communityName))
+                                                .when(
+                                                  data: (community) {
+                                                    return PostContainer(
+                                                      user: user,
+                                                      post: post,
+                                                      community: community,
+                                                    );
+                                                  },
+                                                  error: (error, stackTrace) =>
+                                                      ErrorText(
+                                                          error:
+                                                              error.toString()),
+                                                  loading: () =>
+                                                      const Loading(),
+                                                );
+                                          },
+                                          error: (error, stackTrace) =>
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.all(16),
+                                                child: ErrorText(
+                                                    error: error.toString()),
+                                              ),
+                                          loading: () => const Loading());
                                 },
                                 childCount: posts.length,
                               ),

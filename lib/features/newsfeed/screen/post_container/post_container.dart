@@ -400,15 +400,20 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                   child: Row(
                     children: [
                       CircleAvatar(
-                        backgroundImage: ref
-                            .read(getUserByUidProvider(comment.first.uid))
-                            .whenOrNull(
-                          data: (user) {
-                            return CachedNetworkImageProvider(
-                              user.profileImage,
-                            ) as ImageProvider;
-                          },
-                        ),
+                        radius: 20,
+                        child: ref
+                            .watch(getUserByUidProvider(comment.first.uid))
+                            .when(
+                              data: (user) {
+                                return CircleAvatar(
+                                  backgroundImage: CachedNetworkImageProvider(
+                                      user.profileImage),
+                                  radius: 20,
+                                );
+                              },
+                              loading: () => const CircularProgressIndicator(),
+                              error: (_, __) => const Icon(Icons.error),
+                            ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(

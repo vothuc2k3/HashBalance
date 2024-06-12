@@ -87,6 +87,8 @@ class SearchRepository {
             final achivements =
                 (data['achivements'] as List?)?.cast<String>() ?? [];
             final friends = (data['friends'] as List?)?.cast<String>() ?? [];
+            final followers =
+                (data['followers'] as List?)?.cast<String>() ?? [];
             users.add(
               UserModel(
                 name: data['name'] as String,
@@ -100,7 +102,7 @@ class SearchRepository {
                 friends: friends,
                 createdAt: data['createdAt'] as Timestamp,
                 isRestricted: data['isRestricted'] as bool,
-                followers: data['followers'],
+                followers: followers,
               ),
             );
           }

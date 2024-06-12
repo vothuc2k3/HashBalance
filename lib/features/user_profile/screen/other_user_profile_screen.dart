@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hash_balance/core/common/error_text.dart';
@@ -22,8 +23,15 @@ class OtherUserProfileScreen extends ConsumerStatefulWidget {
 
 class _OtherUserProfileScreenState
     extends ConsumerState<OtherUserProfileScreen> {
+  bool? _didSendRequest;
   final double coverHeight = 250;
   final double profileHeight = 120;
+
+  @override
+  void initState() {
+    _didSendRequest = false;
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +90,8 @@ class _OtherUserProfileScreenState
                         child: CircleAvatar(
                           radius: profileHeight / 2,
                           backgroundColor: Colors.grey.shade800,
-                          backgroundImage: CachedNetworkImageProvider(user.profileImage),
+                          backgroundImage:
+                              CachedNetworkImageProvider(user.profileImage),
                         ),
                       ),
                     ],
@@ -107,7 +116,6 @@ class _OtherUserProfileScreenState
                     ),
                     const SizedBox(height: 16),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         _buildSocialIcon(FontAwesomeIcons.slack),
                         const SizedBox(width: 12),
@@ -116,7 +124,10 @@ class _OtherUserProfileScreenState
                         _buildSocialIcon(FontAwesomeIcons.twitter),
                         const SizedBox(width: 12),
                         _buildSocialIcon(FontAwesomeIcons.linkedin),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 50),
+                        _didSendRequest!
+                            ? _buildFriendRequestSent()
+                            : _buildFriendsWidget(),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -140,21 +151,6 @@ class _OtherUserProfileScreenState
                     const SizedBox(height: 16),
                     const Divider(),
                     const SizedBox(height: 16),
-                    // body: ref.watch(getUserPostsProvider(widget.uid)).when(
-                    //       data: (data) {
-                    //         return ListView.builder(
-                    //           itemCount: data.length,
-                    //           itemBuilder: (BuildContext context, int index) {
-                    //             final post = data[index];
-                    //             return PostCard(post: post);
-                    //           },
-                    //         );
-                    //       },
-                    //       error: (error, stackTrace) {
-                    //         return ErrorText(error: error.toString());
-                    //       },
-                    //       loading: () => const Loading(),
-                    //     ),
                   ],
                 ),
               ],
@@ -183,6 +179,69 @@ class _OtherUserProfileScreenState
         ),
       ),
     );
+  }
+
+  Widget _buildFriendRequestSent() {
+    return ElevatedButton.icon(
+      onPressed: () {
+        _showCancelDialog();
+      },
+      icon: const Icon(Icons.check_circle_outline, color: Colors.white),
+      label: const Text('Request Sent'),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.green,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    )
+        .animate()
+        .fadeIn(duration: 600.ms)
+        .moveY(begin: 30, end: 0, duration: 600.ms, curve: Curves.easeOutBack);
+  }
+
+  Widget _buildAddFriendButton() {
+    return ElevatedButton.icon(
+      onPressed: () {
+        setState(() {
+          _didSendRequest = true;
+        });
+      },
+      icon: const Icon(Icons.person_add_alt_1, color: Colors.white),
+      label: const Text('Add Friend'),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.blue,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    )
+        .animate()
+        .fadeIn(duration: 600.ms)
+        .moveY(begin: 30, end: 0, duration: 600.ms, curve: Curves.easeOutBack);
+  }
+
+  Widget _buildFriendsWidget() {
+    return ElevatedButton.icon(
+      onPressed: null, // Nút không tương tác
+      icon: const Icon(Icons.people, color: Colors.white),
+      label: const Text('Friends'),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.grey,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    )
+        .animate()
+        .fadeIn(duration: 600.ms)
+        .moveY(begin: 30, end: 0, duration: 600.ms, curve: Curves.easeOutBack);
   }
 
   Widget _buildButton({required String text, required int value}) {
@@ -216,6 +275,36 @@ class _OtherUserProfileScreenState
       width: 16,
       thickness: 1,
       color: Colors.grey,
+    );
+  }
+
+  void _showCancelDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Cancel Friend Request'),
+          content: const Text(
+              'Are you sure you want to cancel this friend request?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('No'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Yes'),
+              onPressed: () {
+                setState(() {
+                  _didSendRequest = false;
+                });
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
