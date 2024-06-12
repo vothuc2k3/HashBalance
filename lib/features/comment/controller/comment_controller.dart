@@ -8,7 +8,6 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/comment/repository/comment_repository.dart';
 import 'package:hash_balance/models/comment_model.dart';
 
-
 final getCommentUpvoteStatusProvider =
     StreamProvider.family((ref, String postId) {
   return ref.watch(commentControllerProvider.notifier).checkDidUpvote(postId);
@@ -33,10 +32,25 @@ final commentCountProvider = StreamProvider.family((ref, String postId) {
   return ref.watch(commentControllerProvider.notifier).getCommentCount(postId);
 });
 
-final getCommentsByPostProvider = StreamProvider.family((ref, String postId) {
+final getNewestCommentsByPostProvider =
+    StreamProvider.family((ref, String postId) {
   return ref
       .watch(commentControllerProvider.notifier)
-      .getCommentsByPost(postId);
+      .getNewestCommentsByPost(postId);
+});
+
+final getOldestCommentsByPostProvider =
+    StreamProvider.family((ref, String postId) {
+  return ref
+      .watch(commentControllerProvider.notifier)
+      .getOldestCommentsByPost(postId);
+});
+
+final getRelevantCommentsByPostProvider =
+    StreamProvider.family((ref, String postId) {
+  return ref
+      .watch(commentControllerProvider.notifier)
+      .getRelevantCommentsByPost(postId);
 });
 
 final getTopCommentProvider = StreamProvider.family((ref, String postId) {
@@ -94,10 +108,32 @@ class CommentController extends StateNotifier<bool> {
     }
   }
 
-  //GET COMMENTS BY POSTS
-  Stream<List<Comment>> getCommentsByPost(String postId) {
+  //GET NEWEST COMMENTS BY POSTS
+  Stream<List<Comment>> getNewestCommentsByPost(String postId) {
     try {
-      return _commentRepository.getCommentsByPost(postId);
+      return _commentRepository.getNewestCommentsByPost(postId);
+    } on FirebaseException catch (e) {
+      throw Failures(e.message!);
+    } catch (e) {
+      throw Failures(e.toString());
+    }
+  }
+
+  //GET OLDEST COMMENTS BY POSTS
+  Stream<List<Comment>> getOldestCommentsByPost(String postId) {
+    try {
+      return _commentRepository.getOldestCommentsByPost(postId);
+    } on FirebaseException catch (e) {
+      throw Failures(e.message!);
+    } catch (e) {
+      throw Failures(e.toString());
+    }
+  }
+
+  //GET OLDEST COMMENTS BY POSTS
+  Stream<List<Comment>> getRelevantCommentsByPost(String postId) {
+    try {
+      return _commentRepository.getRelevantCommentsByPost(postId);
     } on FirebaseException catch (e) {
       throw Failures(e.message!);
     } catch (e) {

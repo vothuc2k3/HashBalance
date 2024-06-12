@@ -70,96 +70,150 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
-    return ref.watch(getPostByIdProvider(widget._postId)).whenOrNull(
-      data: (post) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Comments'),
-            actions: [
-              PopupMenuButton<String>(
-                onSelected: (value) {
-                  setState(() {
-                    _sortOption = value;
-                  });
-                },
-                itemBuilder: (BuildContext context) {
-                  return [
-                    const PopupMenuItem(
-                      value: 'newest',
-                      child: Text('Newest to Oldest'),
-                    ),
-                    const PopupMenuItem(
-                      value: 'upvotes',
-                      child: Text('By Upvotes'),
-                    ),
-                  ];
-                },
-                icon: const Icon(Icons.sort),
-              ),
-            ],
-          ),
-          body: Column(
-            children: [
-              Expanded(
-                child: ref.watch(getCommentsByPostProvider(post.id)).when(
-                      data: (comments) {
-                        return ListView.builder(
-                          itemCount: comments.length,
-                          itemBuilder: (context, index) {
-                            return _buildCommentWidget(
-                              comment: comments[index],
-                              post: post,
-                            );
-                          },
-                        );
-                      },
-                      error: (error, stackTrace) =>
-                          ErrorText(error: error.toString()),
-                      loading: () => const Loading(),
-                    )!,
-              ),
-              if (user != null) ...[
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundImage: CachedNetworkImageProvider(
-                          user.profileImage,
+    return ref.read(getPostByIdProvider(widget._postId)).when(
+          data: (post) {
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Comments'),
+                actions: [
+                  PopupMenuButton<String>(
+                    onSelected: (value) {
+                      setState(() {
+                        _sortOption = value;
+                      });
+                    },
+                    itemBuilder: (BuildContext context) {
+                      return [
+                        const PopupMenuItem(
+                          value: 'newest',
+                          child: Text('Newest to Oldest'),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: TextField(
-                          controller: commentTextController,
-                          decoration: InputDecoration(
-                            hintText: 'Leave a comment...',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
+                        const PopupMenuItem(
+                          value: 'oldest',
+                          child: Text('Oldest to Newest'),
+                        ),
+                        const PopupMenuItem(
+                          value: 'default',
+                          child: Text('Most relevant'),
+                        ),
+                      ];
+                    },
+                    icon: const Icon(Icons.sort),
+                  ),
+                ],
+              ),
+              body: Column(
+                children: [
+                  Expanded(
+                    child: _sortOption == 'newest'
+                        ? ref
+                            .watch(
+                                getNewestCommentsByPostProvider(widget._postId))
+                            .when(
+                              data: (comments) {
+                                return ListView.builder(
+                                  itemCount: comments.length,
+                                  itemBuilder: (context, index) {
+                                    return _buildCommentWidget(
+                                      comment: comments[index],
+                                      post: post,
+                                    );
+                                  },
+                                );
+                              },
+                              error: (error, stackTrace) =>
+                                  ErrorText(error: error.toString()),
+                              loading: () => const Loading(),
+                            )
+                        : _sortOption == 'oldest'
+                            ? ref
+                                .watch(getOldestCommentsByPostProvider(
+                                    widget._postId))
+                                .when(
+                                  data: (comments) {
+                                    return ListView.builder(
+                                      itemCount: comments.length,
+                                      itemBuilder: (context, index) {
+                                        return _buildCommentWidget(
+                                          comment: comments[index],
+                                          post: post,
+                                        );
+                                      },
+                                    );
+                                  },
+                                  error: (error, stackTrace) =>
+                                      ErrorText(error: error.toString()),
+                                  loading: () => const Loading(),
+                                )
+                            : ref
+                                .watch(getRelevantCommentsByPostProvider(
+                                    widget._postId))
+                                .when(
+                                  data: (comments) {
+                                    return ListView.builder(
+                                      itemCount: comments.length,
+                                      itemBuilder: (context, index) {
+                                        return _buildCommentWidget(
+                                          comment: comments[index],
+                                          post: post,
+                                        );
+                                      },
+                                    );
+                                  },
+                                  error: (error, stackTrace) =>
+                                      ErrorText(error: error.toString()),
+                                  loading: () => const Loading(),
+                                ),
+                  ),
+                  if (user != null) ...[
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundImage: CachedNetworkImageProvider(
+                              user.profileImage,
                             ),
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextField(
+                              controller: commentTextController,
+                              decoration: InputDecoration(
+                                hintText: 'Leave a comment...',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.send),
+                            onPressed: () {
+                              if (commentTextController.text.isNotEmpty) {
+                                comment(
+                                  post.id,
+                                  commentTextController.text.trim(),
+                                );
+                              }
+                            },
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.send),
-                        onPressed: () {
-                          if (commentTextController.text.isNotEmpty) {
-                            comment(post.id, commentTextController.text);
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ]
-            ],
+                    ),
+                  ]
+                ],
+              ),
+            );
+          },
+          error: (error, stackTrace) => ErrorText(
+            error: error.toString(),
           ),
+          loading: () => const Loading(),
         );
-      },
-    )!;
   }
 
   Widget _buildCommentWidget({
@@ -210,45 +264,56 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
                 ],
               ),
             ),
-            Row(
-              children: [
-                _buildVoteButton(
-                  icon: Icons.arrow_upward_outlined,
-                  count: ref
-                      .watch(getCommentUpvoteCountProvider(comment.id))
-                      .whenOrNull(data: (count) {
-                    return count;
-                  }),
-                  color: ref
-                      .watch(getCommentUpvoteStatusProvider(comment.id))
-                      .whenOrNull(
-                    data: (status) {
-                      return status ? Colors.orange : Colors.grey[600];
+            Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: Row(
+                children: [
+                  Text(
+                    formatTime(comment.createdAt),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(width: 3),
+                  _buildVoteButton(
+                    icon: Icons.arrow_upward_outlined,
+                    count: ref
+                        .watch(getCommentUpvoteCountProvider(comment.id))
+                        .whenOrNull(data: (count) {
+                      return count;
+                    }),
+                    color: ref
+                        .watch(getCommentUpvoteStatusProvider(comment.id))
+                        .whenOrNull(
+                      data: (status) {
+                        return status ? Colors.orange : Colors.grey[600];
+                      },
+                    ),
+                    onTap: () {
+                      upvoteComment(comment.id, comment.uid);
                     },
                   ),
-                  onTap: () {
-                    upvoteComment(comment.id, comment.uid);
-                  },
-                ),
-                _buildVoteButton(
-                  icon: Icons.arrow_downward_outlined,
-                  count: ref
-                      .watch(getCommentDownvoteCountProvider(comment.id))
-                      .whenOrNull(data: (count) {
-                    return count;
-                  }),
-                  color: ref
-                      .watch(getCommentDownvoteStatusProvider(comment.id))
-                      .whenOrNull(
-                    data: (status) {
-                      return status ? Colors.blue : Colors.grey[600];
+                  _buildVoteButton(
+                    icon: Icons.arrow_downward_outlined,
+                    count: ref
+                        .watch(getCommentDownvoteCountProvider(comment.id))
+                        .whenOrNull(data: (count) {
+                      return count;
+                    }),
+                    color: ref
+                        .watch(getCommentDownvoteStatusProvider(comment.id))
+                        .whenOrNull(
+                      data: (status) {
+                        return status ? Colors.blue : Colors.grey[600];
+                      },
+                    ),
+                    onTap: () {
+                      downvoteComment(comment.id, comment.uid);
                     },
                   ),
-                  onTap: () {
-                    downvoteComment(comment.id, comment.uid);
-                  },
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),

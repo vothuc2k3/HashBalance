@@ -39,10 +39,88 @@ class CommentRepository {
     }
   }
 
-  //GET COMMENTS BY POST
-  Stream<List<Comment>> getCommentsByPost(String postId) {
+  //GET NEWEST COMMENTS BY POST
+  Stream<List<Comment>> getNewestCommentsByPost(String postId) {
     try {
-      return _comments.where('postId', isEqualTo: postId).snapshots().map(
+      return _comments
+          .where('postId', isEqualTo: postId)
+          .orderBy('createdAt', descending: true)
+          .snapshots()
+          .map(
+        (event) {
+          List<Comment> comments = [];
+          for (var comment in event.docs) {
+            final data = comment.data() as Map<String, dynamic>;
+            final upvotes = List<String>.from(data['upvotes']);
+            final downvotes = List<String>.from(data['downvotes']);
+            comments.add(
+              Comment(
+                uid: data['uid'] as String,
+                content: data['content'] as String,
+                postId: postId,
+                createdAt: data['createdAt'] as Timestamp,
+                upvotes: upvotes,
+                downvotes: downvotes,
+                upvoteCount: data['upvoteCount'] as int,
+                id: data['id'] as String,
+              ),
+            );
+          }
+          return comments;
+        },
+      );
+    } on FirebaseException catch (e) {
+      throw Failures(e.message!);
+    } catch (e) {
+      throw Failures(e.toString());
+    }
+  }
+
+  //GET OLDEST COMMENTS BY POST
+  Stream<List<Comment>> getOldestCommentsByPost(String postId) {
+    try {
+      return _comments
+          .where('postId', isEqualTo: postId)
+          .orderBy('createdAt', descending: false)
+          .snapshots()
+          .map(
+        (event) {
+          List<Comment> comments = [];
+          for (var comment in event.docs) {
+            final data = comment.data() as Map<String, dynamic>;
+            final upvotes = List<String>.from(data['upvotes']);
+            final downvotes = List<String>.from(data['downvotes']);
+            comments.add(
+              Comment(
+                uid: data['uid'] as String,
+                content: data['content'] as String,
+                postId: postId,
+                createdAt: data['createdAt'] as Timestamp,
+                upvotes: upvotes,
+                downvotes: downvotes,
+                upvoteCount: data['upvoteCount'] as int,
+                id: data['id'] as String,
+              ),
+            );
+          }
+          return comments;
+        },
+      );
+    } on FirebaseException catch (e) {
+      throw Failures(e.message!);
+    } catch (e) {
+      throw Failures(e.toString());
+    }
+  }
+
+  //GET MOST RELEVANT COMMENTS BY POST
+  Stream<List<Comment>> getRelevantCommentsByPost(String postId) {
+    try {
+      return _comments
+          .where('postId', isEqualTo: postId)
+          .orderBy('upvoteCount', descending: true)
+          .snapshots()
+          .map(
         (event) {
           List<Comment> comments = [];
           for (var comment in event.docs) {
@@ -137,7 +215,7 @@ class CommentRepository {
       if (upvotes.contains(upvoteUid)) {
         upvotes.remove(upvoteUid);
         upvoteCount -= 1;
-        batch.update(_comments.doc(upvoteUid), {
+        batch.update(_comments.doc(commentId), {
           'upvotes': upvotes,
           'upvoteCount': upvoteCount,
         });

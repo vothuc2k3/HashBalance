@@ -276,13 +276,14 @@ class _PostContainerState extends ConsumerState<PostContainer> {
               : const SizedBox.shrink(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: ref
-                .watch(getPostUpvoteCountProvider(widget.post.id))
-                .whenOrNull(
+            child: ref.watch(getPostUpvoteCountProvider(widget.post.id)).when(
                   data: (_) {
                     return _buildPostStat(user: widget.user);
                   },
                   loading: () => const Loading(),
+                  error: (error, stackTrace) => ErrorText(
+                    error: error.toString(),
+                  ),
                 ),
           ),
         ],
