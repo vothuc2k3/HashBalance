@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hash_balance/features/newsfeed/screen/newsfeed_screen.dart';
+import 'package:hash_balance/features/notification/screen/notification_screen.dart';
 import 'package:hash_balance/features/post/screen/create_post/create_post_screen.dart';
 
 class Constants {
@@ -33,5 +34,15 @@ class Constants {
     NewsfeedScreen(),
     Scaffold(),
     CreatePostScreen(),
+    Scaffold(),
+    NotificationScreen(),
+  ];
+
+  static final List<String> titles = [
+    'Home',
+    'Communities',
+    'Create',
+    'Chat',
+    'Inbox'
   ];
 }

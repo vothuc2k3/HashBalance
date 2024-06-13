@@ -36,13 +36,12 @@ class SearchCommunityDelegate extends SearchDelegate {
     if (query.isEmpty) {
       return const SizedBox();
     }
-
     return ref.watch(searchProvider(query)).when(
           data: (data) {
             if (query.startsWith('#=')) {
               return ListView.separated(
                 itemCount: data.length,
-                itemBuilder: (BuildContext context, int index) {
+                itemBuilder: (BuildContext , int index) {
                   final community = data[index];
                   return ListTile(
                     leading: CircleAvatar(

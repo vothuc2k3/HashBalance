@@ -129,6 +129,11 @@ String generateRandomCommentId() {
   return uuid.v1();
 }
 
+String generateRandomNotifId() {
+  var uuid = const Uuid();
+  return uuid.v1();
+}
+
 String formatTime(Timestamp timestamp) {
   final now = DateTime.now();
   final difference = now.difference(timestamp.toDate());

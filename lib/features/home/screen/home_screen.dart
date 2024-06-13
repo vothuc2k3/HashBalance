@@ -4,10 +4,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
+import 'package:hash_balance/core/common/error_text.dart';
+import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/home/delegates/search_delegate.dart';
 import 'package:hash_balance/features/home/screen/drawers/community_list_drawer.dart';
 import 'package:hash_balance/features/home/screen/drawers/user_profile_drawer.dart';
+import 'package:hash_balance/features/notification/controller/notification_controller.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -36,8 +39,8 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
 
   void setupNotification() async {
     await fcm.requestPermission();
-    final token = await fcm.getToken();
-    print(token);
+    // final token = await fcm.getToken();
+    // print(token);
   }
 
   void displayCommunityListDrawer(BuildContext context) {
@@ -65,10 +68,15 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home'),
+        title: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: Text(
+            Constants.titles[_page],
+            key: ValueKey<int>(_page),
+          ),
+        ),
         centerTitle: false,
         leading: Builder(builder: (context) {
           return IconButton(
@@ -106,25 +114,54 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
       drawer: const CommunityListDrawer(),
       endDrawer: UserProfileDrawer(homeScreenContext: context),
       bottomNavigationBar: CupertinoTabBar(
-        items: const [
-          BottomNavigationBarItem(
+        items: [
+          const BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.person_search_outlined),
             label: 'Communities',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.add_circle_outline_outlined),
             label: 'Create',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.message_outlined),
             label: 'Chat',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.notification_add_outlined),
+            icon: ref.watch(getNotifsProvider(user!.uid)).when(
+                data: (notifs) {
+                  if (notifs == null || notifs.isEmpty) {
+                    return const Badge(
+                      label: Text(
+                        '0',
+                        style: TextStyle(color: Colors.white, fontSize: 10),
+                      ),
+                      isLabelVisible: false,
+                      child: Icon(Icons.notification_add_outlined),
+                    );
+                  }
+                  int unreadCount = 0;
+                  for (var notif in notifs) {
+                    if (notif.read == false) {
+                      unreadCount++;
+                    }
+                  }
+                  return Badge(
+                    label: Text(
+                      '$unreadCount',
+                      style: const TextStyle(color: Colors.white, fontSize: 10),
+                    ),
+                    isLabelVisible: true,
+                    child: const Icon(Icons.notification_add_outlined),
+                  );
+                },
+                error: (Object error, StackTrace stackTrace) =>
+                    ErrorText(error: error.toString()),
+                loading: () => const Loading()),
             label: 'Inbox',
           ),
         ],
