@@ -68,12 +68,13 @@ class AuthRepository {
           uid: userCredential.user!.uid,
           isAuthenticated: true,
           activityPoint: 0,
-          achivements: ['New boy'],
-          friends: ['nofrienduid'],
+          achivements: ['empty'],
+          friends: ['empty'],
           createdAt: createdAt,
           hashAge: 0,
           isRestricted: false,
-          followers: ['NoFollower'],
+          followers: ['empty'],
+          notifId: ['empty'],
         );
         await _user.doc(userCredential.user!.uid).set(
               user.toMap(),
@@ -176,6 +177,10 @@ class AuthRepository {
           bio: event['bio'] as String? ?? '',
           description: event['description'] as String? ?? '',
           followers: (event['followers'] as List?)
+                  ?.map((item) => item.toString())
+                  .toList() ??
+              [],
+          notifId: (event['notifId'] as List?)
                   ?.map((item) => item.toString())
                   .toList() ??
               [],

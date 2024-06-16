@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
@@ -54,8 +55,9 @@ class FriendController extends StateNotifier<bool> {
           _ref.watch(notificationControllerProvider.notifier);
       notificationController.sendNotification(
         targetUid,
-        'friend_request',
-        'New Friend Request',
+        Constants.friendRequestType,
+        Constants.pending,
+        Constants.friendRequestTitle,
         '${targetUser.name} has sent you a friend request.',
       );
       return right(null);
@@ -98,6 +100,23 @@ class FriendController extends StateNotifier<bool> {
         currentUser!,
         targetUser,
       );
+      final notificationController =
+          _ref.watch(notificationControllerProvider.notifier);
+
+      // notificationController.sendNotification(
+      //   targetUser.uid,
+      //   'friend_request_accepted',
+      //   'Friend Request Accepted',
+        
+      //   'You and ${targetUser.name} are now friends!',
+      // );
+      // notificationController.updateNotification(
+      //   currentUser.uid,
+      //   'friend_request_accepted',
+      //   'Friend Request Accepted',
+      //   'You and ${targetUser.name} are now friends!',
+      // );
+
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));

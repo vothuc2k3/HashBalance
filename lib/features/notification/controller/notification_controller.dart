@@ -31,18 +31,53 @@ class NotificationController extends StateNotifier<bool> {
 
   //SEND NOTIFICATION
   FutureVoid sendNotification(
-      String uid, String type, String title, String message) async {
+    String uid,
+    String type,
+    String status,
+    String title,
+    String message,
+  ) async {
     try {
       final notif = NotificationModel(
-        id: generateRandomNotifId(),
+        id: getNotifId(),
         uid: uid,
         type: type,
+        status: status,
         title: title,
         message: message,
         createdAt: Timestamp.now(),
         read: false,
       );
       await _notificationRepository.sendNotification(notif);
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  //UPDATE NOTIFICATION
+  FutureVoid updateNotification(
+    String notifId,
+    String uid,
+    String type,
+    String status,
+    String title,
+    String message,
+  ) async {
+    try {
+      final notif = NotificationModel(
+        id: notifId,
+        uid: uid,
+        type: type,
+        status: status,
+        title: title,
+        message: message,
+        createdAt: Timestamp.now(),
+        read: false,
+      );
+      await _notificationRepository.updateNotification(notif);
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));

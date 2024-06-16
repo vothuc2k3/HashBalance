@@ -103,6 +103,7 @@ class SearchRepository {
                 createdAt: data['createdAt'] as Timestamp,
                 isRestricted: data['isRestricted'] as bool,
                 followers: followers,
+                notifId: (data['notifId'] as List?)?.cast<String>() ?? [],
               ),
             );
           }

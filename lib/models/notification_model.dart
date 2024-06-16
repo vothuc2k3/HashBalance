@@ -4,6 +4,7 @@ class NotificationModel {
   final String id;
   final String uid;
   final String type;
+  final String status;
   final String title;
   final String message;
   final Timestamp createdAt;
@@ -12,6 +13,7 @@ class NotificationModel {
     required this.id,
     required this.uid,
     required this.type,
+    required this.status,
     required this.title,
     required this.message,
     required this.createdAt,
@@ -22,6 +24,7 @@ class NotificationModel {
     String? id,
     String? uid,
     String? type,
+    String? status,
     String? title,
     String? message,
     Timestamp? createdAt,
@@ -31,6 +34,7 @@ class NotificationModel {
       id: id ?? this.id,
       uid: uid ?? this.uid,
       type: type ?? this.type,
+      status: status ?? this.status,
       title: title ?? this.title,
       message: message ?? this.message,
       createdAt: createdAt ?? this.createdAt,
@@ -43,6 +47,7 @@ class NotificationModel {
       'id': id,
       'uid': uid,
       'type': type,
+      'status': status,
       'title': title,
       'message': message,
       'createdAt': createdAt,
@@ -55,6 +60,7 @@ class NotificationModel {
       id: map['id'] as String,
       uid: map['uid'] as String,
       type: map['type'] as String,
+      status: map['status'] as String,
       title: map['title'] as String,
       message: map['message'] as String,
       createdAt: map['createdAt'] as Timestamp,
@@ -64,7 +70,7 @@ class NotificationModel {
 
   @override
   String toString() {
-    return 'NotificationModel(id: $id, uid: $uid, type: $type, title: $title, message: $message, createdAt: $createdAt, read: $read)';
+    return 'NotificationModel(id: $id, uid: $uid, type: $type, status: $status, title: $title, message: $message, createdAt: $createdAt, read: $read)';
   }
 
   @override
@@ -74,6 +80,7 @@ class NotificationModel {
     return other.id == id &&
         other.uid == uid &&
         other.type == type &&
+        other.status == status &&
         other.title == title &&
         other.message == message &&
         other.createdAt == createdAt &&
@@ -85,6 +92,7 @@ class NotificationModel {
     return id.hashCode ^
         uid.hashCode ^
         type.hashCode ^
+        status.hashCode ^
         title.hashCode ^
         message.hashCode ^
         createdAt.hashCode ^

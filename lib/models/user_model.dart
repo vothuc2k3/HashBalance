@@ -18,6 +18,7 @@ class UserModel {
   final int? hashAge;
   final String? bio;
   final String? description;
+  final List<String> notifId;
   UserModel({
     required this.email,
     this.password,
@@ -35,6 +36,7 @@ class UserModel {
     this.hashAge,
     this.bio,
     this.description,
+    required this.notifId,
   });
 
   UserModel copyWith({
@@ -54,6 +56,7 @@ class UserModel {
     int? hashAge,
     String? bio,
     String? description,
+    List<String>? notifId,
   }) {
     return UserModel(
       email: email ?? this.email,
@@ -72,6 +75,7 @@ class UserModel {
       hashAge: hashAge ?? this.hashAge,
       bio: bio ?? this.bio,
       description: description ?? this.description,
+      notifId: notifId ?? this.notifId,
     );
   }
 
@@ -93,6 +97,7 @@ class UserModel {
       'hashAge': hashAge,
       'bio': bio,
       'description': description,
+      'notifId': notifId,
     };
   }
 
@@ -115,12 +120,13 @@ class UserModel {
       bio: map['bio'] != null ? map['bio'] as String : null,
       description:
           map['description'] != null ? map['description'] as String : null,
+      notifId: List<String>.from((map['notifId'] as List<String>)),
     );
   }
 
   @override
   String toString() {
-    return 'UserModel(email: $email, password: $password, name: $name, uid: $uid, createdAt: $createdAt, profileImage: $profileImage, bannerImage: $bannerImage, isAuthenticated: $isAuthenticated, isRestricted: $isRestricted, activityPoint: $activityPoint, achivements: $achivements, friends: $friends, followers: $followers, hashAge: $hashAge, bio: $bio, description: $description)';
+    return 'UserModel(email: $email, password: $password, name: $name, uid: $uid, createdAt: $createdAt, profileImage: $profileImage, bannerImage: $bannerImage, isAuthenticated: $isAuthenticated, isRestricted: $isRestricted, activityPoint: $activityPoint, achivements: $achivements, friends: $friends, followers: $followers, hashAge: $hashAge, bio: $bio, description: $description, notifId: $notifId)';
   }
 
   @override
@@ -142,7 +148,8 @@ class UserModel {
         listEquals(other.followers, followers) &&
         other.hashAge == hashAge &&
         other.bio == bio &&
-        other.description == description;
+        other.description == description &&
+        listEquals(other.notifId, notifId);
   }
 
   @override
@@ -162,6 +169,7 @@ class UserModel {
         followers.hashCode ^
         hashAge.hashCode ^
         bio.hashCode ^
-        description.hashCode;
+        description.hashCode ^
+        notifId.hashCode;
   }
 }

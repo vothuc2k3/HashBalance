@@ -121,6 +121,7 @@ class UserRepository {
         achivements: List<String>.from(event['achivements']).toList(),
         friends: List<String>.from(event['friends']).toList(),
         followers: List<String>.from(event['followers']).toList(),
+        notifId: List<String>.from(event['notifId']).toList(),
       );
     });
   }

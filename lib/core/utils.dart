@@ -129,7 +129,7 @@ String generateRandomCommentId() {
   return uuid.v1();
 }
 
-String generateRandomNotifId() {
+String getNotifId() {
   var uuid = const Uuid();
   return uuid.v1();
 }

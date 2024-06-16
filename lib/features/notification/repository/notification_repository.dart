@@ -21,7 +21,22 @@ class NotificationRepository {
   //SEND NOTIFICATION
   FutureVoid sendNotification(NotificationModel notif) async {
     try {
-      await _notification.doc().set(notif.toMap());
+      await _notification.doc(notif.id).set(notif.toMap());
+      await _users.doc(notif.uid).update({
+        'notifId': notif.id,
+      });
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  //UPDATE NOTIFICATION
+  FutureVoid updateNotification(NotificationModel notif) async {
+    try {
+      await _notification.doc(notif.id).update(notif.toMap());
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -43,6 +58,7 @@ class NotificationRepository {
           final data = notif.data() as Map<String, dynamic>;
           notifs.add(
             NotificationModel(
+              status: data['status'] as String,
               id: data['id'] as String,
               uid: uid,
               type: data['type'] as String,
@@ -60,5 +76,8 @@ class NotificationRepository {
 
   //REFERENCE ALL THE FRIEND REQUESTS
   CollectionReference get _notification =>
-      _firestore.collection(FirebaseConstants.friendRequestCollection);
+      _firestore.collection(FirebaseConstants.notificationCollection);
+  //REFERENCE ALL THE FRIEND REQUESTS
+  CollectionReference get _users =>
+      _firestore.collection(FirebaseConstants.usersCollection);
 }

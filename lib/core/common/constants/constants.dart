@@ -45,4 +45,10 @@ class Constants {
     'Chat',
     'Inbox'
   ];
+  static const String friendRequestTitle = 'New Friend Request';
+  static const String requestAcceptedTitle = 'Friend Request Accepted';
+
+  static const String friendRequestType  = 'friend_request';
+
+  static const String pending = 'pending';
 }
