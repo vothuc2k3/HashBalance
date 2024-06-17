@@ -65,6 +65,10 @@ class _OtherUserProfileScreenState
     }, (_) {});
   }
 
+  void messageUser(UserModel targetUser) {
+    Routemaster.of(context).push('/message/${targetUser.uid}');
+  }
+
   @override
   void initState() {
     super.initState();
@@ -200,6 +204,26 @@ class _OtherUserProfileScreenState
                                     ErrorText(error: error.toString()),
                                 loading: () => const Loading(),
                               ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          messageUser(targetUser);
+                        },
+                        icon: const Icon(Icons.message, color: Colors.white),
+                        label: const Text('Message'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          textStyle: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 5,
+                        ),
+                      ).animate().fadeIn(duration: 600.ms).moveY(
+                          begin: 30, end: 0, duration: 600.ms, curve: Curves.easeOutBack),
                       const SizedBox(height: 16),
                       const Divider(),
                       const SizedBox(height: 16),

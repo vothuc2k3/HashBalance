@@ -57,7 +57,6 @@ class AuthRepository {
       UserModel? user;
 
       if (userCredential.additionalUserInfo!.isNewUser) {
-        final createdAt = Timestamp.now();
         user = UserModel(
           email: userCredential.user!.email!,
           name: userCredential.user!.displayName ??
@@ -70,7 +69,7 @@ class AuthRepository {
           activityPoint: 0,
           achivements: ['empty'],
           friends: ['empty'],
-          createdAt: createdAt,
+          createdAt: Timestamp.now(),
           hashAge: 0,
           isRestricted: false,
           followers: ['empty'],
