@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
+import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/message/controller/message_controller.dart';
 import 'package:hash_balance/features/message/screen/widget/message_bubble.dart';
@@ -22,13 +24,48 @@ class MessageScreen extends ConsumerStatefulWidget {
 class _MessageScreenState extends ConsumerState<MessageScreen> {
   final TextEditingController _messageController = TextEditingController();
 
+  void sendMessage(String targetUid) async {
+    final result = await ref
+        .watch(messageControllerProvider.notifier)
+        .sendMessage(_messageController.text, targetUid);
+    result.fold((l) {
+      showSnackBar(context, l.message);
+    }, (_) {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(userProvider);
+    final targetUser = ref.watch(getUserByUidProvider(widget._targetuid));
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('FlutterChat'),
+        title: targetUser.whenOrNull(
+          data: (targetUser) {
+            return Row(
+              children: [
+                CircleAvatar(
+                  backgroundImage:
+                      CachedNetworkImageProvider(targetUser.profileImage),
+                ),
+                const SizedBox(width: 10),
+                Text(targetUser.name),
+              ],
+            );
+          },
+          loading: () => const CircularProgressIndicator(),
+          error: (error, stackTrace) => const Text('Error'),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.black87,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.more_vert),
+            onPressed: () {
+              // Implement more actions if needed
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -36,13 +73,20 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
             child: ref.watch(loadMessagesProvider(widget._targetuid)).when(
                   data: (messages) {
                     if (messages == null || messages.isEmpty) {
-                      return const Text('Text your fist message!');
+                      return const Center(
+                        child: Text(
+                          'Text your first message!',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      );
                     }
                     return ListView.builder(
-                      padding: const EdgeInsets.only(
-                        bottom: 40,
-                        left: 13,
-                        right: 13,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 15,
                       ),
                       reverse: true,
                       itemCount: messages.length,
@@ -59,28 +103,23 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
 
                         return ref
                             .watch(getUserByUidProvider(chatMessage.uid))
-                            .when(
-                              data: (user) {
-                                if (nextUserIsSame) {
-                                  return MessageBubble.next(
-                                    message: chatMessage.text,
-                                    isMe: currentUser!.uid ==
-                                        currentMessageUserId,
-                                  );
-                                } else {
-                                  return MessageBubble.first(
-                                    userImage: user.profileImage,
-                                    username: user.name,
-                                    message: chatMessage.text,
-                                    isMe: currentUser!.uid ==
-                                        currentMessageUserId,
-                                  );
-                                }
-                              },
-                              error: (error, stackTrace) =>
-                                  ErrorText(error: error.toString()),
-                              loading: () => const Loading(),
-                            );
+                            .whenOrNull(
+                          data: (user) {
+                            if (nextUserIsSame) {
+                              return MessageBubble.next(
+                                message: chatMessage.text,
+                                isMe: currentUser!.uid == currentMessageUserId,
+                              );
+                            } else {
+                              return MessageBubble.first(
+                                userImage: user.profileImage,
+                                username: user.name,
+                                message: chatMessage.text,
+                                isMe: currentUser!.uid == currentMessageUserId,
+                              );
+                            }
+                          },
+                        );
                       },
                     );
                   },
@@ -90,44 +129,55 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                   ),
                 ),
           ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(
-                right: 1,
-                left: 15,
-                bottom: 14,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _messageController,
-                      textCapitalization: TextCapitalization.sentences,
-                      autocorrect: false,
-                      enableSuggestions: false,
-                      decoration: const InputDecoration(
-                        labelText: 'Send messages....',
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: 10,
+              horizontal: 15,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[800],
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                      child: TextField(
+                        controller: _messageController,
+                        textCapitalization: TextCapitalization.sentences,
+                        autocorrect: true,
+                        enableSuggestions: true,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: const InputDecoration(
+                          hintText: 'Send a message...',
+                          hintStyle: TextStyle(color: Colors.grey),
+                          border: InputBorder.none,
+                        ),
                       ),
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      FocusManager.instance.primaryFocus?.unfocus();
-                    },
-                    child: IconButton(
-                      onPressed: () {
-                        {}
-                      },
-                      icon: Icon(
-                        Icons.send,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary,
-                      ),
+                ),
+                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: () {
+                    sendMessage(widget._targetuid);
+                    FocusManager.instance.primaryFocus?.unfocus();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: const BoxDecoration(
+                      color: Colors.teal,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.send,
+                      color: Colors.white,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],

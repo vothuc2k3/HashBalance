@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/common/constants/firebase_constants.dart';
+import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
+import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/message_model.dart';
 
 final messageRepositoryProvider = Provider((ref) {
@@ -42,6 +45,21 @@ class MessageRepository {
         }
       },
     );
+  }
+
+  FutureVoid sendMessage(
+      String text, String conversationId, Message message) async {
+    try {
+      _conversation
+          .doc(conversationId)
+          .collection('message')
+          .add(message.toMap());
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
   }
 
   //REFERENCES ALL THE CONVERSATIONS

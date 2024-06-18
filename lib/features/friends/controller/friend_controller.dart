@@ -100,8 +100,8 @@ class FriendController extends StateNotifier<bool> {
         currentUser!,
         targetUser,
       );
-      final notificationController =
-          _ref.watch(notificationControllerProvider.notifier);
+      // final notificationController =
+      //     _ref.watch(notificationControllerProvider.notifier);
 
       // notificationController.sendNotification(
       //   targetUser.uid,
