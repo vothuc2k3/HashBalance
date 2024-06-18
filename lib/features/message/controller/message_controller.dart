@@ -5,10 +5,24 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/message/repository/message_repository.dart';
+import 'package:hash_balance/models/conversation_model.dart';
 import 'package:hash_balance/models/message_model.dart';
+
+final getCurrentUserConversationProvider = StreamProvider((ref) {
+  return ref
+      .watch(messageControllerProvider.notifier)
+      .getCurrentUserConversation();
+});
 
 final loadMessagesProvider = StreamProvider.family((ref, String targetUid) {
   return ref.watch(messageControllerProvider.notifier).loadMessages(targetUid);
+});
+
+final getLastMessageByConversationProvider =
+    StreamProvider.family((ref, String id) {
+  return ref
+      .watch(messageControllerProvider.notifier)
+      .getLastMessageByConversation(id);
 });
 
 final messageControllerProvider =
@@ -49,12 +63,14 @@ class MessageController extends StateNotifier<bool> {
       var ids = [targetUid, uid];
       ids.sort();
       _messageRepository.sendMessage(
-        text,
-        ids.join('_'),
         Message(
           text: text,
           uid: uid,
           createdAt: Timestamp.now(),
+        ),
+        Conversation(
+          id: ids.join('_'),
+          participantUids: [targetUid, uid],
         ),
       );
       return right(null);
@@ -65,5 +81,14 @@ class MessageController extends StateNotifier<bool> {
     } finally {
       state = false;
     }
+  }
+
+  Stream<List<Conversation>?> getCurrentUserConversation() {
+    final uid = _ref.read(userProvider)!.uid;
+    return _messageRepository.getCurrentUserConversation(uid);
+  }
+  
+  Stream<Message> getLastMessageByConversation(String id) {
+    return _messageRepository.getLastMessageByConversation(id);
   }
 }

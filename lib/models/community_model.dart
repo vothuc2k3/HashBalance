@@ -50,7 +50,7 @@ class Community {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id': id ,
+      'id': id,
       'name': name,
       'profileImage': profileImage,
       'bannerImage': bannerImage,
@@ -108,4 +108,21 @@ class Community {
         members.hashCode ^
         moderators.hashCode;
   }
+
+  factory Community.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return Community(
+      name: data['name'] as String,
+      members: List<String>.from(data['members'] ?? ['']),
+      id: data['id'] as String,
+      profileImage: data['profileImage'] as String,
+      bannerImage: data['bannerImage'] as String,
+      type: data['type'] as String,
+      createdAt: data['createdAt'] as Timestamp,
+      containsExposureContents: data['containsExposureContents'] as bool,
+      moderators: List<String>.from(data['moderators'] ?? ['']),
+    );
+  }
+
+  int get membersCount => members.length;
 }

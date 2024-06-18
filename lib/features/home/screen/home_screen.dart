@@ -74,7 +74,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
           duration: const Duration(milliseconds: 300),
           child: Text(
             Constants.titles[_page],
-            key: ValueKey<int>(_page),
+            key: ValueKey(_page),
           ),
         ),
         centerTitle: false,

@@ -163,6 +163,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                 GestureDetector(
                   onTap: () {
                     sendMessage(widget._targetuid);
+                    _messageController.clear();
                     FocusManager.instance.primaryFocus?.unfocus();
                   },
                   child: Container(

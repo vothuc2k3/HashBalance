@@ -16,6 +16,10 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/community/repository/community_repository.dart';
 import 'package:hash_balance/models/community_model.dart';
 
+final getTopCommunityListProvider = StreamProvider((ref) {
+  return ref.watch(communityControllerProvider.notifier).getTopCommunitiesList();
+});
+
 final myCommunitiesProvider = StreamProvider((ref) {
   final communityController = ref.watch(communityControllerProvider.notifier);
   return communityController.getMyCommunities();
@@ -224,5 +228,9 @@ class CommunityController extends StateNotifier<bool> {
     } finally {
       state = false;
     }
+  }
+
+  Stream<List<Community>?> getTopCommunitiesList() {
+    return _communityRepository.getTopCommunitiesList();
   }
 }

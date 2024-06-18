@@ -162,6 +162,29 @@ class CommunityRepository {
     }
   }
 
+  Stream<List<Community>?> getTopCommunitiesList() {
+    return _communities.snapshots().map(
+      (snapshot) {
+        if (snapshot.docs.isEmpty) {
+          return null;
+        } else {
+          return snapshot.docs
+              .map((doc) => Community.fromFirestore(doc))
+              .toList();
+        }
+      },
+    ).map(
+      (communities) {
+        if (communities == null) {
+          return null;
+        } else {
+          communities.sort((a, b) => b.membersCount.compareTo(a.membersCount));
+          return communities;
+        }
+      },
+    );
+  }
+
   //GET THE COMMUNITIES DATA
   CollectionReference get _communities =>
       _firestore.collection(FirebaseConstants.communitiesCollection);

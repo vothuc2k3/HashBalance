@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hash_balance/features/community/screen/community_list_screen.dart';
+import 'package:hash_balance/features/message/screen/message_list_screen.dart';
 import 'package:hash_balance/features/newsfeed/screen/newsfeed_screen.dart';
 import 'package:hash_balance/features/notification/screen/notification_screen.dart';
 import 'package:hash_balance/features/post/screen/create_post/create_post_screen.dart';
@@ -32,9 +34,9 @@ class Constants {
 
   static const tabWidgets = [
     NewsfeedScreen(),
-    Scaffold(),
+    CommunityListScreen(),
     CreatePostScreen(),
-    Scaffold(),
+    MessageListScreen(),
     NotificationScreen(),
   ];
 

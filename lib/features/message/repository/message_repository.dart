@@ -5,6 +5,7 @@ import 'package:hash_balance/core/common/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
+import 'package:hash_balance/models/conversation_model.dart';
 import 'package:hash_balance/models/message_model.dart';
 
 final messageRepositoryProvider = Provider((ref) {
@@ -48,12 +49,16 @@ class MessageRepository {
   }
 
   FutureVoid sendMessage(
-      String text, String conversationId, Message message) async {
+    Message message,
+    Conversation conversation,
+  ) async {
     try {
-      _conversation
-          .doc(conversationId)
+      await _conversation.doc(conversation.id).set(conversation.toMap());
+      await _conversation
+          .doc(conversation.id)
           .collection('message')
-          .add(message.toMap());
+          .doc()
+          .set(message.toMap());
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -62,7 +67,57 @@ class MessageRepository {
     }
   }
 
+  Stream<List<Conversation>?> getCurrentUserConversation(String uid) {
+    return _conversation
+        .where('participantUids', arrayContains: uid)
+        .snapshots()
+        .map(
+      (event) {
+        if (event.docs.isEmpty) {
+          return null;
+        } else {
+          List<Conversation> conversations = [];
+          for (var doc in event.docs) {
+            final data = doc.data() as Map<String, dynamic>;
+            conversations.add(
+              Conversation(
+                id: data['id'] as String,
+                participantUids: List<String>.from(data['participantUids']),
+              ),
+            );
+          }
+          return conversations;
+        }
+      },
+    );
+  }
+
+  Stream<Message> getLastMessageByConversation(String id) {
+    return _conversation
+        .doc(id)
+        .collection('message')
+        .orderBy('createdAt', descending: true)
+        .limit(1)
+        .snapshots()
+        .map(
+      (event) {
+        final List<Message> message = [];
+        for (var doc in event.docs) {
+          final data = doc.data();
+          message.add(
+            Message(
+              text: data['text'] as String,
+              uid: data['uid'] as String,
+              createdAt: data['createdAt'] as Timestamp,
+            ),
+          );
+        }
+        return message.first;
+      },
+    );
+  }
+
   //REFERENCES ALL THE CONVERSATIONS
   CollectionReference get _conversation =>
-      _firestore.collection(FirebaseConstants.commentsCollection);
+      _firestore.collection(FirebaseConstants.conversationCollection);
 }

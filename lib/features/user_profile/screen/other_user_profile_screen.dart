@@ -223,7 +223,10 @@ class _OtherUserProfileScreenState
                           elevation: 5,
                         ),
                       ).animate().fadeIn(duration: 600.ms).moveY(
-                          begin: 30, end: 0, duration: 600.ms, curve: Curves.easeOutBack),
+                          begin: 30,
+                          end: 0,
+                          duration: 600.ms,
+                          curve: Curves.easeOutBack),
                       const SizedBox(height: 16),
                       const Divider(),
                       const SizedBox(height: 16),

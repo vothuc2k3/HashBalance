@@ -272,7 +272,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8.0),
                       child: Image.network(
-                        'https://scontent.fsgn5-5.fna.fbcdn.net/v/t39.30808-1/414150820_1868965926854119_3491088876719626029_n.jpg?stp=c0.75.200.200a_dst-jpg_p200x200&_nc_cat=108&ccb=1-7&_nc_sid=5f2048&_nc_eui2=AeFJ0wr8a--tEaEiN8hLqfF09U4eoaR76yn1Th6hpHvrKYSUGUICtKBqpL3zf2bpnMbjoepf3ENZdWcFQVLlSkuu&_nc_ohc=dORJRds8aBoQ7kNvgFPYytz&_nc_ht=scontent.fsgn5-5.fna&oh=00_AYB47jtIoSCsCG-afxaCtjkmPIGEwtypunjqCjvwdUAvjA&oe=666F988D',
+                        'https://scontent.fvca1-4.fna.fbcdn.net/v/t39.30808-6/409392806_1751794215269412_7230771913424671746_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=5f2048&_nc_eui2=AeESdxMaYK437mXJwPMqlMfIXBS8mo6fVjRcFLyajp9WNI10DN_s8g34UBq7WdqQ-SaoCz4oBzsCt2bmsuCyZHr-&_nc_ohc=FKjSxEbObwIQ7kNvgFs4jL6&_nc_ht=scontent.fvca1-4.fna&oh=00_AYCjGz6lXwmXjUgG0801WylTmZh4l2XTpQd0Em51T0S2RA&oe=6676C56A',
                         fit: BoxFit.cover,
                       ),
                     ),
