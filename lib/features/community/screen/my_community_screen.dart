@@ -2,12 +2,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
-import 'package:routemaster/routemaster.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
+import 'package:hash_balance/features/community/screen/mod_tools/edit_community_screen.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
 class MyCommunityScreen extends ConsumerStatefulWidget {
@@ -62,8 +62,15 @@ class MyCommunityScreenState extends ConsumerState<MyCommunityScreen> {
     );
   }
 
-  void navigateToModTools(BuildContext context, String name) {
-    Routemaster.of(context).push('/community/mod-tools/$name');
+  void navigateToModTools(String name) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditCommunityScreen(
+          name: name,
+        ),
+      ),
+    );
   }
 
   @override
@@ -111,8 +118,8 @@ class MyCommunityScreenState extends ConsumerState<MyCommunityScreen> {
                             Align(
                               alignment: Alignment.topLeft,
                               child: CircleAvatar(
-                                backgroundImage:
-                                    CachedNetworkImageProvider(community.profileImage),
+                                backgroundImage: CachedNetworkImageProvider(
+                                    community.profileImage),
                                 radius: 35,
                               ),
                             ),
@@ -164,8 +171,8 @@ class MyCommunityScreenState extends ConsumerState<MyCommunityScreen> {
                                               ),
                                       )
                                     : OutlinedButton(
-                                        onPressed: () => navigateToModTools(
-                                            context, widget.name),
+                                        onPressed: () =>
+                                            navigateToModTools(widget.name),
                                         style: ElevatedButton.styleFrom(
                                           shape: RoundedRectangleBorder(
                                             borderRadius:

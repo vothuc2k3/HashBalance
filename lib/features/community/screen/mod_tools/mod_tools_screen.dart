@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:routemaster/routemaster.dart';
+import 'package:hash_balance/features/community/screen/mod_tools/edit_community_screen.dart';
 
 class ModToolsScreen extends ConsumerWidget {
   final String name;
@@ -10,7 +10,14 @@ class ModToolsScreen extends ConsumerWidget {
   });
 
   void navigateToEditCommunityScreen(BuildContext context, String name) {
-    Routemaster.of(context).push('/community/edit_community/$name');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditCommunityScreen(
+          name: name,
+        ),
+      ),
+    );
   }
 
   @override

@@ -5,18 +5,29 @@ import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/common/google_sign_in_button.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
+import 'package:hash_balance/features/authentication/screen/email_sign_in_screen.dart';
+import 'package:hash_balance/features/authentication/screen/email_sign_up_screen.dart';
 import 'package:hash_balance/theme/pallette.dart';
-import 'package:routemaster/routemaster.dart';
 
 class AuthScreen extends ConsumerWidget {
   const AuthScreen({super.key});
 
   void navigateToEmailSignUpScreen(BuildContext context) {
-    Routemaster.of(context).push('/email-sign-up');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const EmailSignUpScreen(),
+      ),
+    );
   }
 
   void navigateToEmailSignInScreen(BuildContext context) {
-    Routemaster.of(context).push('/email-sign-in');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const EmailSignInScreen(),
+      ),
+    );
   }
 
   @override

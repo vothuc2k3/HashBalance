@@ -17,12 +17,7 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen> {
   @override
   Widget build(BuildContext context) {
     final communityList = ref.watch(getTopCommunityListProvider);
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Top Communities'),
-        backgroundColor: Colors.black87,
-      ),
       body: communityList.when(
         data: (communities) {
           if (communities == null || communities.isEmpty) {

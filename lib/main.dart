@@ -2,29 +2,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/features/comment/screen/comment_screen.dart';
-import 'package:hash_balance/features/message/screen/message_screen.dart';
-import 'package:hash_balance/features/post/screen/create_post/create_post_screen.dart';
-import 'package:routemaster/routemaster.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
-import 'package:hash_balance/core/common/unknown_route.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
-import 'package:hash_balance/features/authentication/screen/email_sign_in_screen.dart';
-import 'package:hash_balance/features/authentication/screen/email_sign_up_screen.dart';
-import 'package:hash_balance/features/community/screen/create_community_screen.dart';
-import 'package:hash_balance/features/community/screen/my_community_screen.dart';
-import 'package:hash_balance/features/community/screen/mod_tools/edit_community_screen.dart';
-import 'package:hash_balance/features/community/screen/mod_tools/mod_tools_screen.dart';
-import 'package:hash_balance/features/community/screen/other_community_screen.dart';
 import 'package:hash_balance/features/home/screen/home_screen.dart';
-import 'package:hash_balance/features/setting/setting_screen.dart';
-import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
-import 'package:hash_balance/features/user_profile/screen/edit_profile/edit_user_profile.dart';
-import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/firebase_options.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
@@ -51,74 +35,6 @@ class MyApp extends ConsumerStatefulWidget {
 }
 
 class MyAppState extends ConsumerState<MyApp> {
-  final _loggedOutRoute = RouteMap(
-    routes: {
-      '/': (_) => const MaterialPage(
-            child: AuthScreen(),
-          ),
-      '/email-sign-up': (_) => const MaterialPage(
-            child: EmailSignUpScreen(),
-          ),
-      '/email-sign-in': (_) => const MaterialPage(
-            child: EmailSignInScreen(),
-          ),
-    },
-    onUnknownRoute: (_) => const MaterialPage(
-      child: UnknownRouteScreen(),
-    ),
-  );
-
-  final _loggedInRoute = RouteMap(
-    routes: {
-      '/': (_) => const MaterialPage(
-            child: HomeScreen(),
-          ),
-      '/community/create': (_) => const MaterialPage(
-            child: CreateCommunityScreen(),
-          ),
-      '/community/view/:name': (route) => MaterialPage(
-            child: OtherCommunityScreen(name: route.pathParameters['name']!),
-          ),
-      '/community/my-community/:name': (route) => MaterialPage(
-            child: MyCommunityScreen(name: route.pathParameters['name']!),
-          ),
-      '/community/mod-tools/:name': (route) => MaterialPage(
-            child: ModToolsScreen(name: route.pathParameters['name']!),
-          ),
-      '/community/edit_community/:name': (route) => MaterialPage(
-            child: EditCommunityScreen(name: route.pathParameters['name']!),
-          ),
-      '/setting': (_) => const MaterialPage(
-            child: SettingScreen(),
-          ),
-      '/user-profile/:uid': (route) => MaterialPage(
-            child: UserProfileScreen(uid: route.pathParameters['uid']!),
-          ),
-      '/user-profile/view/:uid': (route) => MaterialPage(
-            child: OtherUserProfileScreen(uid: route.pathParameters['uid']!),
-          ),
-      '/user-profile/edit/:uid': (route) => MaterialPage(
-            child: EditProfileScreen(uid: route.pathParameters['uid']!),
-          ),
-      '/post/create': (_) => const MaterialPage(
-            child: CreatePostScreen(),
-          ),
-      '/post/:id/comments': (route) => MaterialPage(
-            child: CommentScreen(
-              postId: route.pathParameters['id']!,
-            ),
-          ),
-      '/message/:id': (route) => MaterialPage(
-            child: MessageScreen(
-              targetuid: route.pathParameters['id']!,
-            ),
-          ),
-    },
-    onUnknownRoute: (_) => const MaterialPage(
-      child: UnknownRouteScreen(),
-    ),
-  );
-
   UserModel? userData;
 
   void _getUserData(WidgetRef ref, User data) async {
@@ -133,25 +49,43 @@ class MyAppState extends ConsumerState<MyApp> {
   @override
   Widget build(BuildContext context) {
     return ref.watch(authStageChangeProvider).when(
-          data: (user) => MaterialApp.router(
+          data: (user) {
+            if (user != null) {
+              _getUserData(ref, user);
+              return MaterialApp(
+                debugShowCheckedModeBanner: false,
+                title: 'Hash Balance',
+                theme: Pallete.darkModeAppTheme,
+                home: Consumer(
+                  builder: (context, watch, child) {
+                    final userData = ref.watch(userProvider);
+                    if (userData != null) {
+                      return const HomeScreen();
+                    } else {
+                      return const Loading();
+                    }
+                  },
+                ),
+              );
+            } else {
+              return MaterialApp(
+                debugShowCheckedModeBanner: false,
+                title: 'Hash Balance',
+                theme: Pallete.darkModeAppTheme,
+                home: const AuthScreen(),
+              );
+            }
+          },
+          error: (error, stackTrace) => MaterialApp(
             debugShowCheckedModeBanner: false,
             title: 'Hash Balance',
-            theme: Pallete.darkModeAppTheme,
-            routerDelegate: RoutemasterDelegate(
-              routesBuilder: (_) {
-                if (user != null) {
-                  _getUserData(ref, user);
-                  if (userData != null) {
-                    return _loggedInRoute;
-                  }
-                }
-                return _loggedOutRoute;
-              },
-            ),
-            routeInformationParser: const RoutemasterParser(),
+            home: ErrorText(error: error.toString()),
           ),
-          error: (error, stackTrace) => ErrorText(error: error.toString()),
-          loading: () => const Loading(),
+          loading: () => const MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Hash Balance',
+            home: Loading(),
+          ),
         );
   }
 }

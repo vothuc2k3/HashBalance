@@ -13,7 +13,6 @@ import 'package:hash_balance/features/authentication/controller/auth_controller.
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
-import 'package:routemaster/routemaster.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   final String uid;
@@ -114,8 +113,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       leading: IconButton(
                         icon: const Icon(Icons.arrow_back),
                         onPressed: () {
-                          Routemaster.of(context)
-                              .push('/user-profile/${user.uid}');
+                          Navigator.pop(context);
                         },
                       ),
                       title: const Text('Edit Profile'),
@@ -203,15 +201,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                       },
                                       child: CircleAvatar(
                                         radius: 30,
-                                        backgroundImage:
-                                            profileImageFile != null
-                                                ? FileImage(profileImageFile!)
-                                                : !(user.profileImage ==
-                                                        Constants.avatarDefault)
-                                                    ? CachedNetworkImageProvider(
-                                                            user.profileImage)
-                                                        as ImageProvider
-                                                    : null,
+                                        backgroundImage: profileImageFile !=
+                                                null
+                                            ? FileImage(profileImageFile!)
+                                            : !(user.profileImage ==
+                                                    Constants.avatarDefault)
+                                                ? CachedNetworkImageProvider(
+                                                        user.profileImage)
+                                                    as ImageProvider
+                                                : null,
                                         child: user.profileImage ==
                                                 Constants.avatarDefault
                                             ? const Icon(

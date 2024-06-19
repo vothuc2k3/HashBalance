@@ -5,7 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
-import 'package:routemaster/routemaster.dart';
+import 'package:hash_balance/features/user_profile/screen/edit_profile/edit_user_profile.dart';
 
 class UserProfileScreen extends ConsumerStatefulWidget {
   const UserProfileScreen({
@@ -25,7 +25,12 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
   final double profileHeight = 120;
 
   void navigateToEditUserProfile(BuildContext context) {
-    Routemaster.of(context).push('/user-profile/edit/${widget.uid}');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProfileScreen(uid: widget.uid),
+      ),
+    );
   }
 
   @override
@@ -158,8 +163,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildButton(
-                            text: 'Friends', value: 0),
+                        _buildButton(text: 'Friends', value: 0),
                         _buildVerticalDivider(),
                         _buildButton(
                             text: 'Followers',
@@ -287,8 +291,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: ElevatedButton(
-            onPressed: () {
-            },
+            onPressed: () {},
             child: const Text('See all friends'),
           ),
         ),

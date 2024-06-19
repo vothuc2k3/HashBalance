@@ -142,20 +142,46 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                       color: Colors.grey[800],
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                      child: TextField(
-                        controller: _messageController,
-                        textCapitalization: TextCapitalization.sentences,
-                        autocorrect: true,
-                        enableSuggestions: true,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: const InputDecoration(
-                          hintText: 'Send a message...',
-                          hintStyle: TextStyle(color: Colors.grey),
-                          border: InputBorder.none,
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.image, color: Colors.white),
+                          onPressed: () {
+                            // Implement image picker
+                          },
                         ),
-                      ),
+                        IconButton(
+                          icon: const Icon(Icons.videocam, color: Colors.white),
+                          onPressed: () {
+                            // Implement video picker
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.insert_emoticon,
+                              color: Colors.white),
+                          onPressed: () {
+                            // Implement emoji picker
+                          },
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 15.0),
+                            child: TextField(
+                              controller: _messageController,
+                              textCapitalization: TextCapitalization.sentences,
+                              autocorrect: true,
+                              enableSuggestions: true,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: const InputDecoration(
+                                hintText: 'Send a message...',
+                                hintStyle: TextStyle(color: Colors.grey),
+                                border: InputBorder.none,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

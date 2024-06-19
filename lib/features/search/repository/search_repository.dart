@@ -23,97 +23,78 @@ class SearchRepository {
   }) : _firestore = firestore;
 
   Stream<List<dynamic>> search(String query) {
-    final streamController = StreamController<List<dynamic>>();
     if (query.isEmpty) {
-      return const Stream.empty();
+      return Stream.value([]);
     }
+
     if (query.startsWith('#=')) {
       String communityQuery = query.substring(2);
+      String? communityQueryEnd = communityQuery.isEmpty
+          ? null
+          : communityQuery.substring(0, communityQuery.length - 1) +
+              String.fromCharCode(
+                  communityQuery.codeUnitAt(communityQuery.length - 1) + 1);
+
       return _communities
-          .where(
-            'name',
-            isGreaterThanOrEqualTo: communityQuery.isEmpty ? 0 : communityQuery,
-            isLessThan: communityQuery.isEmpty
-                ? null
-                : communityQuery.substring(0, communityQuery.length - 1) +
-                    String.fromCharCode(
-                        communityQuery.codeUnitAt(communityQuery.length - 1) +
-                            1),
-          )
+          .where('name',
+              isGreaterThanOrEqualTo: communityQuery,
+              isLessThan: communityQueryEnd)
           .snapshots()
-          .map(
-        (event) {
-          List<Community> communities = [];
-          for (var doc in event.docs) {
-            final data = doc.data() as Map<String, dynamic>;
-            final members = (data['members'] as List?)?.cast<String>() ?? [];
-            final moderators = (data['mods'] as List?)?.cast<String>() ?? [];
-            communities.add(
-              Community(
-                id: data['id'] as String,
-                name: data['name'] as String,
-                profileImage: data['profileImage'] as String,
-                bannerImage: data['bannerImage'] as String,
-                type: data['type'] as String,
-                containsExposureContents:
-                    data['containsExposureContents'] as bool,
-                members: members,
-                moderators: moderators,
-                createdAt: data['createdAt'] as Timestamp,
-              ),
-            );
-          }
-          return communities;
-        },
-      );
+          .map((event) {
+        return event.docs.map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return Community(
+            id: data['id'] as String,
+            name: data['name'] as String,
+            profileImage: data['profileImage'] as String,
+            bannerImage: data['bannerImage'] as String,
+            type: data['type'] as String,
+            containsExposureContents: data['containsExposureContents'] as bool,
+            members: (data['members'] as List?)?.cast<String>() ?? [],
+            moderators: (data['mods'] as List?)?.cast<String>() ?? [],
+            createdAt: data['createdAt'] as Timestamp,
+          );
+        }).toList();
+      }).handleError((error) {
+        return [];
+      });
     } else if (query.startsWith('#')) {
       String userQuery = query.substring(1);
+      String? userQueryEnd = userQuery.isEmpty
+          ? null
+          : userQuery.substring(0, userQuery.length - 1) +
+              String.fromCharCode(
+                  userQuery.codeUnitAt(userQuery.length - 1) + 1);
+
       return _user
-          .where(
-            'name',
-            isGreaterThanOrEqualTo: userQuery.isEmpty ? 0 : userQuery,
-            isLessThan: userQuery.isEmpty
-                ? null
-                : userQuery.substring(0, userQuery.length - 1) +
-                    String.fromCharCode(
-                        userQuery.codeUnitAt(userQuery.length - 1) + 1),
-          )
+          .where('name',
+              isGreaterThanOrEqualTo: userQuery, isLessThan: userQueryEnd)
           .snapshots()
-          .map(
-        (event) {
-          List<UserModel> users = [];
-          for (var doc in event.docs) {
-            final data = doc.data() as Map<String, dynamic>;
-            final achivements =
-                (data['achivements'] as List?)?.cast<String>() ?? [];
-            final friends = (data['friends'] as List?)?.cast<String>() ?? [];
-            final followers =
-                (data['followers'] as List?)?.cast<String>() ?? [];
-            users.add(
-              UserModel(
-                name: data['name'] as String,
-                profileImage: data['profileImage'] as String,
-                bannerImage: data['bannerImage'] as String,
-                email: data['email'] as String,
-                uid: data['uid'] as String,
-                isAuthenticated: data['isAuthenticated'] as bool,
-                activityPoint: data['activityPoint'] as int,
-                achivements: achivements,
-                friends: friends,
-                createdAt: data['createdAt'] as Timestamp,
-                isRestricted: data['isRestricted'] as bool,
-                followers: followers,
-                notifId: (data['notifId'] as List?)?.cast<String>() ?? [],
-              ),
-            );
-          }
-          return users;
-        },
-      );
+          .map((event) {
+        return event.docs.map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return UserModel(
+            name: data['name'] as String,
+            profileImage: data['profileImage'] as String,
+            bannerImage: data['bannerImage'] as String,
+            email: data['email'] as String,
+            uid: data['uid'] as String,
+            isAuthenticated: data['isAuthenticated'] as bool,
+            activityPoint: data['activityPoint'] as int,
+            achivements: (data['achivements'] as List?)?.cast<String>() ?? [],
+            friends: (data['friends'] as List?)?.cast<String>() ?? [],
+            createdAt: data['createdAt'] as Timestamp,
+            isRestricted: data['isRestricted'] as bool,
+            followers: (data['followers'] as List?)?.cast<String>() ?? [],
+            notifId: (data['notifId'] as List?)?.cast<String>() ?? [],
+          );
+        }).toList();
+      }).handleError((error) {
+        return [];
+      });
     } else {
-      streamController.close();
+      return Stream.value([]);
     }
-    return streamController.stream;
   }
 
   CollectionReference get _communities =>

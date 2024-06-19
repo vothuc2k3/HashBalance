@@ -2,8 +2,10 @@ import 'package:animated_icon/animated_icon.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/features/community/screen/create_community_screen.dart';
+import 'package:hash_balance/features/community/screen/my_community_screen.dart';
+import 'package:hash_balance/features/community/screen/other_community_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
-import 'package:routemaster/routemaster.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
@@ -14,21 +16,40 @@ class CommunityListDrawer extends ConsumerWidget {
   const CommunityListDrawer({super.key});
 
   void navigateToCreateCommunityScreen(BuildContext context) {
-    Routemaster.of(context).push('/community/create');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CreateCommunityScreen(),
+      ),
+    );
   }
 
   void navigateToViewCommunityScreen(
     BuildContext context,
     Community community,
   ) {
-    Routemaster.of(context).push('/community/view/${community.name}');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OtherCommunityScreen(
+          name: community.name,
+        ),
+      ),
+    );
   }
 
   void navigateToMyCommunityScreen(
     BuildContext context,
     Community community,
   ) {
-    Routemaster.of(context).push('/community/my-community/${community.name}');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MyCommunityScreen(
+          name: community.name,
+        ),
+      ),
+    );
   }
 
   @override

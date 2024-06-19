@@ -1,5 +1,7 @@
 // ignore_for_file: unused_result
 
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -137,10 +139,10 @@ class AuthRepository {
   void signOut(WidgetRef ref) async {
     await _firebaseAuth.signOut();
 
-    ref.refresh(userProvider);
     ref.refresh(communityRepositoryProvider);
     ref.refresh(communityControllerProvider);
     ref.refresh(userCommunitiesProvider);
+    ref.refresh(userProvider);
   }
 
   //GET THE USER DATA

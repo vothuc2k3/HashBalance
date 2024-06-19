@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
-import 'package:routemaster/routemaster.dart';
 
 import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
@@ -17,7 +16,9 @@ import 'package:hash_balance/features/community/repository/community_repository.
 import 'package:hash_balance/models/community_model.dart';
 
 final getTopCommunityListProvider = StreamProvider((ref) {
-  return ref.watch(communityControllerProvider.notifier).getTopCommunitiesList();
+  return ref
+      .watch(communityControllerProvider.notifier)
+      .getTopCommunitiesList();
 });
 
 final myCommunitiesProvider = StreamProvider((ref) {
@@ -96,7 +97,7 @@ class CommunityController extends StateNotifier<bool> {
       },
       (right) {
         showSnackBar(context, 'Your Community Created Successfully. Have Fun!');
-        Routemaster.of(context).pop();
+        Navigator.pop(context);
       },
     );
   }

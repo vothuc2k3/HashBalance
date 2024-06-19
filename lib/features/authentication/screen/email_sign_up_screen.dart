@@ -4,8 +4,8 @@ import 'package:hash_balance/core/common/auth_text_field.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
+import 'package:hash_balance/features/authentication/screen/email_sign_in_screen.dart';
 import 'package:hash_balance/theme/pallette.dart';
-import 'package:routemaster/routemaster.dart';
 
 class EmailSignUpScreen extends ConsumerStatefulWidget {
   const EmailSignUpScreen({
@@ -25,8 +25,7 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
   final nameController = TextEditingController();
   bool isPressed = false;
 
-  void signUpWithEmailAndPassword(BuildContext context, WidgetRef ref) async {
-    Routemaster.of(context).pop();
+  void signUpWithEmailAndPassword() async {
     setState(() {
       isPressed = true;
     });
@@ -42,13 +41,20 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
         showSnackBar(context, l.message);
         setState(() {
           isPressed = false;
-        });  
+        });
       }
-    }, (r) {});
+    }, (r) {
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+    });
   }
 
   void navigateToSignInScreen(BuildContext context) {
-    Routemaster.of(context).replace('/email-sign-in');
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const EmailSignInScreen()),
+    );
   }
 
   @override
@@ -178,7 +184,7 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
                 ),
                 child: ElevatedButton(
                   onPressed: () {
-                    signUpWithEmailAndPassword(context, ref);
+                    signUpWithEmailAndPassword();
                     FocusScope.of(context).unfocus();
                   },
                   style: ElevatedButton.styleFrom(

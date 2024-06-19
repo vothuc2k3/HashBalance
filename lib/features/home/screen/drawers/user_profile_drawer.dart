@@ -6,9 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/setting/setting_screen.dart';
+import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
-import 'package:routemaster/routemaster.dart';
 
 class UserProfileDrawer extends ConsumerStatefulWidget {
   final BuildContext _homeScreenContext;
@@ -24,11 +25,23 @@ class UserProfileDrawer extends ConsumerStatefulWidget {
 
 class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
   void navigateToProfileScreen(BuildContext context, String uid) {
-    Routemaster.of(context).push('/user-profile/$uid');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => UserProfileScreen(
+          uid: uid,
+        ),
+      ),
+    );
   }
 
-  void navigateToSettingScreen(BuildContext context) {
-    Routemaster.of(context).push('/setting');
+  void navigateToSettingScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SettingScreen(),
+      ),
+    );
   }
 
   void _changeUserPrivacy(
@@ -159,7 +172,8 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                 child: Row(
                   children: [
                     CircleAvatar(
-                      backgroundImage: CachedNetworkImageProvider(user!.profileImage),
+                      backgroundImage:
+                          CachedNetworkImageProvider(user!.profileImage),
                       radius: 50,
                     ),
                     const SizedBox(width: 10),
@@ -227,7 +241,7 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                 ),
               ),
               leading: const Icon(Icons.settings),
-              onTap: () => navigateToSettingScreen(context),
+              onTap: () => navigateToSettingScreen(),
             ),
           ],
         ),

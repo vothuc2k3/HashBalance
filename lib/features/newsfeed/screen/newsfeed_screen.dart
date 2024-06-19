@@ -1,8 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/features/post/screen/create_post/create_post_screen.dart';
 import 'package:icons_plus/icons_plus.dart';
-import 'package:routemaster/routemaster.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
@@ -28,7 +28,12 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
   }
 
   void navigateToCreatePostScreen() {
-    Routemaster.of(context).push('/post/create');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CreatePostScreen(),
+      ),
+    );
   }
 
   @override

@@ -9,8 +9,8 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/friends/controller/friend_controller.dart';
+import 'package:hash_balance/features/message/screen/message_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
-import 'package:routemaster/routemaster.dart';
 
 class OtherUserProfileScreen extends ConsumerStatefulWidget {
   const OtherUserProfileScreen({
@@ -66,7 +66,14 @@ class _OtherUserProfileScreenState
   }
 
   void messageUser(UserModel targetUser) {
-    Routemaster.of(context).push('/message/${targetUser.uid}');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MessageScreen(
+          targetuid: targetUser.uid,
+        ),
+      ),
+    );
   }
 
   @override
@@ -84,7 +91,7 @@ class _OtherUserProfileScreenState
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Routemaster.of(context).pop();
+            Navigator.of(context).pop();
           },
         ),
         title: const Text(

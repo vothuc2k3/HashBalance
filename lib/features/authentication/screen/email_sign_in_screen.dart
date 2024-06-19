@@ -4,8 +4,9 @@ import 'package:hash_balance/core/common/auth_text_field.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
+import 'package:hash_balance/features/authentication/screen/email_sign_up_screen.dart';
+import 'package:hash_balance/features/home/screen/home_screen.dart';
 import 'package:hash_balance/theme/pallette.dart';
-import 'package:routemaster/routemaster.dart';
 
 class EmailSignInScreen extends ConsumerStatefulWidget {
   const EmailSignInScreen({super.key});
@@ -37,11 +38,21 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
       setState(() {
         isPressed = false;
       });
-    }, (r) => Routemaster.of(context).replace('/'));
+    }, (_) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const HomeScreen(),
+        ),
+      );
+    });
   }
 
   void navigateToSignUpScreen(BuildContext context) {
-    Routemaster.of(context).replace('/email-sign-up');
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const EmailSignUpScreen()),
+    );
   }
 
   @override

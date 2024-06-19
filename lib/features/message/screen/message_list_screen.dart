@@ -6,6 +6,7 @@ import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/message/controller/message_controller.dart';
+import 'package:hash_balance/features/message/screen/message_screen.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/message_model.dart';
 
@@ -18,6 +19,18 @@ class MessageListScreen extends ConsumerStatefulWidget {
 }
 
 class _MessageListScreenState extends ConsumerState<MessageListScreen> {
+  void messageUser(String targetUid) {
+    // Routemaster.of(context).push('/message/$targetUid');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MessageScreen(
+          targetuid: targetUid,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final conversations = ref.watch(getCurrentUserConversationProvider);
@@ -51,6 +64,11 @@ class _MessageListScreenState extends ConsumerState<MessageListScreen> {
                   loading: () => const Loading(),
                 );
 
+                final otherUser = ref.watch(getUserByUidProvider(
+                  conversation.participantUids
+                      .firstWhere((uid) => uid != currentUser!.uid),
+                ));
+
                 return Card(
                   color: Colors.black,
                   margin: const EdgeInsets.symmetric(vertical: 8),
@@ -60,12 +78,6 @@ class _MessageListScreenState extends ConsumerState<MessageListScreen> {
                   child: ListTile(
                     leading: Consumer(
                       builder: (context, watch, child) {
-                        final otherUser = ref.watch(
-                          getUserByUidProvider(
-                            conversation.participantUids
-                                .firstWhere((uid) => uid != currentUser!.uid),
-                          ),
-                        );
                         return otherUser.when(
                           data: (user) {
                             return CircleAvatar(
@@ -82,9 +94,6 @@ class _MessageListScreenState extends ConsumerState<MessageListScreen> {
                     ),
                     title: Consumer(
                       builder: (context, ref, child) {
-                        final otherUser = ref.watch(getUserByUidProvider(
-                            conversation.participantUids
-                                .firstWhere((uid) => uid != currentUser!.uid)));
                         return otherUser.when(
                           data: (user) {
                             return Text(
@@ -95,9 +104,8 @@ class _MessageListScreenState extends ConsumerState<MessageListScreen> {
                               ),
                             );
                           },
-                          error: (error, stackTrace) => ErrorText(
-                            error: error.toString(),
-                          ),
+                          error: (error, stackTrace) =>
+                              ErrorText(error: error.toString()),
                           loading: () => const Loading(),
                         );
                       },
@@ -120,7 +128,14 @@ class _MessageListScreenState extends ConsumerState<MessageListScreen> {
                           )
                         : null,
                     onTap: () {
-                      // Navigate to the chat screen for this conversation
+                      otherUser.when(
+                        data: (user) {
+                          messageUser(user.uid);
+                        },
+                        error: (error, stackTrace) =>
+                            ErrorText(error: error.toString()),
+                        loading: () => const Loading(),
+                      );
                     },
                   ),
                 );

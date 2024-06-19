@@ -38,6 +38,10 @@ class _CreateCommunityScreenState
   void _showCommunityTypeModal() {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Pallete.blackColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (BuildContext context) {
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -60,9 +64,18 @@ class _CreateCommunityScreenState
             ...Constants.communityTypes.map<Widget>(
               (String value) {
                 return ListTile(
-                  leading: Icon(Constants.communityTypeIcons[value]),
-                  title: Text(value),
-                  subtitle: Text(Constants.communityTypesDescMap[value]!),
+                  leading: Icon(
+                    Constants.communityTypeIcons[value],
+                    color: Colors.white,
+                  ),
+                  title: Text(
+                    value,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  subtitle: Text(
+                    Constants.communityTypesDescMap[value]!,
+                    style: const TextStyle(color: Colors.white70),
+                  ),
                   onTap: () {
                     setState(() {
                       selectedCommunityType = value;
@@ -92,14 +105,20 @@ class _CreateCommunityScreenState
             color: Colors.white,
           ),
         ),
+        backgroundColor: Pallete.blackColor,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(10.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Align(
-              alignment: Alignment.topLeft,
-              child: Text('Your Community name'),
+            const Text(
+              'Your Community name',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
             ),
             const SizedBox(height: 10),
             TextFormField(
@@ -108,12 +127,17 @@ class _CreateCommunityScreenState
               ),
               controller: communityNameController,
               decoration: const InputDecoration(
-                prefixText: '#=',
+                prefixText: '#',
+                prefixStyle: TextStyle(color: Colors.grey),
                 hintText: 'Community_name',
+                hintStyle: TextStyle(color: Colors.white54),
                 filled: true,
-                fillColor: Pallete.blackColor,
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.all(18),
+                fillColor: Pallete.greyColor,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
               ),
               validator: (value) {
                 if (value!.isEmpty) {
@@ -123,85 +147,72 @@ class _CreateCommunityScreenState
               },
               maxLength: 21,
             ),
-            const Align(
-              alignment: Alignment.topLeft,
-              child: Text('Your Community type'),
+            const SizedBox(height: 20),
+            const Text(
+              'Your Community type',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
             ),
             InkWell(
-              onTap: () {
-                _showCommunityTypeModal();
-              },
+              onTap: _showCommunityTypeModal,
               child: Padding(
-                padding: const EdgeInsets.only(
-                  top: 15,
-                  bottom: 10,
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Text(
+                padding: const EdgeInsets.only(top: 15, bottom: 10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: Pallete.greyColor,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
                           selectedCommunityType,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
                           ),
                         ),
-                        const Icon(Icons.arrow_drop_down),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            selectedCommunityTypeDesc!,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                      const Icon(Icons.arrow_drop_down, color: Colors.white),
+                    ],
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 10),
-            GestureDetector(
-              child: Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Exposure contents?',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    width: 60,
-                    height: 40,
-                    child: FittedBox(
-                      fit: BoxFit.fill,
-                      child: Switch(
-                        value: containsExposureContents,
-                        onChanged: (value) {
-                          setState(
-                            () {
-                              containsExposureContents = value;
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ],
+            if (selectedCommunityTypeDesc != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Text(
+                  selectedCommunityTypeDesc!,
+                  style: const TextStyle(color: Colors.white70),
+                ),
               ),
-              onTap: () => setState(
-                () {
-                  containsExposureContents = !containsExposureContents;
-                },
-              ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Exposure contents?',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                Switch(
+                  value: containsExposureContents,
+                  onChanged: (value) {
+                    setState(() {
+                      containsExposureContents = value;
+                    });
+                  },
+                  activeColor: Pallete.blueColor,
+                ),
+              ],
             ),
             const SizedBox(height: 30),
             ElevatedButton(

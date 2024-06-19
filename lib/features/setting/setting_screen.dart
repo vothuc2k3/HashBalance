@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
+import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
 import 'package:hash_balance/theme/pallette.dart';
-import 'package:routemaster/routemaster.dart';
 
 class SettingScreen extends ConsumerStatefulWidget {
   const SettingScreen({super.key});
@@ -24,7 +24,10 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
     });
     Timer(const Duration(seconds: 1), () {
       ref.read(authControllerProvider.notifier).signOut(ref);
-      Routemaster.of(context).replace('/');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const AuthScreen()),
+      );
     });
   }
 
