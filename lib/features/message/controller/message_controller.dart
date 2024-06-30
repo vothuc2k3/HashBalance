@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
+import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/message/repository/message_repository.dart';
 import 'package:hash_balance/models/conversation_model.dart';
@@ -45,10 +46,7 @@ class MessageController extends StateNotifier<bool> {
   Stream<List<Message>?> loadMessages(String targetUid) {
     try {
       final uid = _ref.read(userProvider)!.uid;
-      var ids = [targetUid, uid];
-      ids.sort();
-      final conversationId = ids.join('_');
-      return _messageRepository.loadMessages(conversationId);
+      return _messageRepository.loadMessages(getConversationId(uid, targetUid));
     } on FirebaseException catch (e) {
       throw Failures(e.message!);
     } catch (e) {
@@ -67,6 +65,7 @@ class MessageController extends StateNotifier<bool> {
           text: text,
           uid: uid,
           createdAt: Timestamp.now(),
+          seenBy: ['empty'],
         ),
         Conversation(
           id: ids.join('_'),
@@ -87,8 +86,14 @@ class MessageController extends StateNotifier<bool> {
     final uid = _ref.read(userProvider)!.uid;
     return _messageRepository.getCurrentUserConversation(uid);
   }
-  
+
   Stream<Message> getLastMessageByConversation(String id) {
     return _messageRepository.getLastMessageByConversation(id);
+  }
+
+  void markAsRead(String targetUid) {
+    final currentUser = _ref.watch(userProvider);
+    String conversationId = getConversationId(currentUser!.uid, targetUid);
+    _messageRepository.markAsRead(conversationId, currentUser.uid);
   }
 }

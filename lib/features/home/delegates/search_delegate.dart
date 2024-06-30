@@ -95,7 +95,10 @@ class SearchCommunityDelegate extends SearchDelegate {
                   children: [
                     Icon(Icons.article, color: Colors.white),
                     SizedBox(width: 10),
-                    Text('=', style: TextStyle(color: Colors.white)),
+                    Text(
+                      '=',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ],
                 ),
               ),
@@ -199,7 +202,6 @@ class SearchCommunityDelegate extends SearchDelegate {
   }
 
   void navigateToProfileScreen(BuildContext context, String uid) {
-    // Routemaster.of(context).push('/user-profile/view/$uid');
     Navigator.push(
       context,
       MaterialPageRoute(

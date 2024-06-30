@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
-import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/notification/repository/notification_repository.dart';
 import 'package:hash_balance/models/notification_model.dart';
 
@@ -29,64 +28,53 @@ class NotificationController extends StateNotifier<bool> {
   })  : _notificationRepository = notificationRepository,
         super(false);
 
-  //SEND NOTIFICATION
-  FutureVoid sendNotification(
-    String uid,
-    String type,
-    String status,
-    String title,
-    String message,
+  FutureVoid addNotification(
+    String targetUid,
+    NotificationModel notification,
   ) async {
+    state = true;
     try {
-      final notif = NotificationModel(
-        id: getNotifId(),
-        uid: uid,
-        type: type,
-        status: status,
-        title: title,
-        message: message,
-        createdAt: Timestamp.now(),
-        read: false,
-      );
-      await _notificationRepository.sendNotification(notif);
+      await _notificationRepository.addNotification(targetUid, notification);
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
+    } finally {
+      state = false;
     }
   }
 
   //UPDATE NOTIFICATION
-  FutureVoid updateNotification(
-    String notifId,
-    String uid,
-    String type,
-    String status,
-    String title,
-    String message,
-  ) async {
-    try {
-      final notif = NotificationModel(
-        id: notifId,
-        uid: uid,
-        type: type,
-        status: status,
-        title: title,
-        message: message,
-        createdAt: Timestamp.now(),
-        read: false,
-      );
-      await _notificationRepository.updateNotification(notif);
-      return right(null);
-    } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
-    } catch (e) {
-      return left(Failures(e.toString()));
-    }
-  }
+  // FutureVoid updateNotification(
+  //   String notifId,
+  //   String uid,
+  //   String type,
+  //   String status,
+  //   String title,
+  //   String message,
+  // ) async {
+  //   try {
+  //     final notif = NotificationModel(
+  //       id: notifId,
+  //       uid: uid,
+  //       type: type,
+  //       status: status,
+  //       title: title,
+  //       message: message,
+  //       createdAt: Timestamp.now(),
+  //       read: false,
+  //     );
+  //     await _notificationRepository.updateNotification(notif);
+  //     return right(null);
+  //   } on FirebaseException catch (e) {
+  //     return left(Failures(e.message!));
+  //   } catch (e) {
+  //     return left(Failures(e.toString()));
+  //   }
+  // }
 
-  //GET ALL THE NOTIFICATION
+  // GET ALL THE NOTIFICATION
   Stream<List<NotificationModel>?> getNotificationByUid(String uid) {
     return _notificationRepository.getNotificationByUid(uid);
   }

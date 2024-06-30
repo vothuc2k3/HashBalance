@@ -18,25 +18,16 @@ class NotificationRepository {
     required FirebaseFirestore firestore,
   }) : _firestore = firestore;
 
-  //SEND NOTIFICATION
-  FutureVoid sendNotification(NotificationModel notif) async {
+  FutureVoid addNotification(
+    String targetUid,
+    NotificationModel notification,
+  ) async {
     try {
-      await _notification.doc(notif.id).set(notif.toMap());
-      await _users.doc(notif.uid).update({
-        'notifId': notif.id,
-      });
-      return right(null);
-    } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
-    } catch (e) {
-      return left(Failures(e.toString()));
-    }
-  }
-
-  //UPDATE NOTIFICATION
-  FutureVoid updateNotification(NotificationModel notif) async {
-    try {
-      await _notification.doc(notif.id).update(notif.toMap());
+      await _user
+          .doc(targetUid)
+          .collection('notification')
+          .doc(notification.id)
+          .set(notification.toMap());
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -47,25 +38,17 @@ class NotificationRepository {
 
   //GET ALL THE NOTIFICATION
   Stream<List<NotificationModel>?> getNotificationByUid(String uid) {
-    return _notification
-        .where('uid', isEqualTo: uid)
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map(
+    return _user.doc(uid).collection('notification').snapshots().map(
       (event) {
         List<NotificationModel> notifs = [];
         for (var notif in event.docs) {
-          final data = notif.data() as Map<String, dynamic>;
+          final data = notif.data();
           notifs.add(
             NotificationModel(
-              status: data['status'] as String,
               id: data['id'] as String,
-              uid: uid,
-              type: data['type'] as String,
               title: data['title'] as String,
               message: data['message'] as String,
               createdAt: data['createdAt'] as Timestamp,
-              read: data['read'] as bool,
             ),
           );
         }
@@ -74,10 +57,7 @@ class NotificationRepository {
     );
   }
 
-  //REFERENCE ALL THE FRIEND REQUESTS
-  CollectionReference get _notification =>
-      _firestore.collection(FirebaseConstants.notificationCollection);
-  //REFERENCE ALL THE FRIEND REQUESTS
-  CollectionReference get _users =>
+  //REFERENCE ALL THE USERS
+  CollectionReference get _user =>
       _firestore.collection(FirebaseConstants.usersCollection);
 }

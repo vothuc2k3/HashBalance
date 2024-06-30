@@ -114,6 +114,10 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
       drawer: const CommunityListDrawer(),
       endDrawer: UserProfileDrawer(homeScreenContext: context),
       bottomNavigationBar: CupertinoTabBar(
+        backgroundColor: Colors.black87,
+        activeColor: Colors.teal,
+        inactiveColor: Colors.white70,
+        iconSize: 28.0,
         items: [
           const BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -146,7 +150,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
                   }
                   int unreadCount = 0;
                   for (var notif in notifs) {
-                    if (notif.read == false) {
+                    if (notif.isRead == false) {
                       unreadCount++;
                     }
                   }

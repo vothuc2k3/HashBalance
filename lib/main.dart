@@ -76,7 +76,7 @@ class MyAppState extends ConsumerState<MyApp> {
               );
             }
           },
-          error: (error, stackTrace) => MaterialApp(
+          error: (error, stackTrace) => MaterialApp(  
             debugShowCheckedModeBanner: false,
             title: 'Hash Balance',
             home: ErrorText(error: error.toString()),

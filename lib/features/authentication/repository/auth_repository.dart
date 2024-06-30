@@ -62,7 +62,7 @@ class AuthRepository {
         user = UserModel(
           email: userCredential.user!.email!,
           name: userCredential.user!.displayName ??
-              'nameless_user_${generateRandomString()}',
+              'nameless_user_${generateRandomId()}',
           profileImage:
               userCredential.user!.photoURL ?? Constants.avatarDefault,
           bannerImage: Constants.bannerDefault,

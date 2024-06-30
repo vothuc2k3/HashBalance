@@ -92,7 +92,7 @@ class CommentController extends StateNotifier<bool> {
         upvotes: ['empty'],
         downvotes: ['empty'],
         upvoteCount: 0,
-        id: generateRandomCommentId(),
+        id: generateRandomId(),
       );
       final result = await _commentRepository.comment(comment);
       return result.fold(

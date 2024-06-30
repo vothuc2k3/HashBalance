@@ -20,7 +20,6 @@ class MessageListScreen extends ConsumerStatefulWidget {
 
 class _MessageListScreenState extends ConsumerState<MessageListScreen> {
   void messageUser(String targetUid) {
-    // Routemaster.of(context).push('/message/$targetUid');
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -64,11 +63,12 @@ class _MessageListScreenState extends ConsumerState<MessageListScreen> {
                   loading: () => const Loading(),
                 );
 
-                final otherUser = ref.watch(getUserByUidProvider(
-                  conversation.participantUids
-                      .firstWhere((uid) => uid != currentUser!.uid),
-                ));
-
+                final otherUser = ref.watch(
+                  getUserByUidProvider(
+                    conversation.participantUids
+                        .firstWhere((uid) => uid != currentUser!.uid),
+                  ),
+                );
                 return Card(
                   color: Colors.black,
                   margin: const EdgeInsets.symmetric(vertical: 8),
@@ -76,43 +76,37 @@ class _MessageListScreenState extends ConsumerState<MessageListScreen> {
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: ListTile(
-                    leading: Consumer(
-                      builder: (context, watch, child) {
-                        return otherUser.when(
-                          data: (user) {
-                            return CircleAvatar(
-                              backgroundImage:
-                                  CachedNetworkImageProvider(user.profileImage),
-                              radius: 30,
-                            );
-                          },
-                          loading: () => const CircularProgressIndicator(),
-                          error: (error, stackTrace) =>
-                              const Icon(Icons.error, color: Colors.red),
+                    leading: otherUser.when(
+                      data: (user) {
+                        return CircleAvatar(
+                          backgroundImage:
+                              CachedNetworkImageProvider(user.profileImage),
+                          radius: 30,
                         );
                       },
+                      loading: () => const CircularProgressIndicator(),
+                      error: (error, stackTrace) =>
+                          const Icon(Icons.error, color: Colors.red),
                     ),
-                    title: Consumer(
-                      builder: (context, ref, child) {
-                        return otherUser.when(
-                          data: (user) {
-                            return Text(
-                              user.name,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            );
-                          },
-                          error: (error, stackTrace) =>
-                              ErrorText(error: error.toString()),
-                          loading: () => const Loading(),
+                    title: otherUser.when(
+                      data: (user) {
+                        return Text(
+                          user.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         );
                       },
+                      error: (error, stackTrace) =>
+                          ErrorText(error: error.toString()),
+                      loading: () => const Loading(),
                     ),
                     subtitle: lastMessage != null
                         ? Text(
-                            lastMessage!.text,
+                            lastMessage!.uid == currentUser!.uid
+                                ? 'You: ${lastMessage!.text}'
+                                : lastMessage!.text,
                             style: const TextStyle(color: Colors.white70),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

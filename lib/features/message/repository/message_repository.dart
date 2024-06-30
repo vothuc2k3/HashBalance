@@ -39,6 +39,7 @@ class MessageRepository {
                 text: docData['text'] as String,
                 uid: docData['uid'] as String,
                 createdAt: docData['createdAt'] as Timestamp,
+                seenBy: List<String>.from(docData['seenBy']),
               ),
             );
           }
@@ -109,12 +110,34 @@ class MessageRepository {
               text: data['text'] as String,
               uid: data['uid'] as String,
               createdAt: data['createdAt'] as Timestamp,
+              seenBy: List<String>.from(data['seenBy']),
             ),
           );
         }
         return message.first;
       },
     );
+  }
+
+  //MARK THE MESSAGE AS SEEN
+  Future<void> markAsRead(String conversationId, String seenUid) async {
+    // Tham chiếu đến collection 'messages' trong 'conversations'
+    final messagesRef = _firestore
+        .collection('conversation')
+        .doc(conversationId)
+        .collection('message');
+
+    // Lấy tất cả các tin nhắn trong cuộc hội thoại
+    final querySnapshot = await messagesRef.get();
+
+    // Lọc các tin nhắn chưa được xem bởi người dùng hiện tại
+    for (var doc in querySnapshot.docs) {
+      List<dynamic> seenBy = doc['seenBy'] as List<dynamic>;
+      if (!seenBy.contains(seenUid)) {
+        seenBy.add(seenUid);
+        await doc.reference.update({'seenBy': seenBy});
+      }
+    }
   }
 
   //REFERENCES ALL THE CONVERSATIONS

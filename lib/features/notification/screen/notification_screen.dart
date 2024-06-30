@@ -51,7 +51,7 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
                             horizontal: 10, vertical: 5),
                         padding: const EdgeInsets.all(15),
                         decoration: BoxDecoration(
-                          color: notif.read
+                          color: notif.isRead
                               ? Colors.grey[850]
                               : Colors.blueGrey[700],
                           borderRadius: BorderRadius.circular(10),
@@ -89,7 +89,7 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
                               ),
                             ],
                           ),
-                          trailing: notif.read
+                          trailing: notif.isRead
                               ? null
                               : const Icon(Icons.new_releases,
                                   color: Colors.red),

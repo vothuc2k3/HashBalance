@@ -34,6 +34,18 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      markAsRead();
+    });
+  }
+
+  void markAsRead() {
+    ref.read(messageControllerProvider.notifier).markAsRead(widget._targetuid);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(userProvider);
     final targetUser = ref.watch(getUserByUidProvider(widget._targetuid));
@@ -144,25 +156,33 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                     ),
                     child: Row(
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.image, color: Colors.white),
-                          onPressed: () {
-                            // Implement image picker
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.videocam, color: Colors.white),
-                          onPressed: () {
-                            // Implement video picker
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.insert_emoticon,
-                              color: Colors.white),
-                          onPressed: () {
-                            // Implement emoji picker
-                          },
-                        ),
+                        !(_messageController.text == '')
+                            ? const SizedBox.shrink()
+                            : Row(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.image,
+                                        color: Colors.white),
+                                    onPressed: () {
+                                      // Implement image picker
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.videocam,
+                                        color: Colors.white),
+                                    onPressed: () {
+                                      // Implement video picker
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.insert_emoticon,
+                                        color: Colors.white),
+                                    onPressed: () {
+                                      // Implement emoji picker
+                                    },
+                                  ),
+                                ],
+                              ),
                         Expanded(
                           child: Padding(
                             padding:

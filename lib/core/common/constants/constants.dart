@@ -48,9 +48,10 @@ class Constants {
     'Inbox'
   ];
   static const String friendRequestTitle = 'New Friend Request';
+
+  static String getFriendRequestContent(String name) {
+    return '$name has sent you a friend request!';
+  }
+
   static const String requestAcceptedTitle = 'Friend Request Accepted';
-
-  static const String friendRequestType  = 'friend_request';
-
-  static const String pending = 'pending';
 }
