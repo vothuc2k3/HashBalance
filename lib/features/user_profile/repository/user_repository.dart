@@ -119,9 +119,6 @@ class UserRepository {
         isRestricted: event['isRestricted'] as bool,
         activityPoint: event['activityPoint'] as int,
         achivements: List<String>.from(event['achivements']).toList(),
-        friends: List<String>.from(event['friends']).toList(),
-        followers: List<String>.from(event['followers']).toList(),
-        notifId: List<String>.from(event['notifId']).toList(),
       );
     });
   }

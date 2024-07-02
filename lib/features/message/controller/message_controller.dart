@@ -46,7 +46,7 @@ class MessageController extends StateNotifier<bool> {
   Stream<List<Message>?> loadMessages(String targetUid) {
     try {
       final uid = _ref.read(userProvider)!.uid;
-      return _messageRepository.loadMessages(getConversationId(uid, targetUid));
+      return _messageRepository.loadMessages(getUids(uid, targetUid));
     } on FirebaseException catch (e) {
       throw Failures(e.message!);
     } catch (e) {
@@ -93,7 +93,7 @@ class MessageController extends StateNotifier<bool> {
 
   void markAsRead(String targetUid) {
     final currentUser = _ref.watch(userProvider);
-    String conversationId = getConversationId(currentUser!.uid, targetUid);
+    String conversationId = getUids(currentUser!.uid, targetUid);
     _messageRepository.markAsRead(conversationId, currentUser.uid);
   }
 }

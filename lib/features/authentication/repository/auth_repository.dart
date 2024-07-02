@@ -70,12 +70,9 @@ class AuthRepository {
           isAuthenticated: true,
           activityPoint: 0,
           achivements: ['empty'],
-          friends: ['empty'],
           createdAt: Timestamp.now(),
           hashAge: 0,
           isRestricted: false,
-          followers: ['empty'],
-          notifId: ['empty'],
         );
         await _user.doc(userCredential.user!.uid).set(
               user.toMap(),
@@ -101,10 +98,10 @@ class AuthRepository {
 
       UserModel? user;
       String userUid = userCredential.user!.uid;
-      newUser.uid = userUid;
+      UserModel copyUser = newUser.copyWith(uid: userUid);
       if (userCredential.additionalUserInfo!.isNewUser) {
-        await _firestore.collection('users').doc(userUid).set(newUser.toMap());
-        user = newUser;
+        await _firestore.collection('users').doc(userUid).set(copyUser.toMap());
+        user = copyUser;
       } else {
         user = await getUserData(userUid).first;
       }
@@ -168,23 +165,11 @@ class AuthRepository {
                   ?.map((item) => item.toString())
                   .toList() ??
               [],
-          friends: (event['friends'] as List?)
-                  ?.map((item) => item.toString())
-                  .toList() ??
-              [],
           createdAt: createdAt,
           hashAge: hashAge,
           isRestricted: event['isRestricted'] as bool? ?? false,
           bio: event['bio'] as String? ?? '',
           description: event['description'] as String? ?? '',
-          followers: (event['followers'] as List?)
-                  ?.map((item) => item.toString())
-                  .toList() ??
-              [],
-          notifId: (event['notifId'] as List?)
-                  ?.map((item) => item.toString())
-                  .toList() ??
-              [],
         );
       },
     );

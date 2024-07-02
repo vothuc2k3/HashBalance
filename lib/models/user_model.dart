@@ -1,3 +1,6 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
@@ -5,7 +8,7 @@ class UserModel {
   final String email;
   final String? password;
   final String name;
-  String uid;
+  final String uid;
   final Timestamp createdAt;
   final String profileImage;
   final String bannerImage;
@@ -13,12 +16,9 @@ class UserModel {
   final bool isRestricted;
   final int activityPoint;
   final List<String> achivements;
-  final List<String> friends;
-  final List<String> followers;
   final int? hashAge;
   final String? bio;
   final String? description;
-  final List<String> notifId;
   UserModel({
     required this.email,
     this.password,
@@ -31,12 +31,9 @@ class UserModel {
     required this.isRestricted,
     required this.activityPoint,
     required this.achivements,
-    required this.friends,
-    required this.followers,
     this.hashAge,
     this.bio,
     this.description,
-    required this.notifId,
   });
 
   UserModel copyWith({
@@ -51,12 +48,9 @@ class UserModel {
     bool? isRestricted,
     int? activityPoint,
     List<String>? achivements,
-    List<String>? friends,
-    List<String>? followers,
     int? hashAge,
     String? bio,
     String? description,
-    List<String>? notifId,
   }) {
     return UserModel(
       email: email ?? this.email,
@@ -70,12 +64,9 @@ class UserModel {
       isRestricted: isRestricted ?? this.isRestricted,
       activityPoint: activityPoint ?? this.activityPoint,
       achivements: achivements ?? this.achivements,
-      friends: friends ?? this.friends,
-      followers: followers ?? this.followers,
       hashAge: hashAge ?? this.hashAge,
       bio: bio ?? this.bio,
       description: description ?? this.description,
-      notifId: notifId ?? this.notifId,
     );
   }
 
@@ -92,12 +83,9 @@ class UserModel {
       'isRestricted': isRestricted,
       'activityPoint': activityPoint,
       'achivements': achivements,
-      'friends': friends,
-      'followers': followers,
       'hashAge': hashAge,
       'bio': bio,
       'description': description,
-      'notifId': notifId,
     };
   }
 
@@ -114,19 +102,16 @@ class UserModel {
       isRestricted: map['isRestricted'] as bool,
       activityPoint: map['activityPoint'] as int,
       achivements: List<String>.from((map['achivements'] as List<String>)),
-      friends: List<String>.from((map['friends'] as List<String>)),
-      followers: List<String>.from((map['followers'] as List<String>)),
       hashAge: map['hashAge'] != null ? map['hashAge'] as int : null,
       bio: map['bio'] != null ? map['bio'] as String : null,
       description:
           map['description'] != null ? map['description'] as String : null,
-      notifId: List<String>.from((map['notifId'] as List<String>)),
     );
   }
 
   @override
   String toString() {
-    return 'UserModel(email: $email, password: $password, name: $name, uid: $uid, createdAt: $createdAt, profileImage: $profileImage, bannerImage: $bannerImage, isAuthenticated: $isAuthenticated, isRestricted: $isRestricted, activityPoint: $activityPoint, achivements: $achivements, friends: $friends, followers: $followers, hashAge: $hashAge, bio: $bio, description: $description, notifId: $notifId)';
+    return 'UserModel(email: $email, password: $password, name: $name, uid: $uid, createdAt: $createdAt, profileImage: $profileImage, bannerImage: $bannerImage, isAuthenticated: $isAuthenticated, isRestricted: $isRestricted, activityPoint: $activityPoint, achivements: $achivements, hashAge: $hashAge, bio: $bio, description: $description)';
   }
 
   @override
@@ -144,12 +129,9 @@ class UserModel {
         other.isRestricted == isRestricted &&
         other.activityPoint == activityPoint &&
         listEquals(other.achivements, achivements) &&
-        listEquals(other.friends, friends) &&
-        listEquals(other.followers, followers) &&
         other.hashAge == hashAge &&
         other.bio == bio &&
-        other.description == description &&
-        listEquals(other.notifId, notifId);
+        other.description == description;
   }
 
   @override
@@ -165,11 +147,13 @@ class UserModel {
         isRestricted.hashCode ^
         activityPoint.hashCode ^
         achivements.hashCode ^
-        friends.hashCode ^
-        followers.hashCode ^
         hashAge.hashCode ^
         bio.hashCode ^
-        description.hashCode ^
-        notifId.hashCode;
+        description.hashCode;
   }
+
+  String toJson() => json.encode(toMap());
+
+  factory UserModel.fromJson(String source) =>
+      UserModel.fromMap(json.decode(source) as Map<String, dynamic>);
 }

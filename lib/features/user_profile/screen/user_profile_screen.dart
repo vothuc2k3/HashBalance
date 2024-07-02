@@ -165,9 +165,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
                       children: [
                         _buildButton(text: 'Friends', value: 0),
                         _buildVerticalDivider(),
-                        _buildButton(
-                            text: 'Followers',
-                            value: user.followers.length - 1),
+                        _buildButton(text: 'Followers', value: 0),
                         _buildVerticalDivider(),
                         _buildButton(
                             text: 'Activity Points', value: user.activityPoint),

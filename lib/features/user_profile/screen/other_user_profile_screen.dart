@@ -84,6 +84,8 @@ class _OtherUserProfileScreenState
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(userProvider);
+    final targetUser = ref.watch(getUserDataProvider(widget.uid));
+
     final double top = coverHeight - profileHeight / 2;
     final double bottom = profileHeight / 2;
     return Scaffold(
@@ -101,10 +103,10 @@ class _OtherUserProfileScreenState
           ),
         ),
       ),
-      body: ref.watch(getUserDataProvider(widget.uid)).when(
+      body: targetUser.when(
           data: (targetUser) {
-            bool isFriend = currentUser!.friends.contains(targetUser.uid);
-            final uids = [currentUser.uid, targetUser.uid];
+            final isFriend = ref.watch(getFriendshipStatusProvider(targetUser));
+            final uids = [currentUser!.uid, targetUser.uid];
             uids.sort();
             final requestId = uids.join('_');
             return ListView(
@@ -183,34 +185,41 @@ class _OtherUserProfileScreenState
                         ],
                       ),
                       const SizedBox(height: 16),
-                      isFriend
-                          ? _buildFriendsWidget(
-                              context,
-                              targetUser,
-                              unfriend,
-                            )
-                          : ref
-                              .watch(getFriendRequestStatusProvider(requestId))
-                              .when(
-                                data: (request) {
-                                  if (request == null) {
-                                    return _buildAddFriendButton(
-                                      sendAddFriendRequest,
-                                      targetUser,
+                      isFriend.when(
+                          data: (isFriend) {
+                            return isFriend == true
+                                ? _buildFriendsWidget(
+                                    context,
+                                    targetUser,
+                                    unfriend,
+                                  )
+                                : ref
+                                    .watch(getFriendRequestStatusProvider(
+                                        requestId))
+                                    .when(
+                                      data: (request) {
+                                        if (request == null) {
+                                          return _buildAddFriendButton(
+                                            sendAddFriendRequest,
+                                            targetUser,
+                                          );
+                                        } else if (request.requestUid ==
+                                            currentUser.uid) {
+                                          return _buildFriendRequestSent(
+                                              cancelFriendRequest, requestId);
+                                        } else {
+                                          return _buildAcceptFriendRequestButton(
+                                              acceptFriendRequest, targetUser);
+                                        }
+                                      },
+                                      error: (error, stackTrace) =>
+                                          ErrorText(error: error.toString()),
+                                      loading: () => const Loading(),
                                     );
-                                  } else if (request.requestUid ==
-                                      currentUser.uid) {
-                                    return _buildFriendRequestSent(
-                                        cancelFriendRequest, requestId);
-                                  } else {
-                                    return _buildAcceptFriendRequestButton(
-                                        acceptFriendRequest, targetUser);
-                                  }
-                                },
-                                error: (error, stackTrace) =>
-                                    ErrorText(error: error.toString()),
-                                loading: () => const Loading(),
-                              ),
+                          },
+                          error: (error, stackTrace) =>
+                              ErrorText(error: error.toString()),
+                          loading: () => const Loading()),
                       const SizedBox(height: 16),
                       ElevatedButton.icon(
                         onPressed: () {

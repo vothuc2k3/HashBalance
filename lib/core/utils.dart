@@ -100,7 +100,7 @@ String formatTime(Timestamp timestamp) {
   }
 }
 
-String getConversationId(String uid1, String uid2) {
+String getUids(String uid1, String uid2) {
   final uids = [uid1, uid2];
   uids.sort();
   return uids.join('_');

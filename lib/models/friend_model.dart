@@ -1,18 +1,27 @@
-class Friend {
+// ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:convert';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+class Friendship {
   final String uid1;
   final String uid2;
-  Friend({
+  final Timestamp createdAt;
+  Friendship({
     required this.uid1,
     required this.uid2,
+    required this.createdAt,
   });
 
-  Friend copyWith({
+  Friendship copyWith({
     String? uid1,
     String? uid2,
+    Timestamp? createdAt,
   }) {
-    return Friend(
+    return Friendship(
       uid1: uid1 ?? this.uid1,
       uid2: uid2 ?? this.uid2,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 
@@ -20,26 +29,35 @@ class Friend {
     return <String, dynamic>{
       'uid1': uid1,
       'uid2': uid2,
+      'createdAt': createdAt,
     };
   }
 
-  factory Friend.fromMap(Map<String, dynamic> map) {
-    return Friend(
+  factory Friendship.fromMap(Map<String, dynamic> map) {
+    return Friendship(
       uid1: map['uid1'] as String,
       uid2: map['uid2'] as String,
+      createdAt: map['createdAt'] as Timestamp,
     );
   }
 
-  @override
-  String toString() => 'Friend(uid1: $uid1, uid2: $uid2)';
+  String toJson() => json.encode(toMap());
+
+  factory Friendship.fromJson(String source) => Friendship.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
-  bool operator ==(covariant Friend other) {
+  String toString() => 'Friendship(uid1: $uid1, uid2: $uid2, createdAt: $createdAt)';
+
+  @override
+  bool operator ==(covariant Friendship other) {
     if (identical(this, other)) return true;
-
-    return other.uid1 == uid1 && other.uid2 == uid2;
+  
+    return 
+      other.uid1 == uid1 &&
+      other.uid2 == uid2 &&
+      other.createdAt == createdAt;
   }
 
   @override
-  int get hashCode => uid1.hashCode ^ uid2.hashCode;
+  int get hashCode => uid1.hashCode ^ uid2.hashCode ^ createdAt.hashCode;
 }

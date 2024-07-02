@@ -139,14 +139,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
             icon: ref.watch(getNotifsProvider(user!.uid)).when(
                 data: (notifs) {
                   if (notifs == null || notifs.isEmpty) {
-                    return const Badge(
-                      label: Text(
-                        '0',
-                        style: TextStyle(color: Colors.white, fontSize: 10),
-                      ),
-                      isLabelVisible: false,
-                      child: Icon(Icons.notification_add_outlined),
-                    );
+                    return const Icon(Icons.notification_add_outlined);
                   }
                   int unreadCount = 0;
                   for (var notif in notifs) {
@@ -154,14 +147,17 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
                       unreadCount++;
                     }
                   }
-                  return Badge(
-                    label: Text(
-                      '$unreadCount',
-                      style: const TextStyle(color: Colors.white, fontSize: 10),
-                    ),
-                    isLabelVisible: true,
-                    child: const Icon(Icons.notification_add_outlined),
-                  );
+                  return unreadCount == 0
+                      ? const Icon(Icons.notification_add_outlined)
+                      : Badge(
+                          label: Text(
+                            '$unreadCount',
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 10),
+                          ),
+                          isLabelVisible: true,
+                          child: const Icon(Icons.notification_add_outlined),
+                        );
                 },
                 error: (Object error, StackTrace stackTrace) =>
                     ErrorText(error: error.toString()),

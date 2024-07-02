@@ -5,8 +5,9 @@ import 'package:hash_balance/core/common/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
+import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/models/friend_model.dart';
 import 'package:hash_balance/models/friend_request_model.dart';
-import 'package:hash_balance/models/user_model.dart';
 
 final friendRepositoryProvider = Provider((ref) {
   return FriendRepository(firestore: ref.read(firebaseFirestoreProvider));
@@ -44,14 +45,14 @@ class FriendRepository {
   }
 
   //GET THE SEND REQUEST STATUS
-  Stream<FriendRequest?> getFriendRequestStatus(String requestId) {
+  Stream<FriendRequest?> getFriendRequestStatus(String uids) {
     try {
-      return _friendRequest.doc(requestId).snapshots().map((snapshot) {
+      return _friendRequest.doc(uids).snapshots().map((snapshot) {
         final data = snapshot.data();
         if (data != null) {
           final docData = data as Map<String, dynamic>;
           return FriendRequest(
-            id: requestId,
+            id: uids,
             requestUid: docData['requestUid'] as String,
             targetUid: docData['targetUid'] as String,
             createdAt: docData['createdAt'] as Timestamp,
@@ -68,27 +69,13 @@ class FriendRepository {
   }
 
   //ACCEPT FRIEND REQUEST
-  FutureVoid acceptFriendRequest(
-    UserModel currentUser,
-    UserModel targetUser,
-  ) async {
+  FutureVoid acceptFriendRequest(Friendship friendship) async {
     try {
-      final batch = FirebaseFirestore.instance.batch();
-      UserModel currentUserCopy = currentUser.copyWith();
-      UserModel targetUserCopy = targetUser.copyWith();
-      currentUserCopy.friends.add(targetUserCopy.uid);
-      targetUserCopy.friends.add(currentUserCopy.uid);
-      batch.update(_users.doc(currentUser.uid), {
-        'friends': currentUserCopy.friends,
-      });
-      batch.update(_users.doc(targetUserCopy.uid), {
-        'friends': targetUserCopy.friends,
-      });
-      final uids = [currentUser.uid, targetUser.uid];
-      uids.sort();
-      final requestId = uids.join('_');
-      await _friendRequest.doc(requestId).delete();
-      await batch.commit();
+      final uids = getUids(friendship.uid1, friendship.uid2);
+
+      await _friendship.doc(uids).set(friendship.toMap());
+
+      await _friendRequest.doc(uids).delete();
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -98,27 +85,10 @@ class FriendRepository {
   }
 
   //UNFRIEND
-  FutureVoid unfriend(
-    UserModel currentUser,
-    UserModel targetUser,
-  ) async {
+  FutureVoid unfriend(String uids) async {
     try {
-      final batch = FirebaseFirestore.instance.batch();
+      await _friendship.doc(uids).delete();
 
-      UserModel currentUserCopy = currentUser.copyWith();
-      UserModel targetUserCopy = targetUser.copyWith();
-
-      currentUserCopy.friends.remove(targetUserCopy.uid);
-      targetUserCopy.friends.remove(currentUserCopy.uid);
-
-      batch.update(_users.doc(currentUser.uid), {
-        'friends': currentUserCopy.friends,
-      });
-      batch.update(_users.doc(targetUserCopy.uid), {
-        'friends': targetUserCopy.friends,
-      });
-
-      await batch.commit();
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -127,10 +97,16 @@ class FriendRepository {
     }
   }
 
+  Stream<bool> getFriendshipStatus(String uids) {
+    return _friendship.doc(uids).snapshots().map((snapshot) {
+      return snapshot.exists;
+    });
+  }
+
+  //REFERENCE ALL THE FRIENDSHIPS
+  CollectionReference get _friendship =>
+      _firestore.collection(FirebaseConstants.friendshipCollection);
   //REFERENCE ALL THE FRIEND REQUESTS
   CollectionReference get _friendRequest =>
       _firestore.collection(FirebaseConstants.friendRequestCollection);
-  //REFERENCE ALL THE FRIEND REQUESTS
-  CollectionReference get _users =>
-      _firestore.collection(FirebaseConstants.usersCollection);
 }

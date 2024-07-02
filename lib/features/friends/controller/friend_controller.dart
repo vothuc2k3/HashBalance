@@ -8,9 +8,17 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/friends/repository/friend_repository.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
+import 'package:hash_balance/models/friend_model.dart';
 import 'package:hash_balance/models/friend_request_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+
+final getFriendshipStatusProvider =
+    StreamProvider.family((ref, UserModel targetUser) {
+  return ref
+      .watch(friendControllerProvider.notifier)
+      .getFriendshipStatus(targetUser);
+});
 
 final getFriendRequestStatusProvider =
     StreamProvider.family((ref, String requestId) {
@@ -89,15 +97,13 @@ class FriendController extends StateNotifier<bool> {
   }
 
   //GET THE SEND REQUEST STATUS
-  Stream<FriendRequest?> getFriendRequestStatus(String requestId) {
+  Stream<FriendRequest?> getFriendRequestStatus(String uids) {
     try {
-      return _friendRepository.getFriendRequestStatus(requestId);
+      return _friendRepository.getFriendRequestStatus(uids);
     } on FirebaseException catch (e) {
       throw left(Failures(e.message!));
     } catch (e) {
       throw left(Failures(e.toString()));
-    } finally {
-      state = false;
     }
   }
 
@@ -105,9 +111,24 @@ class FriendController extends StateNotifier<bool> {
     try {
       final currentUser = _ref.watch(userProvider);
       await _friendRepository.acceptFriendRequest(
-        currentUser!,
-        targetUser,
+        Friendship(
+          uid1: currentUser!.uid,
+          uid2: targetUser.uid,
+          createdAt: Timestamp.now(),
+        ),
       );
+
+      //SEND ACCEPT FRIEND REQUEST NOTIFICATION
+      await _ref.watch(notificationControllerProvider.notifier).addNotification(
+            targetUser.uid,
+            NotificationModel(
+              id: generateRandomId(),
+              title: Constants.acceptRequestTitle,
+              message: Constants.getAcceptRequestContent(currentUser.name),
+              createdAt: Timestamp.now(),
+            ),
+          );
+
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -119,15 +140,25 @@ class FriendController extends StateNotifier<bool> {
   FutureVoid unfriend(UserModel targetUser) async {
     try {
       final currentUser = _ref.watch(userProvider);
-      await _friendRepository.unfriend(
-        currentUser!,
-        targetUser,
-      );
+      await _friendRepository
+          .unfriend(getUids(targetUser.uid, currentUser!.uid));
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
+    }
+  }
+
+  Stream<bool> getFriendshipStatus(UserModel targetUser) {
+    try {
+      final currentUser = _ref.read(userProvider);
+      return _friendRepository
+          .getFriendshipStatus(getUids(currentUser!.uid, targetUser.uid));
+    } on FirebaseException catch (e) {
+      throw Failures(e.message!);
+    } catch (e) {
+      throw Failures(e.toString());
     }
   }
 }

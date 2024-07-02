@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/notification/repository/notification_repository.dart';
 import 'package:hash_balance/models/notification_model.dart';
 
@@ -21,11 +22,13 @@ final notificationControllerProvider =
 
 class NotificationController extends StateNotifier<bool> {
   final NotificationRepository _notificationRepository;
+  final Ref _ref;
 
   NotificationController({
     required NotificationRepository notificationRepository,
     required Ref ref,
   })  : _notificationRepository = notificationRepository,
+        _ref = ref,
         super(false);
 
   FutureVoid addNotification(
@@ -45,37 +48,13 @@ class NotificationController extends StateNotifier<bool> {
     }
   }
 
-  //UPDATE NOTIFICATION
-  // FutureVoid updateNotification(
-  //   String notifId,
-  //   String uid,
-  //   String type,
-  //   String status,
-  //   String title,
-  //   String message,
-  // ) async {
-  //   try {
-  //     final notif = NotificationModel(
-  //       id: notifId,
-  //       uid: uid,
-  //       type: type,
-  //       status: status,
-  //       title: title,
-  //       message: message,
-  //       createdAt: Timestamp.now(),
-  //       read: false,
-  //     );
-  //     await _notificationRepository.updateNotification(notif);
-  //     return right(null);
-  //   } on FirebaseException catch (e) {
-  //     return left(Failures(e.message!));
-  //   } catch (e) {
-  //     return left(Failures(e.toString()));
-  //   }
-  // }
-
   // GET ALL THE NOTIFICATION
   Stream<List<NotificationModel>?> getNotificationByUid(String uid) {
     return _notificationRepository.getNotificationByUid(uid);
+  }
+
+  void markAsRead(String notifId) {
+    final uid = _ref.watch(userProvider)!.uid;
+    _notificationRepository.markAsRead(uid, notifId);
   }
 }

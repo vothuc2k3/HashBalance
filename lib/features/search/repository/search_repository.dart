@@ -82,11 +82,8 @@ class SearchRepository {
             isAuthenticated: data['isAuthenticated'] as bool,
             activityPoint: data['activityPoint'] as int,
             achivements: (data['achivements'] as List?)?.cast<String>() ?? [],
-            friends: (data['friends'] as List?)?.cast<String>() ?? [],
             createdAt: data['createdAt'] as Timestamp,
             isRestricted: data['isRestricted'] as bool,
-            followers: (data['followers'] as List?)?.cast<String>() ?? [],
-            notifId: (data['notifId'] as List?)?.cast<String>() ?? [],
           );
         }).toList();
       }).handleError((error) {

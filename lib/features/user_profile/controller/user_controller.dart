@@ -8,12 +8,13 @@ import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/features/user_profile/repository/user_repository.dart';
 import 'package:hash_balance/models/user_model.dart';
 
-final userControllerProvider =
-    StateNotifierProvider<UserController, bool>((ref) => UserController(
-          userRepository: ref.read(userRepositoryProvider),
-          ref: ref,
-        ));
-        
+final userControllerProvider = StateNotifierProvider<UserController, bool>(
+  (ref) => UserController(
+    userRepository: ref.read(userRepositoryProvider),
+    ref: ref,
+  ),
+);
+
 final getUserByUidProvider = StreamProvider.family((ref, String uid) {
   return ref.read(userControllerProvider.notifier).getUserByUid(uid);
 });

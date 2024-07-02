@@ -37,9 +37,6 @@ class FirestoreUserListenerState extends ConsumerState<FirestoreUserListener> {
               isRestricted: data['isRestricted'] as bool,
               activityPoint: data['activityPoint'] as int,
               achivements: List<String>.from(data['achivements']),
-              friends: List<String>.from(data['friends']),
-              followers: List<String>.from(data['followers']),
-              notifId: List<String>.from(data['notifId']),
             );
             int hashAge = calculateHashAge(user.createdAt);
             if (user.hashAge != hashAge) {

@@ -49,12 +49,30 @@ class NotificationRepository {
               title: data['title'] as String,
               message: data['message'] as String,
               createdAt: data['createdAt'] as Timestamp,
+              isRead: data['isRead'] as bool,
             ),
           );
         }
         return notifs;
       },
     );
+  }
+
+  //MARK AS READ THE NOTIFICATION
+  Future<void> markAsRead(String uid, String notifId) async {
+    final query = await _user
+        .doc(uid)
+        .collection('notification')
+        .where('id', isEqualTo: notifId)
+        .get();
+    for (var doc in query.docs) {
+      final data = doc.data();
+      bool isRead = data['isRead'] as bool;
+      if (isRead == false) {
+        isRead = true;
+        await doc.reference.update({'isRead': isRead});
+      }
+    }
   }
 
   //REFERENCE ALL THE USERS
