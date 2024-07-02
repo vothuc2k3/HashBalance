@@ -13,7 +13,28 @@ import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/repository/community_repository.dart';
+import 'package:hash_balance/models/community_membership_model.dart';
 import 'package:hash_balance/models/community_model.dart';
+
+final getModeratorStatus = StreamProvider.family((ref, String communityName) {
+  return ref
+      .read(communityControllerProvider.notifier)
+      .getModeratorStatus(communityName);
+});
+
+final getCommunityMemberCountProvider =
+    StreamProvider.family((ref, String communityName) {
+  return ref
+      .read(communityControllerProvider.notifier)
+      .getCommunityMemberCount(communityName);
+});
+
+final getMemberStatusProvider =
+    StreamProvider.family((ref, String communityName) {
+  return ref
+      .read(communityControllerProvider.notifier)
+      .getMemberStatus(communityName);
+});
 
 final getTopCommunityListProvider = StreamProvider((ref) {
   return ref
@@ -33,7 +54,7 @@ final userCommunitiesProvider = StreamProvider((ref) {
 
 final getCommunityByNameProvider = StreamProvider.family((ref, String name) {
   return ref
-      .watch(communityControllerProvider.notifier)
+      .read(communityControllerProvider.notifier)
       .getCommunityByName(name);
 });
 
@@ -71,25 +92,27 @@ class CommunityController extends StateNotifier<bool> {
     String type,
     bool containsExposureContents,
   ) async {
-    state = true;
+    final currentUser = _ref.watch(userProvider);
 
-    final uid = _ref.read(userProvider)?.uid ?? '';
-
-    Community community = Community(
+    final Community community = Community(
       id: generateRandomId(),
       name: name,
       profileImage: Constants.avatarDefault,
       bannerImage: Constants.bannerDefault,
       type: type,
       containsExposureContents: containsExposureContents,
-      members: [uid],
-      moderators: [uid],
       createdAt: Timestamp.now(),
     );
+    final communityController = CommunityController(
+      communityRepository: _communityRepository,
+      ref: _ref,
+      storageRepository: _storageRepository,
+    );
+
+    await communityController.joinCommunityAsModerator(
+        currentUser!.uid, community.name);
 
     final result = await _communityRepository.createCommunity(community);
-
-    state = false;
 
     result.fold(
       (error) {
@@ -125,16 +148,14 @@ class CommunityController extends StateNotifier<bool> {
     required File? profileImage,
     required File? bannerImage,
   }) async {
-    state = true;
     try {
       Community updatedCommunity = community;
 
       if (profileImage != null) {
         final result = await _storageRepository.storeFile(
-          path: 'communities/profile',
-          id: community.name,
-          file: profileImage,
-        );
+            path: 'communities/profile',
+            id: community.name,
+            file: profileImage);
         await result.fold(
           (error) => throw FirebaseException(
             plugin: 'Firebase Exception',
@@ -182,8 +203,6 @@ class CommunityController extends StateNotifier<bool> {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
-    } finally {
-      state = false;
     }
   }
 
@@ -192,10 +211,17 @@ class CommunityController extends StateNotifier<bool> {
     String uid,
     String communityName,
   ) async {
-    state = true;
     try {
-      final result =
-          await _communityRepository.joinCommunity(uid, communityName);
+      final newMembership = CommunityMembership(
+        id: getMembershipId(uid, communityName),
+        communityName: communityName,
+        joinedAt: Timestamp.now(),
+        uid: uid,
+        role: Constants.memberRole,
+      );
+
+      final result = await _communityRepository.joinCommunity(newMembership);
+
       return result.fold(
         (l) => left(Failures(l.message)),
         (r) => right('Successfully Joined The Community!'),
@@ -204,8 +230,33 @@ class CommunityController extends StateNotifier<bool> {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
-    } finally {
-      state = false;
+    }
+  }
+
+  //JOIN AS MOD
+  FutureString joinCommunityAsModerator(
+    String uid,
+    String communityName,
+  ) async {
+    try {
+      final newMembership = CommunityMembership(
+        id: getMembershipId(uid, communityName),
+        communityName: communityName,
+        joinedAt: Timestamp.now(),
+        uid: uid,
+        role: Constants.moderatorRole,
+      );
+
+      final result = await _communityRepository.joinCommunity(newMembership);
+
+      return result.fold(
+        (l) => left(Failures(l.message)),
+        (r) => right('Successfully Joined The Community!'),
+      );
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
     }
   }
 
@@ -214,10 +265,10 @@ class CommunityController extends StateNotifier<bool> {
     String uid,
     String communityName,
   ) async {
-    state = true;
     try {
-      final result =
-          await _communityRepository.leaveCommunity(uid, communityName);
+      final result = await _communityRepository
+          .leaveCommunity(getMembershipId(uid, communityName));
+
       return result.fold(
         (l) => left(Failures(l.message)),
         (r) => right('Successfully Left The Community!'),
@@ -226,12 +277,33 @@ class CommunityController extends StateNotifier<bool> {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
-    } finally {
-      state = false;
+    }
+  }
+
+  //CHECK IF THE USER IS MEMBER OF COMMUNITY
+  Stream<bool> getMemberStatus(String communityName) {
+    try {
+      final currentUser = _ref.watch(userProvider);
+      return _communityRepository
+          .getMemberStatus(getMembershipId(currentUser!.uid, communityName));
+    } on FirebaseException catch (e) {
+      throw Failures(e.message!);
+    } catch (e) {
+      throw Failures(e.toString());
     }
   }
 
   Stream<List<Community>?> getTopCommunitiesList() {
     return _communityRepository.getTopCommunitiesList();
+  }
+
+  Stream<int> getCommunityMemberCount(String communityName) {
+    return _communityRepository.getCommunityMemberCount(communityName);
+  }
+
+  Stream<bool> getModeratorStatus(String communityName) {
+    final currentUser = _ref.watch(userProvider);
+    return _communityRepository
+        .getModeratorStatus(getMembershipId(currentUser!.uid, communityName));
   }
 }

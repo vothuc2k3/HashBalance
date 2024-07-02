@@ -105,3 +105,7 @@ String getUids(String uid1, String uid2) {
   uids.sort();
   return uids.join('_');
 }
+
+String getMembershipId(String uid, String communityName) {
+  return [uid, communityName].join();
+}

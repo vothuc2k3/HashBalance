@@ -7,4 +7,5 @@ class FirebaseConstants {
   static const notificationCollection = 'notification';
   static const conversationCollection = 'conversation';
   static const friendshipCollection = 'friendship';
+  static const communityMembershipCollection = 'community_membership';
 }

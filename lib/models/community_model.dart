@@ -1,5 +1,7 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 
 class Community {
   final String id;
@@ -9,8 +11,6 @@ class Community {
   final String type;
   final Timestamp createdAt;
   final bool containsExposureContents;
-  final List<String> members;
-  final List<String> moderators;
   Community({
     required this.id,
     required this.name,
@@ -19,8 +19,6 @@ class Community {
     required this.type,
     required this.createdAt,
     required this.containsExposureContents,
-    required this.members,
-    required this.moderators,
   });
 
   Community copyWith({
@@ -31,8 +29,6 @@ class Community {
     String? type,
     Timestamp? createdAt,
     bool? containsExposureContents,
-    List<String>? members,
-    List<String>? moderators,
   }) {
     return Community(
       id: id ?? this.id,
@@ -41,10 +37,7 @@ class Community {
       bannerImage: bannerImage ?? this.bannerImage,
       type: type ?? this.type,
       createdAt: createdAt ?? this.createdAt,
-      containsExposureContents:
-          containsExposureContents ?? this.containsExposureContents,
-      members: members ?? this.members,
-      moderators: moderators ?? this.moderators,
+      containsExposureContents: containsExposureContents ?? this.containsExposureContents,
     );
   }
 
@@ -57,8 +50,6 @@ class Community {
       'type': type,
       'createdAt': createdAt,
       'containsExposureContents': containsExposureContents,
-      'members': members,
-      'moderators': moderators,
     };
   }
 
@@ -71,58 +62,53 @@ class Community {
       type: map['type'] as String,
       createdAt: map['createdAt'] as Timestamp,
       containsExposureContents: map['containsExposureContents'] as bool,
-      members: List<String>.from((map['members'] as List<String>)),
-      moderators: List<String>.from((map['moderators'] as List<String>)),
     );
   }
 
   @override
   String toString() {
-    return 'Community(id: $id, name: $name, profileImage: $profileImage, bannerImage: $bannerImage, type: $type, createdAt: $createdAt, containsExposureContents: $containsExposureContents, members: $members, moderators: $moderators)';
+    return 'Community(id: $id, name: $name, profileImage: $profileImage, bannerImage: $bannerImage, type: $type, createdAt: $createdAt, containsExposureContents: $containsExposureContents)';
   }
 
   @override
   bool operator ==(covariant Community other) {
     if (identical(this, other)) return true;
-
-    return other.id == id &&
-        other.name == name &&
-        other.profileImage == profileImage &&
-        other.bannerImage == bannerImage &&
-        other.type == type &&
-        other.createdAt == createdAt &&
-        other.containsExposureContents == containsExposureContents &&
-        listEquals(other.members, members) &&
-        listEquals(other.moderators, moderators);
+  
+    return 
+      other.id == id &&
+      other.name == name &&
+      other.profileImage == profileImage &&
+      other.bannerImage == bannerImage &&
+      other.type == type &&
+      other.createdAt == createdAt &&
+      other.containsExposureContents == containsExposureContents;
   }
 
   @override
   int get hashCode {
     return id.hashCode ^
-        name.hashCode ^
-        profileImage.hashCode ^
-        bannerImage.hashCode ^
-        type.hashCode ^
-        createdAt.hashCode ^
-        containsExposureContents.hashCode ^
-        members.hashCode ^
-        moderators.hashCode;
+      name.hashCode ^
+      profileImage.hashCode ^
+      bannerImage.hashCode ^
+      type.hashCode ^
+      createdAt.hashCode ^
+      containsExposureContents.hashCode;
   }
 
   factory Community.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return Community(
       name: data['name'] as String,
-      members: List<String>.from(data['members'] ?? ['']),
       id: data['id'] as String,
       profileImage: data['profileImage'] as String,
       bannerImage: data['bannerImage'] as String,
       type: data['type'] as String,
       createdAt: data['createdAt'] as Timestamp,
       containsExposureContents: data['containsExposureContents'] as bool,
-      moderators: List<String>.from(data['moderators'] ?? ['']),
     );
   }
 
-  int get membersCount => members.length;
+  String toJson() => json.encode(toMap());
+
+  factory Community.fromJson(String source) => Community.fromMap(json.decode(source) as Map<String, dynamic>);
 }

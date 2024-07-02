@@ -59,14 +59,15 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    trailing: Column(
+                    trailing: const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.people, color: Colors.white70),
-                        const SizedBox(height: 4),
+                        Icon(Icons.people, color: Colors.white70),
+                        SizedBox(height: 4),
                         Text(
-                          '${community.members.length} members',
-                          style: const TextStyle(color: Colors.white70),
+                          // '${community.members.length} members',
+                          '82964',
+                          style: TextStyle(color: Colors.white70),
                         ),
                       ],
                     ),

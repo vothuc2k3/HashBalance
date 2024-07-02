@@ -3,8 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/community/screen/create_community_screen.dart';
-import 'package:hash_balance/features/community/screen/my_community_screen.dart';
-import 'package:hash_balance/features/community/screen/other_community_screen.dart';
+import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
@@ -31,7 +30,7 @@ class CommunityListDrawer extends ConsumerWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => OtherCommunityScreen(
+        builder: (context) => CommunityScreen(
           name: community.name,
         ),
       ),
@@ -45,7 +44,7 @@ class CommunityListDrawer extends ConsumerWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => MyCommunityScreen(
+        builder: (context) => CommunityScreen(
           name: community.name,
         ),
       ),

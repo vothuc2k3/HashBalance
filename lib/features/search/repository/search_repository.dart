@@ -50,8 +50,6 @@ class SearchRepository {
             bannerImage: data['bannerImage'] as String,
             type: data['type'] as String,
             containsExposureContents: data['containsExposureContents'] as bool,
-            members: (data['members'] as List?)?.cast<String>() ?? [],
-            moderators: (data['mods'] as List?)?.cast<String>() ?? [],
             createdAt: data['createdAt'] as Timestamp,
           );
         }).toList();

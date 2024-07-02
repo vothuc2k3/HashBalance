@@ -32,6 +32,9 @@ class Constants {
     'Private': Icons.privacy_tip,
   };
 
+  static const String memberRole = 'member';
+  static const String moderatorRole = 'moderator';
+
   static const tabWidgets = [
     NewsfeedScreen(),
     CommunityListScreen(),
