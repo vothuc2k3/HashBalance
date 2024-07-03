@@ -23,35 +23,75 @@ class CommunityScreen extends ConsumerStatefulWidget {
 }
 
 class CommunityScreenState extends ConsumerState<CommunityScreen> {
-  void joinCommunity(String uid, String communityName, WidgetRef ref,
-      BuildContext communityScreenContext) async {
+  void _showConfirmationDialog(
+    dynamic leaveCommunity,
+    bool isModerator,
+    String uid,
+    String communityName,
+  ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Are you leaving?'),
+          content: Text(
+            isModerator
+                ? 'You\'re moderator, make sure your choice!'
+                : 'Do you want to leave this community?',
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('No'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Yes'),
+              onPressed: () {
+                leaveCommunity();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void joinCommunity(
+    String uid,
+    String communityName,
+  ) async {
     final result = await ref
         .read(communityControllerProvider.notifier)
         .joinCommunity(uid, communityName);
     result.fold(
       (l) => showSnackBar(
-        communityScreenContext,
+        context,
         l.toString(),
       ),
       (r) => showMaterialBanner(
-        communityScreenContext,
+        context,
         r.toString(),
       ),
     );
   }
 
-  void leaveCommunity(String uid, String communityName, WidgetRef ref,
-      BuildContext communityScreenContext) async {
+  void leaveCommunity(
+    String uid,
+    String communityName,
+  ) async {
     final result = await ref
         .read(communityControllerProvider.notifier)
         .leaveCommunity(uid, communityName);
     result.fold(
       (l) => showSnackBar(
-        communityScreenContext,
+        context,
         l.toString(),
       ),
       (r) => showMaterialBanner(
-        communityScreenContext,
+        context,
         r.toString(),
       ),
     );
@@ -144,57 +184,62 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              community.name,
-                              style: const TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.bold),
-                            ),
-                            joined.when(
-                              data: (joined) {
-                                return OutlinedButton(
-                                  onPressed: joined
-                                      ? () => leaveCommunity(
-                                            user!.uid,
-                                            community.name,
-                                            ref,
-                                            context,
-                                          )
-                                      : () => joinCommunity(
-                                            user!.uid,
-                                            community.name,
-                                            ref,
-                                            context,
-                                          ),
-                                  style: ElevatedButton.styleFrom(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 25),
-                                  ),
-                                  child: joined
-                                      ? const Text(
-                                          'Joined',
-                                          style: TextStyle(
-                                            color: Pallete.whiteColor,
-                                          ),
-                                        )
-                                      : const Text(
-                                          'Join',
-                                          style: TextStyle(
-                                            color: Pallete.whiteColor,
-                                          ),
+                        isModerator.when(
+                          data: (isModerator) {
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  community.name,
+                                  style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                joined.when(
+                                  data: (joined) {
+                                    return OutlinedButton(
+                                      onPressed: joined
+                                          ? () => _showConfirmationDialog(
+                                                leaveCommunity,
+                                                isModerator,
+                                                user!.uid,
+                                                community.name,
+                                              )
+                                          : () => joinCommunity(
+                                              user!.uid, community.name),
+                                      style: ElevatedButton.styleFrom(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(30),
                                         ),
-                                );
-                              },
-                              error: (error, stackTrace) =>
-                                  ErrorText(error: error.toString()),
-                              loading: () => const Loading(),
-                            )
-                          ],
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 25),
+                                      ),
+                                      child: joined
+                                          ? const Text(
+                                              'Joined',
+                                              style: TextStyle(
+                                                color: Pallete.whiteColor,
+                                              ),
+                                            )
+                                          : const Text(
+                                              'Join',
+                                              style: TextStyle(
+                                                color: Pallete.whiteColor,
+                                              ),
+                                            ),
+                                    );
+                                  },
+                                  error: (error, stackTrace) =>
+                                      ErrorText(error: error.toString()),
+                                  loading: () => const Loading(),
+                                )
+                              ],
+                            );
+                          },
+                          error: (error, stackTrace) =>
+                              ErrorText(error: error.toString()),
+                          loading: () => const Loading(),
                         ),
                         memberCount.when(
                           data: (count) {
