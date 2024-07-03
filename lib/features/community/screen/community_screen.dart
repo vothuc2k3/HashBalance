@@ -1,10 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/utils.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
+import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/community/screen/mod_tools/mod_tools_screen.dart';
@@ -49,7 +49,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
             TextButton(
               child: const Text('Yes'),
               onPressed: () {
-                leaveCommunity();
+                leaveCommunity(uid, communityName);
                 Navigator.of(context).pop();
               },
             ),
@@ -138,12 +138,14 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                   ),
                                 ),
                               )
-                            : null;
+                            : const SizedBox.shrink();
                       },
                       error: (error, stackTrace) =>
                           ErrorText(error: error.toString()),
-                      loading: () => const Text('Loading...'),
-                    )!,
+                      loading: () => const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
                   ],
                   expandedHeight: 150,
                   flexibleSpace: Stack(

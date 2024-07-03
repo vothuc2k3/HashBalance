@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/common/auth_text_field.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
@@ -24,6 +23,51 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
   final passwordController = TextEditingController();
   final nameController = TextEditingController();
   bool isPressed = false;
+  bool isEmailValid = true;
+  bool isNameValid = true;
+  bool isPasswordValid = true;
+
+  void checkName(String name) async {
+    if (name.length < 5) {
+      setState(() {
+        isNameValid = false;
+      });
+    }
+    final result =
+        await checkExistingUserNameWhenSignUp(name.trim());
+    result.fold((l) {}, (r) {
+      setState(() {
+        isNameValid = r;
+      });
+    });
+  }
+
+  void checkEmail(String email) async {
+    if (email.length < 5) {
+      setState(() {
+        isEmailValid = false;
+      });
+    }
+    final result =
+        await checkExistingEmailWhenSignUp(email.trim().toLowerCase());
+    result.fold((l) {}, (r) {
+      setState(() {
+        isEmailValid = r;
+      });
+    });
+  }
+
+  void checkPassword(String password) {
+    if (password.length <= 5) {
+      setState(() {
+        isPasswordValid = false;
+      });
+    } else {
+      setState(() {
+        isPasswordValid = true;
+      });
+    }
+  }
 
   void signUpWithEmailAndPassword() async {
     setState(() {
@@ -55,11 +99,6 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
       context,
       MaterialPageRoute(builder: (context) => const EmailSignInScreen()),
     );
-  }
-
-  @override
-  void initState() {
-    super.initState();
   }
 
   @override
@@ -116,17 +155,30 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
                   right: 30,
                   left: 30,
                 ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Pallete.greyColor,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: AuthTextField(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                  child: TextFormField(
                     controller: emailController,
                     obscureText: false,
-                    hintText: 'Email',
-                    keyboardType: TextInputType.emailAddress,
-                    autofocus: true,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      labelStyle: const TextStyle(
+                        color: Color(0xFF38464E),
+                      ),
+                      hintText: 'johndoe@example.com',
+                      enabledBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey),
+                      ),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: isEmailValid ? Colors.grey : Colors.red,
+                        ),
+                      ),
+                      errorText: isEmailValid ? null : 'Invalid Email',
+                    ),
+                    onChanged: (value) {
+                      checkEmail(value);
+                    },
                   ),
                 ),
               ),
@@ -138,39 +190,65 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
                   right: 30,
                   left: 30,
                 ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Pallete.greyColor,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: AuthTextField(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                  child: TextFormField(
                     controller: nameController,
                     obscureText: false,
-                    hintText: 'User name',
-                    keyboardType: TextInputType.name,
-                    autofocus: false,
+                    decoration: InputDecoration(
+                      labelText: 'Username',
+                      labelStyle: const TextStyle(
+                        color: Color(0xFF38464E),
+                      ),
+                      hintText: 'JohnDoe',
+                      prefixText: '#',
+                      enabledBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey),
+                      ),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: isNameValid ? Colors.grey : Colors.red,
+                        ),
+                      ),
+                      errorText: isNameValid ? null : 'Invalid Username',
+                    ),
+                    onChanged: (value) {
+                      checkName(value);
+                    },
                   ),
                 ),
               ),
               const SizedBox(height: 20),
-
               //password input field
               Padding(
                 padding: const EdgeInsets.only(
                   right: 30,
                   left: 30,
                 ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Pallete.greyColor,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: AuthTextField(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                  child: TextFormField(
                     controller: passwordController,
                     obscureText: true,
-                    hintText: 'Password',
-                    keyboardType: TextInputType.visiblePassword,
-                    autofocus: false,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      labelStyle: const TextStyle(
+                        color: Color(0xFF38464E),
+                      ),
+                      hintText: '***********',
+                      enabledBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey),
+                      ),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: isPasswordValid ? Colors.grey : Colors.red,
+                        ),
+                      ),
+                      errorText: isPasswordValid ? null : 'Invalid Email',
+                    ),
+                    onChanged: (value) {
+                      checkPassword(value);
+                    },
                   ),
                 ),
               ),
@@ -184,8 +262,10 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
                 ),
                 child: ElevatedButton(
                   onPressed: () {
-                    signUpWithEmailAndPassword();
                     FocusScope.of(context).unfocus();
+                    if (isEmailValid && isNameValid) {
+                      signUpWithEmailAndPassword();
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 50),

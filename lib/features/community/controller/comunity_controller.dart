@@ -5,54 +5,56 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/type_defs.dart';
 
 import 'package:hash_balance/core/common/constants/constants.dart';
+import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
+import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/repository/community_repository.dart';
 import 'package:hash_balance/models/community_membership_model.dart';
 import 'package:hash_balance/models/community_model.dart';
 
-final getModeratorStatus = StreamProvider.family((ref, String communityName) {
+final getModeratorStatus =
+    StreamProvider.family.autoDispose((ref, String communityName) {
   return ref
       .read(communityControllerProvider.notifier)
       .getModeratorStatus(communityName);
 });
 
 final getCommunityMemberCountProvider =
-    StreamProvider.family((ref, String communityName) {
+    StreamProvider.family.autoDispose((ref, String communityName) {
   return ref
       .read(communityControllerProvider.notifier)
       .getCommunityMemberCount(communityName);
 });
 
 final getMemberStatusProvider =
-    StreamProvider.family((ref, String communityName) {
+    StreamProvider.family.autoDispose((ref, String communityName) {
   return ref
       .read(communityControllerProvider.notifier)
       .getMemberStatus(communityName);
 });
 
-final getTopCommunityListProvider = StreamProvider((ref) {
+final getTopCommunityListProvider = StreamProvider.autoDispose((ref) {
   return ref
       .watch(communityControllerProvider.notifier)
       .getTopCommunitiesList();
 });
 
-final myCommunitiesProvider = StreamProvider((ref) {
+final myCommunitiesProvider = StreamProvider.autoDispose((ref) {
   final communityController = ref.watch(communityControllerProvider.notifier);
   return communityController.getMyCommunities();
 });
 
-final userCommunitiesProvider = StreamProvider((ref) {
+final userCommunitiesProvider = StreamProvider.autoDispose((ref) {
   final communityController = ref.watch(communityControllerProvider.notifier);
   return communityController.getUserCommunities();
 });
 
-final getCommunityByNameProvider = StreamProvider.family((ref, String name) {
+final getCommunityByNameProvider =
+    StreamProvider.family.autoDispose((ref, String name) {
   return ref
       .read(communityControllerProvider.notifier)
       .getCommunityByName(name);

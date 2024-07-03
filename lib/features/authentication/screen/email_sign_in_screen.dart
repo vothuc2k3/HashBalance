@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/common/auth_text_field.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
@@ -19,6 +18,19 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   bool isPressed = false;
+  late bool isPasswordValid;
+
+  void checkPassword(String password) {
+    if (password.length <= 5) {
+      setState(() {
+        isPasswordValid = false;
+      });
+    } else {
+      setState(() {
+        isPasswordValid = true;
+      });
+    }
+  }
 
   void signInWithEmail(BuildContext context, WidgetRef ref) async {
     FocusScope.of(context).unfocus();
@@ -60,6 +72,12 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    isPasswordValid = true;
+    super.initState();
   }
 
   @override
@@ -108,17 +126,26 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
                   right: 30,
                   left: 30,
                 ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Pallete.greyColor,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: AuthTextField(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                  child: TextFormField(
                     controller: emailController,
                     obscureText: false,
-                    hintText: 'Email',
-                    keyboardType: TextInputType.emailAddress,
-                    autofocus: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      labelStyle: TextStyle(
+                        color: Color(0xFF38464E),
+                      ),
+                      hintText: 'johndoe@example.com',
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey),
+                      ),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -130,17 +157,30 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
                   right: 30,
                   left: 30,
                 ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Pallete.greyColor,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: AuthTextField(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                  child: TextFormField(
                     controller: passwordController,
                     obscureText: true,
-                    hintText: 'Password',
-                    keyboardType: TextInputType.visiblePassword,
-                    autofocus: false,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      labelStyle: const TextStyle(
+                        color: Color(0xFF38464E),
+                      ),
+                      hintText: '***********',
+                      enabledBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey),
+                      ),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: isPasswordValid ? Colors.grey : Colors.red,
+                        ),
+                      ),
+                      errorText: isPasswordValid ? null : 'Invalid Email',
+                    ),
+                    onChanged: (value) {
+                      checkPassword(value);
+                    },
                   ),
                 ),
               ),

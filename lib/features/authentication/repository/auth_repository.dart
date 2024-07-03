@@ -1,5 +1,3 @@
-// ignore_for_file: unused_result
-
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -13,8 +11,6 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
-import 'package:hash_balance/features/community/controller/comunity_controller.dart';
-import 'package:hash_balance/features/community/repository/community_repository.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 final userProvider = StateProvider<UserModel?>((ref) => null);
@@ -135,11 +131,6 @@ class AuthRepository {
   //SIGN OUT
   void signOut(WidgetRef ref) async {
     await _firebaseAuth.signOut();
-
-    ref.refresh(communityRepositoryProvider);
-    ref.refresh(communityControllerProvider);
-    ref.refresh(userCommunitiesProvider);
-    ref.refresh(userProvider);
   }
 
   //GET THE USER DATA

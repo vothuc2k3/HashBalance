@@ -47,6 +47,42 @@ FutureBool checkExistingUserName(String name, String uid) async {
   }
 }
 
+FutureBool checkExistingEmailWhenSignUp(String email) async {
+  try {
+    final result = await FirebaseFirestore.instance
+        .collection('users')
+        .where('email', isEqualTo: email)
+        .get();
+    if (result.docs.toList().isNotEmpty) {
+      return right(false);
+    } else {
+      return right(true);
+    }
+  } on FirebaseException catch (e) {
+    return left(Failures(e.message!));
+  } catch (e) {
+    return left(Failures(e.toString()));
+  }
+}
+
+FutureBool checkExistingUserNameWhenSignUp(String name) async {
+  try {
+    final result = await FirebaseFirestore.instance
+        .collection('users')
+        .where('name', isEqualTo: name)
+        .get();
+    if (result.docs.toList().isNotEmpty) {
+      return right(false);
+    } else {
+      return right(true);
+    }
+  } on FirebaseException catch (e) {
+    return left(Failures(e.message!));
+  } catch (e) {
+    return left(Failures(e.toString()));
+  }
+}
+
 void showMaterialBanner(BuildContext context, String text) {
   if (context.mounted) {
     ScaffoldMessenger.of(context).hideCurrentMaterialBanner();

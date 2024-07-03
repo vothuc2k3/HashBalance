@@ -220,6 +220,9 @@ class CommunityRepository {
 
   Stream<bool> getModeratorStatus(String membershipId) {
     return _communityMembership.doc(membershipId).snapshots().map((event) {
+      if(event.data() == null){
+        return false;
+      }
       final data = event.data() as Map<String, dynamic>;
       final role = data['role'] as String;
       if (role == Constants.moderatorRole) {
