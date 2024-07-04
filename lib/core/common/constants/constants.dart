@@ -53,6 +53,9 @@ class Constants {
   static const String friendRequestTitle = 'New Friend Request';
   static const String acceptRequestTitle = 'Friend Request Accepted';
 
+  static const String friendRequestType = 'friend_request';
+  static const String acceptRequestType = 'accept_request';
+
   static String getFriendRequestContent(String name) {
     return '$name has sent you a friend request!';
   }

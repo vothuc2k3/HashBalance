@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/common/constants/constants.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
+import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 class NotificationScreen extends ConsumerStatefulWidget {
@@ -17,10 +19,19 @@ class NotificationScreen extends ConsumerStatefulWidget {
 }
 
 class NotificationScreenState extends ConsumerState<NotificationScreen> {
+  void navigateToProfileScreen(String uid) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OtherUserProfileScreen(
+          uid: uid,
+        ),
+      ),
+    );
+  }
+
   void markAsRead(String notifId, UserModel user) {
     ref.watch(notificationControllerProvider.notifier).markAsRead(notifId);
-    // ignore: unused_result
-    ref.refresh(getNotifsProvider(user.uid));
     setState(() {});
   }
 
@@ -104,6 +115,14 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
                             : const Icon(Icons.new_releases, color: Colors.red),
                         onTap: () {
                           markAsRead(notif.id, user);
+                          switch (notif.type) {
+                            case Constants.friendRequestType:
+                              navigateToProfileScreen(notif.targetUid!);
+                              break;
+                            case Constants.acceptRequestType:
+                              navigateToProfileScreen(notif.targetUid!);
+                            default:
+                          }
                         },
                       ).animate().fadeIn(duration: 600.ms).moveY(
                             begin: 30,

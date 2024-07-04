@@ -72,6 +72,7 @@ class FriendController extends StateNotifier<bool> {
           id: generateRandomId(),
           title: Constants.friendRequestTitle,
           message: Constants.getFriendRequestContent(sender!.name),
+          type: Constants.friendRequestType,
           createdAt: Timestamp.now(),
         ),
       );
@@ -125,6 +126,8 @@ class FriendController extends StateNotifier<bool> {
               id: generateRandomId(),
               title: Constants.acceptRequestTitle,
               message: Constants.getAcceptRequestContent(currentUser.name),
+              targetUid: targetUser.uid,
+              type: Constants.acceptRequestType,
               createdAt: Timestamp.now(),
             ),
           );

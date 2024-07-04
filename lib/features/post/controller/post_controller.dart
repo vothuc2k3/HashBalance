@@ -8,7 +8,9 @@ import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/post/repository/post_repository.dart';
+import 'package:hash_balance/models/post_downvote_model.dart';
 import 'package:hash_balance/models/post_model.dart';
+import 'package:hash_balance/models/post_upvote_model.dart';
 
 final postControllerProvider = StateNotifierProvider<PostController, bool>(
   (ref) => PostController(
@@ -56,19 +58,13 @@ class PostController extends StateNotifier<bool> {
     File? video,
     String? content,
   ) async {
-    state = true;
     try {
-      List<String> upvotes = ['empty'];
-      List<String> downvotes = ['empty'];
       final post = Post(
         communityName: communityName,
         uid: uid,
         content: content,
         createdAt: Timestamp.now(),
-        upvotes: upvotes,
-        downvotes: downvotes,
         id: generateRandomId(),
-        upvoteCount: 0,
       );
       final result = await _postRepository.createPost(post, image, video);
       return result.fold(
@@ -79,16 +75,20 @@ class PostController extends StateNotifier<bool> {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
-    } finally {
-      state = false;
     }
   }
 
   FutureVoid upvote(String postId, String authorUid) async {
-    state = true;
     try {
-      final user = _ref.read(userProvider);
-      final result = await _postRepository.upvote(postId, user!.uid, authorUid);
+      final user = _ref.watch(userProvider);
+
+      final postUpvote = PostUpvote(
+        id: getPostUpvoteId(user!.uid, postId),
+        postId: postId,
+        uid: user.uid,
+        createdAt: Timestamp.now(),
+      );
+      final result = await _postRepository.upvote(postUpvote, authorUid);
       return result.fold(
         (l) {
           return left(Failures(l.message));
@@ -101,17 +101,20 @@ class PostController extends StateNotifier<bool> {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
-    } finally {
-      state = false;
     }
   }
 
   FutureVoid downvote(String postId, String authorUid) async {
-    state = true;
     try {
       final user = _ref.read(userProvider);
-      final result =
-          await _postRepository.downvote(postId, user!.uid, authorUid);
+
+      final postDownvote = PostDownvote(
+        id: getPostDownvoteId(user!.uid, postId),
+        postId: postId,
+        uid: user.uid,
+        createdAt: Timestamp.now(),
+      );
+      final result = await _postRepository.downvote(postDownvote, authorUid);
       return result.fold(
         (l) {
           return left(Failures(l.message));
@@ -124,14 +127,12 @@ class PostController extends StateNotifier<bool> {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
-    } finally {
-      state = false;
     }
   }
 
   Stream<bool> checkDidUpvote(String postId) {
     final user = _ref.read(userProvider);
-    return _postRepository.checkDidUpvote(postId, user!.uid);
+    return _postRepository.checkDidUpvote(getPostUpvoteId(user!.uid, postId));
   }
 
   Stream<int> getUpvotes(String postId) {
@@ -140,7 +141,8 @@ class PostController extends StateNotifier<bool> {
 
   Stream<bool> checkDidDownvote(String postId) {
     final user = _ref.read(userProvider);
-    return _postRepository.checkDidDownvote(postId, user!.uid);
+    return _postRepository
+        .checkDidDownvote(getPostDownvoteId(user!.uid, postId));
   }
 
   Stream<int> getDownvotes(String postId) {

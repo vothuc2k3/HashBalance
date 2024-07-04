@@ -145,3 +145,10 @@ String getUids(String uid1, String uid2) {
 String getMembershipId(String uid, String communityName) {
   return [uid, communityName].join();
 }
+
+String getPostUpvoteId(String uid, String postId) {
+  return [uid, postId, 'upvote'].join();
+}
+String getPostDownvoteId(String uid, String postId) {
+  return [uid, postId, 'downvote'].join();
+}

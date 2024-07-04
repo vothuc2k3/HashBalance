@@ -8,7 +8,10 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
+import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/models/post_downvote_model.dart';
 import 'package:hash_balance/models/post_model.dart';
+import 'package:hash_balance/models/post_upvote_model.dart';
 
 final postRepositoryProvider = Provider((ref) {
   return PostRepository(
@@ -81,49 +84,24 @@ class PostRepository {
   }
 
   //UPVOTE A POST
-  FutureVoid upvote(String postId, String upvoteUid, String authorUid) async {
-    final batch = FirebaseFirestore.instance.batch();
+  FutureVoid upvote(PostUpvote postUpvote, String authorUid) async {
     try {
-      final postDoc = await _posts.doc(postId).get();
-      if (postDoc.exists) {
-        final data = postDoc.data();
-        final postData = data as Map<String, dynamic>;
-        var upvotes = List<String>.from(postData['upvotes'] ?? <String>[]);
-        var downvotes = List<String>.from(postData['downvotes'] ?? <String>[]);
-        var upvoteCount = postData['upvoteCount'] as int;
+      final postDownvoteId =
+          getPostDownvoteId(postUpvote.uid, postUpvote.postId);
 
-        if (downvotes.contains(upvoteUid)) {
-          downvotes.remove(upvoteUid);
-          batch.update(_posts.doc(postId), {
-            'downvotes': downvotes,
-          });
-        }
-        if (upvotes.contains(upvoteUid)) {
-          upvotes.remove(upvoteUid);
-          upvoteCount -= 1;
-          batch.update(_posts.doc(postId), {
-            'upvotes': upvotes,
-            'upvoteCount': upvoteCount,
-          });
-          batch.update(_users.doc(authorUid), {
-            'activityPoint': FieldValue.increment(-1),
-          });
-        } else {
-          upvotes.add(upvoteUid);
-          upvoteCount += 1;
-          batch.update(_posts.doc(postId), {
-            'upvotes': upvotes,
-            'upvoteCount': upvoteCount,
-          });
-          batch.update(_users.doc(authorUid), {
-            'activityPoint': FieldValue.increment(1),
-          });
-        }
-        await batch.commit();
-        return right(null);
+      final existingUpvote = await _postUpvotes.doc(postUpvote.id).get();
+
+      final existingDownvote = await _postDownvotes.doc(postDownvoteId).get();
+
+      if (existingUpvote.exists) {
+        await _postUpvotes.doc(postUpvote.id).delete();
       } else {
-        return left(Failures('Post not found'));
+        if (existingDownvote.exists) {
+          await _postDownvotes.doc(postDownvoteId).delete();
+        }
+        await _postUpvotes.doc(postUpvote.id).set(postUpvote.toMap());
       }
+      return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {
@@ -132,44 +110,24 @@ class PostRepository {
   }
 
 // DOWNVOTE A POST
-  FutureVoid downvote(
-      String postId, String downvoteUid, String authorUid) async {
-    final batch = FirebaseFirestore.instance.batch();
+  FutureVoid downvote(PostDownvote postDownvote, String authorUid) async {
     try {
-      final postDoc = await _posts.doc(postId).get();
-      if (postDoc.exists) {
-        final data = postDoc.data();
-        final postData = data as Map<String, dynamic>;
-        var downvotes = List<String>.from(postData['downvotes'] ?? <String>[]);
-        var upvotes = List<String>.from(postData['upvotes'] ?? <String>[]);
-        var upvoteCount = postData['upvoteCount'] as int;
-        if (upvotes.contains(downvoteUid)) {
-          upvotes.remove(downvoteUid);
-          upvoteCount -= 1;
-          batch.update(_posts.doc(postId), {
-            'upvotes': upvotes,
-            'upvoteCount': upvoteCount,
-          });
-          batch.update(_users.doc(authorUid), {
-            'activityPoint': FieldValue.increment(-1),
-          });
-        }
-        if (downvotes.contains(downvoteUid)) {
-          downvotes.remove(downvoteUid);
-          batch.update(_posts.doc(postId), {
-            'downvotes': downvotes,
-          });
-        } else {
-          downvotes.add(downvoteUid);
-          batch.update(_posts.doc(postId), {
-            'downvotes': downvotes,
-          });
-        }
-        await batch.commit();
-        return right(null);
+      final postUpvoteId =
+          getPostUpvoteId(postDownvote.uid, postDownvote.postId);
+
+      final existingDownvote = await _postDownvotes.doc(postDownvote.id).get();
+
+      final existingUpvote = await _postUpvotes.doc(postUpvoteId).get();
+
+      if (existingDownvote.exists) {
+        await _postDownvotes.doc(postDownvote.id).delete();
       } else {
-        return left(Failures('Post not found'));
+        if (existingUpvote.exists) {
+          await _postUpvotes.doc(postUpvoteId).delete();
+        }
+        await _postDownvotes.doc(postDownvote.id).set(postDownvote.toMap());
       }
+      return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {
@@ -178,51 +136,36 @@ class PostRepository {
   }
 
   //CHECK IF THE USER UPVOTED THE POST
-  Stream<bool> checkDidUpvote(String postId, String uid) {
-    return _posts.doc(postId).snapshots().map((event) {
-      final data = event.data() as Map<String, dynamic>;
-      final upvotes = List<String>.from(data['upvotes']);
-      if (upvotes.contains(uid)) {
-        return true;
-      } else {
-        return false;
-      }
+  Stream<bool> checkDidUpvote(String postUpvoteId) {
+    return _postUpvotes.doc(postUpvoteId).snapshots().map((event) {
+      return event.exists;
     });
   }
 
   //CHECK IF THE USER DOWNVOTED THE POST
-  Stream<bool> checkDidDownvote(
-    String postId,
-    String uid,
-  ) {
-    return _posts.doc(postId).snapshots().map((event) {
-      final data = event.data() as Map<String, dynamic>;
-      final downvotes = List<String>.from(data['downvotes']);
-      if (downvotes.contains(uid)) {
-        return true;
-      } else {
-        return false;
-      }
+  Stream<bool> checkDidDownvote(String postDownvoteId) {
+    return _postDownvotes.doc(postDownvoteId).snapshots().map((event) {
+      return event.exists;
     });
   }
 
   //GET THE UPVOTE COUNTS OF THE POSTS
   Stream<int> getUpvotes(String postId) {
-    return _posts.doc(postId).snapshots().map((event) {
-      final data = event.data() as Map<String, dynamic>;
-      return List<String>.from(data['upvotes']).length - 1;
+    return _postUpvotes
+        .where('postId', isEqualTo: postId)
+        .snapshots()
+        .map((event) {
+      return event.docs.length;
     });
   }
 
   //GET THE DOWNVOTE COUNTS OF THE POSTS
   Stream<int> getDownvotes(String postId) {
-    return _posts.doc(postId).snapshots().map((event) {
-      final data = event.data() as Map<String, dynamic>;
-      if (List<String>.from(data['downvotes']).isEmpty) {
-        return 0;
-      } else {
-        return List<String>.from(data['downvotes']).length - 1;
-      }
+    return _postDownvotes
+        .where('postId', isEqualTo: postId)
+        .snapshots()
+        .map((event) {
+      return event.docs.length;
     });
   }
 
@@ -253,9 +196,6 @@ class PostRepository {
         communityName: data['communityName'] as String,
         uid: data['uid'] as String,
         createdAt: data['createdAt'] as Timestamp,
-        upvotes: List<String>.from(data['upvotes']),
-        downvotes: List<String>.from(data['downvotes']),
-        upvoteCount: data['upvoteCount'] as int,
       );
     });
   }
@@ -266,4 +206,10 @@ class PostRepository {
   //REFERENCE ALL THE USERS
   CollectionReference get _users =>
       _firestore.collection(FirebaseConstants.usersCollection);
+  //REFERENCE ALL THE POSTS
+  CollectionReference get _postUpvotes =>
+      _firestore.collection(FirebaseConstants.postUpvoteCollection);
+  //REFERENCE ALL THE POSTS
+  CollectionReference get _postDownvotes =>
+      _firestore.collection(FirebaseConstants.postDownvoteCollection);
 }

@@ -1,6 +1,9 @@
+// ignore_for_file: unused_result
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/features/newsfeed/screen/post_container/post_container.dart';
 import 'package:hash_balance/features/post/screen/create_post/create_post_screen.dart';
 import 'package:icons_plus/icons_plus.dart';
 
@@ -9,7 +12,6 @@ import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
-import 'package:hash_balance/features/newsfeed/screen/post_container/post_container.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
@@ -23,7 +25,6 @@ class NewsfeedScreen extends ConsumerStatefulWidget {
 
 class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
   Future<void> _refreshPosts() async {
-    // ignore: unused_result
     ref.refresh(getCommunitiesPostsProvider);
   }
 
@@ -41,7 +42,7 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
     final user = ref.watch(userProvider);
     return Scaffold(
       body: RefreshIndicator(
-        onRefresh: _refreshPosts,
+        onRefresh: ()=>_refreshPosts(),
         child: GestureDetector(
           onTap: FocusScope.of(context).unfocus,
           child: CustomScrollView(

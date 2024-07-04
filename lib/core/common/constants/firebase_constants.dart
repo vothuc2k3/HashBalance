@@ -8,4 +8,6 @@ class FirebaseConstants {
   static const conversationCollection = 'conversation';
   static const friendshipCollection = 'friendship';
   static const communityMembershipCollection = 'community_membership';
+  static const postUpvoteCollection = 'post_upvote';
+  static const postDownvoteCollection = 'post_downvote';
 }

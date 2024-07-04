@@ -284,15 +284,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
               : const SizedBox.shrink(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: ref.watch(getPostUpvoteCountProvider(widget.post.id)).when(
-                  data: (_) {
-                    return _buildPostStat(user: widget.user);
-                  },
-                  loading: () => const Loading(),
-                  error: (error, stackTrace) => ErrorText(
-                    error: error.toString(),
-                  ),
-                ),
+            child: _buildPostStat(user: widget.user),
           ),
         ],
       ),
@@ -574,29 +566,26 @@ class PostActions extends ConsumerWidget {
       children: [
         _buildVoteButton(
           icon: Icons.arrow_upward_rounded,
-          count: (ref.watch(getPostUpvoteCountProvider(_post.id)).whenOrNull(
+          count: ref.watch(getPostUpvoteCountProvider(_post.id)).whenOrNull(
               data: (count) {
             return count;
-          }))!,
+          }),
           color: ref.watch(getPostUpvoteStatusProvider(_post.id)).whenOrNull(
-            data: (status) {
-              return status ? Colors.orange : Colors.grey[600];
-            },
-          ),
+              data: (status) {
+            return status ? Colors.orange : Colors.grey[600];
+          }),
           onTap: _onUpvote,
         ),
         _buildVoteButton(
           icon: Mdi.arrowDown,
           count: ref.watch(getPostDownvoteCountProvider(_post.id)).whenOrNull(
-            data: (count) {
-              return count;
-            },
-          ),
+              data: (count) {
+            return count;
+          }),
           color: ref.watch(getPostDownvoteStatusProvider(_post.id)).whenOrNull(
-            data: (status) {
-              return status ? Colors.blue : Colors.grey[600];
-            },
-          ),
+              data: (status) {
+            return status ? Colors.blue : Colors.grey[600];
+          }),
           onTap: _onDownvote,
         ),
         _buildActionButton(

@@ -7,6 +7,9 @@ class NotificationModel {
   final String id;
   final String title;
   final String message;
+  final String type;
+  final String? targetUid;
+  final String? postId;
   final Timestamp createdAt;
   final bool isRead;
 
@@ -14,6 +17,9 @@ class NotificationModel {
     required this.id,
     required this.title,
     required this.message,
+    required this.type,
+    this.targetUid,
+    this.postId,
     required this.createdAt,
     this.isRead = false,
   });
@@ -22,6 +28,9 @@ class NotificationModel {
     String? id,
     String? title,
     String? message,
+    String? type,
+    String? targetUid,
+    String? postId,
     Timestamp? createdAt,
     bool? isRead,
   }) {
@@ -29,6 +38,9 @@ class NotificationModel {
       id: id ?? this.id,
       title: title ?? this.title,
       message: message ?? this.message,
+      type: type ?? this.type,
+      targetUid: targetUid ?? this.targetUid,
+      postId: postId ?? this.postId,
       createdAt: createdAt ?? this.createdAt,
       isRead: isRead ?? this.isRead,
     );
@@ -39,6 +51,9 @@ class NotificationModel {
       'id': id,
       'title': title,
       'message': message,
+      'type': type,
+      'targetUid': targetUid,
+      'postId': postId,
       'createdAt': createdAt,
       'isRead': isRead,
     };
@@ -49,6 +64,9 @@ class NotificationModel {
       id: map['id'] as String,
       title: map['title'] as String,
       message: map['message'] as String,
+      type: map['type'] as String,
+      targetUid: map['targetUid'] != null ? map['targetUid'] as String : null,
+      postId: map['postId'] != null ? map['postId'] as String : null,
       createdAt: map['createdAt'] as Timestamp,
       isRead: map['isRead'] as bool,
     );
@@ -56,11 +74,12 @@ class NotificationModel {
 
   String toJson() => json.encode(toMap());
 
-  factory NotificationModel.fromJson(String source) => NotificationModel.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory NotificationModel.fromJson(String source) =>
+      NotificationModel.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
-    return 'NotificationModel(id: $id, title: $title, message: $message, createdAt: $createdAt, isRead: $isRead)';
+    return 'NotificationModel(id: $id, title: $title, message: $message, type: $type, targetUid: $targetUid, postId: $postId, createdAt: $createdAt, isRead: $isRead)';
   }
 
   @override
@@ -71,6 +90,9 @@ class NotificationModel {
       other.id == id &&
       other.title == title &&
       other.message == message &&
+      other.type == type &&
+      other.targetUid == targetUid &&
+      other.postId == postId &&
       other.createdAt == createdAt &&
       other.isRead == isRead;
   }
@@ -80,6 +102,9 @@ class NotificationModel {
     return id.hashCode ^
       title.hashCode ^
       message.hashCode ^
+      type.hashCode ^
+      targetUid.hashCode ^
+      postId.hashCode ^
       createdAt.hashCode ^
       isRead.hashCode;
   }

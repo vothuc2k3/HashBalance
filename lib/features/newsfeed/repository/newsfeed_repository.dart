@@ -16,15 +16,15 @@ class NewsfeedRepository {
 
   //GET THE COMMUNITIES BY CURRENT USER
   Stream<List<Post>> getCommunitiesPosts(String uid) {
-    return _communities
+    return _communityMembership
         .where(
-          'members',
-          arrayContains: uid,
+          'uid',
+          isEqualTo: uid,
         )
         .snapshots()
         .asyncMap((data) async {
       final communityNames =
-          data.docs.map((doc) => doc['name'] as String).toList();
+          data.docs.map((doc) => doc['communityName'] as String).toList();
       final List<Post> posts = [];
       for (var communityName in communityNames) {
         final communityPosts = await _posts
@@ -37,12 +37,6 @@ class NewsfeedRepository {
           var content = postDoc['content'] ?? '';
           var image = postDoc['image'] ?? '';
           var video = postDoc['video'] ?? '';
-          var upvotes = postDoc['upvotes'] != null
-              ? List<String>.from(postDoc['upvotes'])
-              : <String>[''];
-          var downvotes = postDoc['downvotes'] != null
-              ? List<String>.from(postDoc['downvotes'])
-              : <String>[''];
           posts.add(
             Post(
               video: video as String,
@@ -51,10 +45,7 @@ class NewsfeedRepository {
               communityName: postDoc['communityName'] as String,
               uid: postDoc['uid'] as String,
               createdAt: postDoc['createdAt'] as Timestamp,
-              upvotes: upvotes,
-              downvotes: downvotes,
               id: postDoc['id'] as String,
-              upvoteCount: 0,
             ),
           );
         }
@@ -67,6 +58,6 @@ class NewsfeedRepository {
   CollectionReference get _posts =>
       _firestore.collection(FirebaseConstants.postsCollection);
   //REFERENCE THE COMMUNITIES DATA
-  CollectionReference get _communities =>
-      _firestore.collection(FirebaseConstants.communitiesCollection);
+  CollectionReference get _communityMembership =>
+      _firestore.collection(FirebaseConstants.communityMembershipCollection);
 }
