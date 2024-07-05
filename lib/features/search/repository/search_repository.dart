@@ -79,7 +79,6 @@ class SearchRepository {
             uid: data['uid'] as String,
             isAuthenticated: data['isAuthenticated'] as bool,
             activityPoint: data['activityPoint'] as int,
-            achivements: (data['achivements'] as List?)?.cast<String>() ?? [],
             createdAt: data['createdAt'] as Timestamp,
             isRestricted: data['isRestricted'] as bool,
           );

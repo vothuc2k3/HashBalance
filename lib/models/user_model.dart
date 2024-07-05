@@ -2,7 +2,6 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 
 class UserModel {
   final String email;
@@ -15,7 +14,6 @@ class UserModel {
   final bool isAuthenticated;
   final bool isRestricted;
   final int activityPoint;
-  final List<String> achivements;
   final int? hashAge;
   final String? bio;
   final String? description;
@@ -30,7 +28,6 @@ class UserModel {
     required this.isAuthenticated,
     required this.isRestricted,
     required this.activityPoint,
-    required this.achivements,
     this.hashAge,
     this.bio,
     this.description,
@@ -47,7 +44,6 @@ class UserModel {
     bool? isAuthenticated,
     bool? isRestricted,
     int? activityPoint,
-    List<String>? achivements,
     int? hashAge,
     String? bio,
     String? description,
@@ -63,7 +59,6 @@ class UserModel {
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
       isRestricted: isRestricted ?? this.isRestricted,
       activityPoint: activityPoint ?? this.activityPoint,
-      achivements: achivements ?? this.achivements,
       hashAge: hashAge ?? this.hashAge,
       bio: bio ?? this.bio,
       description: description ?? this.description,
@@ -82,7 +77,6 @@ class UserModel {
       'isAuthenticated': isAuthenticated,
       'isRestricted': isRestricted,
       'activityPoint': activityPoint,
-      'achivements': achivements,
       'hashAge': hashAge,
       'bio': bio,
       'description': description,
@@ -101,7 +95,6 @@ class UserModel {
       isAuthenticated: map['isAuthenticated'] as bool,
       isRestricted: map['isRestricted'] as bool,
       activityPoint: map['activityPoint'] as int,
-      achivements: List<String>.from((map['achivements'] as List<String>)),
       hashAge: map['hashAge'] != null ? map['hashAge'] as int : null,
       bio: map['bio'] != null ? map['bio'] as String : null,
       description:
@@ -111,7 +104,7 @@ class UserModel {
 
   @override
   String toString() {
-    return 'UserModel(email: $email, password: $password, name: $name, uid: $uid, createdAt: $createdAt, profileImage: $profileImage, bannerImage: $bannerImage, isAuthenticated: $isAuthenticated, isRestricted: $isRestricted, activityPoint: $activityPoint, achivements: $achivements, hashAge: $hashAge, bio: $bio, description: $description)';
+    return 'UserModel(email: $email, password: $password, name: $name, uid: $uid, createdAt: $createdAt, profileImage: $profileImage, bannerImage: $bannerImage, isAuthenticated: $isAuthenticated, isRestricted: $isRestricted, activityPoint: $activityPoint, hashAge: $hashAge, bio: $bio, description: $description)';
   }
 
   @override
@@ -128,7 +121,6 @@ class UserModel {
         other.isAuthenticated == isAuthenticated &&
         other.isRestricted == isRestricted &&
         other.activityPoint == activityPoint &&
-        listEquals(other.achivements, achivements) &&
         other.hashAge == hashAge &&
         other.bio == bio &&
         other.description == description;
@@ -146,7 +138,6 @@ class UserModel {
         isAuthenticated.hashCode ^
         isRestricted.hashCode ^
         activityPoint.hashCode ^
-        achivements.hashCode ^
         hashAge.hashCode ^
         bio.hashCode ^
         description.hashCode;

@@ -65,7 +65,6 @@ class AuthRepository {
           uid: userCredential.user!.uid,
           isAuthenticated: true,
           activityPoint: 0,
-          achivements: ['empty'],
           createdAt: Timestamp.now(),
           hashAge: 0,
           isRestricted: false,
@@ -152,10 +151,6 @@ class AuthRepository {
           bannerImage: event['bannerImage'] as String? ?? '',
           isAuthenticated: event['isAuthenticated'] as bool? ?? false,
           activityPoint: event['activityPoint'] as int? ?? 0,
-          achivements: (event['achivements'] as List?)
-                  ?.map((item) => item.toString())
-                  .toList() ??
-              [],
           createdAt: createdAt,
           hashAge: hashAge,
           isRestricted: event['isRestricted'] as bool? ?? false,

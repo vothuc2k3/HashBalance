@@ -4,16 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
-import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
+import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/edit_profile/edit_user_profile.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 class UserProfileScreen extends ConsumerStatefulWidget {
   const UserProfileScreen({
     super.key,
-    required this.uid,
+    required this.user,
   });
 
-  final String uid;
+  final UserModel user;
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
@@ -28,7 +29,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => EditProfileScreen(uid: widget.uid),
+        builder: (context) => EditProfileScreen(uid: widget.user.uid),
       ),
     );
   }
@@ -61,131 +62,125 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
           ),
         ),
       ),
-      body: ref.watch(getUserDataProvider(widget.uid)).when(
-          data: (user) {
-            return ListView(
-              padding: EdgeInsets.zero,
+      body: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          Container(
+            margin: EdgeInsets.only(bottom: bottom),
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
               children: [
                 Container(
-                  margin: EdgeInsets.only(bottom: bottom),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    alignment: Alignment.center,
-                    children: [
-                      Container(
-                        color: Colors.black,
-                        child: CachedNetworkImage(
-                          imageUrl: user.bannerImage,
-                          width: double.infinity,
-                          height: coverHeight,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Positioned(
-                        top: top,
-                        left: 10,
-                        child: CircleAvatar(
-                          radius: (profileHeight / 2) - 10,
-                          backgroundColor: Colors.grey.shade800,
-                          backgroundImage:
-                              CachedNetworkImageProvider(user.profileImage),
-                        ),
-                      ),
-                    ],
+                  color: Colors.black,
+                  child: CachedNetworkImage(
+                    imageUrl: widget.user.bannerImage,
+                    width: double.infinity,
+                    height: coverHeight,
+                    fit: BoxFit.cover,
                   ),
                 ),
-                Column(
-                  children: [
-                    Row(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(left: 10),
-                          child: Text(
-                            '#${user.name}',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(left: 10),
-                          child: Text(
-                            user.bio ?? 'You haven\'t said anything yet...',
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(left: 10),
-                          child: Text(
-                            user.description ??
-                                'You haven\'t describe about yourself yet...',
-                            style: const TextStyle(
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          _buildSocialIcon(FontAwesomeIcons.slack),
-                          const SizedBox(width: 12),
-                          _buildSocialIcon(FontAwesomeIcons.github),
-                          const SizedBox(width: 12),
-                          _buildSocialIcon(FontAwesomeIcons.twitter),
-                          const SizedBox(width: 12),
-                          _buildSocialIcon(FontAwesomeIcons.linkedin),
-                          const SizedBox(width: 12),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Divider(),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _buildButton(text: 'Friends', value: 0),
-                        _buildVerticalDivider(),
-                        _buildButton(text: 'Followers', value: 0),
-                        _buildVerticalDivider(),
-                        _buildButton(
-                            text: 'Activity Points', value: user.activityPoint),
-                        _buildVerticalDivider(),
-                        _buildButton(
-                            text: 'Achivements',
-                            value: user.achivements.length),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    const Divider(),
-                    const SizedBox(height: 16),
-                    _buildFriendsWidget(),
-                  ],
+                Positioned(
+                  top: top,
+                  left: 10,
+                  child: CircleAvatar(
+                    radius: (profileHeight / 2) - 10,
+                    backgroundColor: Colors.grey.shade800,
+                    backgroundImage:
+                        CachedNetworkImageProvider(widget.user.profileImage),
+                  ),
                 ),
               ],
-            );
-          },
-          error: (error, stackTrace) => ErrorText(error: error.toString()),
-          loading: () => const Loading()),
+            ),
+          ),
+          Column(
+            children: [
+              Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 10),
+                    child: Text(
+                      '#${widget.user.name}',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 10),
+                    child: Text(
+                      widget.user.bio ?? 'You haven\'t said anything yet...',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 10),
+                    child: Text(
+                      widget.user.description ??
+                          'You haven\'t describe about yourself yet...',
+                      style: const TextStyle(
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.only(left: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    _buildSocialIcon(FontAwesomeIcons.slack),
+                    const SizedBox(width: 12),
+                    _buildSocialIcon(FontAwesomeIcons.github),
+                    const SizedBox(width: 12),
+                    _buildSocialIcon(FontAwesomeIcons.twitter),
+                    const SizedBox(width: 12),
+                    _buildSocialIcon(FontAwesomeIcons.linkedin),
+                    const SizedBox(width: 12),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildButton(text: 'Friends', value: 0),
+                  _buildVerticalDivider(),
+                  _buildButton(text: 'Followers', value: 0),
+                  _buildVerticalDivider(),
+                  _buildButton(
+                      text: 'Activity Points',
+                      value: widget.user.activityPoint),
+                  _buildVerticalDivider(),
+                  _buildButton(text: 'Achivements', value: 0),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 16),
+              _buildFriendsWidget(widget.user.uid),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -243,58 +238,65 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
     );
   }
 
-  Widget _buildFriendsWidget() {
-    return Column(
-      children: [
-        const Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              '57 friends',
-              style: TextStyle(fontSize: 18),
+  Widget _buildFriendsWidget(String uid) {
+    final friendList = ref.watch(fetchFriendsProvider(uid));
+    return friendList.when(
+      data: (friendList) {
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  '${friendList.length} friends',
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ),
             ),
-          ),
-        ),
-        SizedBox(
-          height: 200,
-          child: GridView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-              childAspectRatio: 0.75,
-            ),
-            itemCount: 6,
-            itemBuilder: (context, index) {
-              return Column(
-                children: [
-                  Flexible(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8.0),
-                      child: CachedNetworkImage(
-                        imageUrl:
-                            'https://scontent.fsgn5-9.fna.fbcdn.net/v/t39.30808-6/449482612_787463453567079_4991714071923227864_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeHbR0bWkuVef3IdA7kx2BcygMpGLAlnIpuAykYsCWcim9Gq2SMh8Ef55BdFDZDW0Y7e7HW-5b1AZ-9eGn-2mysR&_nc_ohc=wrCYE-_bNEwQ7kNvgFOjJON&_nc_ht=scontent.fsgn5-9.fna&gid=APjHSAmqH-vpuILxClWsHt2&oh=00_AYB2KxKWYZ8y3kuaDidaV6O05KFQ0EhBcqHUTZH7jfpiUA&oe=6686F9B1',
-                        fit: BoxFit.cover,
+            SizedBox(
+              height: 200,
+              child: GridView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  childAspectRatio: 0.75,
+                ),
+                itemCount: friendList.length,
+                itemBuilder: (context, index) {
+                  final friend = friendList[index];
+                  return Column(
+                    children: [
+                      Flexible(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8.0),
+                          child: CachedNetworkImage(
+                            imageUrl: friend.profileImage,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text('lmaoMate', style: TextStyle(fontSize: 16)),
-                ],
-              );
-            },
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ElevatedButton(
-            onPressed: () {},
-            child: const Text('See all friends'),
-          ),
-        ),
-      ],
+                      const SizedBox(height: 8),
+                      Text(friend.name, style: const TextStyle(fontSize: 16)),
+                    ],
+                  );
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: () {},
+                child: const Text('See all friends'),
+              ),
+            ),
+          ],
+        );
+      },
+      error: (error, stackTrace) => ErrorText(error: error.toString()),
+      loading: () => const Loading(),
     );
   }
 }

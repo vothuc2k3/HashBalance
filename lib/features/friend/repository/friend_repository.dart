@@ -8,6 +8,7 @@ import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/models/friend_model.dart';
 import 'package:hash_balance/models/friend_request_model.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 final friendRepositoryProvider = Provider((ref) {
   return FriendRepository(firestore: ref.read(firebaseFirestoreProvider));
@@ -103,6 +104,40 @@ class FriendRepository {
     });
   }
 
+  Future<List<UserModel>> fetchFriendsByUser(String uid) async {
+    final query1 = _friendship.where('uid1', isEqualTo: uid).get();
+    final query2 = _friendship.where('uid2', isEqualTo: uid).get();
+    final results = await Future.wait([query1, query2]);
+    final documents = results.expand((result) => result.docs).toList();
+    final friendUids = documents.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      return data['uid1'] == uid ? data['uid2'] : data['uid1'];
+    }).toList();
+    final friendQuery =
+        await _users.where(FieldPath.documentId, whereIn: friendUids).get();
+    var friendList = <UserModel>[];
+    for (var doc in friendQuery.docs) {
+      final data = doc.data() as Map<String, dynamic>;
+      friendList.add(
+        UserModel(
+          email: data['email'] as String,
+          name: data['name'] as String,
+          uid: data['uid'] as String,
+          createdAt: data['createdAt'] as Timestamp,
+          profileImage: data['profileImage'] as String,
+          bannerImage: data['bannerImage'] as String,
+          isAuthenticated: data['isAuthenticated'] as bool,
+          isRestricted: data['isRestricted'] as bool,
+          activityPoint: data['activityPoint'] as int,
+        ),
+      );
+    }
+    return friendList;
+  }
+
+  //REFERENCE ALL THE FRIENDSHIPS
+  CollectionReference get _users =>
+      _firestore.collection(FirebaseConstants.usersCollection);
   //REFERENCE ALL THE FRIENDSHIPS
   CollectionReference get _friendship =>
       _firestore.collection(FirebaseConstants.friendshipCollection);

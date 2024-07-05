@@ -24,12 +24,12 @@ class UserProfileDrawer extends ConsumerStatefulWidget {
 }
 
 class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
-  void navigateToProfileScreen(BuildContext context, String uid) {
+  void navigateToProfileScreen(UserModel user) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => UserProfileScreen(
-          uid: uid,
+          user: user,
         ),
       ),
     );
@@ -164,7 +164,7 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
             InkWell(
               onTap: () {
                 Timer(const Duration(milliseconds: 200), () {
-                  navigateToProfileScreen(context, user.uid);
+                  navigateToProfileScreen(user);
                 });
               },
               child: Padding(

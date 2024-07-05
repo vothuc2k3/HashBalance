@@ -76,7 +76,6 @@ class AuthController extends StateNotifier<bool> {
         bannerImage: Constants.bannerDefault,
         isAuthenticated: true,
         activityPoint: 0,
-        achivements: ['empty'],
         createdAt: Timestamp.now(),
         hashAge: 0,
         isRestricted: false,

@@ -6,12 +6,18 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/features/friends/repository/friend_repository.dart';
+import 'package:hash_balance/features/friend/repository/friend_repository.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
 import 'package:hash_balance/models/friend_model.dart';
 import 'package:hash_balance/models/friend_request_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+
+final fetchFriendsProvider = FutureProvider.family((ref, String uid) async {
+  return await ref
+      .watch(friendControllerProvider.notifier)
+      .fetchFriendsByUser(uid);
+});
 
 final getFriendshipStatusProvider =
     StreamProvider.family((ref, UserModel targetUser) {
@@ -163,5 +169,9 @@ class FriendController extends StateNotifier<bool> {
     } catch (e) {
       throw Failures(e.toString());
     }
+  }
+
+  Future<List<UserModel>> fetchFriendsByUser(String uid) async {
+    return await _friendRepository.fetchFriendsByUser(uid);
   }
 }

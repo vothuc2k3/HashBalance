@@ -95,7 +95,6 @@ class UserRepository {
         'hashAge': updatedUser.hashAge,
         'bio': updatedUser.bio,
         'description': updatedUser.description,
-        'achivements': List<String>.from(updatedUser.achivements).toList(),
       };
       await _user.doc(user.uid).update(updatedUserAfterCast);
       return right(null);
@@ -118,7 +117,6 @@ class UserRepository {
         isAuthenticated: event['isAuthenticated'] as bool,
         isRestricted: event['isRestricted'] as bool,
         activityPoint: event['activityPoint'] as int,
-        achivements: List<String>.from(event['achivements']).toList(),
       );
     });
   }

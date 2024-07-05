@@ -8,7 +8,7 @@ import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/features/friends/controller/friend_controller.dart';
+import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/message/screen/message_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
 
@@ -257,7 +257,7 @@ class _OtherUserProfileScreenState
                           _buildVerticalDivider(),
                           _buildButton(
                               text: 'Achievements',
-                              value: targetUser.achivements.length),
+                              value: 0),
                           _buildVerticalDivider(),
                           _buildButton(text: 'Followers', value: 5834),
                         ],
