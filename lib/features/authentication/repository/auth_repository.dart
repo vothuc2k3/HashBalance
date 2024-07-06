@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -59,8 +60,9 @@ class AuthRepository {
           email: userCredential.user!.email!,
           name: userCredential.user!.displayName ??
               'nameless_user_${generateRandomId()}',
-          profileImage:
-              userCredential.user!.photoURL ?? Constants.avatarDefault,
+          profileImage: userCredential.user!.photoURL ??
+              Constants.avatarDefault[
+                  Random().nextInt(Constants.avatarDefault.length)],
           bannerImage: Constants.bannerDefault,
           uid: userCredential.user!.uid,
           isAuthenticated: true,

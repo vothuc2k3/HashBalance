@@ -4,6 +4,7 @@ import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/screen/email_sign_in_screen.dart';
+import 'package:hash_balance/features/home/screen/home_screen.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
 class EmailSignUpScreen extends ConsumerStatefulWidget {
@@ -33,8 +34,7 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
         isNameValid = false;
       });
     }
-    final result =
-        await checkExistingUserNameWhenSignUp(name.trim());
+    final result = await checkExistingUserNameWhenSignUp(name.trim());
     result.fold((l) {}, (r) {
       setState(() {
         isNameValid = r;
@@ -89,7 +89,11 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
       }
     }, (r) {
       if (context.mounted) {
-        Navigator.of(context).pop();
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          (Route<dynamic> route) => false,
+        );
       }
     });
   }

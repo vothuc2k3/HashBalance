@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -99,7 +100,8 @@ class CommunityController extends StateNotifier<bool> {
     final Community community = Community(
       id: generateRandomId(),
       name: name,
-      profileImage: Constants.avatarDefault,
+      profileImage: Constants
+          .avatarDefault[Random().nextInt(Constants.avatarDefault.length)],
       bannerImage: Constants.bannerDefault,
       type: type,
       containsExposureContents: containsExposureContents,

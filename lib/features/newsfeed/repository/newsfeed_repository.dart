@@ -15,7 +15,7 @@ class NewsfeedRepository {
       : _firestore = firestore;
 
   //GET THE COMMUNITIES BY CURRENT USER
-  Stream<List<Post>> getCommunitiesPosts(String uid) {
+  Stream<List<Post>> getJoinedCommunitiesPosts(String uid) {
     return _communityMembership
         .where(
           'uid',

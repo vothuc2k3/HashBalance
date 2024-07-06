@@ -169,34 +169,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundImage:
-                          NetworkImage(widget.community.profileImage),
-                      radius: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '#=${widget.community.name}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.more_horiz),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
+
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Column(

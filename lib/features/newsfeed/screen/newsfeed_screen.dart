@@ -38,11 +38,19 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.refresh(getCommunitiesPostsProvider);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
     return Scaffold(
       body: RefreshIndicator(
-        onRefresh: ()=>_refreshPosts(),
+        onRefresh: () => _refreshPosts(),
         child: GestureDetector(
           onTap: FocusScope.of(context).unfocus,
           child: CustomScrollView(

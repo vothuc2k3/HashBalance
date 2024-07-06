@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -72,7 +73,8 @@ class AuthController extends StateNotifier<bool> {
         password: password,
         name: name,
         uid: '',
-        profileImage: Constants.avatarDefault,
+        profileImage: Constants
+            .avatarDefault[Random().nextInt(Constants.avatarDefault.length)],
         bannerImage: Constants.bannerDefault,
         isAuthenticated: true,
         activityPoint: 0,

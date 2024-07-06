@@ -12,6 +12,11 @@ import 'package:hash_balance/models/post_downvote_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/post_upvote_model.dart';
 
+final fetchCommunityPostsProvider = StreamProvider.family(
+    (ref, String communityName) => ref
+        .watch(postControllerProvider.notifier)
+        .fetchCommunityPosts(communityName));
+
 final postControllerProvider = StateNotifierProvider<PostController, bool>(
   (ref) => PostController(
       postRepository: ref.read(postRepositoryProvider), ref: ref),
@@ -166,6 +171,10 @@ class PostController extends StateNotifier<bool> {
     } finally {
       state = false;
     }
+  }
+
+  Stream<List<Post>?> fetchCommunityPosts(String communityName) {
+    return _postRepository.fetchCommunityPosts(communityName);
   }
 
   Stream<Post> getPostById(String postId) {

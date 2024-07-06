@@ -2,8 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:hash_balance/core/common/error_text.dart';
-import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/edit_profile/edit_user_profile.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -162,7 +160,6 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildButton(text: 'Friends', value: 0),
                   _buildVerticalDivider(),
                   _buildButton(text: 'Followers', value: 0),
                   _buildVerticalDivider(),
@@ -255,7 +252,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
               ),
             ),
             SizedBox(
-              height: 200,
+              height: 250,
               child: GridView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -269,17 +266,30 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
                   final friend = friendList[index];
                   return Column(
                     children: [
-                      Flexible(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8.0),
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.blue, // Màu viền
+                            width: 2.0, // Độ dày viền
+                          ),
+                        ),
+                        child: ClipOval(
                           child: CachedNetworkImage(
                             imageUrl: friend.profileImage,
+                            width: 60,
+                            height: 60,
                             fit: BoxFit.cover,
+                            placeholder: (context, url) =>
+                                const CircularProgressIndicator(),
+                            errorWidget: (context, url, error) =>
+                                const Icon(Icons.error),
                           ),
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(friend.name, style: const TextStyle(fontSize: 16)),
+                      Text('#${friend.name}',
+                          style: const TextStyle(fontSize: 16)),
                     ],
                   );
                 },
@@ -288,15 +298,22 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  // Handle see all friends action
+                },
                 child: const Text('See all friends'),
               ),
             ),
           ],
         );
       },
-      error: (error, stackTrace) => ErrorText(error: error.toString()),
-      loading: () => const Loading(),
+      error: (error, stackTrace) => Center(
+        child: Text(
+          'Error: $error',
+          style: const TextStyle(color: Colors.red),
+        ),
+      ),
+      loading: () => const Center(child: CircularProgressIndicator()),
     );
   }
 }

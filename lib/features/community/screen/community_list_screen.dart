@@ -4,6 +4,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
+import 'package:hash_balance/features/community/screen/community_screen.dart';
+import 'package:hash_balance/models/community_model.dart';
 
 class CommunityListScreen extends ConsumerStatefulWidget {
   const CommunityListScreen({super.key});
@@ -14,6 +16,17 @@ class CommunityListScreen extends ConsumerStatefulWidget {
 }
 
 class _CommunityListScreenState extends ConsumerState<CommunityListScreen> {
+  _navigateToCommunityScreen(Community community) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CommunityScreen(
+          community: community,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final communityList = ref.watch(getTopCommunityListProvider);
@@ -71,9 +84,7 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen> {
                         ),
                       ],
                     ),
-                    onTap: () {
-                      // Navigate to community details or handle tap
-                    },
+                    onTap: () => _navigateToCommunityScreen(community),
                   ),
                 );
               },

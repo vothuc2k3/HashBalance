@@ -23,7 +23,7 @@ class CommunityListDrawer extends ConsumerWidget {
     );
   }
 
-  void navigateToViewCommunityScreen(
+  void navigateToCommunityScreen(
     BuildContext context,
     Community community,
   ) {
@@ -31,21 +31,7 @@ class CommunityListDrawer extends ConsumerWidget {
       context,
       MaterialPageRoute(
         builder: (context) => CommunityScreen(
-          name: community.name,
-        ),
-      ),
-    );
-  }
-
-  void navigateToMyCommunityScreen(
-    BuildContext context,
-    Community community,
-  ) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CommunityScreen(
-          name: community.name,
+          community: community,
         ),
       ),
     );
@@ -111,7 +97,7 @@ class CommunityListDrawer extends ConsumerWidget {
                                 ),
                               ),
                               onTap: () {
-                                navigateToMyCommunityScreen(
+                                navigateToCommunityScreen(
                                   context,
                                   community,
                                 );
@@ -182,7 +168,7 @@ class CommunityListDrawer extends ConsumerWidget {
                                 ),
                               ),
                               onTap: () {
-                                navigateToViewCommunityScreen(
+                                navigateToCommunityScreen(
                                   context,
                                   community,
                                 );

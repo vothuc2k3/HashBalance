@@ -188,6 +188,7 @@ class PostRepository {
   }
 
   //GET POST DATA BY ID
+  //TODO: CHECK THIS FUNCTION
   Stream<Post> getPostById(String postId) {
     return _posts.doc(postId).snapshots().map((event) {
       final data = event.data() as Map<String, dynamic>;
@@ -197,6 +198,37 @@ class PostRepository {
         uid: data['uid'] as String,
         createdAt: data['createdAt'] as Timestamp,
       );
+    });
+  }
+
+  //FETCH POSTS BY COMMUNITIES
+  Stream<List<Post>?> fetchCommunityPosts(String communityName) {
+    return _posts
+        .where('communityName', isEqualTo: communityName)
+        .snapshots()
+        .map((event) {
+      if (event.docs.isEmpty) {
+        return null;
+      }
+      var communityPosts = <Post>[];
+      for (var doc in event.docs) {
+        final postData = doc.data() as Map<String, dynamic>;
+        var content = postData['content'] ?? '';
+        var image = postData['image'] ?? '';
+        var video = postData['video'] ?? '';
+        communityPosts.add(
+          Post(
+            video: video as String,
+            image: image as String,
+            content: content as String,
+            communityName: postData['communityName'] as String,
+            uid: postData['uid'] as String,
+            createdAt: postData['createdAt'] as Timestamp,
+            id: postData['id'] as String,
+          ),
+        );
+      }
+      return communityPosts;
     });
   }
 

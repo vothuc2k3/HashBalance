@@ -7,7 +7,7 @@ import 'package:hash_balance/models/post_model.dart';
 
 final getCommunitiesPostsProvider = StreamProvider((ref) {
   final newsfeedController = ref.watch(newsfeedControllerProvider.notifier);
-  return newsfeedController.getCommunitiesPosts();
+  return newsfeedController.getJoinedCommunitiesPosts();
 });
 
 final newsfeedControllerProvider =
@@ -35,8 +35,8 @@ class NewsfeedController extends StateNotifier<bool> {
         _ref = ref,
         super(false);
 
-  Stream<List<Post>> getCommunitiesPosts() {
+  Stream<List<Post>> getJoinedCommunitiesPosts() {
     final user = _ref.read(userProvider);
-    return _newsfeedRepository.getCommunitiesPosts(user!.uid);
+    return _newsfeedRepository.getJoinedCommunitiesPosts(user!.uid);
   }
 }
