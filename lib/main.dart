@@ -12,12 +12,16 @@ import 'package:hash_balance/features/home/screen/home_screen.dart';
 import 'package:hash_balance/firebase_options.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
+  OneSignal.initialize('2c3828a5-d158-4947-988e-3f20d00111d1');
+  OneSignal.Notifications.requestPermission(true);
   runApp(
     const ProviderScope(
       child: MyApp(),
@@ -43,11 +47,20 @@ class MyAppState extends ConsumerState<MyApp> {
         .getUserData(data.uid)
         .first;
     ref.read(userProvider.notifier).update((state) => userData);
-    setState(() {});
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { 
+    OneSignal.Notifications.addClickListener((event){
+      final data = event.notification.additionalData;
+      final notifType = data!['type'] as String;
+      switch (notifType) {
+        case 'friend_request':
+          break;
+        default:
+      }
+    });
+
     return ref.watch(authStageChangeProvider).when(
           data: (user) {
             if (user != null) {
@@ -76,7 +89,7 @@ class MyAppState extends ConsumerState<MyApp> {
               );
             }
           },
-          error: (error, stackTrace) => MaterialApp(  
+          error: (error, stackTrace) => MaterialApp(
             debugShowCheckedModeBanner: false,
             title: 'Hash Balance',
             home: ErrorText(error: error.toString()),

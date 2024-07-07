@@ -72,6 +72,8 @@ class FriendController extends StateNotifier<bool> {
         createdAt: Timestamp.now(),
       );
       await _friendRepository.sendFriendRequest(request);
+      
+      //SEND A NOTIFICATION TO THE TARGET USER
       await _notificationController.addNotification(
         targetUser.uid,
         NotificationModel(

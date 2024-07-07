@@ -239,6 +239,15 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
     final friendList = ref.watch(fetchFriendsProvider(uid));
     return friendList.when(
       data: (friendList) {
+        if (friendList.isEmpty) {
+          return const Column(
+            children: [
+              Text('This guy hasn\'t been friend to anyone'),
+              Divider(),
+              SizedBox(height: 16),
+            ],
+          );
+        }
         return Column(
           children: [
             Padding(
@@ -304,6 +313,8 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
                 child: const Text('See all friends'),
               ),
             ),
+            const Divider(),
+            const SizedBox(height: 16),
           ],
         );
       },
