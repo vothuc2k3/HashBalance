@@ -66,4 +66,6 @@ class Constants {
   static String getAcceptRequestContent(String name) {
     return '$name has accepted your friend request!';
   }
+
+  static String? externalId;
 }

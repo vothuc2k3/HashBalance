@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/common/constants/constants.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
@@ -22,6 +23,10 @@ void main() async {
   OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
   OneSignal.initialize('2c3828a5-d158-4947-988e-3f20d00111d1');
   OneSignal.Notifications.requestPermission(true);
+  
+  // ignore: avoid_print
+  print('SIGNATURE LMAO!: ${Constants.externalId}');
+  
   runApp(
     const ProviderScope(
       child: MyApp(),
@@ -50,17 +55,7 @@ class MyAppState extends ConsumerState<MyApp> {
   }
 
   @override
-  Widget build(BuildContext context) { 
-    OneSignal.Notifications.addClickListener((event){
-      final data = event.notification.additionalData;
-      final notifType = data!['type'] as String;
-      switch (notifType) {
-        case 'friend_request':
-          break;
-        default:
-      }
-    });
-
+  Widget build(BuildContext context) {
     return ref.watch(authStageChangeProvider).when(
           data: (user) {
             if (user != null) {

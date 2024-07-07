@@ -2,6 +2,7 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 class UserModel {
   final String email;
@@ -17,6 +18,7 @@ class UserModel {
   final int? hashAge;
   final String? bio;
   final String? description;
+  final List<String>? deviceIds;
   UserModel({
     required this.email,
     this.password,
@@ -31,6 +33,7 @@ class UserModel {
     this.hashAge,
     this.bio,
     this.description,
+    this.deviceIds,
   });
 
   UserModel copyWith({
@@ -47,6 +50,7 @@ class UserModel {
     int? hashAge,
     String? bio,
     String? description,
+    List<String>? deviceIds,
   }) {
     return UserModel(
       email: email ?? this.email,
@@ -62,6 +66,7 @@ class UserModel {
       hashAge: hashAge ?? this.hashAge,
       bio: bio ?? this.bio,
       description: description ?? this.description,
+      deviceIds: deviceIds ?? this.deviceIds,
     );
   }
 
@@ -80,6 +85,7 @@ class UserModel {
       'hashAge': hashAge,
       'bio': bio,
       'description': description,
+      'deviceIds': deviceIds,
     };
   }
 
@@ -99,12 +105,15 @@ class UserModel {
       bio: map['bio'] != null ? map['bio'] as String : null,
       description:
           map['description'] != null ? map['description'] as String : null,
+      deviceIds: map['deviceIds'] != null
+          ? List<String>.from((map['deviceIds'] as List<String>))
+          : null,
     );
   }
 
   @override
   String toString() {
-    return 'UserModel(email: $email, password: $password, name: $name, uid: $uid, createdAt: $createdAt, profileImage: $profileImage, bannerImage: $bannerImage, isAuthenticated: $isAuthenticated, isRestricted: $isRestricted, activityPoint: $activityPoint, hashAge: $hashAge, bio: $bio, description: $description)';
+    return 'UserModel(email: $email, password: $password, name: $name, uid: $uid, createdAt: $createdAt, profileImage: $profileImage, bannerImage: $bannerImage, isAuthenticated: $isAuthenticated, isRestricted: $isRestricted, activityPoint: $activityPoint, hashAge: $hashAge, bio: $bio, description: $description, deviceIds: $deviceIds)';
   }
 
   @override
@@ -123,7 +132,8 @@ class UserModel {
         other.activityPoint == activityPoint &&
         other.hashAge == hashAge &&
         other.bio == bio &&
-        other.description == description;
+        other.description == description &&
+        listEquals(other.deviceIds, deviceIds);
   }
 
   @override
@@ -140,7 +150,8 @@ class UserModel {
         activityPoint.hashCode ^
         hashAge.hashCode ^
         bio.hashCode ^
-        description.hashCode;
+        description.hashCode ^
+        deviceIds.hashCode;
   }
 
   String toJson() => json.encode(toMap());

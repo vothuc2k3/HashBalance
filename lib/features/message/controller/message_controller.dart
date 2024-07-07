@@ -58,8 +58,6 @@ class MessageController extends StateNotifier<bool> {
     state = true;
     try {
       final uid = _ref.read(userProvider)!.uid;
-      var ids = [targetUid, uid];
-      ids.sort();
       _messageRepository.sendMessage(
         Message(
           text: text,
@@ -68,7 +66,7 @@ class MessageController extends StateNotifier<bool> {
           seenBy: ['empty'],
         ),
         Conversation(
-          id: ids.join('_'),
+          id: getUids(uid, targetUid),
           participantUids: [targetUid, uid],
         ),
       );

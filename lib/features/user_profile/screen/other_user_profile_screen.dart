@@ -106,9 +106,7 @@ class _OtherUserProfileScreenState
       body: targetUser.when(
           data: (targetUser) {
             final isFriend = ref.watch(getFriendshipStatusProvider(targetUser));
-            final uids = [currentUser!.uid, targetUser.uid];
-            uids.sort();
-            final requestId = uids.join('_');
+            final requestId = getUids(currentUser!.uid, targetUser.uid);
             return ListView(
               padding: EdgeInsets.zero,
               children: [
@@ -255,9 +253,7 @@ class _OtherUserProfileScreenState
                               text: 'Activity Points',
                               value: targetUser.activityPoint),
                           _buildVerticalDivider(),
-                          _buildButton(
-                              text: 'Achievements',
-                              value: 0),
+                          _buildButton(text: 'Achievements', value: 0),
                           _buildVerticalDivider(),
                           _buildButton(text: 'Followers', value: 5834),
                         ],
