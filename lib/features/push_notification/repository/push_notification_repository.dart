@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/models/notification_model.dart';
 import 'package:http/http.dart' as http;
 
 final pushNotificationRepositoryProvider = Provider((ref) {
@@ -12,10 +13,8 @@ final pushNotificationRepositoryProvider = Provider((ref) {
 class PushNotificationRepository {
   PushNotificationRepository();
 
-  Future<void> sendPushNotificationFriendRequest(
-    List<String> deviceIds,
-    String uid,
-  ) async {
+  Future<void> sendPushNotification(
+      List<String> deviceIds, String uid, NotificationModel notif) async {
     const String oneSignalAppId = 'b10fa7dd-5d27-4634-9409-11169c4425e1';
     const String oneSignalRestApiKey =
         'MDJiZTY5ZTAtYmRiZC00N2I4LWE1MjUtYjQzODA4MTMwMTk2';
@@ -29,8 +28,8 @@ class PushNotificationRepository {
         'app_id': oneSignalAppId,
         'include_aliases': {uid: deviceIds},
         'target_channel': 'push',
-        'headings': {'en': 'Notification Title'},
-        'contents': {'en': 'This is a test message'},
+        'headings': {'en': notif.title},
+        'contents': {'en': notif.message},
       }),
     );
     if (response.statusCode == 200) {

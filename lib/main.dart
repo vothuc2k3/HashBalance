@@ -77,7 +77,14 @@ class MyAppState extends ConsumerState<MyApp> {
                   builder: (context, watch, child) {
                     final userData = ref.watch(userProvider);
                     if (userData != null) {
-                      return const HomeScreen();
+                      return PopScope(
+                        onPopInvoked: (didPop) {
+                          final authController =
+                              ref.watch(authControllerProvider.notifier);
+                          authController.signOut(ref);
+                        },
+                        child: const HomeScreen(),
+                      );
                     } else {
                       return const Loading();
                     }

@@ -81,23 +81,22 @@ class FriendController extends StateNotifier<bool> {
       );
       await _friendRepository.sendFriendRequest(request);
 
+      final notif = NotificationModel(
+        id: generateRandomId(),
+        title: Constants.friendRequestTitle,
+        message: Constants.getFriendRequestContent(sender!.name),
+        type: Constants.friendRequestType,
+        createdAt: Timestamp.now(),
+      );
+
       //SEND PUSH NOTIFICATION TO THE TARGET
       final targetUserDeviceIds =
           await _userController.getUserDeviceIds(targetUid);
-      await _pushNotificationController
-          .sendPushNotificationFriendRequest(targetUserDeviceIds, targetUid);
+      await _pushNotificationController.sendPushNotification(
+          targetUserDeviceIds, targetUid, notif);
 
       //SEND A NOTIFICATION TO THE TARGET USER
-      await _notificationController.addNotification(
-        targetUser.uid,
-        NotificationModel(
-          id: generateRandomId(),
-          title: Constants.friendRequestTitle,
-          message: Constants.getFriendRequestContent(sender!.name),
-          type: Constants.friendRequestType,
-          createdAt: Timestamp.now(),
-        ),
-      );
+      await _notificationController.addNotification(targetUser.uid, notif);
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -129,6 +128,7 @@ class FriendController extends StateNotifier<bool> {
     }
   }
 
+  //ACCEPT FRIEND REQUEST
   FutureVoid acceptFriendRequest(UserModel targetUser) async {
     try {
       final currentUser = _ref.watch(userProvider);
@@ -140,18 +140,28 @@ class FriendController extends StateNotifier<bool> {
         ),
       );
 
+      final notif = NotificationModel(
+        id: generateRandomId(),
+        title: Constants.acceptRequestTitle,
+        message: Constants.getAcceptRequestContent(currentUser.name),
+        targetUid: targetUser.uid,
+        type: Constants.acceptRequestType,
+        createdAt: Timestamp.now(),
+      );
+
+      //SEND ACCEPT REQUEST PUSH NOTIFICATION
+      final targetUserDeviceIds =
+          await _userController.getUserDeviceIds(targetUser.uid);
+      await _pushNotificationController.sendPushNotification(
+        targetUserDeviceIds,
+        targetUser.uid,
+        notif,
+      );
+
       //SEND ACCEPT FRIEND REQUEST NOTIFICATION
-      await _ref.watch(notificationControllerProvider.notifier).addNotification(
-            targetUser.uid,
-            NotificationModel(
-              id: generateRandomId(),
-              title: Constants.acceptRequestTitle,
-              message: Constants.getAcceptRequestContent(currentUser.name),
-              targetUid: targetUser.uid,
-              type: Constants.acceptRequestType,
-              createdAt: Timestamp.now(),
-            ),
-          );
+      await _ref
+          .watch(notificationControllerProvider.notifier)
+          .addNotification(targetUser.uid, notif);
 
       return right(null);
     } on FirebaseException catch (e) {

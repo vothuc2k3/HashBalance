@@ -10,7 +10,6 @@ import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/common/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
-import 'package:hash_balance/core/providers/onesignal_provider.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/models/user_devices_model.dart';
@@ -110,7 +109,6 @@ class AuthRepository {
       await _userDevices.doc().set(device.toMap());
       await OneSignal.User.addAlias(
           userCredential.user!.uid, Constants.deviceId);
-
       return right(user);
     } on FirebaseAuthException catch (e) {
       return left(Failures(e.message!));
@@ -144,7 +142,6 @@ class AuthRepository {
         await _userDevices.doc().set(userDevice.toMap());
       }
 
-      await OneSignal.login(userCredential.user!.uid);
       await OneSignal.User.addAlias(
         userCredential.user!.uid,
         Constants.deviceId,
@@ -168,7 +165,6 @@ class AuthRepository {
     for (var doc in userDevices.docs) {
       await doc.reference.delete();
     }
-    await OneSignal.logout();
     await _firebaseAuth.signOut();
   }
 

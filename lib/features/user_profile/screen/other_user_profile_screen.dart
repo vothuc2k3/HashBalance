@@ -96,12 +96,14 @@ class _OtherUserProfileScreenState
             Navigator.of(context).pop();
           },
         ),
-        title: const Text(
-          'User Profile',
-          style: TextStyle(
-            color: Colors.white,
-          ),
-        ),
+        title: targetUser.whenOrNull(data: (targetUser) {
+          return Text(
+            targetUser.name,
+            style: const TextStyle(
+              color: Colors.white,
+            ),
+          );
+        }),
       ),
       body: targetUser.when(
           data: (targetUser) {
