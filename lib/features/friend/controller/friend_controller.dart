@@ -9,8 +9,9 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/friend/repository/friend_repository.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
-import 'package:hash_balance/models/friend_model.dart';
-import 'package:hash_balance/models/friend_request_model.dart';
+import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
+import 'package:hash_balance/models/friendship_model.dart';
+import 'package:hash_balance/models/friendship_request_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
@@ -36,6 +37,7 @@ final getFriendRequestStatusProvider =
 
 final friendControllerProvider =
     StateNotifierProvider<FriendController, bool>((ref) => FriendController(
+          userController: ref.read(userControllerProvider.notifier),
           notificationController:
               ref.read(notificationControllerProvider.notifier),
           friendRepository: ref.read(friendRepositoryProvider),
@@ -45,17 +47,20 @@ final friendControllerProvider =
         ));
 
 class FriendController extends StateNotifier<bool> {
+  final UserController _userController;
   final PushNotificationController _pushNotificationController;
   final NotificationController _notificationController;
   final FriendRepository _friendRepository;
   final Ref _ref;
 
   FriendController({
+    required UserController userController,
     required PushNotificationController pushNotificationController,
     required NotificationController notificationController,
     required FriendRepository friendRepository,
     required Ref ref,
-  })  : _pushNotificationController = pushNotificationController,
+  })  : _userController = userController,
+        _pushNotificationController = pushNotificationController,
         _notificationController = notificationController,
         _friendRepository = friendRepository,
         _ref = ref,
@@ -76,6 +81,12 @@ class FriendController extends StateNotifier<bool> {
       );
       await _friendRepository.sendFriendRequest(request);
 
+      //SEND PUSH NOTIFICATION TO THE TARGET
+      final targetUserDeviceIds =
+          await _userController.getUserDeviceIds(targetUid);
+      await _pushNotificationController
+          .sendPushNotificationFriendRequest(targetUserDeviceIds, targetUid);
+
       //SEND A NOTIFICATION TO THE TARGET USER
       await _notificationController.addNotification(
         targetUser.uid,
@@ -87,11 +98,6 @@ class FriendController extends StateNotifier<bool> {
           createdAt: Timestamp.now(),
         ),
       );
-
-      //SEND PUSH NOTIFICATION TO THE TARGET USER
-      await _pushNotificationController.setExternalUserId();
-      await _pushNotificationController.sendPushNotification();
-
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));

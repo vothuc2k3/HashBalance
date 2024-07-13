@@ -152,3 +152,6 @@ String getPostUpvoteId(String uid, String postId) {
 String getPostDownvoteId(String uid, String postId) {
   return [uid, postId, 'downvote'].join();
 }
+String getUserDeviceDocId(String uid, String postId) {
+  return [uid, postId, 'downvote'].join();
+}

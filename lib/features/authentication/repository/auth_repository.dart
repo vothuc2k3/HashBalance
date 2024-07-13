@@ -10,9 +10,12 @@ import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/common/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
+import 'package:hash_balance/core/providers/onesignal_provider.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/models/user_devices_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 final userProvider = StateProvider<UserModel?>((ref) => null);
 
@@ -54,7 +57,6 @@ class AuthRepository {
       final userCredential =
           await _firebaseAuth.signInWithCredential(credential);
       UserModel? user;
-
       if (userCredential.additionalUserInfo!.isNewUser) {
         user = UserModel(
           email: userCredential.user!.email!,
@@ -71,9 +73,7 @@ class AuthRepository {
           hashAge: 0,
           isRestricted: false,
         );
-        await _user.doc(userCredential.user!.uid).set(
-              user.toMap(),
-            );
+        await _users.doc(userCredential.user!.uid).set(user.toMap());
       } else {
         user = await getUserData(userCredential.user!.uid).first;
       }
@@ -95,13 +95,22 @@ class AuthRepository {
 
       UserModel? user;
       String userUid = userCredential.user!.uid;
-      UserModel copyUser = newUser.copyWith(uid: userUid);
-      if (userCredential.additionalUserInfo!.isNewUser) {
-        await _firestore.collection('users').doc(userUid).set(copyUser.toMap());
-        user = copyUser;
-      } else {
-        user = await getUserData(userUid).first;
-      }
+      UserModel copyUser = newUser.copyWith(
+        uid: userUid,
+      );
+
+      await _users.doc(userUid).set(copyUser.toMap());
+      user = copyUser;
+      final device = UserDevices(
+        uid: copyUser.uid,
+        deviceId: Constants.deviceId!,
+        createdAt: Timestamp.now(),
+      );
+
+      await _userDevices.doc().set(device.toMap());
+      await OneSignal.User.addAlias(
+          userCredential.user!.uid, Constants.deviceId);
+
       return right(user);
     } on FirebaseAuthException catch (e) {
       return left(Failures(e.message!));
@@ -120,6 +129,27 @@ class AuthRepository {
         email: email,
         password: password,
       );
+      final devicesDoc = await _userDevices
+          .where('uid', isEqualTo: userCredential.user!.uid)
+          .where('deviceId', isEqualTo: Constants.deviceId)
+          .get();
+
+      //CHECK DUPLICATE DEVICES
+      if (devicesDoc.docs.isEmpty) {
+        final userDevice = UserDevices(
+          uid: userCredential.user!.uid,
+          deviceId: Constants.deviceId!,
+          createdAt: Timestamp.now(),
+        );
+        await _userDevices.doc().set(userDevice.toMap());
+      }
+
+      await OneSignal.login(userCredential.user!.uid);
+      await OneSignal.User.addAlias(
+        userCredential.user!.uid,
+        Constants.deviceId,
+      );
+
       final user = await getUserData(userCredential.user!.uid).first;
       return right(user);
     } on FirebaseAuthException catch (e) {
@@ -130,20 +160,26 @@ class AuthRepository {
   }
 
   //SIGN OUT
-  void signOut(WidgetRef ref) async {
+  void signOut(WidgetRef ref, String uid) async {
+    final userDevices = await _userDevices
+        .where('uid', isEqualTo: uid)
+        .where('deviceId', isEqualTo: Constants.deviceId)
+        .get();
+    for (var doc in userDevices.docs) {
+      await doc.reference.delete();
+    }
+    await OneSignal.logout();
     await _firebaseAuth.signOut();
   }
 
   //GET THE USER DATA
   Stream<UserModel> getUserData(String uid) {
-    final snapshot = _user.doc(uid).snapshots();
-
+    final snapshot = _users.doc(uid).snapshots();
     return snapshot.map(
       (event) {
         Timestamp createdAt = event['createdAt'];
         int hashAge =
             DateTime.now().difference(createdAt.toDate()).inSeconds ~/ 86400;
-
         return UserModel(
           uid: event['uid'] as String? ?? '',
           name: event['name'] as String? ?? '',
@@ -170,7 +206,7 @@ class AuthRepository {
   }) async {
     try {
       final updatedUser = user.copyWith(isRestricted: setting);
-      await _user.doc(user.uid).update({
+      await _users.doc(user.uid).update({
         'isRestricted': updatedUser.isRestricted,
       });
       return right(null);
@@ -182,6 +218,9 @@ class AuthRepository {
   }
 
   //REFERENCE ALL THE USERS
-  CollectionReference get _user =>
+  CollectionReference get _users =>
       _firestore.collection(FirebaseConstants.usersCollection);
+  //REFERENCE ALL THE USERS
+  CollectionReference get _userDevices =>
+      _firestore.collection(FirebaseConstants.userDevicesCollection);
 }

@@ -36,6 +36,7 @@ class MessageRepository {
             final docData = doc.data();
             messages.add(
               Message(
+                id: docData['id'] as String,
                 text: docData['text'] as String,
                 uid: docData['uid'] as String,
                 createdAt: docData['createdAt'] as Timestamp,
@@ -107,6 +108,7 @@ class MessageRepository {
           final data = doc.data();
           message.add(
             Message(
+              id: data['id'] as String,
               text: data['text'] as String,
               uid: data['uid'] as String,
               createdAt: data['createdAt'] as Timestamp,

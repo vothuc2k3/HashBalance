@@ -49,6 +49,7 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
     return Scaffold(
+      
       body: RefreshIndicator(
         onRefresh: () => _refreshPosts(),
         child: GestureDetector(

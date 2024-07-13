@@ -6,8 +6,8 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
-import 'package:hash_balance/models/friend_model.dart';
-import 'package:hash_balance/models/friend_request_model.dart';
+import 'package:hash_balance/models/friendship_model.dart';
+import 'package:hash_balance/models/friendship_request_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 final friendRepositoryProvider = Provider((ref) {

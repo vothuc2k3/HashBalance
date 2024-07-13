@@ -121,7 +121,21 @@ class UserRepository {
     });
   }
 
+  Future<List<String>> getUserDeviceIds(String uid) async {
+    final userDeviceDocs =
+        await _userDevices.where('uid', isEqualTo: uid).get();
+    var deviceIds = <String>[];
+    for (var doc in userDeviceDocs.docs) {
+      final docData = doc.data() as Map<String, dynamic>;
+      deviceIds.add(docData['deviceId']);
+    }
+    return deviceIds;
+  }
+
   //REFERENCE ALL THE USERS
   CollectionReference get _user =>
       _firestore.collection(FirebaseConstants.usersCollection);
+  //REFERENCE ALL THE USERS
+  CollectionReference get _userDevices =>
+      _firestore.collection(FirebaseConstants.userDevicesCollection);
 }

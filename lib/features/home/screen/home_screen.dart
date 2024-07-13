@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
@@ -87,14 +88,17 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
               Icons.search,
             ),
           ),
-          Builder(builder: (context) {
-            return IconButton(
-              icon: CircleAvatar(
-                backgroundImage: CachedNetworkImageProvider(user!.profileImage),
-              ),
-              onPressed: () => displayUserProfileDrawer(context),
-            );
-          }),
+          Builder(
+            builder: (context) {
+              return IconButton(
+                icon: CircleAvatar(
+                  backgroundImage:
+                      CachedNetworkImageProvider(user!.profileImage),
+                ),
+                onPressed: () => displayUserProfileDrawer(context),
+              );
+            },
+          ),
         ],
       ),
       body: PageView(

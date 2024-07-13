@@ -1,8 +1,12 @@
+import 'dart:io';
+
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
@@ -13,25 +17,30 @@ import 'package:hash_balance/features/home/screen/home_screen.dart';
 import 'package:hash_balance/firebase_options.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
-import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
-  OneSignal.initialize('2c3828a5-d158-4947-988e-3f20d00111d1');
+  OneSignal.initialize('b10fa7dd-5d27-4634-9409-11169c4425e1');
   OneSignal.Notifications.requestPermission(true);
-  
-  // ignore: avoid_print
-  print('SIGNATURE LMAO!: ${Constants.externalId}');
-  
+  Constants.deviceId = await getDeviceId();
   runApp(
     const ProviderScope(
       child: MyApp(),
     ),
   );
+}
+
+Future<String?> getDeviceId() async {
+  DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+  String? deviceId;
+  if (Platform.isAndroid) {
+    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    deviceId = androidInfo.id;
+  }
+  return deviceId;
 }
 
 class MyApp extends ConsumerStatefulWidget {
