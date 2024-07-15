@@ -45,15 +45,17 @@ class UserRepository {
           file: profileImage,
         );
         await result.fold(
-            (error) => throw FirebaseException(
-                  plugin: 'Firebase Exception',
-                  message: error.message,
-                ), (right) async {
-          String profileImageUrl = await FirebaseStorage.instance
-              .ref('users/profile/${user.uid}')
-              .getDownloadURL();
-          updatedUser = updatedUser.copyWith(profileImage: profileImageUrl);
-        });
+          (error) => throw FirebaseException(
+            plugin: 'Firebase Exception',
+            message: error.message,
+          ),
+          (right) async {
+            String profileImageUrl = await FirebaseStorage.instance
+                .ref('users/profile/${user.uid}')
+                .getDownloadURL();
+            updatedUser = updatedUser.copyWith(profileImage: profileImageUrl);
+          },
+        );
       }
       if (bannerImage != null) {
         final result = await _storageRepository.storeFile(
@@ -83,7 +85,6 @@ class UserRepository {
       }
       final Map<String, dynamic> updatedUserAfterCast = {
         'email': updatedUser.email,
-        'password': updatedUser.password,
         'name': updatedUser.name,
         'uid': updatedUser.uid,
         'createdAt': updatedUser.createdAt,
@@ -121,15 +122,15 @@ class UserRepository {
     });
   }
 
-  Future<List<String>> getUserDeviceIds(String uid) async {
+  Future<List<String>> getUserDeviceTokens(String uid) async {
     final userDeviceDocs =
         await _userDevices.where('uid', isEqualTo: uid).get();
-    var deviceIds = <String>[];
+    var deviceTokens = <String>[];
     for (var doc in userDeviceDocs.docs) {
       final docData = doc.data() as Map<String, dynamic>;
-      deviceIds.add(docData['deviceId']);
+      deviceTokens.add(docData['deviceToken']);
     }
-    return deviceIds;
+    return deviceTokens;
   }
 
   //REFERENCE ALL THE USERS

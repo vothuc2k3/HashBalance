@@ -78,7 +78,7 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
         .signUpWithEmailAndPassword(
           emailController.text.toLowerCase().trim(),
           passwordController.text,
-          nameController.text,
+          nameController.text.trim().toLowerCase(),
         );
     user.fold((l) {
       if (context.mounted) {

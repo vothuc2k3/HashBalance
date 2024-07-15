@@ -5,22 +5,22 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserDevices {
   final String uid;
-  final String deviceId;
+  final String deviceToken;
   final Timestamp createdAt;
   UserDevices({
     required this.uid,
-    required this.deviceId,
+    required this.deviceToken,
     required this.createdAt,
   });
 
   UserDevices copyWith({
     String? uid,
-    String? deviceId,
+    String? deviceToken,
     Timestamp? createdAt,
   }) {
     return UserDevices(
       uid: uid ?? this.uid,
-      deviceId: deviceId ?? this.deviceId,
+      deviceToken: deviceToken ?? this.deviceToken,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -28,7 +28,7 @@ class UserDevices {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'uid': uid,
-      'deviceId': deviceId,
+      'deviceToken': deviceToken,
       'createdAt': createdAt,
     };
   }
@@ -36,7 +36,7 @@ class UserDevices {
   factory UserDevices.fromMap(Map<String, dynamic> map) {
     return UserDevices(
       uid: map['uid'] as String,
-      deviceId: map['deviceId'] as String,
+      deviceToken: map['deviceToken'] as String,
       createdAt: map['createdAt'] as Timestamp,
     );
   }
@@ -46,7 +46,7 @@ class UserDevices {
   factory UserDevices.fromJson(String source) => UserDevices.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
-  String toString() => 'UserDevices(uid: $uid, deviceId: $deviceId, createdAt: $createdAt)';
+  String toString() => 'UserDevices(uid: $uid, deviceToken: $deviceToken, createdAt: $createdAt)';
 
   @override
   bool operator ==(covariant UserDevices other) {
@@ -54,10 +54,10 @@ class UserDevices {
   
     return 
       other.uid == uid &&
-      other.deviceId == deviceId &&
+      other.deviceToken == deviceToken &&
       other.createdAt == createdAt;
   }
 
   @override
-  int get hashCode => uid.hashCode ^ deviceId.hashCode ^ createdAt.hashCode;
+  int get hashCode => uid.hashCode ^ deviceToken.hashCode ^ createdAt.hashCode;
 }

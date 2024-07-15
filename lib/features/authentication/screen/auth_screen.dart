@@ -7,6 +7,7 @@ import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/screen/email_sign_in_screen.dart';
 import 'package:hash_balance/features/authentication/screen/email_sign_up_screen.dart';
+import 'package:hash_balance/features/authentication/screen/forgot_password_screen.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
 class AuthScreen extends ConsumerWidget {
@@ -28,6 +29,14 @@ class AuthScreen extends ConsumerWidget {
         builder: (context) => const EmailSignInScreen(),
       ),
     );
+  }
+
+  void navigateToForgotPasswordScreen(context) {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const ForgotPasswordScreen(),
+        ));
   }
 
   @override
@@ -115,22 +124,39 @@ class AuthScreen extends ConsumerWidget {
                     alignment: Alignment.bottomCenter,
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 40),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      child: Column(
                         children: [
-                          const Text(
-                            'Already have an account? ',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontStyle: FontStyle.italic,
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                'Already have an account? ',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  navigateToEmailSignInScreen(context);
+                                },
+                                child: const Text(
+                                  'Sign In',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           TextButton(
                             onPressed: () {
-                              navigateToEmailSignInScreen(context);
+                              navigateToForgotPasswordScreen(context);
                             },
                             child: const Text(
-                              'Sign In',
+                              'Forgot Password?',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,

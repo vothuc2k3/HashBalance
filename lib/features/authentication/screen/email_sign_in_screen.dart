@@ -32,7 +32,7 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
     }
   }
 
-  void signInWithEmail(BuildContext context, WidgetRef ref) async {
+  void signInWithEmail( ) async {
     FocusScope.of(context).unfocus();
     setState(() {
       isPressed = true;
@@ -196,7 +196,7 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
                   onPressed: isPressed
                       ? () {}
                       : () {
-                          signInWithEmail(context, ref);
+                          signInWithEmail();
                         },
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 50),

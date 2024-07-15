@@ -57,7 +57,7 @@ class UserController extends StateNotifier<bool> {
     return _userRepository.getUserByUid(uid);
   }
 
-  Future<List<String>> getUserDeviceIds(String uid)async{
-    return await _userRepository.getUserDeviceIds(uid);
+  Future<List<String>> getUserDeviceTokens(String uid)async{
+    return await _userRepository.getUserDeviceTokens(uid);
   }
 }

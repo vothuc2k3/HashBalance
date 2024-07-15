@@ -67,5 +67,5 @@ class Constants {
     return '$name has accepted your friend request!';
   }
 
-  static String? deviceId;
+  static String? deviceToken;
 }

@@ -90,10 +90,10 @@ class FriendController extends StateNotifier<bool> {
       );
 
       //SEND PUSH NOTIFICATION TO THE TARGET
-      final targetUserDeviceIds =
-          await _userController.getUserDeviceIds(targetUid);
-      await _pushNotificationController.sendPushNotification(
-          targetUserDeviceIds, targetUid, notif);
+      // final targetUserDeviceIds =
+      //     await _userController.getUserDeviceIds(targetUid);
+      // await _pushNotificationController.sendPushNotification(
+      //     targetUserDeviceIds, targetUid, notif);
 
       //SEND A NOTIFICATION TO THE TARGET USER
       await _notificationController.addNotification(targetUser.uid, notif);
@@ -150,13 +150,13 @@ class FriendController extends StateNotifier<bool> {
       );
 
       //SEND ACCEPT REQUEST PUSH NOTIFICATION
-      final targetUserDeviceIds =
-          await _userController.getUserDeviceIds(targetUser.uid);
-      await _pushNotificationController.sendPushNotification(
-        targetUserDeviceIds,
-        targetUser.uid,
-        notif,
-      );
+      // final targetUserDeviceIds =
+      //     await _userController.getUserDeviceIds(targetUser.uid);
+      // await _pushNotificationController.sendPushNotification(
+      //   targetUserDeviceIds,
+      //   targetUser.uid,
+      //   notif,
+      // );
 
       //SEND ACCEPT FRIEND REQUEST NOTIFICATION
       await _ref

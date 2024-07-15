@@ -14,7 +14,6 @@ import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/models/user_devices_model.dart';
 import 'package:hash_balance/models/user_model.dart';
-import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 final userProvider = StateProvider<UserModel?>((ref) => null);
 
@@ -85,11 +84,12 @@ class AuthRepository {
   }
 
   //SIGN UP WITH EMAIL AND PASSWORD
-  FutureUserModel signUpWithEmailAndPassword(UserModel newUser) async {
+  FutureUserModel signUpWithEmailAndPassword(
+      UserModel newUser, UserDevices userDevice, String password) async {
     try {
       final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: newUser.email,
-        password: newUser.password!,
+        password: password,
       );
 
       UserModel? user;
@@ -100,15 +100,10 @@ class AuthRepository {
 
       await _users.doc(userUid).set(copyUser.toMap());
       user = copyUser;
-      final device = UserDevices(
-        uid: copyUser.uid,
-        deviceId: Constants.deviceId!,
-        createdAt: Timestamp.now(),
-      );
+      var userDeviceCopy = userDevice.copyWith(uid: copyUser.uid);
 
-      await _userDevices.doc().set(device.toMap());
-      await OneSignal.User.addAlias(
-          userCredential.user!.uid, Constants.deviceId);
+      await _userDevices.doc().set(userDeviceCopy.toMap());
+
       return right(user);
     } on FirebaseAuthException catch (e) {
       return left(Failures(e.message!));
@@ -120,6 +115,7 @@ class AuthRepository {
   //SIGN THE USER IN WITH EMAIL AND PASSWORD
   FutureUserModel signInWithEmailAndPassword(
     String email,
+    UserDevices userDevice,
     String password,
   ) async {
     try {
@@ -127,27 +123,20 @@ class AuthRepository {
         email: email,
         password: password,
       );
+
       final devicesDoc = await _userDevices
           .where('uid', isEqualTo: userCredential.user!.uid)
-          .where('deviceId', isEqualTo: Constants.deviceId)
+          .where('deviceToken', isEqualTo: userDevice.deviceToken)
           .get();
 
       //CHECK DUPLICATE DEVICES
       if (devicesDoc.docs.isEmpty) {
-        final userDevice = UserDevices(
-          uid: userCredential.user!.uid,
-          deviceId: Constants.deviceId!,
-          createdAt: Timestamp.now(),
-        );
-        await _userDevices.doc().set(userDevice.toMap());
+        var userDeviceCopy = userDevice.copyWith(uid: userCredential.user!.uid);
+        await _userDevices.doc().set(userDeviceCopy.toMap());
       }
 
-      await OneSignal.User.addAlias(
-        userCredential.user!.uid,
-        Constants.deviceId,
-      );
-
       final user = await getUserData(userCredential.user!.uid).first;
+      
       return right(user);
     } on FirebaseAuthException catch (e) {
       return left(Failures(e.message ?? 'Unknown error occurred?'));
@@ -160,7 +149,7 @@ class AuthRepository {
   void signOut(WidgetRef ref, String uid) async {
     final userDevices = await _userDevices
         .where('uid', isEqualTo: uid)
-        .where('deviceId', isEqualTo: Constants.deviceId)
+        .where('deviceToken', isEqualTo: Constants.deviceToken)
         .get();
     for (var doc in userDevices.docs) {
       await doc.reference.delete();
@@ -180,7 +169,6 @@ class AuthRepository {
           uid: event['uid'] as String? ?? '',
           name: event['name'] as String? ?? '',
           email: event['email'] as String? ?? '',
-          password: event['password'] as String?,
           profileImage: event['profileImage'] as String? ?? '',
           bannerImage: event['bannerImage'] as String? ?? '',
           isAuthenticated: event['isAuthenticated'] as bool? ?? false,
@@ -205,6 +193,18 @@ class AuthRepository {
       await _users.doc(user.uid).update({
         'isRestricted': updatedUser.isRestricted,
       });
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  //SEND RESET PASSWORD LINK
+  FutureVoid sendResetPasswordLink(String email) async {
+    try {
+      await _firebaseAuth.sendPasswordResetEmail(email: email);
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));

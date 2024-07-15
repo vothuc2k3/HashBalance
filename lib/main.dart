@@ -1,12 +1,9 @@
-import 'dart:io';
-
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
-import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
@@ -23,24 +20,14 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  OneSignal.initialize('b10fa7dd-5d27-4634-9409-11169c4425e1');
-  OneSignal.Notifications.requestPermission(true);
-  Constants.deviceId = await getDeviceId();
+  await FirebaseMessaging.instance.requestPermission();
+  Constants.deviceToken = await FirebaseMessaging.instance.getToken();
+  print('DEVICE TOKEN: ${Constants.deviceToken}');
   runApp(
     const ProviderScope(
       child: MyApp(),
     ),
   );
-}
-
-Future<String?> getDeviceId() async {
-  DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-  String? deviceId;
-  if (Platform.isAndroid) {
-    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    deviceId = androidInfo.id;
-  }
-  return deviceId;
 }
 
 class MyApp extends ConsumerStatefulWidget {
@@ -61,6 +48,11 @@ class MyAppState extends ConsumerState<MyApp> {
         .getUserData(data.uid)
         .first;
     ref.read(userProvider.notifier).update((state) => userData);
+  }
+
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override

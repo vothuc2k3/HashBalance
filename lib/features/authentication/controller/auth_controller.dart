@@ -10,6 +10,7 @@ import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/models/user_devices_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 final authControllerProvider = StateNotifierProvider<AuthController, bool>(
@@ -70,7 +71,6 @@ class AuthController extends StateNotifier<bool> {
     try {
       UserModel userModel = UserModel(
         email: email,
-        password: password,
         name: name,
         uid: '',
         profileImage: Constants
@@ -84,8 +84,18 @@ class AuthController extends StateNotifier<bool> {
         bio: 'New user',
         description: 'Nothing, I\'m a new user here....',
       );
-      final result =
-          await _authRepository.signUpWithEmailAndPassword(userModel);
+      final userDevice = UserDevices(
+        uid: '',
+        deviceToken: Constants.deviceToken ?? '',
+        createdAt: Timestamp.now(),
+      );
+
+      final result = await _authRepository.signUpWithEmailAndPassword(
+        userModel,
+        userDevice,
+        password,
+      );
+
       return result.fold((l) => left(Failures(l.message)), (userModel) {
         _ref.read(userProvider.notifier).update((state) => userModel);
         return right(userModel);
@@ -106,8 +116,13 @@ class AuthController extends StateNotifier<bool> {
   ) async {
     state = true;
     try {
-      final result =
-          await _authRepository.signInWithEmailAndPassword(email, password);
+      final userDevice = UserDevices(
+        uid: '',
+        deviceToken: Constants.deviceToken!,
+        createdAt: Timestamp.now(),
+      );
+      final result = await _authRepository.signInWithEmailAndPassword(
+          email, userDevice, password);
       return result.fold((l) => left(Failures(l.message)), (userModel) {
         _ref.read(userProvider.notifier).update((state) => userModel);
         return right(userModel);
@@ -124,7 +139,6 @@ class AuthController extends StateNotifier<bool> {
   void signOut(WidgetRef ref) {
     final uid = _ref.watch(userProvider)!.uid;
     _authRepository.signOut(ref, uid);
-
   }
 
   FutureString changeUserPrivacy({
@@ -150,5 +164,19 @@ class AuthController extends StateNotifier<bool> {
 
   Stream<UserModel> getUserData(String uid) {
     return _authRepository.getUserData(uid);
+  }
+
+  FutureVoid sendResetPasswordLink(String email) async {
+    state = true;
+    try {
+      await _authRepository.sendResetPasswordLink(email);
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    } finally {
+      state = false;
+    }
   }
 }

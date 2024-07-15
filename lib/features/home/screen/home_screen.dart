@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
+import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/home/delegates/search_delegate.dart';
 import 'package:hash_balance/features/home/screen/drawers/community_list_drawer.dart';
@@ -25,8 +26,17 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   void initState() {
-    super.initState();
     _pageController = PageController();
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await requestPushPermissions();
+    });
+  }
+
+  Future<void> requestPushPermissions() async {
+    Constants.deviceToken =
+        await ref.watch(firebaseMessagingProvider).getToken();
+    await ref.watch(firebaseMessagingProvider).requestPermission();
   }
 
   @override
