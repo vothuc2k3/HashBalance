@@ -55,7 +55,6 @@ dependencies:
   icons_plus: ^5.0.0
   animated_icon: ^0.0.9
   mdi: ^5.0.0-nullsafety.0
-  uuid: ^4.4.0
   video_player: ^2.8.6
   timeago: ^3.6.1
   video_thumbnail: ^0.5.3
@@ -65,6 +64,8 @@ dependencies:
   device_info_plus: ^10.1.0
   url_launcher: ^6.3.0
   firebase_messaging: ^15.0.3
+  nanoid: ^1.0.0
+  pusher_beams: ^1.1.1
 
 dev_dependencies:
   flutter_test:

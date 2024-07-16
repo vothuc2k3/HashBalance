@@ -69,7 +69,7 @@ class PostController extends StateNotifier<bool> {
         uid: uid,
         content: content,
         createdAt: Timestamp.now(),
-        id: generateRandomId(),
+        id: await generateRandomId(),
       );
       final result = await _postRepository.createPost(post, image, video);
       return result.fold(

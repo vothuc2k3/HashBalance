@@ -313,14 +313,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.9.9"
-  fixnum:
-    dependency: transitive
-    description:
-      name: fixnum
-      sha256: "25517a4deb0c03aa0f32fd12db525856438902d9c16536311e76cdc57b31d7d1"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.1.0"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -338,10 +330,10 @@ packages:
     dependency: transitive
     description:
       name: flutter_cache_manager
-      sha256: "395d6b7831f21f3b989ebedbb785545932adb9afe2622c1ffacf7f4b53a7e544"
+      sha256: "8207f27539deb83732fdda03e259349046a39a4c767269285f449ade355d54ba"
       url: "https://pub.dev"
     source: hosted
-    version: "3.3.2"
+    version: "3.3.1"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -496,6 +488,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.19.0"
+  js:
+    dependency: transitive
+    description:
+      name: js
+      sha256: f2c445dce49627136094980615a031419f7f3eb393237e4ecd97ac15dea343f3
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.6.7"
   leak_tracker:
     dependency: transitive
     description:
@@ -568,6 +568,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.12.0"
+  nanoid:
+    dependency: "direct main"
+    description:
+      name: nanoid
+      sha256: be3f8752d9046c825df2f3914195151eb876f3ad64b9d833dd0b799b77b8759e
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   octo_image:
     dependency: transitive
     description:
@@ -736,6 +744,46 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.8"
+  pusher_beams:
+    dependency: "direct main"
+    description:
+      name: pusher_beams
+      sha256: "0564aac34c61a4e51badd896574653bc32f0a69ab902ddbb800cd421c1e9f4f8"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.1"
+  pusher_beams_android:
+    dependency: transitive
+    description:
+      name: pusher_beams_android
+      sha256: b60f9f4b2b83cd4b02d6de6e28ef8daf0f9a67493c5ff796da1387239b1a25bd
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.1"
+  pusher_beams_ios:
+    dependency: transitive
+    description:
+      name: pusher_beams_ios
+      sha256: "09871ce8ce5a64d43ed5bed3b3816a9dfa507e492bfe4bd0d3168a094c7d500c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.1"
+  pusher_beams_platform_interface:
+    dependency: transitive
+    description:
+      name: pusher_beams_platform_interface
+      sha256: "90645da247512f080a29d95b23a46998d2f81c37c849376288debf9625457731"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.1"
+  pusher_beams_web:
+    dependency: transitive
+    description:
+      name: pusher_beams_web
+      sha256: f95a14e497263a75f7025fc3c5471fe315f36fb85b113022ca1ac579e10bbe38
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.1"
   riverpod:
     dependency: transitive
     description:
@@ -765,14 +813,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.10.0"
-  sprintf:
-    dependency: transitive
-    description:
-      name: sprintf
-      sha256: "1fc9ffe69d4df602376b52949af107d8f5703b77cda567c4d7d86a0693120f23"
-      url: "https://pub.dev"
-    source: hosted
-    version: "7.0.0"
   sqflite:
     dependency: transitive
     description:
@@ -942,13 +982,13 @@ packages:
     source: hosted
     version: "3.1.1"
   uuid:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: uuid
-      sha256: "814e9e88f21a176ae1359149021870e87f7cddaf633ab678a5d2b0bff7fd1ba8"
+      sha256: "648e103079f7c64a36dc7d39369cabb358d377078a051d6ae2ad3aa539519313"
       url: "https://pub.dev"
     source: hosted
-    version: "4.4.0"
+    version: "3.0.7"
   vector_graphics:
     dependency: transitive
     description:

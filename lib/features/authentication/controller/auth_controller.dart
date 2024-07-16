@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:async';
 import 'dart:math';
 
@@ -8,10 +10,12 @@ import 'package:fpdart/fpdart.dart';
 
 import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/failures.dart';
+import 'package:hash_balance/core/providers/pusher_beams_provider.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/models/user_devices_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:pusher_beams/pusher_beams.dart';
 
 final authControllerProvider = StateNotifierProvider<AuthController, bool>(
   (ref) => AuthController(
@@ -96,8 +100,23 @@ class AuthController extends StateNotifier<bool> {
         password,
       );
 
-      return result.fold((l) => left(Failures(l.message)), (userModel) {
-        _ref.read(userProvider.notifier).update((state) => userModel);
+      return result.fold(
+          (l) => left(
+                Failures(l.message),
+              ), (userModel) async {
+        _ref.read(userProvider.notifier).update(
+              (state) => userModel,
+            );
+        final pusherBeams = PusherBeams.instance;
+        pusherBeams.start(Constants.pusherBeamsId);
+        await pusherBeams
+            .setUserId(userModel.uid, _ref.watch(beamsAuthProvider), (error) {
+          if (error != null) {
+            print('Error setting User ID: $error');
+          } else {
+            print('User ID set successfully');
+          }
+        });
         return right(userModel);
       });
     } on FirebaseAuthException catch (e) {
@@ -123,8 +142,18 @@ class AuthController extends StateNotifier<bool> {
       );
       final result = await _authRepository.signInWithEmailAndPassword(
           email, userDevice, password);
-      return result.fold((l) => left(Failures(l.message)), (userModel) {
+      return result.fold((l) => left(Failures(l.message)), (userModel) async {
         _ref.read(userProvider.notifier).update((state) => userModel);
+        final pusherBeams = PusherBeams.instance;
+        pusherBeams.start(Constants.pusherBeamsId);
+        await pusherBeams
+            .setUserId(userModel.uid, _ref.watch(beamsAuthProvider), (error) {
+          if (error != null) {
+            print('Error setting User ID: $error');
+          } else {
+            print('User ID set successfully');
+          }
+        });
         return right(userModel);
       });
     } on FirebaseAuthException catch (e) {
@@ -138,6 +167,8 @@ class AuthController extends StateNotifier<bool> {
 
   void signOut(WidgetRef ref) {
     final uid = _ref.watch(userProvider)!.uid;
+    final pusherBeams = PusherBeams.instance;
+    pusherBeams.stop();
     _authRepository.signOut(ref, uid);
   }
 

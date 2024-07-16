@@ -2,8 +2,8 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/push_notification/repository/push_notification_repository.dart';
-import 'package:hash_balance/models/notification_model.dart';
 
 final pushNotificationControllerProvider =
     StateNotifierProvider<PushNotificationController, bool>(
@@ -27,9 +27,14 @@ class PushNotificationController extends StateNotifier<bool> {
         _ref = ref,
         super(false);
 
-  Future<void> sendPushNotification(
-      List<String> deviceIds, String targetUid, NotificationModel notif) async {
-    await _pushNotificationRepository.sendPushNotification(
-        deviceIds, targetUid, notif);
+  // Future<void> sendPushNotification(
+  //     List<String> deviceIds, String targetUid, NotificationModel notif) async {
+  //   await _pushNotificationRepository.sendPushNotification(
+  //       deviceIds, targetUid, notif);
+  // }
+
+  Future<void> sendTest() async {
+    final uid = _ref.watch(userProvider)!.uid;
+    await _pushNotificationRepository.sendFriendRequestPushNotification(uid);
   }
 }

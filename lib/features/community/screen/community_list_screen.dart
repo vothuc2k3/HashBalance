@@ -5,6 +5,7 @@ import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
+import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
 
 class CommunityListScreen extends ConsumerStatefulWidget {
@@ -27,6 +28,10 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen> {
     );
   }
 
+  void sendTest() async {
+    await ref.watch(pushNotificationControllerProvider.notifier).sendTest();
+  }
+
   @override
   Widget build(BuildContext context) {
     final communityList = ref.watch(getTopCommunityListProvider);
@@ -36,7 +41,9 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen> {
           if (communities == null || communities.isEmpty) {
             return Center(
               child: IconButton(
-                onPressed: () {},
+                onPressed: () {
+                  sendTest();
+                },
                 icon: const Icon(Icons.abc),
               ),
             );

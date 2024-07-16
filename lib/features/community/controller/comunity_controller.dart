@@ -98,7 +98,7 @@ class CommunityController extends StateNotifier<bool> {
     final currentUser = _ref.watch(userProvider);
 
     final Community community = Community(
-      id: generateRandomId(),
+      id: await generateRandomId(),
       name: name,
       profileImage: Constants
           .avatarDefault[Random().nextInt(Constants.avatarDefault.length)],

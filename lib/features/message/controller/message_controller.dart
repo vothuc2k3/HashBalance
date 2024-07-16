@@ -60,7 +60,7 @@ class MessageController extends StateNotifier<bool> {
       final uid = _ref.read(userProvider)!.uid;
       _messageRepository.sendMessage(
         Message(
-          id: generateRandomId(),
+          id:await  generateRandomId(),
           text: text,
           uid: uid,
           createdAt: Timestamp.now(),

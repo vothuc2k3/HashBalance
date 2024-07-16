@@ -68,4 +68,6 @@ class Constants {
   }
 
   static String? deviceToken;
+
+  static String pusherBeamsId = '05608c4c-b933-4cf5-9c56-9eeb904eaf83';
 }

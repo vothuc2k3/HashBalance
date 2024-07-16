@@ -82,7 +82,7 @@ class FriendController extends StateNotifier<bool> {
       await _friendRepository.sendFriendRequest(request);
 
       final notif = NotificationModel(
-        id: generateRandomId(),
+        id: await generateRandomId(),
         title: Constants.friendRequestTitle,
         message: Constants.getFriendRequestContent(sender!.name),
         type: Constants.friendRequestType,
@@ -141,7 +141,7 @@ class FriendController extends StateNotifier<bool> {
       );
 
       final notif = NotificationModel(
-        id: generateRandomId(),
+        id:await generateRandomId(),
         title: Constants.acceptRequestTitle,
         message: Constants.getAcceptRequestContent(currentUser.name),
         targetUid: targetUser.uid,
