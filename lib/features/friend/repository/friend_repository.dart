@@ -6,6 +6,7 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/models/follower_model.dart';
 import 'package:hash_balance/models/friendship_model.dart';
 import 'package:hash_balance/models/friendship_request_model.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -121,7 +122,7 @@ class FriendRepository {
       if (friendUids.isEmpty) {
         return [];
       }
-      
+
       final friendQuery =
           await _users.where(FieldPath.documentId, whereIn: friendUids).get();
 
@@ -135,6 +136,23 @@ class FriendRepository {
     }
   }
 
+  FutureVoid followUser(Follower followerModel) async {
+    try {
+      await _follower.doc(followerModel.id).set(followerModel.toMap());
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  Stream<bool> getFollowingStatus(String uids) {
+    return _follower.doc(uids).snapshots().map((event) {
+      return event.exists;
+    });
+  }
+
   //REFERENCE ALL THE FRIENDSHIPS
   CollectionReference get _users =>
       _firestore.collection(FirebaseConstants.usersCollection);
@@ -144,4 +162,7 @@ class FriendRepository {
   //REFERENCE ALL THE FRIEND REQUESTS
   CollectionReference get _friendRequest =>
       _firestore.collection(FirebaseConstants.friendRequestCollection);
+  //REFERENCE ALL THE FRIEND REQUESTS
+  CollectionReference get _follower =>
+      _firestore.collection(FirebaseConstants.followerCollection);
 }

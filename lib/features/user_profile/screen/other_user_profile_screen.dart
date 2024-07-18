@@ -30,6 +30,15 @@ class _OtherUserProfileScreenState
   final double coverHeight = 250;
   final double profileHeight = 120;
 
+  void followUser(UserModel targetUser) async {
+    final result = await ref
+        .watch(friendControllerProvider.notifier)
+        .followUser(targetUser.uid);
+    result.fold((l) {
+      showSnackBar(context, l.message);
+    }, (_) {});
+  }
+
   void sendAddFriendRequest(UserModel targetUser) async {
     final result = await ref
         .watch(friendControllerProvider.notifier)
@@ -107,6 +116,8 @@ class _OtherUserProfileScreenState
       ),
       body: targetUser.when(
           data: (targetUser) {
+            final isFollowing =
+                ref.watch(getFollowingStatusProvider(targetUser));
             final isFriend = ref.watch(getFriendshipStatusProvider(targetUser));
             final requestId = getUids(currentUser!.uid, targetUser.uid);
             return ListView(
@@ -185,6 +196,19 @@ class _OtherUserProfileScreenState
                         ],
                       ),
                       const SizedBox(height: 16),
+                      isFollowing.when(
+                        data: (isFollowing) {
+                          return _buildFollowButton(
+                            isFollowing,
+                            followUser,
+                            targetUser,
+                          );
+                        },
+                        error: (error, stackTrace) =>
+                            ErrorText(error: error.toString()),
+                        loading: () => const Loading(),
+                      ),
+                      const SizedBox(height: 8),
                       isFriend.when(
                           data: (isFriend) {
                             return isFriend == true
@@ -199,9 +223,13 @@ class _OtherUserProfileScreenState
                                     .when(
                                       data: (request) {
                                         if (request == null) {
-                                          return _buildAddFriendButton(
-                                            sendAddFriendRequest,
-                                            targetUser,
+                                          return Column(
+                                            children: [
+                                              _buildAddFriendButton(
+                                                sendAddFriendRequest,
+                                                targetUser,
+                                              ),
+                                            ],
                                           );
                                         } else if (request.requestUid ==
                                             currentUser.uid) {
@@ -272,6 +300,50 @@ class _OtherUserProfileScreenState
           error: (error, stackTrace) => ErrorText(error: error.toString()),
           loading: () => const Loading()),
     );
+  }
+
+  Widget _buildFollowButton(
+    bool isFollowing,
+    dynamic followUser,
+    UserModel targetUser,
+  ) {
+    return isFollowing
+        ? ElevatedButton.icon(
+            onPressed: () {
+              followUser(targetUser);
+            },
+            icon: const Icon(Icons.check, color: Colors.white),
+            label: const Text('Following'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              textStyle:
+                  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              elevation: 5,
+            ),
+          ).animate().fadeIn(duration: 600.ms).moveY(
+            begin: 30, end: 0, duration: 600.ms, curve: Curves.easeOutBack)
+        : ElevatedButton.icon(
+            onPressed: () {
+              followUser(targetUser);
+            },
+            icon: const Icon(Icons.person_add_alt_1, color: Colors.white),
+            label: const Text('Follow'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              textStyle:
+                  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              elevation: 5,
+            ),
+          ).animate().fadeIn(duration: 600.ms).moveY(
+            begin: 30, end: 0, duration: 600.ms, curve: Curves.easeOutBack);
   }
 
   Widget _buildSocialIcon(IconData icon) {

@@ -10,6 +10,7 @@ import 'package:hash_balance/features/friend/repository/friend_repository.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
+import 'package:hash_balance/models/follower_model.dart';
 import 'package:hash_balance/models/friendship_model.dart';
 import 'package:hash_balance/models/friendship_request_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
@@ -19,6 +20,13 @@ final fetchFriendsProvider = FutureProvider.family((ref, String uid) async {
   return await ref
       .watch(friendControllerProvider.notifier)
       .fetchFriendsByUser(uid);
+});
+
+final getFollowingStatusProvider =
+    StreamProvider.family((ref, UserModel targetUser) {
+  return ref
+      .watch(friendControllerProvider.notifier)
+      .getFollowingStatus(targetUser);
 });
 
 final getFriendshipStatusProvider =
@@ -47,8 +55,6 @@ final friendControllerProvider =
         ));
 
 class FriendController extends StateNotifier<bool> {
-  final UserController _userController;
-  final PushNotificationController _pushNotificationController;
   final NotificationController _notificationController;
   final FriendRepository _friendRepository;
   final Ref _ref;
@@ -59,9 +65,7 @@ class FriendController extends StateNotifier<bool> {
     required NotificationController notificationController,
     required FriendRepository friendRepository,
     required Ref ref,
-  })  : _userController = userController,
-        _pushNotificationController = pushNotificationController,
-        _notificationController = notificationController,
+  })  : _notificationController = notificationController,
         _friendRepository = friendRepository,
         _ref = ref,
         super(false);
@@ -141,7 +145,7 @@ class FriendController extends StateNotifier<bool> {
       );
 
       final notif = NotificationModel(
-        id:await generateRandomId(),
+        id: await generateRandomId(),
         title: Constants.acceptRequestTitle,
         message: Constants.getAcceptRequestContent(currentUser.name),
         targetUid: targetUser.uid,
@@ -198,5 +202,27 @@ class FriendController extends StateNotifier<bool> {
 
   Future<List<UserModel>> fetchFriendsByUser(String uid) async {
     return await _friendRepository.fetchFriendsByUser(uid);
+  }
+
+  FutureVoid followUser(String targetUid) async {
+    try {
+      final uid = _ref.read(userProvider)!.uid;
+      final followerModel = Follower(
+          id: getUids(targetUid, uid),
+          followerUid: uid,
+          targetUid: targetUid,
+          createdAt: Timestamp.now());
+      await _friendRepository.followUser(followerModel);
+      return right(null);
+    } on FirebaseException catch (e) {
+      throw Failures(e.message!);
+    } catch (e) {
+      throw Failures(e.toString());
+    }
+  }
+
+  Stream<bool> getFollowingStatus(UserModel targetUser) {
+    final uid = _ref.read(userProvider)!.uid;
+    return _friendRepository.getFollowingStatus(getUids(targetUser.uid, uid));
   }
 }

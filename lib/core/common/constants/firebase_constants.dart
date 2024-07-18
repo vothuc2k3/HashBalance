@@ -11,4 +11,5 @@ class FirebaseConstants {
   static const communityMembershipCollection = 'community_membership';
   static const postUpvoteCollection = 'post_upvote';
   static const postDownvoteCollection = 'post_downvote';
+  static const followerCollection = 'follower';
 }
