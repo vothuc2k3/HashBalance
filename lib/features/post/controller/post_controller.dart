@@ -8,9 +8,16 @@ import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/post/repository/post_repository.dart';
-import 'package:hash_balance/models/post_downvote_model.dart';
 import 'package:hash_balance/models/post_model.dart';
-import 'package:hash_balance/models/post_upvote_model.dart';
+import 'package:hash_balance/models/post_vote_model.dart';
+
+final getPostVoteCountProvider = StreamProvider.family((ref, Post post) {
+  return ref.watch(postControllerProvider.notifier).getPostVoteCount(post);
+});
+
+final getVoteStatusProvider = FutureProvider.family((ref, Post post) {
+  return ref.watch(postControllerProvider.notifier).getVoteStatus(post);
+});
 
 final fetchCommunityPostsProvider = StreamProvider.family(
     (ref, String communityName) => ref
@@ -24,24 +31,6 @@ final postControllerProvider = StateNotifierProvider<PostController, bool>(
 
 final getPostByIdProvider = StreamProvider.family((ref, String postId) {
   return ref.watch(postControllerProvider.notifier).getPostById(postId);
-});
-
-final getPostUpvoteStatusProvider = StreamProvider.family((ref, String postId) {
-  return ref.watch(postControllerProvider.notifier).checkDidUpvote(postId);
-});
-
-final getPostDownvoteStatusProvider =
-    StreamProvider.family((ref, String postId) {
-  return ref.watch(postControllerProvider.notifier).checkDidDownvote(postId);
-});
-
-final getPostUpvoteCountProvider = StreamProvider.family((ref, String postId) {
-  return ref.watch(postControllerProvider.notifier).getUpvotes(postId);
-});
-
-final getPostDownvoteCountProvider =
-    StreamProvider.family((ref, String postId) {
-  return ref.watch(postControllerProvider.notifier).getDownvotes(postId);
 });
 
 class PostController extends StateNotifier<bool> {
@@ -83,25 +72,19 @@ class PostController extends StateNotifier<bool> {
     }
   }
 
-  FutureVoid upvote(String postId, String authorUid) async {
+  FutureVoid votePost(Post post, bool userVote) async {
     try {
-      final user = _ref.watch(userProvider);
-
-      final postUpvote = PostUpvote(
-        id: getPostUpvoteId(user!.uid, postId),
-        postId: postId,
-        uid: user.uid,
+      final currentUser = _ref.read(userProvider)!;
+      final postVoteModel = PostVote(
+        id: await generateRandomId(),
+        postId: post.id,
+        uid: currentUser.uid,
+        isUpvoted: userVote,
         createdAt: Timestamp.now(),
       );
-      final result = await _postRepository.upvote(postUpvote, authorUid);
-      return result.fold(
-        (l) {
-          return left(Failures(l.message));
-        },
-        (r) {
-          return right(null);
-        },
-      );
+
+      await _postRepository.votePost(postVoteModel);
+      return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {
@@ -109,49 +92,20 @@ class PostController extends StateNotifier<bool> {
     }
   }
 
-  FutureVoid downvote(String postId, String authorUid) async {
+  Future<bool?> getVoteStatus(Post post) async {
     try {
-      final user = _ref.read(userProvider);
-
-      final postDownvote = PostDownvote(
-        id: getPostDownvoteId(user!.uid, postId),
-        postId: postId,
-        uid: user.uid,
-        createdAt: Timestamp.now(),
-      );
-      final result = await _postRepository.downvote(postDownvote, authorUid);
-      return result.fold(
-        (l) {
-          return left(Failures(l.message));
-        },
-        (r) {
-          return right(null);
-        },
-      );
+      final uid = _ref.read(userProvider)!.uid;
+      return await _postRepository.getVoteStatus(uid, post.id);
     } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
+      throw Failures(e.message!);
     } catch (e) {
-      return left(Failures(e.toString()));
+      throw Failures(e.toString());
     }
   }
 
-  Stream<bool> checkDidUpvote(String postId) {
-    final user = _ref.read(userProvider);
-    return _postRepository.checkDidUpvote(getPostUpvoteId(user!.uid, postId));
-  }
-
-  Stream<int> getUpvotes(String postId) {
-    return _postRepository.getUpvotes(postId);
-  }
-
-  Stream<bool> checkDidDownvote(String postId) {
-    final user = _ref.read(userProvider);
-    return _postRepository
-        .checkDidDownvote(getPostDownvoteId(user!.uid, postId));
-  }
-
-  Stream<int> getDownvotes(String postId) {
-    return _postRepository.getDownvotes(postId);
+  Stream<Map<String, int>> getPostVoteCount(Post post) {
+    final uid = _ref.read(userProvider)!.uid;
+    return _postRepository.getPostVoteCount(post, uid);
   }
 
   FutureString deletePost(Post post) async {

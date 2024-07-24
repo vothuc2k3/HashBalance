@@ -1,8 +1,11 @@
 import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:video_player/video_player.dart';
+
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/core/utils.dart';
@@ -12,8 +15,6 @@ import 'package:hash_balance/features/home/screen/home_screen.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
-import 'package:video_player/video_player.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class CreatePostScreen extends ConsumerStatefulWidget {
   const CreatePostScreen({super.key});
@@ -44,56 +45,33 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     super.dispose();
   }
 
-  Future<bool> _requestPermission(Permission permission) async {
-    PermissionStatus status = await permission.status;
-    if (status.isDenied) {
-      status = await permission.request();
-    }
-    return status.isGranted;
-  }
-
   void selectImage() async {
-    if (await _requestPermission(Permission.photos)) {
-      final result = await pickImage();
-      if (result != null) {
-        setState(() {
-          image = File(result.files.first.path!);
-        });
-      }
-    } else {
-      // ignore: use_build_context_synchronously
-      showSnackBar(context, 'Storage permission denied');
+    final result = await pickImage();
+    if (result != null) {
+      setState(() {
+        image = File(result.files.first.path!);
+      });
     }
   }
 
   void selectVideo() async {
-    if (await _requestPermission(Permission.videos)) {
-      final result = await pickVideo();
-      if (result != null) {
-        setState(() {
-          isSelectingVideo = true;
-          video = File(result.files.first.path!);
-          _videoPlayerController = VideoPlayerController.file(video!)
-            ..initialize().then((_) {
-              setState(() {});
-              _videoPlayerController!.play();
-            });
-        });
-      }
-    } else {
-      // ignore: use_build_context_synchronously
-      showSnackBar(context, 'Storage permission denied');
+    final result = await pickVideo();
+    if (result != null) {
+      setState(() {
+        isSelectingVideo = true;
+        video = File(result.files.first.path!);
+        _videoPlayerController = VideoPlayerController.file(video!)
+          ..initialize().then((_) {
+            setState(() {});
+            _videoPlayerController!.play();
+          });
+      });
     }
   }
 
   void createPost(String uid) async {
     final result = await ref.read(postControllerProvider.notifier).createPost(
-          uid,
-          selectedCommunity!,
-          image,
-          video,
-          contentController.text,
-        );
+        uid, selectedCommunity!, image, video, contentController.text);
     result.fold((l) {
       setState(() {
         isCreatingPost = false;
@@ -220,7 +198,8 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                       hintText:
                                           'Hey ${user.name}, what are you thinking?',
                                       hintStyle: TextStyle(
-                                          color: Colors.white.withOpacity(0.5)),
+                                        color: Colors.white.withOpacity(0.5),
+                                      ),
                                       border: InputBorder.none,
                                     ),
                                     maxLines: null,
@@ -565,7 +544,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               }
             },
             error: (Object error, StackTrace stackTrace) =>
-                ErrorText(error: error.toString()),
+                ErrorText(error: error.toString()), 
             loading: () => const Loading()));
   }
 }

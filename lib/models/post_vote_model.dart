@@ -3,28 +3,32 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class PostUpvote {
+class PostVote {
   final String id;
   final String postId;
   final String uid;
+  final bool isUpvoted;
   final Timestamp createdAt;
-  PostUpvote({
+  PostVote({
     required this.id,
     required this.postId,
     required this.uid,
+    required this.isUpvoted,
     required this.createdAt,
   });
 
-  PostUpvote copyWith({
+  PostVote copyWith({
     String? id,
     String? postId,
     String? uid,
+    bool? isUpvoted,
     Timestamp? createdAt,
   }) {
-    return PostUpvote(
+    return PostVote(
       id: id ?? this.id,
       postId: postId ?? this.postId,
       uid: uid ?? this.uid,
+      isUpvoted: isUpvoted ?? this.isUpvoted,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -34,41 +38,49 @@ class PostUpvote {
       'id': id,
       'postId': postId,
       'uid': uid,
+      'isUpvoted': isUpvoted,
       'createdAt': createdAt,
     };
   }
 
-  factory PostUpvote.fromMap(Map<String, dynamic> map) {
-    return PostUpvote(
+  factory PostVote.fromMap(Map<String, dynamic> map) {
+    return PostVote(
       id: map['id'] as String,
       postId: map['postId'] as String,
       uid: map['uid'] as String,
+      isUpvoted: map['isUpvoted'] as bool,
       createdAt: map['createdAt'] as Timestamp,
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory PostUpvote.fromJson(String source) =>
-      PostUpvote.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory PostVote.fromJson(String source) =>
+      PostVote.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
-    return 'PostUpvote(id: $id, postId: $postId, uid: $uid, createdAt: $createdAt)';
+    return 'PostVote(id: $id, postId: $postId, uid: $uid, isUpvoted: $isUpvoted, createdAt: $createdAt)';
   }
 
   @override
-  bool operator ==(covariant PostUpvote other) {
+  bool operator ==(covariant PostVote other) {
     if (identical(this, other)) return true;
-
-    return other.id == id &&
-        other.postId == postId &&
-        other.uid == uid &&
-        other.createdAt == createdAt;
+  
+    return 
+      other.id == id &&
+      other.postId == postId &&
+      other.uid == uid &&
+      other.isUpvoted == isUpvoted &&
+      other.createdAt == createdAt;
   }
 
   @override
   int get hashCode {
-    return id.hashCode ^ postId.hashCode ^ uid.hashCode ^ createdAt.hashCode;
+    return id.hashCode ^
+      postId.hashCode ^
+      uid.hashCode ^
+      isUpvoted.hashCode ^
+      createdAt.hashCode;
   }
 }

@@ -47,19 +47,10 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     });
   }
 
-  void upvotePost() async {
+  void votePost(bool userVote) async {
     final result = await ref
         .read(postControllerProvider.notifier)
-        .upvote(widget.post.id, widget.post.uid);
-    result.fold((l) {
-      showSnackBar(context, l.toString());
-    }, (_) {});
-  }
-
-  void downvotePost() async {
-    final result = await ref
-        .read(postControllerProvider.notifier)
-        .downvote(widget.post.id, widget.post.uid);
+        .votePost(widget.post, userVote);
     result.fold((l) {
       showSnackBar(context, l.toString());
     }, (_) {});
@@ -169,7 +160,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Column(
@@ -344,8 +334,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         ),
         PostActions(
           post: widget.post,
-          onUpvote: upvotePost,
-          onDownvote: downvotePost,
+          onVote: votePost,
           onComment: () {
             navigateToCommentScreen(widget.post.id);
           },
@@ -511,21 +500,18 @@ class _PostContainerState extends ConsumerState<PostContainer> {
 
 class PostActions extends ConsumerWidget {
   final Post _post;
-  final Function _onUpvote;
-  final Function _onDownvote;
+  final Function _onVote;
   final Function _onComment;
   final Function _onShare;
 
   const PostActions({
     super.key,
     required Post post,
-    required Function onUpvote,
-    required Function onDownvote,
+    required Function onVote,
     required Function onComment,
     required Function onShare,
   })  : _post = post,
-        _onUpvote = onUpvote,
-        _onDownvote = onDownvote,
+        _onVote = onVote,
         _onComment = onComment,
         _onShare = onShare;
 
@@ -536,27 +522,35 @@ class PostActions extends ConsumerWidget {
       children: [
         _buildVoteButton(
           icon: Icons.arrow_upward_rounded,
-          count: ref.watch(getPostUpvoteCountProvider(_post.id)).whenOrNull(
+          count: ref.watch(getPostVoteCountProvider(_post)).whenOrNull(
               data: (count) {
-            return count;
+            return count['upvotes'];
           }),
-          color: ref.watch(getPostUpvoteStatusProvider(_post.id)).whenOrNull(
+          color: ref.watch(getVoteStatusProvider(_post)).whenOrNull(
               data: (status) {
-            return status ? Colors.orange : Colors.grey[600];
+            if (status != null) {
+              return status ? Colors.orange : Colors.grey[600];
+            } else {
+              return Colors.grey[600];
+            }
           }),
-          onTap: _onUpvote,
+          onTap: _onVote,
         ),
         _buildVoteButton(
           icon: Mdi.arrowDown,
-          count: ref.watch(getPostDownvoteCountProvider(_post.id)).whenOrNull(
+          count: ref.watch(getPostVoteCountProvider(_post)).whenOrNull(
               data: (count) {
-            return count;
+            return count['downvotes'];
           }),
-          color: ref.watch(getPostDownvoteStatusProvider(_post.id)).whenOrNull(
+          color: ref.watch(getVoteStatusProvider(_post)).whenOrNull(
               data: (status) {
-            return status ? Colors.blue : Colors.grey[600];
+            if (status != null) {
+              return status ? Colors.blue : Colors.grey[600];
+            } else {
+              return Colors.grey[600];
+            }
           }),
-          onTap: _onDownvote,
+          onTap: _onVote,
         ),
         _buildActionButton(
           icon: Mdi.commentOutline,

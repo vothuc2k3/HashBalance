@@ -8,15 +8,14 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
-import 'package:hash_balance/core/utils.dart';
-import 'package:hash_balance/models/post_downvote_model.dart';
 import 'package:hash_balance/models/post_model.dart';
-import 'package:hash_balance/models/post_upvote_model.dart';
+import 'package:hash_balance/models/post_vote_model.dart';
 
 final postRepositoryProvider = Provider((ref) {
   return PostRepository(
-      firestore: ref.read(firebaseFirestoreProvider),
-      storageRepository: ref.read(storageRepositoryProvider));
+    firestore: ref.read(firebaseFirestoreProvider),
+    storageRepository: ref.read(storageRepositoryProvider),
+  );
 });
 
 class PostRepository {
@@ -83,89 +82,76 @@ class PostRepository {
     }
   }
 
-  //UPVOTE A POST
-  FutureVoid upvote(PostUpvote postUpvote, String authorUid) async {
+  //VOTE THE POST
+  Future<void> votePost(PostVote postVoteModel) async {
     try {
-      final postDownvoteId =
-          getPostDownvoteId(postUpvote.uid, postUpvote.postId);
-
-      final existingUpvote = await _postUpvotes.doc(postUpvote.id).get();
-
-      final existingDownvote = await _postDownvotes.doc(postDownvoteId).get();
-
-      if (existingUpvote.exists) {
-        await _postUpvotes.doc(postUpvote.id).delete();
+      final querySnapshot = await _postVotes
+          .where('postId', isEqualTo: postVoteModel.postId)
+          .where('uid', isEqualTo: postVoteModel.uid)
+          .get();
+      if (querySnapshot.docs.isEmpty) {
+        await _postVotes.doc(postVoteModel.id).set(postVoteModel.toMap());
       } else {
-        if (existingDownvote.exists) {
-          await _postDownvotes.doc(postDownvoteId).delete();
+        final data = querySnapshot.docs.first.data() as Map<String, dynamic>;
+        final postVoteModelId = data['id'] as String;
+        final postVoteModelCopy = postVoteModel.copyWith(id: postVoteModelId);
+        final isAlreadyUpvoted = data['isUpvoted'] as bool;
+        final doWantToUpvote = postVoteModel.isUpvoted;
+        if (doWantToUpvote == isAlreadyUpvoted) {
+          await _postVotes.doc(postVoteModelId).delete();
+        } else {
+          await _postVotes
+              .doc(postVoteModelId)
+              .update(postVoteModelCopy.toMap());
         }
-        await _postUpvotes.doc(postUpvote.id).set(postUpvote.toMap());
       }
-      return right(null);
     } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
+      throw Failures(e.message!);
     } catch (e) {
-      return left(Failures(e.toString()));
+      throw Failures(e.toString());
     }
   }
 
-// DOWNVOTE A POST
-  FutureVoid downvote(PostDownvote postDownvote, String authorUid) async {
+  //CHECK VOTE STATUS OF A USER TOWARDS A POST
+  Future<bool?> getVoteStatus(String currentUid, String postId) async {
     try {
-      final postUpvoteId =
-          getPostUpvoteId(postDownvote.uid, postDownvote.postId);
-
-      final existingDownvote = await _postDownvotes.doc(postDownvote.id).get();
-
-      final existingUpvote = await _postUpvotes.doc(postUpvoteId).get();
-
-      if (existingDownvote.exists) {
-        await _postDownvotes.doc(postDownvote.id).delete();
-      } else {
-        if (existingUpvote.exists) {
-          await _postUpvotes.doc(postUpvoteId).delete();
-        }
-        await _postDownvotes.doc(postDownvote.id).set(postDownvote.toMap());
+      final querySnapshot = await _postVotes
+          .where('postId', isEqualTo: postId)
+          .where('uid', isEqualTo: currentUid)
+          .get();
+      if (querySnapshot.docs.isEmpty) {
+        return null;
       }
-      return right(null);
+      final data = querySnapshot.docs.first.data() as Map<String, dynamic>;
+      return data['isUpvoted'];
     } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
+      throw Failures(e.message!);
     } catch (e) {
-      return left(Failures(e.toString()));
+      throw Failures(e.toString());
     }
   }
 
-  //CHECK IF THE USER UPVOTED THE POST
-  Stream<bool> checkDidUpvote(String postUpvoteId) {
-    return _postUpvotes.doc(postUpvoteId).snapshots().map((event) {
-      return event.exists;
-    });
-  }
-
-  //CHECK IF THE USER DOWNVOTED THE POST
-  Stream<bool> checkDidDownvote(String postDownvoteId) {
-    return _postDownvotes.doc(postDownvoteId).snapshots().map((event) {
-      return event.exists;
-    });
-  }
-
-  //GET THE UPVOTE COUNTS OF THE POSTS
-  Stream<int> getUpvotes(String postId) {
-    return _postUpvotes
-        .where('postId', isEqualTo: postId)
+  //GET VOTE COUNT OF A POST
+  Stream<Map<String, int>> getPostVoteCount(Post post, String uid) {
+    return _postVotes
+        .where('postId', isEqualTo: post.id)
+        .where('uid', isEqualTo: uid)
         .snapshots()
         .map((event) {
-      return event.docs.length;
-    });
-  }
-
-  //GET THE DOWNVOTE COUNTS OF THE POSTS
-  Stream<int> getDownvotes(String postId) {
-    return _postDownvotes
-        .where('postId', isEqualTo: postId)
-        .snapshots()
-        .map((event) {
-      return event.docs.length;
+      int upvoteCount = 0;
+      int downvoteCount = 0;
+      for (var doc in event.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        if (data['isUpvoted'] == true) {
+          upvoteCount++;
+        } else {
+          downvoteCount++;
+        }
+      }
+      return {
+        'upvotes': upvoteCount,
+        'downvotes': downvoteCount,
+      };
     });
   }
 
@@ -188,7 +174,6 @@ class PostRepository {
   }
 
   //GET POST DATA BY ID
-  //TODO: CHECK THIS FUNCTION
   Stream<Post> getPostById(String postId) {
     return _posts.doc(postId).snapshots().map((event) {
       final data = event.data() as Map<String, dynamic>;
@@ -239,9 +224,6 @@ class PostRepository {
   CollectionReference get _users =>
       _firestore.collection(FirebaseConstants.usersCollection);
   //REFERENCE ALL THE POSTS
-  CollectionReference get _postUpvotes =>
-      _firestore.collection(FirebaseConstants.postUpvoteCollection);
-  //REFERENCE ALL THE POSTS
-  CollectionReference get _postDownvotes =>
-      _firestore.collection(FirebaseConstants.postDownvoteCollection);
+  CollectionReference get _postVotes =>
+      _firestore.collection(FirebaseConstants.postVoteCollection);
 }
