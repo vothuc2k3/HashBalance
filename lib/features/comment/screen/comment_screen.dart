@@ -49,19 +49,10 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
     );
   }
 
-  void upvoteComment(String commentId, String authorUid) async {
+  void voteComment(String commentId, bool userVote) async {
     final result = await ref
         .read(commentControllerProvider.notifier)
-        .upvote(commentId, authorUid);
-    result.fold((l) {
-      showSnackBar(context, l.toString());
-    }, (_) {});
-  }
-
-  void downvoteComment(String commentId, String authorUid) async {
-    final result = await ref
-        .read(commentControllerProvider.notifier)
-        .downvote(commentId, authorUid);
+        .voteComment(commentId, userVote);
     result.fold((l) {
       showSnackBar(context, l.toString());
     }, (_) {});
@@ -279,37 +270,45 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
                   _buildVoteButton(
                     icon: Icons.arrow_upward_outlined,
                     count: ref
-                        .watch(getCommentUpvoteCountProvider(comment.id))
+                        .watch(getCommentVoteCountProvider(comment.id))
                         .whenOrNull(data: (count) {
-                      return count;
+                      return count['upvotes'];
                     }),
                     color: ref
-                        .watch(getCommentUpvoteStatusProvider(comment.id))
+                        .watch(getCommentVoteStatusProvider(comment.id))
                         .whenOrNull(
                       data: (status) {
-                        return status ? Colors.orange : Colors.grey[600];
+                        if (status == null) {
+                          return Colors.grey[600];
+                        } else {
+                          return Colors.orange;
+                        }
                       },
                     ),
                     onTap: () {
-                      upvoteComment(comment.id, comment.uid);
+                      voteComment(comment.id, true);
                     },
                   ),
                   _buildVoteButton(
                     icon: Icons.arrow_downward_outlined,
                     count: ref
-                        .watch(getCommentDownvoteCountProvider(comment.id))
+                        .watch(getCommentVoteCountProvider(comment.id))
                         .whenOrNull(data: (count) {
-                      return count;
+                      return count['downvotes'];
                     }),
                     color: ref
-                        .watch(getCommentDownvoteStatusProvider(comment.id))
+                        .watch(getCommentVoteStatusProvider(comment.id))
                         .whenOrNull(
                       data: (status) {
-                        return status ? Colors.blue : Colors.grey[600];
+                        if (status == null) {
+                          return Colors.grey[600];
+                        } else {
+                          return Colors.orange;
+                        }
                       },
                     ),
                     onTap: () {
-                      downvoteComment(comment.id, comment.uid);
+                      voteComment(comment.id, false);
                     },
                   ),
                 ],

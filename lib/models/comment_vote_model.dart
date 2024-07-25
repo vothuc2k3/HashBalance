@@ -3,32 +3,32 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class Comment {
+class CommentVote {
   final String id;
+  final String commentId;
   final String uid;
-  final String postId;
-  final String? content;
+  final bool isUpvoted;
   final Timestamp createdAt;
-  Comment({
+  CommentVote({
     required this.id,
+    required this.commentId,
     required this.uid,
-    required this.postId,
-    this.content,
+    required this.isUpvoted,
     required this.createdAt,
   });
 
-  Comment copyWith({
+  CommentVote copyWith({
     String? id,
+    String? commentId,
     String? uid,
-    String? postId,
-    String? content,
+    bool? isUpvoted,
     Timestamp? createdAt,
   }) {
-    return Comment(
+    return CommentVote(
       id: id ?? this.id,
+      commentId: commentId ?? this.commentId,
       uid: uid ?? this.uid,
-      postId: postId ?? this.postId,
-      content: content ?? this.content,
+      isUpvoted: isUpvoted ?? this.isUpvoted,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -36,50 +36,50 @@ class Comment {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'id': id,
+      'commentId': commentId,
       'uid': uid,
-      'postId': postId,
-      'content': content,
+      'isUpvoted': isUpvoted,
       'createdAt': createdAt,
     };
   }
 
-  factory Comment.fromMap(Map<String, dynamic> map) {
-    return Comment(
+  factory CommentVote.fromMap(Map<String, dynamic> map) {
+    return CommentVote(
       id: map['id'] as String,
+      commentId: map['commentId'] as String,
       uid: map['uid'] as String,
-      postId: map['postId'] as String,
-      content: map['content'] != null ? map['content'] as String : null,
+      isUpvoted: map['isUpvoted'] as bool,
       createdAt: map['createdAt'] as Timestamp,
     );
   }
 
+  String toJson() => json.encode(toMap());
+
+  factory CommentVote.fromJson(String source) =>
+      CommentVote.fromMap(json.decode(source) as Map<String, dynamic>);
+
   @override
   String toString() {
-    return 'Comment(id: $id, uid: $uid, postId: $postId, content: $content, createdAt: $createdAt)';
+    return 'CommentVote(id: $id, commentId: $commentId, uid: $uid, isUpvoted: $isUpvoted, createdAt: $createdAt)';
   }
 
   @override
-  bool operator ==(covariant Comment other) {
+  bool operator ==(covariant CommentVote other) {
     if (identical(this, other)) return true;
 
     return other.id == id &&
+        other.commentId == commentId &&
         other.uid == uid &&
-        other.postId == postId &&
-        other.content == content &&
+        other.isUpvoted == isUpvoted &&
         other.createdAt == createdAt;
   }
 
   @override
   int get hashCode {
     return id.hashCode ^
+        commentId.hashCode ^
         uid.hashCode ^
-        postId.hashCode ^
-        content.hashCode ^
+        isUpvoted.hashCode ^
         createdAt.hashCode;
   }
-
-  String toJson() => json.encode(toMap());
-
-  factory Comment.fromJson(String source) =>
-      Comment.fromMap(json.decode(source) as Map<String, dynamic>);
 }

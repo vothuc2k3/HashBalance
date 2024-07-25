@@ -113,17 +113,24 @@ class PostRepository {
   }
 
   //CHECK VOTE STATUS OF A USER TOWARDS A POST
-  Future<bool?> getVoteStatus(String currentUid, String postId) async {
+  Stream<bool?> getPostVoteStatus(Post post, String uid) {
     try {
-      final querySnapshot = await _postVotes
-          .where('postId', isEqualTo: postId)
-          .where('uid', isEqualTo: currentUid)
-          .get();
-      if (querySnapshot.docs.isEmpty) {
-        return null;
-      }
-      final data = querySnapshot.docs.first.data() as Map<String, dynamic>;
-      return data['isUpvoted'];
+      return _postVotes
+          .where('postId', isEqualTo: post.id)
+          .where('uid', isEqualTo: uid)
+          .snapshots()
+          .map((event) {
+        if (event.docs.isEmpty) {
+          return null;
+        }
+        bool isUpvoted = true;
+        for (var doc in event.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          isUpvoted = data['isUpvoted'];
+          break;
+        }
+        return isUpvoted;
+      });
     } on FirebaseException catch (e) {
       throw Failures(e.message!);
     } catch (e) {
@@ -137,22 +144,24 @@ class PostRepository {
         .where('postId', isEqualTo: post.id)
         .where('uid', isEqualTo: uid)
         .snapshots()
-        .map((event) {
-      int upvoteCount = 0;
-      int downvoteCount = 0;
-      for (var doc in event.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        if (data['isUpvoted'] == true) {
-          upvoteCount++;
-        } else {
-          downvoteCount++;
+        .map(
+      (event) {
+        int upvoteCount = 0;
+        int downvoteCount = 0;
+        for (var doc in event.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          if (data['isUpvoted'] == true) {
+            upvoteCount++;
+          } else {
+            downvoteCount++;
+          }
         }
-      }
-      return {
-        'upvotes': upvoteCount,
-        'downvotes': downvoteCount,
-      };
-    });
+        return {
+          'upvotes': upvoteCount,
+          'downvotes': downvoteCount,
+        };
+      },
+    );
   }
 
   //DELETE THE POST

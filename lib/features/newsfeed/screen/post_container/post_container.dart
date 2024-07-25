@@ -56,19 +56,10 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     }, (_) {});
   }
 
-  void upvoteComment(String commentId, String authorUid) async {
+  void voteComment(String commentId, bool userVote) async {
     final result = await ref
         .read(commentControllerProvider.notifier)
-        .upvote(commentId, authorUid);
-    result.fold((l) {
-      showSnackBar(context, l.toString());
-    }, (_) {});
-  }
-
-  void downvoteComment(String commentId, String authorUid) async {
-    final result = await ref
-        .read(commentControllerProvider.notifier)
-        .downvote(commentId, authorUid);
+        .voteComment(commentId, userVote);
     result.fold((l) {
       showSnackBar(context, l.toString());
     }, (_) {});
@@ -334,7 +325,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
             const Expanded(
               child: Text(''),
             ),
-            ref.watch(commentCountProvider(widget.post.id)).whenOrNull(
+            ref.watch(getPostCommentCountProvider(widget.post.id)).whenOrNull(
                   data: (count) {
                     return Text(
                       '$count Comments',
@@ -376,7 +367,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         //GET TOP COMMENT PROVIDER
         ref.watch(getTopCommentProvider(widget.post.id)).whenOrNull(
               data: (comment) {
-                if (comment.isEmpty) {
+                if (comment == null) {
                   return const SizedBox.shrink();
                 }
                 return Column(
@@ -388,7 +379,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                           CircleAvatar(
                             radius: 20,
                             child: ref
-                                .watch(getUserByUidProvider(comment.first.uid))
+                                .watch(getUserByUidProvider(comment.uid))
                                 .when(
                                   data: (user) {
                                     return CircleAvatar(
@@ -408,8 +399,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: ref
-                                  .watch(
-                                      getUserByUidProvider(comment.first.uid))
+                                  .watch(getUserByUidProvider(comment.uid))
                                   .whenOrNull(
                                 data: (user) {
                                   return [
@@ -418,9 +408,9 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                                             .textTheme
                                             .titleSmall),
                                     const SizedBox(height: 4),
-                                    Text(comment.first.content == null
+                                    Text(comment.content == null
                                         ? ''
-                                        : comment.first.content!),
+                                        : comment.content!),
                                   ];
                                 },
                               )!,
@@ -434,7 +424,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                       child: Row(
                         children: [
                           Text(
-                            formatTime(comment.first.createdAt),
+                            formatTime(comment.createdAt),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 12,
@@ -444,45 +434,45 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                           _buildVoteButton(
                             icon: Icons.arrow_upward_outlined,
                             count: ref
-                                .watch(getCommentUpvoteCountProvider(
-                                    comment.first.id))
+                                .watch(getCommentVoteCountProvider(comment.id))
                                 .whenOrNull(data: (count) {
-                              return count;
+                              return count['upvotes'];
                             }),
                             color: ref
-                                .watch(getCommentUpvoteStatusProvider(
-                                    comment.first.id))
+                                .watch(getCommentVoteStatusProvider(comment.id))
                                 .whenOrNull(
                               data: (status) {
-                                return status
-                                    ? Colors.orange
-                                    : Colors.grey[600];
+                                if (status == null) {
+                                  return Colors.grey[600];
+                                } else {
+                                  return Colors.orange;
+                                }
                               },
                             ),
                             onTap: () {
-                              upvoteComment(
-                                  comment.first.id, comment.first.uid);
+                              voteComment(comment.id, true);
                             },
                           ),
                           _buildVoteButton(
                             icon: Icons.arrow_downward_outlined,
                             count: ref
-                                .watch(getCommentDownvoteCountProvider(
-                                    comment.first.id))
+                                .watch(getCommentVoteCountProvider(comment.id))
                                 .whenOrNull(data: (count) {
-                              return count;
+                              return count['downvotes'];
                             }),
                             color: ref
-                                .watch(getCommentDownvoteStatusProvider(
-                                    comment.first.id))
+                                .watch(getCommentVoteStatusProvider(comment.id))
                                 .whenOrNull(
                               data: (status) {
-                                return status ? Colors.blue : Colors.grey[600];
+                                if (status == null) {
+                                  return Colors.grey[600];
+                                } else {
+                                  return Colors.blue;
+                                }
                               },
                             ),
                             onTap: () {
-                              downvoteComment(
-                                  comment.first.id, comment.first.uid);
+                              voteComment(comment.id, false);
                             },
                           ),
                         ],
@@ -554,7 +544,7 @@ class PostActions extends ConsumerWidget {
               data: (count) {
             return count['upvotes'];
           }),
-          color: ref.watch(getVoteStatusProvider(_post)).whenOrNull(
+          color: ref.watch(getPostVoteStatusProvider(_post)).whenOrNull(
               data: (status) {
             if (status != null) {
               return status ? Colors.orange : Colors.grey[600];
@@ -571,7 +561,7 @@ class PostActions extends ConsumerWidget {
               data: (count) {
             return count['downvotes'];
           }),
-          color: ref.watch(getVoteStatusProvider(_post)).whenOrNull(
+          color: ref.watch(getPostVoteStatusProvider(_post)).whenOrNull(
               data: (status) {
             if (status != null) {
               return status ? Colors.blue : Colors.grey[600];

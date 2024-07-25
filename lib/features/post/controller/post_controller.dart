@@ -15,8 +15,8 @@ final getPostVoteCountProvider = StreamProvider.family((ref, Post post) {
   return ref.watch(postControllerProvider.notifier).getPostVoteCount(post);
 });
 
-final getVoteStatusProvider = FutureProvider.family((ref, Post post) {
-  return ref.watch(postControllerProvider.notifier).getVoteStatus(post);
+final getPostVoteStatusProvider = StreamProvider.family((ref, Post post) {
+  return ref.watch(postControllerProvider.notifier).getPostVoteStatus(post);
 });
 
 final fetchCommunityPostsProvider = StreamProvider.family(
@@ -92,10 +92,10 @@ class PostController extends StateNotifier<bool> {
     }
   }
 
-  Future<bool?> getVoteStatus(Post post) async {
+  Stream<bool?> getPostVoteStatus(Post post) {
     try {
       final uid = _ref.read(userProvider)!.uid;
-      return await _postRepository.getVoteStatus(uid, post.id);
+      return _postRepository.getPostVoteStatus(post, uid);
     } on FirebaseException catch (e) {
       throw Failures(e.message!);
     } catch (e) {
