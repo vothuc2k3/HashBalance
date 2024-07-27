@@ -52,16 +52,16 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         .read(postControllerProvider.notifier)
         .votePost(widget.post, userVote);
     result.fold((l) {
-      showSnackBar(context, l.toString());
+      showToast(false, l.toString());
     }, (_) {});
   }
 
-  void voteComment(String commentId, bool userVote) async {
+  void voteComment(String commentId, String postId, bool userVote) async {
     final result = await ref
         .read(commentControllerProvider.notifier)
-        .voteComment(commentId, userVote);
+        .voteComment(commentId, postId, userVote);
     result.fold((l) {
-      showSnackBar(context, l.toString());
+      showToast(false, l.toString());
     }, (_) {});
   }
 
@@ -416,13 +416,15 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                               data: (status) {
                                 if (status == null) {
                                   return Colors.grey[600];
-                                } else {
+                                } else if (status) {
                                   return Colors.orange;
+                                } else {
+                                  return Colors.grey[600];
                                 }
                               },
                             ),
                             onTap: () {
-                              voteComment(comment.id, true);
+                              voteComment(comment.id, widget.post.id, true);
                             },
                           ),
                           _buildVoteButton(
@@ -438,13 +440,15 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                               data: (status) {
                                 if (status == null) {
                                   return Colors.grey[600];
-                                } else {
+                                } else if (!status) {
                                   return Colors.blue;
+                                } else {
+                                  return Colors.grey[600];
                                 }
                               },
                             ),
                             onTap: () {
-                              voteComment(comment.id, false);
+                              voteComment(comment.id, widget.post.id, false);
                             },
                           ),
                         ],
@@ -518,8 +522,10 @@ class PostActions extends ConsumerWidget {
           }),
           color: ref.watch(getPostVoteStatusProvider(_post)).whenOrNull(
               data: (status) {
-            if (status != null) {
-              return status ? Colors.orange : Colors.grey[600];
+            if (status == null) {
+              return Colors.grey[600];
+            } else if (status) {
+              return Colors.orange;
             } else {
               return Colors.grey[600];
             }
@@ -535,8 +541,10 @@ class PostActions extends ConsumerWidget {
           }),
           color: ref.watch(getPostVoteStatusProvider(_post)).whenOrNull(
               data: (status) {
-            if (status != null) {
-              return status ? Colors.blue : Colors.grey[600];
+            if (status == null) {
+              return Colors.grey[600];
+            } else if (!status) {
+              return Colors.blue;
             } else {
               return Colors.grey[600];
             }

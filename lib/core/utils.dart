@@ -9,22 +9,34 @@ import 'package:timeago/timeago.dart' as timeago;
 
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
+import 'package:toastification/toastification.dart';
 
-void showSnackBar(BuildContext context, String text) {
-  if (context.mounted) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(text),
-        ),
+void showToast(bool type, String message) {
+  switch (type) {
+    case true:
+      toastification.show(
+        type: ToastificationType.success,
+        style: ToastificationStyle.flatColored,
+        title: const Text('Success'),
+        description: Text(message),
+        alignment: Alignment.topLeft,
+        autoCloseDuration: const Duration(seconds: 4),
+        boxShadow: highModeShadow,
       );
+      break;
+    case false:
+      toastification.show(
+        type: ToastificationType.error,
+        style: ToastificationStyle.flatColored,
+        title: const Text('Failed'),
+        description: Text(message),
+        alignment: Alignment.topLeft,
+        autoCloseDuration: const Duration(seconds: 4),
+        boxShadow: highModeShadow,
+      );
+      break;
+    default:
   }
-  Future.delayed(const Duration(seconds: 3), () {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    }
-  });
 }
 
 FutureBool checkExistingUserName(String name, String uid) async {
@@ -83,33 +95,6 @@ FutureBool checkExistingUserNameWhenSignUp(String name) async {
   }
 }
 
-void showMaterialBanner(BuildContext context, String text) {
-  if (context.mounted) {
-    ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-    ScaffoldMessenger.of(context).showMaterialBanner(
-      MaterialBanner(
-        forceActionsBelow: false,
-        content: Text(text),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-              }
-            },
-            child: const Text('DISMISS'),
-          ),
-        ],
-      ),
-    );
-  }
-  Future.delayed(const Duration(seconds: 3), () {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-    }
-  });
-}
-
 Future<FilePickerResult?> pickImage() async {
   return await FilePicker.platform.pickFiles(
     type: FileType.custom,
@@ -142,8 +127,8 @@ String getUids(String uid1, String uid2) {
   return uids.join('_');
 }
 
-String getMembershipId(String uid, String communityName) {
-  return [uid, communityName].join();
+String getMembershipId(String uid, String communityId) {
+  return [uid, communityId].join();
 }
 
 String getPostUpvoteId(String uid, String postId) {

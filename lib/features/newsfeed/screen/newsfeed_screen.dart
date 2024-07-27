@@ -49,7 +49,6 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
     return Scaffold(
-      
       body: RefreshIndicator(
         onRefresh: () => _refreshPosts(),
         child: GestureDetector(
@@ -84,11 +83,15 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
                                       .when(
                                           data: (user) {
                                             return ref
-                                                .watch(
-                                                    getCommunityByNameProvider(
-                                                        post.communityName))
+                                                .watch(getCommunityByIdProvider(
+                                                    post.communityId))
                                                 .when(
                                                   data: (community) {
+                                                    if (community == null) {
+                                                      return const ErrorText(
+                                                          error:
+                                                              'Unexpected Error Happenned...');
+                                                    }
                                                     return PostContainer(
                                                       user: user,
                                                       post: post,

@@ -63,8 +63,8 @@ dependencies:
   url_launcher: ^6.3.0
   firebase_messaging: ^15.0.3
   nanoid: ^1.0.0
-  pusher_beams: ^1.1.1
   image: ^4.2.0
+  toastification: ^2.1.0
 
 dev_dependencies:
   flutter_test:

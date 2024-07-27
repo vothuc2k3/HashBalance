@@ -8,16 +8,14 @@ import 'package:hash_balance/theme/pallette.dart';
 class GoogleSignInButton extends ConsumerWidget {
   const GoogleSignInButton({
     super.key,
-    required BuildContext authScreenContext,
-  }) : _authScreenContext = authScreenContext;
+  }) ;
 
-  final BuildContext _authScreenContext;
 
   void signInWithGoogle(WidgetRef ref) async {
     final result =
         await ref.read(authControllerProvider.notifier).signInWithGoogle();
     result.fold((l) {
-      showSnackBar(_authScreenContext, l.message);
+      showToast(false, l.message);
     }, (r) {});
   }
 

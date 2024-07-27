@@ -103,12 +103,13 @@ class CommentController extends StateNotifier<bool> {
   }
 
   //VOTE THE COMMENT
-  FutureVoid voteComment(String commentId, bool userVote) async {
+  FutureVoid voteComment(String commentId, String postId, bool userVote) async {
     try {
       final currentUser = _ref.read(userProvider)!;
       final commentVoteModel = CommentVote(
         id: await generateRandomId(),
         commentId: commentId,
+        postId: postId,
         uid: currentUser.uid,
         isUpvoted: userVote,
         createdAt: Timestamp.now(),
@@ -186,7 +187,8 @@ class CommentController extends StateNotifier<bool> {
   // GET OLDEST COMMENTS BY POSTS
   Stream<List<Comment>> getRelevantCommentsByPost(String postId) {
     try {
-      return _commentRepository.getRelevantCommentsByPost(postId);
+      final list = _commentRepository.getRelevantCommentsByPost(postId);
+      return list;
     } on FirebaseException catch (e) {
       throw Failures(e.message!);
     } catch (e) {

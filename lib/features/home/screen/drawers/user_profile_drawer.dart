@@ -55,8 +55,8 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
               setting: setting,
               user: user,
             );
-    result.fold((l) => showSnackBar(homeScreenContext, l.message),
-        (r) => showMaterialBanner(homeScreenContext, r.toString()));
+    result.fold((l) => showToast(false, l.message),
+        (r) => showToast(true, r.toString()));
   }
 
   void showChangePrivacyModal(

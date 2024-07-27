@@ -1,6 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/common/error_text.dart';
+import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:mdi/mdi.dart';
 import 'package:video_player/video_player.dart';
 
@@ -52,16 +54,16 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         .read(postControllerProvider.notifier)
         .votePost(widget.post, userVote);
     result.fold((l) {
-      showSnackBar(context, l.toString());
+      showToast(false, l.toString());
     }, (_) {});
   }
 
-  void voteComment(String commentId, bool userVote) async {
+  void voteComment(String commentId, String postId, bool userVote) async {
     final result = await ref
         .read(commentControllerProvider.notifier)
-        .voteComment(commentId, userVote);
+        .voteComment(commentId, postId, userVote);
     result.fold((l) {
-      showSnackBar(context, l.toString());
+      showToast(false, l.toString());
     }, (_) {});
   }
 
@@ -264,7 +266,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
               : const SizedBox.shrink(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: _buildPostStat(user: widget.user),
+            child: _buildPostStat(user: widget.user, postId: widget.post.id),
           ),
         ],
       ),
@@ -316,7 +318,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     );
   }
 
-  Widget _buildPostStat({required UserModel user}) {
+  Widget _buildPostStat({required UserModel user, required String postId}) {
     return Column(
       children: [
         Row(
@@ -365,9 +367,10 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         ),
 
         //GET TOP COMMENT PROVIDER
-        ref.watch(getTopCommentProvider(widget.post.id)).whenOrNull(
+        ref.watch(getTopCommentProvider(widget.post.id)).when(
               data: (comment) {
                 if (comment == null) {
+                  print('LMAO NO COMMENTTTTTTTTT');
                   return const SizedBox.shrink();
                 }
                 return Column(
@@ -444,13 +447,15 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                               data: (status) {
                                 if (status == null) {
                                   return Colors.grey[600];
-                                } else {
+                                } else if (status) {
                                   return Colors.orange;
+                                } else {
+                                  return Colors.grey[600];
                                 }
                               },
                             ),
                             onTap: () {
-                              voteComment(comment.id, true);
+                              voteComment(comment.id, postId, true);
                             },
                           ),
                           _buildVoteButton(
@@ -466,13 +471,15 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                               data: (status) {
                                 if (status == null) {
                                   return Colors.grey[600];
-                                } else {
+                                } else if (!status) {
                                   return Colors.blue;
+                                } else {
+                                  return Colors.grey[600];
                                 }
                               },
                             ),
                             onTap: () {
-                              voteComment(comment.id, false);
+                              voteComment(comment.id, postId, false);
                             },
                           ),
                         ],
@@ -481,8 +488,10 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                   ],
                 );
               },
-            ) ??
-            const Text('Loading....'),
+              error: (Object error, StackTrace stackTrace) =>
+                  ErrorText(error: error.toString()),
+              loading: () => const Loading(),
+            )
       ],
     );
   }
@@ -546,8 +555,10 @@ class PostActions extends ConsumerWidget {
           }),
           color: ref.watch(getPostVoteStatusProvider(_post)).whenOrNull(
               data: (status) {
-            if (status != null) {
-              return status ? Colors.orange : Colors.grey[600];
+            if (status == null) {
+              return Colors.grey[600];
+            } else if (status) {
+              return Colors.orange;
             } else {
               return Colors.grey[600];
             }
@@ -563,8 +574,10 @@ class PostActions extends ConsumerWidget {
           }),
           color: ref.watch(getPostVoteStatusProvider(_post)).whenOrNull(
               data: (status) {
-            if (status != null) {
-              return status ? Colors.blue : Colors.grey[600];
+            if (status == null) {
+              return Colors.grey[600];
+            } else if (!status) {
+              return Colors.blue;
             } else {
               return Colors.grey[600];
             }

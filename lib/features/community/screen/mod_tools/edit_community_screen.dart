@@ -13,10 +13,10 @@ import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
 class EditCommunityScreen extends ConsumerStatefulWidget {
-  final String name;
+  final String id;
   const EditCommunityScreen({
     super.key,
-    required this.name,
+    required this.id,
   });
 
   @override
@@ -157,111 +157,118 @@ class _EditCommunityScreenState extends ConsumerState<EditCommunityScreen> {
           profileImage: profileImageFile,
           bannerImage: bannerImageFile,
         );
-    result.fold((l) => showSnackBar(context, l.toString()),
-        (r) => showMaterialBanner(context, r.toString()));
+    result.fold((l) => showToast(false, l.toString()),
+        (r) => showToast(true, r.toString()));
   }
 
   @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(communityControllerProvider);
-    return ref.watch(getCommunityByNameProvider(widget.name)).when(
-          data: (community) => Scaffold(
-            backgroundColor: Pallete.darkModeAppTheme.colorScheme.surface,
-            appBar: AppBar(
-              title: const Text('Edit Community'),
-              centerTitle: false,
-              actions: [
-                TextButton(
-                  onPressed: () => saveChanges(community),
-                  child: const Text(
-                    'Save',
-                    style: TextStyle(color: Pallete.whiteColor),
+    return ref.watch(getCommunityByIdProvider(widget.id)).when(
+          data: (community) {
+            if (community == null) {
+              return const ErrorText(error: 'Unexpected Error Happenned');
+            }
+            return Scaffold(
+              backgroundColor: Pallete.darkModeAppTheme.colorScheme.surface,
+              appBar: AppBar(
+                title: const Text('Edit Community'),
+                centerTitle: false,
+                actions: [
+                  TextButton(
+                    onPressed: () => saveChanges(community),
+                    child: const Text(
+                      'Save',
+                      style: TextStyle(color: Pallete.whiteColor),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            body: 
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: !isLoading
-                  ? Column(
-                      children: [
-                        SizedBox(
-                          height: 200,
-                          child: Stack(
-                            children: [
-                              InkWell(
-                                onTap: () {
-                                  showCommunityBannerImageActionModal(context);
-                                },
-                                child: DottedBorder(
-                                  borderType: BorderType.RRect,
-                                  radius: const Radius.circular(40),
-                                  dashPattern: const [10, 4],
-                                  strokeCap: StrokeCap.round,
-                                  color: Pallete.darkModeAppTheme.textTheme
-                                      .bodyMedium!.color!,
-                                  child: Container(
-                                    width: double.infinity,
-                                    height: 150,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: bannerImageFile != null
-                                        ? Image.file(bannerImageFile!)
-                                        : community.bannerImage ==
-                                                Constants.bannerDefault
-                                            ? const Center(
-                                                child: Icon(
-                                                  Icons.camera_alt_outlined,
-                                                  size: 40,
+                ],
+              ),
+              body: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: !isLoading
+                    ? Column(
+                        children: [
+                          SizedBox(
+                            height: 200,
+                            child: Stack(
+                              children: [
+                                InkWell(
+                                  onTap: () {
+                                    showCommunityBannerImageActionModal(
+                                        context);
+                                  },
+                                  child: DottedBorder(
+                                    borderType: BorderType.RRect,
+                                    radius: const Radius.circular(40),
+                                    dashPattern: const [10, 4],
+                                    strokeCap: StrokeCap.round,
+                                    color: Pallete.darkModeAppTheme.textTheme
+                                        .bodyMedium!.color!,
+                                    child: Container(
+                                      width: double.infinity,
+                                      height: 150,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: bannerImageFile != null
+                                          ? Image.file(bannerImageFile!)
+                                          : community.bannerImage ==
+                                                  Constants.bannerDefault
+                                              ? const Center(
+                                                  child: Icon(
+                                                    Icons.camera_alt_outlined,
+                                                    size: 40,
+                                                  ),
+                                                )
+                                              : Image.network(
+                                                  community.bannerImage,
+                                                  loadingBuilder: (context,
+                                                      child, loadingProgress) {
+                                                    if (loadingProgress ==
+                                                        null) {
+                                                      return child;
+                                                    }
+                                                    return Container(
+                                                      width: double.infinity,
+                                                      height: 150,
+                                                      color: Colors.black,
+                                                      child: const Center(
+                                                        child:
+                                                            CircularProgressIndicator(),
+                                                      ),
+                                                    );
+                                                  },
                                                 ),
-                                              )
-                                            : Image.network(
-                                                community.bannerImage,
-                                                loadingBuilder: (context, child,
-                                                    loadingProgress) {
-                                                  if (loadingProgress == null) {
-                                                    return child;
-                                                  }
-                                                  return Container(
-                                                    width: double.infinity,
-                                                    height: 150,
-                                                    color: Colors.black,
-                                                    child: const Center(
-                                                      child:
-                                                          CircularProgressIndicator(),
-                                                    ),
-                                                  );
-                                                },
-                                              ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                              Positioned(
-                                bottom: 20,
-                                left: 20,
-                                child: GestureDetector(
-                                  onTap: () =>
-                                      showCommunityProfileImageActionModal(
-                                          context),
-                                  child: CircleAvatar(
-                                    radius: 30,
-                                    backgroundImage: profileImageFile != null
-                                        ? FileImage(profileImageFile!)
-                                        : CachedNetworkImageProvider(community.profileImage)
-                                            as ImageProvider<Object>,
+                                Positioned(
+                                  bottom: 20,
+                                  left: 20,
+                                  child: GestureDetector(
+                                    onTap: () =>
+                                        showCommunityProfileImageActionModal(
+                                            context),
+                                    child: CircleAvatar(
+                                      radius: 30,
+                                      backgroundImage: profileImageFile != null
+                                          ? FileImage(profileImageFile!)
+                                          : CachedNetworkImageProvider(
+                                                  community.profileImage)
+                                              as ImageProvider<Object>,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    )
-                  : const Loading(),
-            ),
-          ),
+                        ],
+                      )
+                    : const Loading(),
+              ),
+            );
+          },
           error: (error, stackTrace) => ErrorText(error: error.toString()),
           loading: () => const Loading(),
         );

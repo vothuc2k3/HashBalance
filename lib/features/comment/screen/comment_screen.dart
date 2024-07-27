@@ -34,14 +34,14 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
         .comment(postId, content);
     result.fold(
       (l) {
-        showSnackBar(
-          context,
+        showToast(
+          false,
           l.message,
         );
       },
       (r) {
-        showSnackBar(
-          context,
+        showToast(
+          true,
           r,
         );
         commentTextController.clear();
@@ -49,12 +49,12 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
     );
   }
 
-  void voteComment(String commentId, bool userVote) async {
+  void voteComment(String commentId, String postId, bool userVote) async {
     final result = await ref
         .read(commentControllerProvider.notifier)
-        .voteComment(commentId, userVote);
+        .voteComment(commentId, postId, userVote);
     result.fold((l) {
-      showSnackBar(context, l.toString());
+      showToast(false, l.toString());
     }, (_) {});
   }
 
@@ -137,8 +137,10 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
                                   loading: () => const Loading(),
                                 )
                             : ref
-                                .watch(getRelevantCommentsByPostProvider(
-                                    widget._postId))
+                                .watch(
+                                  getRelevantCommentsByPostProvider(
+                                      widget._postId),
+                                )
                                 .when(
                                   data: (comments) {
                                     return ListView.builder(
@@ -280,13 +282,15 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
                       data: (status) {
                         if (status == null) {
                           return Colors.grey[600];
-                        } else {
+                        } else if (status) {
                           return Colors.orange;
+                        } else {
+                          return Colors.grey[600];
                         }
                       },
                     ),
                     onTap: () {
-                      voteComment(comment.id, true);
+                      voteComment(comment.id, widget._postId, true);
                     },
                   ),
                   _buildVoteButton(
@@ -302,13 +306,15 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
                       data: (status) {
                         if (status == null) {
                           return Colors.grey[600];
+                        } else if (!status) {
+                          return Colors.blue;
                         } else {
-                          return Colors.orange;
+                          return Colors.grey[600];
                         }
                       },
                     ),
                     onTap: () {
-                      voteComment(comment.id, false);
+                      voteComment(comment.id, widget._postId, false);
                     },
                   ),
                 ],

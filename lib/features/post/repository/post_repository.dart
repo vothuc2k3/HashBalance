@@ -28,6 +28,16 @@ class PostRepository {
   })  : _firestore = firestore,
         _storageRepository = storageRepository;
 
+  //REFERENCE ALL THE POSTS
+  CollectionReference get _posts =>
+      _firestore.collection(FirebaseConstants.postsCollection);
+  //REFERENCE ALL THE USERS
+  CollectionReference get _users =>
+      _firestore.collection(FirebaseConstants.usersCollection);
+  //REFERENCE ALL THE POSTS
+  CollectionReference get _postVotes =>
+      _firestore.collection(FirebaseConstants.postVoteCollection);
+
   //CREATE A NEW POST
   FutureVoid createPost(
     Post post,
@@ -188,17 +198,18 @@ class PostRepository {
       final data = event.data() as Map<String, dynamic>;
       return Post(
         id: postId,
-        communityName: data['communityName'] as String,
+        communityId: data['communityId'] as String,
         uid: data['uid'] as String,
+        status: data['status'] as String,
         createdAt: data['createdAt'] as Timestamp,
       );
     });
   }
 
   //FETCH POSTS BY COMMUNITIES
-  Stream<List<Post>?> fetchCommunityPosts(String communityName) {
+  Stream<List<Post>?> fetchCommunityPosts(String communityId) {
     return _posts
-        .where('communityName', isEqualTo: communityName)
+        .where('communityId', isEqualTo: communityId)
         .snapshots()
         .map((event) {
       if (event.docs.isEmpty) {
@@ -215,8 +226,9 @@ class PostRepository {
             video: video as String,
             image: image as String,
             content: content as String,
-            communityName: postData['communityName'] as String,
+            communityId: postData['communityId'] as String,
             uid: postData['uid'] as String,
+            status: postData['status'] as String,
             createdAt: postData['createdAt'] as Timestamp,
             id: postData['id'] as String,
           ),
@@ -226,13 +238,37 @@ class PostRepository {
     });
   }
 
-  //REFERENCE ALL THE POSTS
-  CollectionReference get _posts =>
-      _firestore.collection(FirebaseConstants.postsCollection);
-  //REFERENCE ALL THE USERS
-  CollectionReference get _users =>
-      _firestore.collection(FirebaseConstants.usersCollection);
-  //REFERENCE ALL THE POSTS
-  CollectionReference get _postVotes =>
-      _firestore.collection(FirebaseConstants.postVoteCollection);
+  Stream<List<Post>?> getPendingPosts(String communityId) {
+    return _posts
+        .where('communityId', isEqualTo: communityId)
+        .where('status', isEqualTo: 'Pending')
+        .snapshots()
+        .map(
+      (event) {
+        if (event.docs.isEmpty) {
+          return null;
+        }
+        final pendingPosts = <Post>[];
+        for (final doc in event.docs) {
+          final postData = doc.data() as Map<String, dynamic>;
+          var content = postData['content'] ?? '';
+          var image = postData['image'] ?? '';
+          var video = postData['video'] ?? '';
+          pendingPosts.add(
+            Post(
+              video: video as String,
+              image: image as String,
+              content: content as String,
+              communityId: postData['communityId'] as String,
+              uid: postData['uid'] as String,
+              status: postData['status'] as String,
+              createdAt: postData['createdAt'] as Timestamp,
+              id: postData['id'] as String,
+            ),
+          );
+        }
+        return pendingPosts;
+      },
+    );
+  }
 }

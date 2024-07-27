@@ -82,7 +82,7 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
         );
     user.fold((l) {
       if (context.mounted) {
-        showSnackBar(context, l.message);
+        showToast(false, l.message);
         setState(() {
           isPressed = false;
         });

@@ -31,7 +31,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     dynamic leaveCommunity,
     bool isModerator,
     String uid,
-    String communityName,
+    String communityId,
   ) {
     showDialog(
       context: context,
@@ -53,7 +53,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
             TextButton(
               child: const Text('Yes'),
               onPressed: () {
-                leaveCommunity(uid, communityName);
+                leaveCommunity(uid, communityId);
                 Navigator.of(context).pop();
               },
             ),
@@ -65,18 +65,18 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
 
   void joinCommunity(
     String uid,
-    String communityName,
+    String communityId,
   ) async {
     final result = await ref
         .read(communityControllerProvider.notifier)
-        .joinCommunity(uid, communityName);
+        .joinCommunity(uid, communityId);
     result.fold(
-      (l) => showSnackBar(
-        context,
+      (l) => showToast(
+        false,
         l.toString(),
       ),
-      (r) => showMaterialBanner(
-        context,
+      (r) => showToast(
+        true,
         r.toString(),
       ),
     );
@@ -84,18 +84,18 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
 
   void leaveCommunity(
     String uid,
-    String communityName,
+    String communityId,
   ) async {
     final result = await ref
         .read(communityControllerProvider.notifier)
-        .leaveCommunity(uid, communityName);
+        .leaveCommunity(uid, communityId);
     result.fold(
-      (l) => showSnackBar(
-        context,
+      (l) => showToast(
+        false,
         l.toString(),
       ),
-      (r) => showMaterialBanner(
-        context,
+      (r) => showToast(
+        true,
         r.toString(),
       ),
     );
@@ -105,7 +105,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ModToolsScreen(name: widget._community.name),
+        builder: (context) => ModToolsScreen(community: widget._community),
       ),
     );
   }
@@ -114,11 +114,11 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
     final memberCount =
-        ref.watch(getCommunityMemberCountProvider(widget._community.name));
-    final joined = ref.watch(getMemberStatusProvider(widget._community.name));
-    final isModerator = ref.watch(getModeratorStatus(widget._community.name));
+        ref.watch(getCommunityMemberCountProvider(widget._community.id));
+    final joined = ref.watch(getMemberStatusProvider(widget._community.id));
+    final isModerator = ref.watch(getModeratorStatus(widget._community.id));
     final posts =
-        ref.watch(fetchCommunityPostsProvider(widget._community.name));
+        ref.watch(fetchCommunityPostsProvider(widget._community.id));
     return Scaffold(
         body: NestedScrollView(
       headerSliverBuilder: (context, innerBoxIsScrolled) {
@@ -210,7 +210,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                           widget._community.name,
                                         )
                                     : () => joinCommunity(
-                                        user!.uid, widget._community.name),
+                                        user!.uid, widget._community.id),
                                 style: ElevatedButton.styleFrom(
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(30),
@@ -275,9 +275,14 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
               return ref.watch(getUserByUidProvider(post.uid)).when(
                     data: (user) {
                       return ref
-                          .watch(getCommunityByNameProvider(post.communityName))
+                          .watch(getCommunityByIdProvider(post.communityId))
                           .when(
                             data: (community) {
+                              if (community == null) {
+                                return const ErrorText(
+                                  error: 'Unexpected Error Happenned....',
+                                );
+                              }
                               return PostContainer(
                                 user: user,
                                 post: post,

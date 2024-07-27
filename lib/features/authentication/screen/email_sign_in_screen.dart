@@ -45,7 +45,7 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
         );
     result.fold((l) {
       if (context.mounted) {
-        showSnackBar(context, l.message);
+        showToast(false, l.message);
       }
       setState(() {
         isPressed = false;

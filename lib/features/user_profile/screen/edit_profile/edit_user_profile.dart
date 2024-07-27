@@ -97,8 +97,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ? user.description
                   : descController.text.trim(),
             );
-    result.fold((l) => showSnackBar(context, l.toString()),
-        (r) => showMaterialBanner(context, r.toString()));
+    result.fold((l) => showToast(false, l.toString()),
+        (r) => showToast(true, r.toString()));
   }
 
   @override
@@ -204,14 +204,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                         backgroundImage: profileImageFile !=
                                                 null
                                             ? FileImage(profileImageFile!)
-                                            : !(user.profileImage ==
-                                                    Constants.avatarDefault)
+                                            : !(Constants.avatarDefault
+                                                    .contains(
+                                                        user.profileImage))
                                                 ? CachedNetworkImageProvider(
                                                         user.profileImage)
                                                     as ImageProvider
                                                 : null,
-                                        child: user.profileImage ==
-                                                Constants.avatarDefault
+                                        child: Constants.avatarDefault
+                                                .contains(user.profileImage)
                                             ? const Icon(
                                                 Icons.camera_alt_outlined,
                                                 size: 30,

@@ -5,13 +5,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CommunityMembership {
   final String id;
-  final String communityName;
+  final String communityId;
   final Timestamp joinedAt;
   final String uid;
   final String role;
   CommunityMembership({
     required this.id,
-    required this.communityName,
+    required this.communityId,
     required this.joinedAt,
     required this.uid,
     required this.role,
@@ -19,14 +19,14 @@ class CommunityMembership {
 
   CommunityMembership copyWith({
     String? id,
-    String? communityName,
+    String? communityId,
     Timestamp? joinedAt,
     String? uid,
     String? role,
   }) {
     return CommunityMembership(
       id: id ?? this.id,
-      communityName: communityName ?? this.communityName,
+      communityId: communityId ?? this.communityId,
       joinedAt: joinedAt ?? this.joinedAt,
       uid: uid ?? this.uid,
       role: role ?? this.role,
@@ -36,7 +36,7 @@ class CommunityMembership {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'id': id,
-      'communityName': communityName,
+      'communityId': communityId,
       'joinedAt': joinedAt,
       'uid': uid,
       'role': role,
@@ -46,7 +46,7 @@ class CommunityMembership {
   factory CommunityMembership.fromMap(Map<String, dynamic> map) {
     return CommunityMembership(
       id: map['id'] as String,
-      communityName: map['communityName'] as String,
+      communityId: map['communityId'] as String,
       joinedAt: map['joinedAt'] as Timestamp,
       uid: map['uid'] as String,
       role: map['role'] as String,
@@ -59,7 +59,7 @@ class CommunityMembership {
 
   @override
   String toString() {
-    return 'CommunityMembership(id: $id, communityName: $communityName, joinedAt: $joinedAt, uid: $uid, role: $role)';
+    return 'CommunityMembership(id: $id, communityId: $communityId, joinedAt: $joinedAt, uid: $uid, role: $role)';
   }
 
   @override
@@ -68,7 +68,7 @@ class CommunityMembership {
   
     return 
       other.id == id &&
-      other.communityName == communityName &&
+      other.communityId == communityId &&
       other.joinedAt == joinedAt &&
       other.uid == uid &&
       other.role == role;
@@ -77,7 +77,7 @@ class CommunityMembership {
   @override
   int get hashCode {
     return id.hashCode ^
-      communityName.hashCode ^
+      communityId.hashCode ^
       joinedAt.hashCode ^
       uid.hashCode ^
       role.hashCode;

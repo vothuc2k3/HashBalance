@@ -19,16 +19,23 @@ class CommunityRepository {
   CommunityRepository({required FirebaseFirestore firestore})
       : _firestore = firestore;
 
+  //GET THE COMMUNITIES DATA
+  CollectionReference get _communities =>
+      _firestore.collection(FirebaseConstants.communitiesCollection);
+  //GET THE COMMUNITIES DATA
+  CollectionReference get _communityMembership =>
+      _firestore.collection(FirebaseConstants.communityMembershipCollection);
+
   //CREATE A WHOLE NEW COMMUNITY
   FutureVoid createCommunity(Community community) async {
     try {
-      var communityDoc = await _communities.doc(community.name).get();
+      var communityDoc = await _communities.doc(community.id).get();
 
       if (communityDoc.exists) {
         throw 'The name is already exists!';
       }
       return right(
-        _communities.doc(community.name).set(community.toMap()),
+        _communities.doc(community.id).set(community.toMap()),
       );
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -45,9 +52,9 @@ class CommunityRepository {
         .asyncMap((event) async {
       final communities = <Community>[];
       for (var doc in event.docs) {
-        final communityName =
-            (doc.data() as Map<String, dynamic>)['communityName'] as String;
-        final communitySnapshot = await _communities.doc(communityName).get();
+        final communityId =
+            (doc.data() as Map<String, dynamic>)['communityId'] as String;
+        final communitySnapshot = await _communities.doc(communityId).get();
         final data = communitySnapshot.data() as Map<String, dynamic>;
         communities.add(
           Community(
@@ -73,9 +80,9 @@ class CommunityRepository {
         .asyncMap((event) async {
       final communities = <Community>[];
       for (var doc in event.docs) {
-        final communityName =
-            (doc.data() as Map<String, dynamic>)['communityName'] as String;
-        final communitySnapshot = await _communities.doc(communityName).get();
+        final communityId =
+            (doc.data() as Map<String, dynamic>)['communityId'] as String;
+        final communitySnapshot = await _communities.doc(communityId).get();
         final data = communitySnapshot.data() as Map<String, dynamic>;
         communities.add(
           Community(
@@ -93,22 +100,6 @@ class CommunityRepository {
     });
   }
 
-  //GET THE COMMUNITY BY NAME
-  Stream<Community> getCommunityByName(String name) {
-    return _communities.doc(name).snapshots().map((event) {
-      final data = event.data() as Map<String, dynamic>;
-      return Community(
-        name: data['name'] as String,
-        profileImage: data['profileImage'] as String,
-        bannerImage: data['bannerImage'] as String,
-        createdAt: data['createdAt'] as Timestamp,
-        type: data['type'] as String,
-        containsExposureContents: data['containsExposureContents'] as bool,
-        id: data['id'] as String,
-      );
-    });
-  }
-
   //EDIT COMMUNITY VISUAL
   FutureVoid editCommunityProfileOrBannerImage(Community community) async {
     try {
@@ -122,7 +113,7 @@ class CommunityRepository {
       };
 
       return right(
-        await _communities.doc(community.name).update(communityAfterCast),
+        await _communities.doc(community.id).update(communityAfterCast),
       );
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -164,14 +155,14 @@ class CommunityRepository {
       final communityCountMap = <String, int>{};
 
       final memberCountFutures = communitySnapshot.docs.map((doc) async {
-        final communityName = doc.id;
+        final communityId = doc.id;
         final communityData = doc.data() as Map<String, dynamic>;
 
         final memberCountSnapshot = await _communityMembership
-            .where('communityName', isEqualTo: communityName)
+            .where('communityId', isEqualTo: communityId)
             .get();
         final memberCount = memberCountSnapshot.size;
-        communityCountMap[communityName] = memberCount;
+        communityCountMap[communityId] = memberCount;
 
         communities.add(
           Community(
@@ -211,16 +202,16 @@ class CommunityRepository {
   }
 
   //GET MEMBER COUNT OF COMMUNITY
-  Stream<int> getCommunityMemberCount(String communityName) {
+  Stream<int> getCommunityMemberCount(String communityId) {
     return _communityMembership
-        .where('communityName', isEqualTo: communityName)
+        .where('communityId', isEqualTo: communityId)
         .snapshots()
         .map((snapshot) => snapshot.size);
   }
 
   Stream<bool> getModeratorStatus(String membershipId) {
     return _communityMembership.doc(membershipId).snapshots().map((event) {
-      if(event.data() == null){
+      if (event.data() == null) {
         return false;
       }
       final data = event.data() as Map<String, dynamic>;
@@ -232,10 +223,20 @@ class CommunityRepository {
     });
   }
 
-  //GET THE COMMUNITIES DATA
-  CollectionReference get _communities =>
-      _firestore.collection(FirebaseConstants.communitiesCollection);
-  //GET THE COMMUNITIES DATA
-  CollectionReference get _communityMembership =>
-      _firestore.collection(FirebaseConstants.communityMembershipCollection);
+  Stream<Community?> getCommunityById(String communityId) {
+    return _communities.doc(communityId).snapshots().map(
+      (event) {
+        final data = event.data() as Map<String, dynamic>;
+        return Community(
+          id: data['id'] as String,
+          name: data['name'] as String,
+          profileImage: data['profileImage'] as String,
+          bannerImage: data['bannerImage'] as String,
+          type: data['type'] as String,
+          createdAt: data['createdAt'] as Timestamp,
+          containsExposureContents: data['containsExposureContents'] as bool,
+        );
+      },
+    );
+  }
 }

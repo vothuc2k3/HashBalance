@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
+import 'package:toastification/toastification.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
@@ -22,7 +23,9 @@ void main() async {
   Constants.deviceToken = '';
   runApp(
     const ProviderScope(
-      child: MyApp(),
+      child: ToastificationWrapper(
+        child: MyApp(),
+      ),
     ),
   );
 }

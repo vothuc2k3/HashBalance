@@ -25,10 +25,9 @@ class CreatePostScreen extends ConsumerStatefulWidget {
 
 class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   final contentController = TextEditingController();
-  String? communityName;
   File? image;
   File? video;
-  String? selectedCommunity;
+  Community? selectedCommunity;
 
   bool isSelectingImage = false;
   bool isSelectingVideo = false;
@@ -76,12 +75,12 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       setState(() {
         isCreatingPost = false;
       });
-      return showSnackBar(context, l.toString());
+      return showToast(false, l.toString());
     }, (r) {
       setState(() {
         isCreatingPost = false;
       });
-      return showMaterialBanner(context, r);
+      return showToast(true, r);
     });
   }
 
@@ -399,7 +398,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                       } else {
                                         if (selectedCommunity == null ||
                                             !communities.any((community) =>
-                                                community.name ==
+                                                community ==
                                                 selectedCommunity)) {
                                           selectedCommunity = null;
                                         }
@@ -408,7 +407,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                               CrossAxisAlignment.start,
                                           children: [
                                             const SizedBox(height: 15),
-                                            DropdownButtonFormField<String>(
+                                            DropdownButtonFormField<Community>(
                                               value: selectedCommunity,
                                               hint: const Text(
                                                   'Choose community'),
@@ -418,10 +417,12 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                                 });
                                               },
                                               items: communities.map<
-                                                      DropdownMenuItem<String>>(
+                                                      DropdownMenuItem<
+                                                          Community>>(
                                                   (Community community) {
-                                                return DropdownMenuItem<String>(
-                                                  value: community.name,
+                                                return DropdownMenuItem<
+                                                    Community>(
+                                                  value: community,
                                                   child: Row(
                                                     children: [
                                                       CircleAvatar(
@@ -433,7 +434,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                                       ),
                                                       const SizedBox(width: 8),
                                                       Text(
-                                                          '#${community.name}'),
+                                                          '#=${community.name}'),
                                                     ],
                                                   ),
                                                 );
@@ -544,7 +545,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               }
             },
             error: (Object error, StackTrace stackTrace) =>
-                ErrorText(error: error.toString()), 
+                ErrorText(error: error.toString()),
             loading: () => const Loading()));
   }
 }

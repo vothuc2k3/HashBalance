@@ -183,19 +183,18 @@ class CommentRepository {
             }
           }
         }
-
         if (commentUpvotes.isEmpty) {
           return [];
         }
-
         List<Comment> comments = [];
         for (var commentId in commentUpvotes.keys) {
           final commentDoc = await _comments.doc(commentId).get();
-          final commentData = commentDoc.data() as Map<String, dynamic>;
-          final comment = Comment.fromMap(commentData);
-          comments.add(comment);
+          if (commentDoc.exists) {
+            final commentData = commentDoc.data() as Map<String, dynamic>;
+            final comment = Comment.fromMap(commentData);
+            comments.add(comment);
+          }
         }
-
         comments.sort(
             (a, b) => commentUpvotes[b.id]!.compareTo(commentUpvotes[a.id]!));
 
@@ -215,6 +214,9 @@ class CommentRepository {
         .snapshots()
         .asyncMap(
       (snapshot) async {
+        if (snapshot.docs.isEmpty) {
+          return null;
+        }
         Map<String, int> commentUpvotes = {};
         for (var doc in snapshot.docs) {
           final data = doc.data() as Map<String, dynamic>;

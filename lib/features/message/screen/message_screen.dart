@@ -29,7 +29,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
         .watch(messageControllerProvider.notifier)
         .sendMessage(_messageController.text, targetUid);
     result.fold((l) {
-      showSnackBar(context, l.message);
+      showToast(false, l.message);
     }, (_) {});
   }
 

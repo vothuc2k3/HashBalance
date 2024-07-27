@@ -26,7 +26,7 @@ class ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         .sendResetPasswordLink(_emailController.text.trim().toLowerCase());
     result.fold(
       (l) {
-        showSnackBar(context, l.toString());
+        showToast(false, l.toString());
       },
       (_) {
         showDialog(

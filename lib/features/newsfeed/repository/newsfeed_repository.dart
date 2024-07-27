@@ -23,16 +23,12 @@ class NewsfeedRepository {
         )
         .snapshots()
         .asyncMap((data) async {
-      final communityNames =
-          data.docs.map((doc) => doc['communityName'] as String).toList();
+      final communitiesId =
+          data.docs.map((doc) => doc['communityId'] as String).toList();
       final List<Post> posts = [];
-      for (var communityName in communityNames) {
-        final communityPosts = await _posts
-            .where(
-              'communityName',
-              isEqualTo: communityName,
-            )
-            .get();
+      for (var communityId in communitiesId) {
+        final communityPosts =
+            await _posts.where('communityId', isEqualTo: communityId).get();
         for (var postDoc in communityPosts.docs) {
           var content = postDoc['content'] ?? '';
           var image = postDoc['image'] ?? '';
@@ -42,10 +38,11 @@ class NewsfeedRepository {
               video: video as String,
               image: image as String,
               content: content as String,
-              communityName: postDoc['communityName'] as String,
+              communityId: postDoc['communityId'] as String,
               uid: postDoc['uid'] as String,
               createdAt: postDoc['createdAt'] as Timestamp,
               id: postDoc['id'] as String,
+              status: '',
             ),
           );
         }

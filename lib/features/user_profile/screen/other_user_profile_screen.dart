@@ -35,7 +35,7 @@ class _OtherUserProfileScreenState
         .watch(friendControllerProvider.notifier)
         .followUser(targetUser.uid);
     result.fold((l) {
-      showSnackBar(context, l.message);
+      showToast(false, l.message);
     }, (_) {});
   }
 
@@ -44,7 +44,7 @@ class _OtherUserProfileScreenState
         .watch(friendControllerProvider.notifier)
         .sendFriendRequest(targetUser);
     result.fold((l) {
-      showSnackBar(context, l.message);
+      showToast(false, l.message);
     }, (_) {});
   }
 
@@ -53,7 +53,7 @@ class _OtherUserProfileScreenState
         .watch(friendControllerProvider.notifier)
         .cancelFriendRequest(requestId);
     result.fold((l) {
-      showSnackBar(context, l.message);
+      showToast(false, l.message);
     }, (_) {});
   }
 
@@ -62,7 +62,7 @@ class _OtherUserProfileScreenState
         .watch(friendControllerProvider.notifier)
         .acceptFriendRequest(targetUser);
     result.fold((l) {
-      showSnackBar(context, l.message);
+      showToast(false, l.message);
     }, (_) {});
   }
 
@@ -70,7 +70,7 @@ class _OtherUserProfileScreenState
     final result =
         await ref.watch(friendControllerProvider.notifier).unfriend(targetUser);
     result.fold((l) {
-      showSnackBar(context, l.message);
+      showToast(false, l.message);
     }, (_) {});
   }
 

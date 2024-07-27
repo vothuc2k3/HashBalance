@@ -8,8 +8,16 @@ import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/post/repository/post_repository.dart';
+import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/post_vote_model.dart';
+
+final getPendingPostsProvider =
+    StreamProvider.family.autoDispose((ref, String communityId) {
+  return ref
+      .watch(postControllerProvider.notifier)
+      .getPendingPosts(communityId);
+});
 
 final getPostVoteCountProvider = StreamProvider.family((ref, Post post) {
   return ref.watch(postControllerProvider.notifier).getPostVoteCount(post);
@@ -20,9 +28,9 @@ final getPostVoteStatusProvider = StreamProvider.family((ref, Post post) {
 });
 
 final fetchCommunityPostsProvider = StreamProvider.family(
-    (ref, String communityName) => ref
+    (ref, String communityId) => ref
         .watch(postControllerProvider.notifier)
-        .fetchCommunityPosts(communityName));
+        .fetchCommunityPosts(communityId));
 
 final postControllerProvider = StateNotifierProvider<PostController, bool>(
   (ref) => PostController(
@@ -47,24 +55,42 @@ class PostController extends StateNotifier<bool> {
   //CREATE A NEW POST
   FutureString createPost(
     String uid,
-    String communityName,
+    Community community,
     File? image,
     File? video,
     String? content,
   ) async {
     try {
-      final post = Post(
-        communityName: communityName,
-        uid: uid,
-        content: content,
-        createdAt: Timestamp.now(),
-        id: await generateRandomId(),
-      );
-      final result = await _postRepository.createPost(post, image, video);
-      return result.fold(
-        (l) => left((Failures(l.message))),
-        (r) => right('Your Post Was Successfuly Uploaded!'),
-      );
+      switch (community.type) {
+        case 'Public':
+          final post = Post(
+            communityId: community.id,
+            uid: uid,
+            content: content,
+            status: 'Approved',
+            createdAt: Timestamp.now(),
+            id: await generateRandomId(),
+          );
+          final result = await _postRepository.createPost(post, image, video);
+          return result.fold(
+            (l) => left((Failures(l.message))),
+            (r) => right('Your Post Was Successfuly Uploaded!'),
+          );
+        default:
+          final post = Post(
+            communityId: community.id,
+            uid: uid,
+            content: content,
+            status: 'Pending',
+            createdAt: Timestamp.now(),
+            id: await generateRandomId(),
+          );
+          final result = await _postRepository.createPost(post, image, video);
+          return result.fold(
+            (l) => left((Failures(l.message))),
+            (r) => right('Your Post Are Now Pending To Be Approved!'),
+          );
+      }
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {
@@ -127,11 +153,15 @@ class PostController extends StateNotifier<bool> {
     }
   }
 
-  Stream<List<Post>?> fetchCommunityPosts(String communityName) {
-    return _postRepository.fetchCommunityPosts(communityName);
+  Stream<List<Post>?> fetchCommunityPosts(String communityId) {
+    return _postRepository.fetchCommunityPosts(communityId);
   }
 
   Stream<Post> getPostById(String postId) {
     return _postRepository.getPostById(postId);
+  }
+
+  Stream<List<Post>?> getPendingPosts(String communityId) {
+    return _postRepository.getPendingPosts(communityId);
   }
 }
