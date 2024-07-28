@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:toastification/toastification.dart';
@@ -20,7 +22,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  Constants.deviceToken = '';
+  Constants.deviceToken = await FirebaseMessaging.instance.getToken();
   runApp(
     const ProviderScope(
       child: ToastificationWrapper(
@@ -41,6 +43,8 @@ class MyApp extends ConsumerStatefulWidget {
 
 class MyAppState extends ConsumerState<MyApp> {
   UserModel? userData;
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   void _getUserData(WidgetRef ref, User data) async {
     userData = await ref
@@ -50,9 +54,47 @@ class MyAppState extends ConsumerState<MyApp> {
     ref.read(userProvider.notifier).update((state) => userData);
   }
 
+  void setupLocalNotifications() {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
+
+    flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+
+  Future<void> showNotification(RemoteMessage message) async {
+    AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      Constants.deviceToken!,
+      'HashBalance',
+      importance: Importance.max,
+      priority: Priority.high,
+      showWhen: false,
+    );
+    NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      message.notification?.title,
+      message.notification?.body,
+      platformChannelSpecifics,
+      payload: 'item x',
+    );
+  }
+
   @override
   void initState() {
     super.initState();
+    setupLocalNotifications();
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      RemoteNotification? notification = message.notification;
+      AndroidNotification? android = message.notification?.android;
+      if (notification != null && android != null) {
+        showNotification(message);
+      }
+    });
   }
 
   @override

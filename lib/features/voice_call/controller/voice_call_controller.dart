@@ -32,4 +32,16 @@ class VoiceCallController extends StateNotifier<bool> {
       return left(Failures(e.toString()));
     }
   }
+
+  FutureVoid notifyIncomingCall(String userDeviceToken) async {
+    try {
+      await _voiceCallRepository.sendFCMNotification(
+        userDeviceToken,
+        'Nguyen Thi Tu Trinhhhhh',
+      );
+      return right(null);
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
 }

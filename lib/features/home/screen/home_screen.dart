@@ -34,8 +34,6 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> requestPushPermissions() async {
-    Constants.deviceToken =
-        await ref.watch(firebaseMessagingProvider).getToken();
     await ref.watch(firebaseMessagingProvider).requestPermission();
   }
 

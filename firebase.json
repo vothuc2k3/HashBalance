@@ -1,1 +1,36 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"hash-balance-official-2","appId":"1:456581070342:android:b5b28a46f459edc7c5cd87","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"hash-balance-official-2","configurations":{"android":"1:456581070342:android:b5b28a46f459edc7c5cd87","web":"1:456581070342:web:52a99891dc873688c5cd87","windows":"1:456581070342:web:3ce6579e9a707231c5cd87"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "hash-balance-official-2",
+          "appId": "1:456581070342:android:b5b28a46f459edc7c5cd87",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "hash-balance-official-2",
+          "configurations": {
+            "android": "1:456581070342:android:b5b28a46f459edc7c5cd87",
+            "web": "1:456581070342:web:52a99891dc873688c5cd87",
+            "windows": "1:456581070342:web:3ce6579e9a707231c5cd87"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ]
+}

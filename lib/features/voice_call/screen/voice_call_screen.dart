@@ -6,26 +6,33 @@ import 'package:agora_rtc_engine/rtc_remote_view.dart' as rtc_remote_view;
 import 'package:flutter/material.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
 
-class CallPage extends StatefulWidget {
+class VoiceCallScreen extends StatefulWidget {
   /// non-modifiable channel name of the page
-  final String? channelName;
+  final String _channelName;
 
   /// non-modifiable client role of the page
-  final ClientRole? role;
+  final ClientRole _role;
+  final String _token;
 
   /// Creates a call page with given channel name.
-  const CallPage({super.key, this.channelName, this.role});
+  const VoiceCallScreen({
+    super.key,
+    required String token,
+    required String channelName,
+    required ClientRole role,
+  })  : _channelName = channelName,
+        _role = role,
+        _token = token;
 
   @override
-  CallPageState createState() => CallPageState();
+  VoiceCallScreenState createState() => VoiceCallScreenState();
 }
 
-class CallPageState extends State<CallPage> {
+class VoiceCallScreenState extends State<VoiceCallScreen> {
   final _users = <int>[];
   final _infoStrings = <String>[];
   bool muted = false;
   late RtcEngine _engine;
-  String? token;
 
   @override
   void dispose() {
@@ -57,14 +64,14 @@ class CallPageState extends State<CallPage> {
         _infoStrings.add('Agora Engine is not starting');
       });
       return;
-    } 
+    }
 
     await _initAgoraRtcEngine();
     _addAgoraEventHandlers();
     VideoEncoderConfiguration configuration = VideoEncoderConfiguration();
     configuration.dimensions = const VideoDimensions(width: 1920, height: 1080);
     await _engine.setVideoEncoderConfiguration(configuration);
-    await _engine.joinChannel(token, widget.channelName!, null, 0);
+    await _engine.joinChannel(widget._token, widget._channelName, null, 0);
   }
 
   /// Create agora sdk instance and initialize
@@ -72,7 +79,7 @@ class CallPageState extends State<CallPage> {
     _engine = await RtcEngine.create(Constants.agoraAppId);
     await _engine.enableVideo();
     await _engine.setChannelProfile(ChannelProfile.LiveBroadcasting);
-    await _engine.setClientRole(widget.role!);
+    await _engine.setClientRole(widget._role);
   }
 
   /// Add agora event handlers
@@ -115,12 +122,12 @@ class CallPageState extends State<CallPage> {
   /// Helper function to get list of native views
   List<Widget> _getRenderViews() {
     final List<StatefulWidget> list = [];
-    if (widget.role == ClientRole.Broadcaster) {
+    if (widget._role == ClientRole.Broadcaster) {
       list.add(const rtc_local_view.SurfaceView());
     }
     for (var uid in _users) {
       list.add(rtc_remote_view.SurfaceView(
-          channelId: widget.channelName!, uid: uid));
+          channelId: widget._channelName, uid: uid));
     }
     return list;
   }
@@ -176,7 +183,7 @@ class CallPageState extends State<CallPage> {
 
   /// Toolbar layout
   Widget _toolbar() {
-    if (widget.role == ClientRole.Audience) return Container();
+    if (widget._role == ClientRole.Audience) return Container();
     return Container(
       alignment: Alignment.bottomCenter,
       padding: const EdgeInsets.symmetric(vertical: 48),

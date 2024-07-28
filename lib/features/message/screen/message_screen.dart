@@ -1,7 +1,9 @@
 import 'package:agora_rtc_engine/rtc_engine.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
@@ -11,7 +13,9 @@ import 'package:hash_balance/features/message/controller/message_controller.dart
 import 'package:hash_balance/features/message/screen/widget/message_bubble.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/features/voice_call/controller/voice_call_controller.dart';
+import 'package:hash_balance/features/voice_call/screen/voice_call_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:flutter/foundation.dart' as foundation;
 
 class MessageScreen extends ConsumerStatefulWidget {
   final UserModel _targetUser;
@@ -29,29 +33,83 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
   final TextEditingController _messageController = TextEditingController();
   String? uids;
   String? token;
+  String? channelName;
   final role = ClientRole.Broadcaster;
 
-  void _init() async {
-    final result = await ref
-        .watch(voiceCallControllerProvider.notifier)
-        .fetchAgoraToken(uids!);
-    result.fold((l) => showToast(false, l.message), (r) => token = r);
+  bool _isEmojiVisible = false;
+
+  void _init() {
     uids = getUids(widget._targetUser.uid, ref.read(userProvider)!.uid);
+    channelName = uids;
+  }
+
+  void _onEmojiSelected(Emoji emoji) {
+    setState(() {
+      _messageController.text += emoji.emoji;
+    });
   }
 
   void sendMessage(String targetUid) async {
     final result = await ref
         .watch(messageControllerProvider.notifier)
         .sendMessage(_messageController.text, targetUid);
-    result.fold((l) {
-      showToast(false, l.message);
-    }, (_) {});
+    result.fold(
+      (l) {
+        showToast(false, l.message);
+      },
+      (_) {},
+    );
   }
 
   void markAsRead() {
     ref
         .read(messageControllerProvider.notifier)
         .markAsRead(widget._targetUser.uid);
+  }
+
+  Future<void> onVoiceCall() async {
+    final voiceCallController = ref.watch(voiceCallControllerProvider.notifier);
+
+    final result = await voiceCallController.fetchAgoraToken(uids!);
+    result.fold((l) => showToast(false, l.message), (r) => token = r);
+    await _handleCameraAndMic(Permission.camera);
+    await _handleCameraAndMic(Permission.microphone);
+
+    final result2 = await voiceCallController.notifyIncomingCall(
+        'eTWsn-rXQYqq7aMW6ElOMa:APA91bFBxsTP7zB-w_lo-P1QtPI4I0YZltB2sNNJ2sYl1kVJdpj-dkvK-596ax95tIu6Z1g1puyzmw6IahG98bgbiwO7vey2usASJpiS45Yg0cs2a_AjtRKiWiKAXy93eKKTVLWfouAG');
+    result2.fold(
+      (l) => showToast(false, l.message),
+      (_) {},
+    );
+
+    if (mounted) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => VoiceCallScreen(
+            channelName: channelName!,
+            role: role,
+            token: token!,
+          ),
+        ),
+      );
+    } else {
+      showToast(false, 'Unexpected Error Happenned...');
+    }
+  }
+
+  Future<void> onVideoCall() async {
+    final voiceCallController = ref.watch(voiceCallControllerProvider.notifier);
+    final result2 = await voiceCallController.notifyIncomingCall(
+        'eTWsn-rXQYqq7aMW6ElOMa:APA91bFBxsTP7zB-w_lo-P1QtPI4I0YZltB2sNNJ2sYl1kVJdpj-dkvK-596ax95tIu6Z1g1puyzmw6IahG98bgbiwO7vey2usASJpiS45Yg0cs2a_AjtRKiWiKAXy93eKKTVLWfouAG');
+    result2.fold(
+      (l) => showToast(false, l.message),
+      (_) {},
+    );
+  }
+
+  Future<void> _handleCameraAndMic(Permission permission) async {
+    await permission.request();
   }
 
   @override
@@ -80,7 +138,10 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                   CachedNetworkImageProvider(widget._targetUser.profileImage),
             ),
             const SizedBox(width: 10),
-            Text(widget._targetUser.name),
+            Text(
+              widget._targetUser.name,
+              style: const TextStyle(fontSize: 14),
+            ),
           ],
         ),
         centerTitle: true,
@@ -88,13 +149,11 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.call),
-            onPressed: () {},
+            onPressed: onVoiceCall,
           ),
           IconButton(
             icon: const Icon(Icons.videocam),
-            onPressed: () {
-              // Implement video call
-            },
+            onPressed: onVideoCall,
           ),
           IconButton(
             icon: const Icon(Icons.more_vert),
@@ -166,6 +225,30 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                   ),
                 ),
           ),
+          if (_isEmojiVisible)
+            SizedBox(
+              height: 250,
+              child: EmojiPicker(
+                onEmojiSelected: (category, emoji) {
+                  _onEmojiSelected(emoji);
+                },
+                config: Config(
+                  height: 256,
+                  checkPlatformCompatibility: true,
+                  emojiViewConfig: EmojiViewConfig(
+                    emojiSizeMax: 28 *
+                        (foundation.defaultTargetPlatform == TargetPlatform.iOS
+                            ? 1.20
+                            : 1.0),
+                  ),
+                  swapCategoryAndBottomBar: false,
+                  skinToneConfig: const SkinToneConfig(),
+                  categoryViewConfig: const CategoryViewConfig(),
+                  bottomActionBarConfig: const BottomActionBarConfig(),
+                  searchViewConfig: const SearchViewConfig(),
+                ),
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.symmetric(
               vertical: 10,
@@ -202,7 +285,9 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                                 icon: const Icon(Icons.insert_emoticon,
                                     color: Colors.white),
                                 onPressed: () {
-                                  // Implement emoji picker
+                                  setState(() {
+                                    _isEmojiVisible = !_isEmojiVisible;
+                                  });
                                 },
                               ),
                             ],
@@ -222,6 +307,13 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                                 hintStyle: TextStyle(color: Colors.grey),
                                 border: InputBorder.none,
                               ),
+                              onTap: () {
+                                if (_isEmojiVisible) {
+                                  setState(() {
+                                    _isEmojiVisible = false;
+                                  });
+                                }
+                              },
                             ),
                           ),
                         ),

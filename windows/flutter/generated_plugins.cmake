@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   agora_rtc_engine
   cloud_firestore
+  emoji_picker_flutter
   firebase_auth
   firebase_core
   firebase_storage
