@@ -9,6 +9,7 @@ import 'package:hash_balance/features/message/controller/message_controller.dart
 import 'package:hash_balance/features/message/screen/message_screen.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/message_model.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 class MessageListScreen extends ConsumerStatefulWidget {
   const MessageListScreen({super.key});
@@ -19,12 +20,12 @@ class MessageListScreen extends ConsumerStatefulWidget {
 }
 
 class _MessageListScreenState extends ConsumerState<MessageListScreen> {
-  void messageUser(String targetUid) {
+  void messageUser(UserModel targetUser) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => MessageScreen(
-          targetuid: targetUid,
+          targetUser: targetUser,
         ),
       ),
     );
@@ -124,7 +125,7 @@ class _MessageListScreenState extends ConsumerState<MessageListScreen> {
                     onTap: () {
                       otherUser.when(
                         data: (user) {
-                          messageUser(user.uid);
+                          messageUser(user);
                         },
                         error: (error, stackTrace) =>
                             ErrorText(error: error.toString()),

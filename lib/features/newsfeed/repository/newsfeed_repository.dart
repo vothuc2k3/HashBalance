@@ -30,20 +30,8 @@ class NewsfeedRepository {
         final communityPosts =
             await _posts.where('communityId', isEqualTo: communityId).get();
         for (var postDoc in communityPosts.docs) {
-          var content = postDoc['content'] ?? '';
-          var image = postDoc['image'] ?? '';
-          var video = postDoc['video'] ?? '';
           posts.add(
-            Post(
-              video: video as String,
-              image: image as String,
-              content: content as String,
-              communityId: postDoc['communityId'] as String,
-              uid: postDoc['uid'] as String,
-              createdAt: postDoc['createdAt'] as Timestamp,
-              id: postDoc['id'] as String,
-              status: '',
-            ),
+            Post.fromMap(postDoc.data() as Map<String, dynamic>),
           );
         }
       }

@@ -68,6 +68,8 @@ class PostController extends StateNotifier<bool> {
             uid: uid,
             content: content,
             status: 'Approved',
+            upvoteCount: 0,
+            downvoteCount: 0,
             createdAt: Timestamp.now(),
             id: await generateRandomId(),
           );
@@ -82,6 +84,8 @@ class PostController extends StateNotifier<bool> {
             uid: uid,
             content: content,
             status: 'Pending',
+            upvoteCount: 0,
+            downvoteCount: 0,
             createdAt: Timestamp.now(),
             id: await generateRandomId(),
           );
@@ -109,12 +113,14 @@ class PostController extends StateNotifier<bool> {
         createdAt: Timestamp.now(),
       );
 
-      await _postRepository.votePost(postVoteModel);
+      await _postRepository.votePost(postVoteModel, post);
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {
-      return left(Failures(e.toString()));
+      return left(Failures(
+        e.toString(),
+      ));
     }
   }
 
@@ -130,8 +136,7 @@ class PostController extends StateNotifier<bool> {
   }
 
   Stream<Map<String, int>> getPostVoteCount(Post post) {
-    final uid = _ref.read(userProvider)!.uid;
-    return _postRepository.getPostVoteCount(post, uid);
+    return _postRepository.getPostVoteCount(post);
   }
 
   FutureString deletePost(Post post) async {

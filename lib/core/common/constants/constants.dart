@@ -69,5 +69,5 @@ class Constants {
 
   static String? deviceToken;
 
-  static String pusherBeamsId = '05608c4c-b933-4cf5-9c56-9eeb904eaf83';
+  static String agoraAppId = '8a2ac699a8c84f3f894f59e55e766fa4';
 }

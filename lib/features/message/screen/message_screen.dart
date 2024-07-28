@@ -1,6 +1,8 @@
+import 'package:agora_rtc_engine/rtc_engine.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/core/utils.dart';
@@ -8,14 +10,16 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/message/controller/message_controller.dart';
 import 'package:hash_balance/features/message/screen/widget/message_bubble.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
+import 'package:hash_balance/features/voice_call/controller/voice_call_controller.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 class MessageScreen extends ConsumerStatefulWidget {
-  final String _targetuid;
+  final UserModel _targetUser;
 
   const MessageScreen({
     super.key,
-    required String targetuid,
-  }) : _targetuid = targetuid;
+    required UserModel targetUser,
+  }) : _targetUser = targetUser;
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => _MessageScreenState();
@@ -23,6 +27,17 @@ class MessageScreen extends ConsumerStatefulWidget {
 
 class _MessageScreenState extends ConsumerState<MessageScreen> {
   final TextEditingController _messageController = TextEditingController();
+  String? uids;
+  String? token;
+  final role = ClientRole.Broadcaster;
+
+  void _init() async {
+    final result = await ref
+        .watch(voiceCallControllerProvider.notifier)
+        .fetchAgoraToken(uids!);
+    result.fold((l) => showToast(false, l.message), (r) => token = r);
+    uids = getUids(widget._targetUser.uid, ref.read(userProvider)!.uid);
+  }
 
   void sendMessage(String targetUid) async {
     final result = await ref
@@ -33,6 +48,18 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
     }, (_) {});
   }
 
+  void markAsRead() {
+    ref
+        .read(messageControllerProvider.notifier)
+        .markAsRead(widget._targetUser.uid);
+  }
+
+  @override
+  void initState() {
+    _init();
+    super.initState();
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -41,36 +68,34 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
     });
   }
 
-  void markAsRead() {
-    ref.read(messageControllerProvider.notifier).markAsRead(widget._targetuid);
-  }
-
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(userProvider);
-    final targetUser = ref.watch(getUserByUidProvider(widget._targetuid));
-
     return Scaffold(
       appBar: AppBar(
-        title: targetUser.whenOrNull(
-          data: (targetUser) {
-            return Row(
-              children: [
-                CircleAvatar(
-                  backgroundImage:
-                      CachedNetworkImageProvider(targetUser.profileImage),
-                ),
-                const SizedBox(width: 10),
-                Text(targetUser.name),
-              ],
-            );
-          },
-          loading: () => const CircularProgressIndicator(),
-          error: (error, stackTrace) => const Text('Error'),
+        title: Row(
+          children: [
+            CircleAvatar(
+              backgroundImage:
+                  CachedNetworkImageProvider(widget._targetUser.profileImage),
+            ),
+            const SizedBox(width: 10),
+            Text(widget._targetUser.name),
+          ],
         ),
         centerTitle: true,
         backgroundColor: Colors.black87,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.call),
+            onPressed: () {},
+          ),
+          IconButton(
+            icon: const Icon(Icons.videocam),
+            onPressed: () {
+              // Implement video call
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.more_vert),
             onPressed: () {
@@ -82,7 +107,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
       body: Column(
         children: [
           Expanded(
-            child: ref.watch(loadMessagesProvider(widget._targetuid)).when(
+            child: ref.watch(loadMessagesProvider(widget._targetUser.uid)).when(
                   data: (messages) {
                     if (messages == null || messages.isEmpty) {
                       return const Center(
@@ -156,33 +181,32 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                     ),
                     child: Row(
                       children: [
-                        !(_messageController.text == '')
-                            ? const SizedBox.shrink()
-                            : Row(
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.image,
-                                        color: Colors.white),
-                                    onPressed: () {
-                                      // Implement image picker
-                                    },
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.videocam,
-                                        color: Colors.white),
-                                    onPressed: () {
-                                      // Implement video picker
-                                    },
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.insert_emoticon,
-                                        color: Colors.white),
-                                    onPressed: () {
-                                      // Implement emoji picker
-                                    },
-                                  ),
-                                ],
+                        if (_messageController.text.isEmpty)
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.image,
+                                    color: Colors.white),
+                                onPressed: () {
+                                  // Implement image picker
+                                },
                               ),
+                              IconButton(
+                                icon: const Icon(Icons.videocam,
+                                    color: Colors.white),
+                                onPressed: () {
+                                  // Implement video picker
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.insert_emoticon,
+                                    color: Colors.white),
+                                onPressed: () {
+                                  // Implement emoji picker
+                                },
+                              ),
+                            ],
+                          ),
                         Expanded(
                           child: Padding(
                             padding:
@@ -208,7 +232,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                 const SizedBox(width: 10),
                 GestureDetector(
                   onTap: () {
-                    sendMessage(widget._targetuid);
+                    sendMessage(widget._targetUser.uid);
                     _messageController.clear();
                     FocusManager.instance.primaryFocus?.unfocus();
                   },

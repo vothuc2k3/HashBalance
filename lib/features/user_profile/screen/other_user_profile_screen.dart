@@ -79,7 +79,7 @@ class _OtherUserProfileScreenState
       context,
       MaterialPageRoute(
         builder: (context) => MessageScreen(
-          targetuid: targetUser.uid,
+          targetUser: targetUser,
         ),
       ),
     );

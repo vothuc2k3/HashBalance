@@ -93,26 +93,56 @@ class PostRepository {
   }
 
   //VOTE THE POST
-  Future<void> votePost(PostVote postVoteModel) async {
+  Future<void> votePost(PostVote postVoteModel, Post post) async {
     try {
       final querySnapshot = await _postVotes
           .where('postId', isEqualTo: postVoteModel.postId)
           .where('uid', isEqualTo: postVoteModel.uid)
           .get();
+
       if (querySnapshot.docs.isEmpty) {
         await _postVotes.doc(postVoteModel.id).set(postVoteModel.toMap());
+        if (postVoteModel.isUpvoted) {
+          await _posts
+              .doc(post.id)
+              .update({'upvoteCount': FieldValue.increment(1)});
+        } else {
+          await _posts
+              .doc(post.id)
+              .update({'upvoteCount': FieldValue.increment(-1)});
+        }
       } else {
         final data = querySnapshot.docs.first.data() as Map<String, dynamic>;
-        final postVoteModelId = data['id'] as String;
-        final postVoteModelCopy = postVoteModel.copyWith(id: postVoteModelId);
+        final postVoteModelId = querySnapshot.docs.first.id;
         final isAlreadyUpvoted = data['isUpvoted'] as bool;
         final doWantToUpvote = postVoteModel.isUpvoted;
+
         if (doWantToUpvote == isAlreadyUpvoted) {
+          // Remove the vote
           await _postVotes.doc(postVoteModelId).delete();
+          if (doWantToUpvote) {
+            await _posts
+                .doc(post.id)
+                .update({'upvoteCount': FieldValue.increment(-1)});
+          } else {
+            await _posts
+                .doc(post.id)
+                .update({'upvoteCount': FieldValue.increment(1)});
+          }
         } else {
-          await _postVotes
-              .doc(postVoteModelId)
-              .update(postVoteModelCopy.toMap());
+          // Update the vote
+          await _postVotes.doc(postVoteModelId).update(postVoteModel.toMap());
+          if (doWantToUpvote) {
+            await _posts.doc(post.id).update({
+              'upvoteCount': FieldValue.increment(1),
+              'downvoteCount': FieldValue.increment(-1)
+            });
+          } else {
+            await _posts.doc(post.id).update({
+              'upvoteCount': FieldValue.increment(-1),
+              'downvoteCount': FieldValue.increment(1)
+            });
+          }
         }
       }
     } on FirebaseException catch (e) {
@@ -149,29 +179,14 @@ class PostRepository {
   }
 
   //GET VOTE COUNT OF A POST
-  Stream<Map<String, int>> getPostVoteCount(Post post, String uid) {
-    return _postVotes
-        .where('postId', isEqualTo: post.id)
-        .where('uid', isEqualTo: uid)
-        .snapshots()
-        .map(
-      (event) {
-        int upvoteCount = 0;
-        int downvoteCount = 0;
-        for (var doc in event.docs) {
-          final data = doc.data() as Map<String, dynamic>;
-          if (data['isUpvoted'] == true) {
-            upvoteCount++;
-          } else {
-            downvoteCount++;
-          }
-        }
-        return {
-          'upvotes': upvoteCount,
-          'downvotes': downvoteCount,
-        };
-      },
-    );
+  Stream<Map<String, int>> getPostVoteCount(Post post) {
+    return _posts.doc(post.id).snapshots().map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      return {
+        'upvotes': data['upvoteCount'],
+        'downvotes': data['downvoteCount'],
+      };
+    });
   }
 
   //DELETE THE POST
@@ -196,13 +211,7 @@ class PostRepository {
   Stream<Post> getPostById(String postId) {
     return _posts.doc(postId).snapshots().map((event) {
       final data = event.data() as Map<String, dynamic>;
-      return Post(
-        id: postId,
-        communityId: data['communityId'] as String,
-        uid: data['uid'] as String,
-        status: data['status'] as String,
-        createdAt: data['createdAt'] as Timestamp,
-      );
+      return Post.fromMap(data);
     });
   }
 
@@ -229,6 +238,8 @@ class PostRepository {
             communityId: postData['communityId'] as String,
             uid: postData['uid'] as String,
             status: postData['status'] as String,
+            upvoteCount: postData['upvoteCount'] as int,
+            downvoteCount: postData['downvoteCount'] as int,
             createdAt: postData['createdAt'] as Timestamp,
             id: postData['id'] as String,
           ),
@@ -262,6 +273,8 @@ class PostRepository {
               communityId: postData['communityId'] as String,
               uid: postData['uid'] as String,
               status: postData['status'] as String,
+              upvoteCount: postData['upvoteCount'] as int,
+              downvoteCount: postData['downvoteCount'] as int,
               createdAt: postData['createdAt'] as Timestamp,
               id: postData['id'] as String,
             ),

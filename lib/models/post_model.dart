@@ -10,6 +10,8 @@ class Post {
   final String? content;
   final String? image;
   final String? video;
+  final int upvoteCount;
+  final int downvoteCount;
   final String status;
   final Timestamp createdAt;
   Post({
@@ -19,6 +21,8 @@ class Post {
     this.content,
     this.image,
     this.video,
+    required this.upvoteCount,
+    required this.downvoteCount,
     required this.status,
     required this.createdAt,
   });
@@ -30,6 +34,8 @@ class Post {
     String? content,
     String? image,
     String? video,
+    int? upvoteCount,
+    int? downvoteCount,
     String? status,
     Timestamp? createdAt,
   }) {
@@ -40,6 +46,8 @@ class Post {
       content: content ?? this.content,
       image: image ?? this.image,
       video: video ?? this.video,
+      upvoteCount: upvoteCount ?? this.upvoteCount,
+      downvoteCount: downvoteCount ?? this.downvoteCount,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -53,6 +61,8 @@ class Post {
       'content': content,
       'image': image,
       'video': video,
+      'upvoteCount': upvoteCount,
+      'downvoteCount': downvoteCount,
       'status': status,
       'createdAt': createdAt,
     };
@@ -63,9 +73,11 @@ class Post {
       id: map['id'] as String,
       communityId: map['communityId'] as String,
       uid: map['uid'] as String,
-      content: map['content'] != null ? map['content'] as String : null,
-      image: map['image'] != null ? map['image'] as String : null,
-      video: map['video'] != null ? map['video'] as String : null,
+      content: map['content'] != null ? map['content'] as String : '',
+      image: map['image'] != null ? map['image'] as String : '',
+      video: map['video'] != null ? map['video'] as String : '',
+      upvoteCount: map['upvoteCount'] as int,
+      downvoteCount: map['downvoteCount'] as int,
       status: map['status'] as String,
       createdAt: map['createdAt'] as Timestamp,
     );
@@ -73,7 +85,7 @@ class Post {
 
   @override
   String toString() {
-    return 'Post(id: $id, communityId: $communityId, uid: $uid, content: $content, image: $image, video: $video, status: $status, createdAt: $createdAt)';
+    return 'Post(id: $id, communityId: $communityId, uid: $uid, content: $content, image: $image, video: $video, upvoteCount: $upvoteCount, downvoteCount: $downvoteCount, status: $status, createdAt: $createdAt)';
   }
 
   @override
@@ -86,6 +98,8 @@ class Post {
         other.content == content &&
         other.image == image &&
         other.video == video &&
+        other.upvoteCount == upvoteCount &&
+        other.downvoteCount == downvoteCount &&
         other.status == status &&
         other.createdAt == createdAt;
   }
@@ -98,6 +112,8 @@ class Post {
         content.hashCode ^
         image.hashCode ^
         video.hashCode ^
+        upvoteCount.hashCode ^
+        downvoteCount.hashCode ^
         status.hashCode ^
         createdAt.hashCode;
   }
