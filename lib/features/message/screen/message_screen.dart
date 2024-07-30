@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/features/call/screen/incoming_call_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
@@ -12,8 +13,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/message/controller/message_controller.dart';
 import 'package:hash_balance/features/message/screen/widget/message_bubble.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
-import 'package:hash_balance/features/voice_call/controller/voice_call_controller.dart';
-import 'package:hash_balance/features/voice_call/screen/voice_call_screen.dart';
+import 'package:hash_balance/features/call/controller/voice_call_controller.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:flutter/foundation.dart' as foundation;
 
@@ -35,6 +35,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
   String? token;
   String? channelName;
   final role = ClientRole.Broadcaster;
+  bool? isCaller;
 
   bool _isEmojiVisible = false;
 
@@ -49,7 +50,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
     });
   }
 
-  void sendMessage(String targetUid) async {
+  void onSendMessage(String targetUid) async {
     final result = await ref
         .watch(messageControllerProvider.notifier)
         .sendMessage(_messageController.text, targetUid);
@@ -67,29 +68,28 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
         .markAsRead(widget._targetUser.uid);
   }
 
-  Future<void> onVoiceCall() async {
-    final voiceCallController = ref.watch(voiceCallControllerProvider.notifier);
+  Future<void> onStartVoiceCall() async {
+    // final voiceCallController = ref.watch(voiceCallControllerProvider.notifier);
 
-    final result = await voiceCallController.fetchAgoraToken(uids!);
-    result.fold((l) => showToast(false, l.message), (r) => token = r);
-    await _handleCameraAndMic(Permission.camera);
-    await _handleCameraAndMic(Permission.microphone);
+    // final result = await voiceCallController.fetchAgoraToken(uids!);
+    // result.fold((l) => showToast(false, l.message), (r) => token = r);
+    // await _handleCameraAndMic(Permission.camera);
+    // await _handleCameraAndMic(Permission.microphone);
 
-    final result2 = await voiceCallController.notifyIncomingCall(
-        'eTWsn-rXQYqq7aMW6ElOMa:APA91bFBxsTP7zB-w_lo-P1QtPI4I0YZltB2sNNJ2sYl1kVJdpj-dkvK-596ax95tIu6Z1g1puyzmw6IahG98bgbiwO7vey2usASJpiS45Yg0cs2a_AjtRKiWiKAXy93eKKTVLWfouAG');
-    result2.fold(
-      (l) => showToast(false, l.message),
-      (_) {},
-    );
+    // final result2 =
+    //     await voiceCallController.notifyIncomingCall(widget._targetUser);
+    // result2.fold(
+    //   (l) => showToast(false, l.message),
+    //   (_) {},
+    // );
 
     if (mounted) {
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => VoiceCallScreen(
-            channelName: channelName!,
-            role: role,
-            token: token!,
+          builder: (context) => IncomingCallScreen(
+            caller: ref.watch(userProvider)!,
+            receiver: widget._targetUser,
           ),
         ),
       );
@@ -100,8 +100,8 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
 
   Future<void> onVideoCall() async {
     final voiceCallController = ref.watch(voiceCallControllerProvider.notifier);
-    final result2 = await voiceCallController.notifyIncomingCall(
-        'eTWsn-rXQYqq7aMW6ElOMa:APA91bFBxsTP7zB-w_lo-P1QtPI4I0YZltB2sNNJ2sYl1kVJdpj-dkvK-596ax95tIu6Z1g1puyzmw6IahG98bgbiwO7vey2usASJpiS45Yg0cs2a_AjtRKiWiKAXy93eKKTVLWfouAG');
+    final result2 =
+        await voiceCallController.notifyIncomingCall(widget._targetUser);
     result2.fold(
       (l) => showToast(false, l.message),
       (_) {},
@@ -149,7 +149,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.call),
-            onPressed: onVoiceCall,
+            onPressed: onStartVoiceCall,
           ),
           IconButton(
             icon: const Icon(Icons.videocam),
@@ -324,7 +324,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                 const SizedBox(width: 10),
                 GestureDetector(
                   onTap: () {
-                    sendMessage(widget._targetUser.uid);
+                    onSendMessage(widget._targetUser.uid);
                     _messageController.clear();
                     FocusManager.instance.primaryFocus?.unfocus();
                   },

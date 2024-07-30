@@ -1,3 +1,7 @@
+// ignore_for_file: avoid_print
+
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -54,45 +58,97 @@ class MyAppState extends ConsumerState<MyApp> {
     ref.read(userProvider.notifier).update((state) => userData);
   }
 
-  void setupLocalNotifications() {
+  void _setupLocalNotifications() async {
+    final Completer<bool> completer = Completer();
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
     const InitializationSettings initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
 
-    flutterLocalNotificationsPlugin.initialize(initializationSettings);
+    flutterLocalNotificationsPlugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (response) async {
+        _handleNotificationTap(response, completer);
+      },
+    );
   }
 
-  Future<void> showNotification(RemoteMessage message) async {
-    AndroidNotificationDetails androidPlatformChannelSpecifics =
+  Future<void> _handleNotificationTap(
+      NotificationResponse response, Completer<bool> completer) async {
+    if (response.payload != null) {
+      if (response.payload == 'answer_action') {
+        print('User tapped on answer action');
+        completer.complete(true);
+      } else if (response.payload == 'decline_action') {
+        print('User tapped on decline action');
+        completer.complete(false);
+      }
+    }
+  }
+
+  Future<bool> showIncomingCall(RemoteMessage message) async {
+    Completer<bool> completer = Completer<bool>();
+
+    const String channelId = 'incoming_call_channel';
+    const String channelName = 'Incoming Calls';
+    const String channelDescription = 'Channel for incoming call notifications';
+
+    const AndroidNotificationAction answerAction = AndroidNotificationAction(
+      'answer_action',
+      'Answer',
+      icon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+    );
+
+    const AndroidNotificationAction declineAction = AndroidNotificationAction(
+      'decline_action',
+      'Decline',
+      icon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+    );
+
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-      Constants.deviceToken!,
-      'HashBalance',
+      channelId,
+      channelName,
+      channelDescription: channelDescription,
       importance: Importance.max,
       priority: Priority.high,
       showWhen: false,
+      actions: <AndroidNotificationAction>[answerAction, declineAction],
     );
-    NotificationDetails platformChannelSpecifics =
+
+    const NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
+
     await flutterLocalNotificationsPlugin.show(
       0,
       message.notification?.title,
       message.notification?.body,
       platformChannelSpecifics,
-      payload: 'item x',
+      payload: 'incoming_call',
     );
+
+    // Lắng nghe hành động từ thông báo
+    flutterLocalNotificationsPlugin.initialize(
+      const InitializationSettings(
+          android: AndroidInitializationSettings('@mipmap/ic_launcher')),
+      onDidReceiveNotificationResponse: (response) {
+        _handleNotificationTap(response, completer);
+      },
+    );
+
+    return completer.future;
   }
 
   @override
   void initState() {
     super.initState();
-    setupLocalNotifications();
+    _setupLocalNotifications();
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
       if (notification != null && android != null) {
-        showNotification(message);
+          showIncomingCall(message);
       }
     });
   }

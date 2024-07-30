@@ -5,8 +5,9 @@ import 'package:agora_rtc_engine/rtc_local_view.dart' as rtc_local_view;
 import 'package:agora_rtc_engine/rtc_remote_view.dart' as rtc_remote_view;
 import 'package:flutter/material.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class VoiceCallScreen extends StatefulWidget {
+class CallScreen extends ConsumerStatefulWidget {
   /// non-modifiable channel name of the page
   final String _channelName;
 
@@ -15,7 +16,7 @@ class VoiceCallScreen extends StatefulWidget {
   final String _token;
 
   /// Creates a call page with given channel name.
-  const VoiceCallScreen({
+  const CallScreen({
     super.key,
     required String token,
     required String channelName,
@@ -25,10 +26,10 @@ class VoiceCallScreen extends StatefulWidget {
         _token = token;
 
   @override
-  VoiceCallScreenState createState() => VoiceCallScreenState();
+  CallScreenState createState() => CallScreenState();
 }
 
-class VoiceCallScreenState extends State<VoiceCallScreen> {
+class CallScreenState extends ConsumerState<CallScreen> {
   final _users = <int>[];
   final _infoStrings = <String>[];
   bool muted = false;

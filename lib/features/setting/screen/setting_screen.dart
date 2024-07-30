@@ -18,7 +18,7 @@ class SettingScreen extends ConsumerStatefulWidget {
 class SettingScreenState extends ConsumerState<SettingScreen> {
   bool isTrySigningOut = false;
 
-  void signOut(BuildContext context, WidgetRef ref) {
+  void signOut() {
     setState(() {
       isTrySigningOut = true;
     });
@@ -58,7 +58,20 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            onTap: () => signOut(context, ref),
+            onTap: () => signOut(),
+          ),
+          ListTile(
+            leading: Icon(
+              Icons.logout,
+              color: Pallete.redColor,
+            ),
+            title: const Text(
+              'Open the test screen',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            onTap: () {},
           ),
         ],
       ),
