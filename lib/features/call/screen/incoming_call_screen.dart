@@ -51,9 +51,6 @@ class IncomingCallScreenState extends ConsumerState<IncomingCallScreen> {
       (l) => showToast(false, l.message),
       (_) {},
     );
-
-    final answerCallResult = await voiceCallController.onAnswerCall();
-    print('THE RESULT ISSSSSSSSSSSSSS: $answerCallResult');
   }
 
   // @override

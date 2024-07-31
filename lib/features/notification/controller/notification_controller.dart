@@ -7,6 +7,12 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/notification/repository/notification_repository.dart';
 import 'package:hash_balance/models/notification_model.dart';
 
+final deleteNotifProvider = Provider.family((ref, String notifId) {
+  return ref
+      .watch(notificationControllerProvider.notifier)
+      .deleteNotif(notifId);
+});
+
 final getNotifsProvider = StreamProvider.family((ref, String uid) {
   return ref
       .watch(notificationControllerProvider.notifier)
@@ -53,8 +59,13 @@ class NotificationController extends StateNotifier<bool> {
     return _notificationRepository.getNotificationByUid(uid);
   }
 
-  void markAsRead(String notifId) {
+  void markAsRead(String notifId) async {
     final uid = _ref.watch(userProvider)!.uid;
-    _notificationRepository.markAsRead(uid, notifId);
+    await _notificationRepository.markAsRead(uid, notifId);
+  }
+
+  void deleteNotif(String notifId) async {
+    final uid = _ref.watch(userProvider)!.uid;
+    await _notificationRepository.deleteNotification(uid, notifId);
   }
 }

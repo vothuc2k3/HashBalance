@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/edit_profile/edit_user_profile.dart';
+import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 class UserProfileScreen extends ConsumerStatefulWidget {
@@ -28,6 +29,15 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => EditProfileScreen(uid: widget.user.uid),
+      ),
+    );
+  }
+
+  void navigateToFriendProfile(UserModel friend) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OtherUserProfileScreen(targetUser: friend),
       ),
     );
   }
@@ -275,30 +285,35 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
                   final friend = friendList[index];
                   return Column(
                     children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.blue, // Màu viền
-                            width: 2.0, // Độ dày viền
+                      InkWell(
+                        onTap: () => navigateToFriendProfile(friend),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.blue, // Màu viền
+                              width: 2.0, // Độ dày viền
+                            ),
                           ),
-                        ),
-                        child: ClipOval(
-                          child: CachedNetworkImage(
-                            imageUrl: friend.profileImage,
-                            width: 60,
-                            height: 60,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) =>
-                                const CircularProgressIndicator(),
-                            errorWidget: (context, url, error) =>
-                                const Icon(Icons.error),
+                          child: ClipOval(
+                            child: CachedNetworkImage(
+                              imageUrl: friend.profileImage,
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) =>
+                                  const CircularProgressIndicator(),
+                              errorWidget: (context, url, error) =>
+                                  const Icon(Icons.error),
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text('#${friend.name}',
-                          style: const TextStyle(fontSize: 16)),
+                      Text(
+                        '#${friend.name}',
+                        style: const TextStyle(fontSize: 16),
+                      ),
                     ],
                   );
                 },

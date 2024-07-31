@@ -78,6 +78,10 @@ class NotificationRepository {
     }
   }
 
+  Future<void> deleteNotification(String uid, String notifId) async {
+    await _user.doc(uid).collection('notification').doc(notifId).delete();
+  }
+
   //REFERENCE ALL THE USERS
   CollectionReference get _user =>
       _firestore.collection(FirebaseConstants.usersCollection);

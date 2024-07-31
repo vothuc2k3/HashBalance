@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:http/http.dart' as http;
 
 final pushNotificationRepositoryProvider = Provider((ref) {
@@ -12,50 +13,24 @@ final pushNotificationRepositoryProvider = Provider((ref) {
 class PushNotificationRepository {
   PushNotificationRepository();
 
-  // Future<void> sendPushNotification(
-  //     List<String> deviceIds, String uid, NotificationModel notif) async {
-  //   const String oneSignalAppId = 'b10fa7dd-5d27-4634-9409-11169c4425e1';
-  //   const String oneSignalRestApiKey =
-  //       'MDJiZTY5ZTAtYmRiZC00N2I4LWE1MjUtYjQzODA4MTMwMTk2';
-  //   final response = await http.post(
-  //     Uri.parse('https://api.onesignal.com/notifications'),
-  //     headers: {
-  //       'Content-Type': 'application/json; charset=utf-8',
-  //       'Authorization': 'Basic $oneSignalRestApiKey',
-  //     },
-  //     body: jsonEncode({
-  //       'app_id': oneSignalAppId,
-  //       'include_aliases': {uid: deviceIds},
-  //       'target_channel': 'push',
-  //       'headings': {'en': notif.title},
-  //       'contents': {'en': notif.message},
-  //     }),
-  //   );
-  //   if (response.statusCode == 200) {
-  //     print('SUCCESSFULLY SENT API');
-  //   }
-  // }
-
-  Future<void> sendFriendRequestPushNotification(String uid) async {
-    final url = Uri.parse('http://10.26.8.33:3000/send-notification');
+  Future<void> sendFCMNotification(
+      List<String> tokens, String message, String title) async {
+    final url = Uri.parse('http://${Constants.ip}:3000/sendPushNotification');
     final response = await http.post(
       url,
-      headers: <String, String>{
+      headers: {
         'Content-Type': 'application/json',
       },
-      body: jsonEncode(
-        {
-          'title': 'Friend Request',
-          'body': 'You have a new friend request!',
-          'user_id': uid,
-        },
-      ),
+      body: json.encode({
+        'tokens': tokens,
+        'message': message,
+        'title': title,
+      }),
     );
     if (response.statusCode == 200) {
       print('Notification sent successfully');
     } else {
-      print('Failed to send notification. Status code: ${response.statusCode}');
-      print('Reason: ${response.body}');
+      print('Failed to send notification');
     }
   }
 }

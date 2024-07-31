@@ -1,8 +1,5 @@
-// ignore_for_file: unused_field
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
-import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/push_notification/repository/push_notification_repository.dart';
 
 final pushNotificationControllerProvider =
@@ -14,27 +11,21 @@ final pushNotificationControllerProvider =
 );
 
 class PushNotificationController extends StateNotifier<bool> {
-  final AuthController _authController;
   final PushNotificationRepository _pushNotificationRepository;
-  final Ref _ref;
 
   PushNotificationController({
     required AuthController authController,
     required PushNotificationRepository pushNotificationRepository,
     required Ref ref,
-  })  : _authController = authController,
-        _pushNotificationRepository = pushNotificationRepository,
-        _ref = ref,
+  })  : _pushNotificationRepository = pushNotificationRepository,
         super(false);
 
-  // Future<void> sendPushNotification(
-  //     List<String> deviceIds, String targetUid, NotificationModel notif) async {
-  //   await _pushNotificationRepository.sendPushNotification(
-  //       deviceIds, targetUid, notif);
-  // }
-
-  Future<void> sendTest() async {
-    final uid = _ref.watch(userProvider)!.uid;
-    await _pushNotificationRepository.sendFriendRequestPushNotification(uid);
+  Future<void> sendPushNotification(
+      List<String> deviceTokens, String message, String title) async {
+    await _pushNotificationRepository.sendFCMNotification(
+      deviceTokens,
+      message,
+      title,
+    );
   }
 }

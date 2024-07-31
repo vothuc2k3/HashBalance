@@ -168,7 +168,7 @@ class SearchCommunityDelegate extends SearchDelegate {
                         style: const TextStyle(color: Colors.white),
                       ),
                       onTap: () {
-                        navigateToProfileScreen(context, user.uid);
+                        navigateToProfileScreen(context, user);
                       },
                     ),
                   );
@@ -202,12 +202,12 @@ class SearchCommunityDelegate extends SearchDelegate {
     );
   }
 
-  void navigateToProfileScreen(BuildContext context, String uid) {
+  void navigateToProfileScreen(BuildContext context, UserModel targetUser) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => OtherUserProfileScreen(
-          uid: uid,
+          targetUser: targetUser,
         ),
       ),
     );

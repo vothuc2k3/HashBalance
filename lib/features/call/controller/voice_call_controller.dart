@@ -48,12 +48,4 @@ class VoiceCallController extends StateNotifier<bool> {
       return left(Failures(e.toString()));
     }
   }
-
-  Future<bool> onAnswerCall() async {
-    try {
-      return await _voiceCallRepository.onAnswerCall();
-    } catch (e) {
-      throw e.toString();
-    }
-  }
 }

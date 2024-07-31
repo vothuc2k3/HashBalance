@@ -6,7 +6,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/core/utils.dart';
-import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/message/screen/message_screen.dart';
@@ -15,10 +14,10 @@ import 'package:hash_balance/models/user_model.dart';
 class OtherUserProfileScreen extends ConsumerStatefulWidget {
   const OtherUserProfileScreen({
     super.key,
-    required this.uid,
-  });
+    required UserModel targetUser,
+  }) : _targetUser = targetUser;
 
-  final String uid;
+  final UserModel _targetUser;
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
@@ -93,7 +92,10 @@ class _OtherUserProfileScreenState
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(userProvider);
-    final targetUser = ref.watch(getUserDataProvider(widget.uid));
+    final isFollowing =
+        ref.watch(getFollowingStatusProvider(widget._targetUser));
+    final isFriend = ref.watch(getFriendshipStatusProvider(widget._targetUser));
+    final requestId = getUids(currentUser!.uid, widget._targetUser.uid);
 
     final double top = coverHeight - profileHeight / 2;
     final double bottom = profileHeight / 2;
@@ -105,200 +107,190 @@ class _OtherUserProfileScreenState
             Navigator.of(context).pop();
           },
         ),
-        title: targetUser.whenOrNull(data: (targetUser) {
-          return Text(
-            targetUser.name,
-            style: const TextStyle(
-              color: Colors.white,
-            ),
-          );
-        }),
+        title: Text(
+          widget._targetUser.name,
+          style: const TextStyle(
+            color: Colors.white,
+          ),
+        ),
       ),
-      body: targetUser.when(
-          data: (targetUser) {
-            final isFollowing =
-                ref.watch(getFollowingStatusProvider(targetUser));
-            final isFriend = ref.watch(getFriendshipStatusProvider(targetUser));
-            final requestId = getUids(currentUser!.uid, targetUser.uid);
-            return ListView(
-              padding: EdgeInsets.zero,
+      body: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          Container(
+            margin: EdgeInsets.only(bottom: bottom),
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
               children: [
                 Container(
-                  margin: EdgeInsets.only(bottom: bottom),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    alignment: Alignment.center,
-                    children: [
-                      Container(
-                        color: Colors.grey,
-                        child: Image.network(
-                          targetUser.bannerImage,
-                          width: double.infinity,
-                          height: coverHeight,
-                          fit: BoxFit.cover,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) {
-                              return child;
-                            }
-                            return Container(
-                              width: double.infinity,
-                              height: coverHeight,
-                              color: Colors.black,
-                              child: const Center(
-                                child: CircularProgressIndicator(),
-                              ),
-                            );
-                          },
+                  color: Colors.grey,
+                  child: Image.network(
+                    widget._targetUser.bannerImage,
+                    width: double.infinity,
+                    height: coverHeight,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) {
+                        return child;
+                      }
+                      return Container(
+                        width: double.infinity,
+                        height: coverHeight,
+                        color: Colors.black,
+                        child: const Center(
+                          child: CircularProgressIndicator(),
                         ),
-                      ),
-                      Positioned(
-                        top: top,
-                        child: CircleAvatar(
-                          radius: profileHeight / 2,
-                          backgroundColor: Colors.grey.shade800,
-                          backgroundImage: CachedNetworkImageProvider(
-                              targetUser.profileImage),
-                        ),
-                      ),
-                    ],
+                      );
+                    },
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Short description',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Long description',
-                        style: TextStyle(
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _buildSocialIcon(FontAwesomeIcons.slack),
-                          const SizedBox(width: 12),
-                          _buildSocialIcon(FontAwesomeIcons.github),
-                          const SizedBox(width: 12),
-                          _buildSocialIcon(FontAwesomeIcons.twitter),
-                          const SizedBox(width: 12),
-                          _buildSocialIcon(FontAwesomeIcons.linkedin),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      isFollowing.when(
-                        data: (isFollowing) {
-                          return _buildFollowButton(
-                            isFollowing,
-                            followUser,
-                            targetUser,
-                          );
-                        },
-                        error: (error, stackTrace) =>
-                            ErrorText(error: error.toString()),
-                        loading: () => const Loading(),
-                      ),
-                      const SizedBox(height: 8),
-                      isFriend.when(
-                          data: (isFriend) {
-                            return isFriend == true
-                                ? _buildFriendsWidget(
-                                    context,
-                                    targetUser,
-                                    unfriend,
-                                  )
-                                : ref
-                                    .watch(getFriendRequestStatusProvider(
-                                        requestId))
-                                    .when(
-                                      data: (request) {
-                                        if (request == null) {
-                                          return Column(
-                                            children: [
-                                              _buildAddFriendButton(
-                                                sendAddFriendRequest,
-                                                targetUser,
-                                              ),
-                                            ],
-                                          );
-                                        } else if (request.requestUid ==
-                                            currentUser.uid) {
-                                          return _buildFriendRequestSent(
-                                              cancelFriendRequest, requestId);
-                                        } else {
-                                          return _buildAcceptFriendRequestButton(
-                                              acceptFriendRequest, targetUser);
-                                        }
-                                      },
-                                      error: (error, stackTrace) =>
-                                          ErrorText(error: error.toString()),
-                                      loading: () => const Loading(),
-                                    );
-                          },
-                          error: (error, stackTrace) =>
-                              ErrorText(error: error.toString()),
-                          loading: () => const Loading()),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          messageUser(targetUser);
-                        },
-                        icon: const Icon(Icons.message, color: Colors.white),
-                        label: const Text('Message'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          textStyle: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 5,
-                        ),
-                      ).animate().fadeIn(duration: 600.ms).moveY(
-                          begin: 30,
-                          end: 0,
-                          duration: 600.ms,
-                          curve: Curves.easeOutBack),
-                      const SizedBox(height: 16),
-                      const Divider(),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _buildButton(text: 'Friends', value: 52),
-                          _buildVerticalDivider(),
-                          _buildButton(
-                              text: 'Activity Points',
-                              value: targetUser.activityPoint),
-                          _buildVerticalDivider(),
-                          _buildButton(text: 'Achievements', value: 0),
-                          _buildVerticalDivider(),
-                          _buildButton(text: 'Followers', value: 5834),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      const Divider(),
-                      const SizedBox(height: 16),
-                    ],
+                Positioned(
+                  top: top,
+                  child: CircleAvatar(
+                    radius: profileHeight / 2,
+                    backgroundColor: Colors.grey.shade800,
+                    backgroundImage: CachedNetworkImageProvider(
+                      widget._targetUser.profileImage,
+                    ),
                   ),
                 ),
               ],
-            );
-          },
-          error: (error, stackTrace) => ErrorText(error: error.toString()),
-          loading: () => const Loading()),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              children: [
+                const SizedBox(height: 8),
+                const Text(
+                  'Short description',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Long description',
+                  style: TextStyle(
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildSocialIcon(FontAwesomeIcons.slack),
+                    const SizedBox(width: 12),
+                    _buildSocialIcon(FontAwesomeIcons.github),
+                    const SizedBox(width: 12),
+                    _buildSocialIcon(FontAwesomeIcons.twitter),
+                    const SizedBox(width: 12),
+                    _buildSocialIcon(FontAwesomeIcons.linkedin),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                isFollowing.when(
+                  data: (isFollowing) {
+                    return _buildFollowButton(
+                      isFollowing,
+                      followUser,
+                      widget._targetUser,
+                    );
+                  },
+                  error: (error, stackTrace) =>
+                      ErrorText(error: error.toString()),
+                  loading: () => const Loading(),
+                ),
+                const SizedBox(height: 8),
+                isFriend.when(
+                    data: (isFriend) {
+                      return isFriend == true
+                          ? _buildFriendsWidget(
+                              context,
+                              widget._targetUser,
+                              unfriend,
+                            )
+                          : ref
+                              .watch(getFriendRequestStatusProvider(requestId))
+                              .when(
+                                data: (request) {
+                                  if (request == null) {
+                                    return Column(
+                                      children: [
+                                        _buildAddFriendButton(
+                                          sendAddFriendRequest,
+                                          widget._targetUser,
+                                        ),
+                                      ],
+                                    );
+                                  } else if (request.requestUid ==
+                                      currentUser.uid) {
+                                    return _buildFriendRequestSent(
+                                        cancelFriendRequest, requestId);
+                                  } else {
+                                    return _buildAcceptFriendRequestButton(
+                                        acceptFriendRequest,
+                                        widget._targetUser);
+                                  }
+                                },
+                                error: (error, stackTrace) =>
+                                    ErrorText(error: error.toString()),
+                                loading: () => const Loading(),
+                              );
+                    },
+                    error: (error, stackTrace) =>
+                        ErrorText(error: error.toString()),
+                    loading: () => const Loading()),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    messageUser(widget._targetUser);
+                  },
+                  icon: const Icon(Icons.message, color: Colors.white),
+                  label: const Text('Message'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    textStyle: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    elevation: 5,
+                  ),
+                ).animate().fadeIn(duration: 600.ms).moveY(
+                    begin: 30,
+                    end: 0,
+                    duration: 600.ms,
+                    curve: Curves.easeOutBack),
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildButton(text: 'Friends', value: 52),
+                    _buildVerticalDivider(),
+                    _buildButton(
+                        text: 'Activity Points',
+                        value: widget._targetUser.activityPoint),
+                    _buildVerticalDivider(),
+                    _buildButton(text: 'Achievements', value: 0),
+                    _buildVerticalDivider(),
+                    _buildButton(text: 'Followers', value: 5834),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -462,7 +454,10 @@ class _OtherUserProfileScreenState
         .moveY(begin: 30, end: 0, duration: 600.ms, curve: Curves.easeOutBack);
   }
 
-  Widget _buildButton({required String text, required int value}) {
+  Widget _buildButton({
+    required String text,
+    required int value,
+  }) {
     return MaterialButton(
       padding: const EdgeInsets.symmetric(vertical: 4),
       onPressed: () {},
@@ -490,7 +485,7 @@ class _OtherUserProfileScreenState
 
   Widget _buildVerticalDivider() {
     return const VerticalDivider(
-      width: 16,
+      width: 8,
       thickness: 1,
       color: Colors.grey,
     );

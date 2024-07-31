@@ -133,6 +133,18 @@ class UserRepository {
     return deviceTokens;
   }
 
+  Future<UserModel> fetchUserByUidProvider(String uid) async {
+    try {
+      final userDoc = await _user.doc(uid).get();
+      final user = UserModel.fromMap(userDoc.data() as Map<String, dynamic>);
+      return user;
+    } on FirebaseException catch (e) {
+      throw e.message!;
+    } catch (e) {
+      throw e.toString();
+    }
+  }
+
   //REFERENCE ALL THE USERS
   CollectionReference get _user =>
       _firestore.collection(FirebaseConstants.usersCollection);

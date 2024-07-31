@@ -63,4 +63,14 @@ class UserController extends StateNotifier<bool> {
   Future<List<String>> getUserDeviceTokens(String uid) async {
     return await _userRepository.getUserDeviceTokens(uid);
   }
+
+  Future<UserModel> fetchUserByUidProvider(String uid) async {
+    try {
+      return await _userRepository.fetchUserByUidProvider(uid);
+    } on FirebaseException catch (e) {
+      throw e.message!;
+    } catch (e) {
+      throw e.toString();
+    }
+  }
 }

@@ -126,7 +126,6 @@ class FriendRepository {
       final friendQuery =
           await _users.where(FieldPath.documentId, whereIn: friendUids).get();
 
-      // Chuyển đổi các tài liệu thành các đối tượng UserModel
       return friendQuery.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         return UserModel.fromMap(data);
@@ -162,7 +161,7 @@ class FriendRepository {
   //REFERENCE ALL THE FRIEND REQUESTS
   CollectionReference get _friendRequest =>
       _firestore.collection(FirebaseConstants.friendRequestCollection);
-  //REFERENCE ALL THE FRIEND REQUESTS
+  //REFERENCE ALL THE FOLLOWER
   CollectionReference get _follower =>
       _firestore.collection(FirebaseConstants.followerCollection);
 }

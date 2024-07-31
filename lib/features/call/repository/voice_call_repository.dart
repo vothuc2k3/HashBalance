@@ -3,7 +3,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
@@ -34,25 +33,6 @@ class VoiceCallRepository {
     }
   }
 
-  Future<void> sendFCMNotification(List<String> tokens, String message) async {
-    final url = Uri.parse('http://$_ip:3000/sendPushNotification');
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: json.encode({
-        'token': tokens.first,
-        'message': message,
-      }),
-    );
-    if (response.statusCode == 200) {
-      print('Notification sent successfully');
-    } else {
-      print('Failed to send notification');
-    }
-  }
-
   Future<void> notifyIncomingCall(
       List<String> tokens, String message, String callerName) async {
     final url = Uri.parse('http://$_ip:3000/sendPushNotification');
@@ -76,17 +56,5 @@ class VoiceCallRepository {
     } else {
       print('Failed to send notification');
     }
-  }
-
-  Future<bool> onAnswerCall() async {
-    Completer<bool> completer = Completer<bool>();
-    FirebaseMessaging.onMessage.listen((RemoteMessage remoteMessage) {
-      if (remoteMessage.data['response'] == 'Answer') {
-        completer.complete(true);
-      } else if (remoteMessage.data['response'] == 'Decline') {
-        completer.complete(false);
-      }
-    });
-    return completer.future;
   }
 }

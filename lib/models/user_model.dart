@@ -90,10 +90,10 @@ class UserModel {
       isAuthenticated: map['isAuthenticated'] as bool,
       isRestricted: map['isRestricted'] as bool,
       activityPoint: map['activityPoint'] as int,
-      hashAge: map['hashAge'] != null ? map['hashAge'] as int : null,
-      bio: map['bio'] != null ? map['bio'] as String : null,
+      hashAge: map['hashAge'] != null ? map['hashAge'] as int : 1,
+      bio: map['bio'] != null ? map['bio'] as String : '',
       description:
-          map['description'] != null ? map['description'] as String : null,
+          map['description'] != null ? map['description'] as String : '',
     );
   }
 

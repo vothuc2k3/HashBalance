@@ -1,16 +1,14 @@
 // ignore_for_file: avoid_print
 
-import 'dart:async';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:toastification/toastification.dart';
 
+import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading_circular.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
@@ -47,8 +45,7 @@ class MyApp extends ConsumerStatefulWidget {
 
 class MyAppState extends ConsumerState<MyApp> {
   UserModel? userData;
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   void _getUserData(WidgetRef ref, User data) async {
     userData = await ref
@@ -59,52 +56,34 @@ class MyAppState extends ConsumerState<MyApp> {
   }
 
   void _setupLocalNotifications() async {
-    final Completer<bool> completer = Completer();
-    const AndroidInitializationSettings initializationSettingsAndroid =
+    const initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const InitializationSettings initializationSettings =
+    const initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
 
     flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (response) async {
-        _handleNotificationTap(response, completer);
+        _handleNotificationTap(response);
       },
     );
   }
 
-  Future<void> _handleNotificationTap(
-      NotificationResponse response, Completer<bool> completer) async {
+  Future<void> _handleNotificationTap(NotificationResponse response) async {
     if (response.payload != null) {
       if (response.payload == 'answer_action') {
         print('User tapped on answer action');
-        completer.complete(true);
       } else if (response.payload == 'decline_action') {
         print('User tapped on decline action');
-        completer.complete(false);
       }
     }
   }
 
-  Future<bool> showIncomingCall(RemoteMessage message) async {
-    Completer<bool> completer = Completer<bool>();
-
-    const String channelId = 'incoming_call_channel';
-    const String channelName = 'Incoming Calls';
-    const String channelDescription = 'Channel for incoming call notifications';
-
-    const AndroidNotificationAction answerAction = AndroidNotificationAction(
-      'answer_action',
-      'Answer',
-      icon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
-    );
-
-    const AndroidNotificationAction declineAction = AndroidNotificationAction(
-      'decline_action',
-      'Decline',
-      icon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
-    );
+  Future<void> showLocalNotification(RemoteMessage message) async {
+    const String channelId = 'default_channel';
+    const String channelName = 'Default';
+    const String channelDescription = 'Default Channel for Notifications';
 
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
@@ -113,8 +92,7 @@ class MyAppState extends ConsumerState<MyApp> {
       channelDescription: channelDescription,
       importance: Importance.max,
       priority: Priority.high,
-      showWhen: false,
-      actions: <AndroidNotificationAction>[answerAction, declineAction],
+      ticker: 'ticker',
     );
 
     const NotificationDetails platformChannelSpecifics =
@@ -125,32 +103,21 @@ class MyAppState extends ConsumerState<MyApp> {
       message.notification?.title,
       message.notification?.body,
       platformChannelSpecifics,
-      payload: 'incoming_call',
+      payload: 'default_payload',
     );
-
-    // Lắng nghe hành động từ thông báo
-    flutterLocalNotificationsPlugin.initialize(
-      const InitializationSettings(
-          android: AndroidInitializationSettings('@mipmap/ic_launcher')),
-      onDidReceiveNotificationResponse: (response) {
-        _handleNotificationTap(response, completer);
-      },
-    );
-
-    return completer.future;
   }
 
   @override
   void initState() {
-    super.initState();
     _setupLocalNotifications();
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      RemoteNotification? notification = message.notification;
-      AndroidNotification? android = message.notification?.android;
+      final notification = message.notification;
+      final android = message.notification?.android;
       if (notification != null && android != null) {
-          showIncomingCall(message);
+        showLocalNotification(message);
       }
     });
+    super.initState();
   }
 
   @override

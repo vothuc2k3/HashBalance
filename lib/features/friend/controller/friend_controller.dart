@@ -57,6 +57,8 @@ final friendControllerProvider =
 class FriendController extends StateNotifier<bool> {
   final NotificationController _notificationController;
   final FriendRepository _friendRepository;
+  final PushNotificationController _pushNotificationController;
+  final UserController _userController;
   final Ref _ref;
 
   FriendController({
@@ -67,6 +69,8 @@ class FriendController extends StateNotifier<bool> {
     required Ref ref,
   })  : _notificationController = notificationController,
         _friendRepository = friendRepository,
+        _userController = userController,
+        _pushNotificationController = pushNotificationController,
         _ref = ref,
         super(false);
 
@@ -89,15 +93,19 @@ class FriendController extends StateNotifier<bool> {
         id: await generateRandomId(),
         title: Constants.friendRequestTitle,
         message: Constants.getFriendRequestContent(sender!.name),
+        targetUid: targetUid,
         type: Constants.friendRequestType,
         createdAt: Timestamp.now(),
       );
 
       //SEND PUSH NOTIFICATION TO THE TARGET
-      // final targetUserDeviceIds =
-      //     await _userController.getUserDeviceIds(targetUid);
-      // await _pushNotificationController.sendPushNotification(
-      //     targetUserDeviceIds, targetUid, notif);
+      final targetUserDeviceIds =
+          await _userController.getUserDeviceTokens(targetUid);
+      await _pushNotificationController.sendPushNotification(
+        targetUserDeviceIds,
+        notif.message,
+        notif.title,
+      );
 
       //SEND A NOTIFICATION TO THE TARGET USER
       await _notificationController.addNotification(targetUser.uid, notif);
@@ -154,13 +162,13 @@ class FriendController extends StateNotifier<bool> {
       );
 
       //SEND ACCEPT REQUEST PUSH NOTIFICATION
-      // final targetUserDeviceIds =
-      //     await _userController.getUserDeviceIds(targetUser.uid);
-      // await _pushNotificationController.sendPushNotification(
-      //   targetUserDeviceIds,
-      //   targetUser.uid,
-      //   notif,
-      // );
+      final targetUserDeviceIds =
+          await _userController.getUserDeviceTokens(targetUser.uid);
+      await _pushNotificationController.sendPushNotification(
+        targetUserDeviceIds,
+        notif.message,
+        notif.title,
+      );
 
       //SEND ACCEPT FRIEND REQUEST NOTIFICATION
       await _ref
