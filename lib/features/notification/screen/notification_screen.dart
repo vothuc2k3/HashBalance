@@ -180,7 +180,7 @@ class NotificationScreenState extends ConsumerState<NotificationScreen>
                                   ? null
                                   : const Icon(Icons.new_releases,
                                       color: Colors.red),
-                              onTap: () {
+                              onTap: () async {
                                 markAsRead(notif.id, user);
                                 switch (notif.type) {
                                   case Constants.friendRequestType:

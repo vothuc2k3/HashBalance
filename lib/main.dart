@@ -110,13 +110,15 @@ class MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     _setupLocalNotifications();
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      final notification = message.notification;
-      final android = message.notification?.android;
-      if (notification != null && android != null) {
-        showLocalNotification(message);
-      }
-    });
+    FirebaseMessaging.onMessage.listen(
+      (RemoteMessage message) {
+        final notification = message.notification;
+        final android = message.notification?.android;
+        if (notification != null && android != null) {
+          showLocalNotification(message);
+        }
+      },
+    );
     super.initState();
   }
 

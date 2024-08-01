@@ -69,19 +69,19 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
   }
 
   Future<void> onStartVoiceCall() async {
-    // final voiceCallController = ref.watch(voiceCallControllerProvider.notifier);
+    final voiceCallController = ref.watch(voiceCallControllerProvider.notifier);
 
-    // final result = await voiceCallController.fetchAgoraToken(uids!);
-    // result.fold((l) => showToast(false, l.message), (r) => token = r);
-    // await _handleCameraAndMic(Permission.camera);
-    // await _handleCameraAndMic(Permission.microphone);
+    final result = await voiceCallController.fetchAgoraToken(uids!);
+    result.fold((l) => showToast(false, l.message), (r) => token = r);
+    await _handleCameraAndMic(Permission.camera);
+    await _handleCameraAndMic(Permission.microphone);
 
-    // final result2 =
-    //     await voiceCallController.notifyIncomingCall(widget._targetUser);
-    // result2.fold(
-    //   (l) => showToast(false, l.message),
-    //   (_) {},
-    // );
+    final result2 =
+        await voiceCallController.notifyIncomingCall(widget._targetUser);
+    result2.fold(
+      (l) => showToast(false, l.message),
+      (_) {},
+    );
 
     if (mounted) {
       await Navigator.push(

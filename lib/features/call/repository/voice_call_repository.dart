@@ -14,13 +14,12 @@ final voiceCallRepositoryProvider = Provider((ref) {
 });
 
 class VoiceCallRepository {
-  final _ip = '192.168.8.134';
-
   //FETCH AGORA TOKEN
   FutureString fetchAgoraToken(String channelName) async {
     try {
       final response = await http.get(
-        Uri.parse('http://$_ip:3000/access_token?channelName=$channelName'),
+        Uri.parse(
+            'https://hash-balance-backend-6cdfcc4bcae7.herokuapp.com/access_token?channelName=$channelName'),
       );
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
@@ -35,26 +34,25 @@ class VoiceCallRepository {
 
   Future<void> notifyIncomingCall(
       List<String> tokens, String message, String callerName) async {
-    final url = Uri.parse('http://$_ip:3000/sendPushNotification');
+    final url = Uri.parse(
+        'https://hash-balance-backend-6cdfcc4bcae7.herokuapp.com/sendPushNotification');
     final response = await http.post(
       url,
       headers: {
         'Content-Type': 'application/json',
       },
       body: json.encode({
-        'token': tokens.first,
+        'tokens': tokens,
         'message': message,
-        'data': {
-          'type': 'incoming_call',
-          'caller': callerName,
-          'options': ['Answer', 'Decline'],
-        },
+        'title': 'Incoming Call',
       }),
     );
     if (response.statusCode == 200) {
       print('Notification sent successfully');
     } else {
       print('Failed to send notification');
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
     }
   }
 }

@@ -70,6 +70,4 @@ class Constants {
   static String? deviceToken;
 
   static String agoraAppId = '8a2ac699a8c84f3f894f59e55e766fa4';
-
-  static const ip = '192.168.8.167';
 }

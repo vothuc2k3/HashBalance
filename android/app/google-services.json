@@ -1,45 +1,37 @@
 {
   "project_info": {
-    "project_number": "456581070342",
-    "project_id": "hash-balance-official-2",
-    "storage_bucket": "hash-balance-official-2.appspot.com"
+    "project_number": "342717500493",
+    "project_id": "hash-balance-official",
+    "storage_bucket": "hash-balance-official.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:456581070342:android:b5b28a46f459edc7c5cd87",
+        "mobilesdk_app_id": "1:342717500493:android:e5b8281843ea1886d0e004",
         "android_client_info": {
           "package_name": "com.example.hash_balance"
         }
       },
       "oauth_client": [
         {
-          "client_id": "456581070342-f3e31i9gtmkh9ajvrm7g5drmo9b4srb2.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.hash_balance",
-            "certificate_hash": "2c3198bf18a5c4490e0d52eed9f3190b7d0542c7"
-          }
-        },
-        {
-          "client_id": "456581070342-b157pc9hr7ta88gsapi0mhd5ecmaav4a.apps.googleusercontent.com",
+          "client_id": "342717500493-cs9rd5u54smcle5a93uknn7t903r63h6.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAt0vq2v6bpxhyw1iQutVDY8Aq21Z93gNM"
+          "current_key": "AIzaSyA3tSQM2M4v8NEVN6Gs95k3-weaf3tWsjg"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "456581070342-b157pc9hr7ta88gsapi0mhd5ecmaav4a.apps.googleusercontent.com",
+              "client_id": "342717500493-cs9rd5u54smcle5a93uknn7t903r63h6.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "456581070342-j45e7jajpt8gu89eiav11shvk6kmud2r.apps.googleusercontent.com",
+              "client_id": "342717500493-8krnm7p281a6n9i0es8d9u1u55qp9v25.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
                 "bundle_id": "com.example.hashBalance"
