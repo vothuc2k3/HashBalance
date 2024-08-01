@@ -8,21 +8,24 @@ class NotificationModel {
   final String title;
   final String message;
   final String type;
-  final String? targetUid;
+  final String targetUid;
+  final String senderUid;
   final String? postId;
   final Timestamp createdAt;
   final bool isRead;
-
   NotificationModel({
     required this.id,
     required this.title,
     required this.message,
     required this.type,
-    this.targetUid,
+    required this.targetUid,
+    required this.senderUid,
     this.postId,
     required this.createdAt,
-    this.isRead = false,
+    required this.isRead,
   });
+
+
 
   NotificationModel copyWith({
     String? id,
@@ -30,6 +33,7 @@ class NotificationModel {
     String? message,
     String? type,
     String? targetUid,
+    String? senderUid,
     String? postId,
     Timestamp? createdAt,
     bool? isRead,
@@ -40,6 +44,7 @@ class NotificationModel {
       message: message ?? this.message,
       type: type ?? this.type,
       targetUid: targetUid ?? this.targetUid,
+      senderUid: senderUid ?? this.senderUid,
       postId: postId ?? this.postId,
       createdAt: createdAt ?? this.createdAt,
       isRead: isRead ?? this.isRead,
@@ -53,6 +58,7 @@ class NotificationModel {
       'message': message,
       'type': type,
       'targetUid': targetUid,
+      'senderUid': senderUid,
       'postId': postId,
       'createdAt': createdAt,
       'isRead': isRead,
@@ -65,8 +71,9 @@ class NotificationModel {
       title: map['title'] as String,
       message: map['message'] as String,
       type: map['type'] as String,
-      targetUid: map['targetUid'] != null ? map['targetUid'] as String : null,
-      postId: map['postId'] != null ? map['postId'] as String : null,
+      targetUid: map['targetUid'] as String,
+      senderUid: map['senderUid'] as String,
+      postId: map['postId'] != null ? map['postId'] as String : '',
       createdAt: map['createdAt'] as Timestamp,
       isRead: map['isRead'] as bool,
     );
@@ -79,33 +86,34 @@ class NotificationModel {
 
   @override
   String toString() {
-    return 'NotificationModel(id: $id, title: $title, message: $message, type: $type, targetUid: $targetUid, postId: $postId, createdAt: $createdAt, isRead: $isRead)';
+    return 'NotificationModel(id: $id, title: $title, message: $message, type: $type, targetUid: $targetUid, senderUid: $senderUid, postId: $postId, createdAt: $createdAt, isRead: $isRead)';
   }
 
   @override
   bool operator ==(covariant NotificationModel other) {
     if (identical(this, other)) return true;
-  
-    return 
-      other.id == id &&
-      other.title == title &&
-      other.message == message &&
-      other.type == type &&
-      other.targetUid == targetUid &&
-      other.postId == postId &&
-      other.createdAt == createdAt &&
-      other.isRead == isRead;
+
+    return other.id == id &&
+        other.title == title &&
+        other.message == message &&
+        other.type == type &&
+        other.targetUid == targetUid &&
+        other.senderUid == senderUid &&
+        other.postId == postId &&
+        other.createdAt == createdAt &&
+        other.isRead == isRead;
   }
 
   @override
   int get hashCode {
     return id.hashCode ^
-      title.hashCode ^
-      message.hashCode ^
-      type.hashCode ^
-      targetUid.hashCode ^
-      postId.hashCode ^
-      createdAt.hashCode ^
-      isRead.hashCode;
+        title.hashCode ^
+        message.hashCode ^
+        type.hashCode ^
+        targetUid.hashCode ^
+        senderUid.hashCode ^
+        postId.hashCode ^
+        createdAt.hashCode ^
+        isRead.hashCode;
   }
 }

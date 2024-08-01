@@ -45,7 +45,7 @@ class NotificationScreenState extends ConsumerState<NotificationScreen>
 
   void navigateToProfileScreen(String uid) async {
     final targetUser = await _fetchUserByUid(uid);
-    Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => OtherUserProfileScreen(
@@ -184,10 +184,10 @@ class NotificationScreenState extends ConsumerState<NotificationScreen>
                                 markAsRead(notif.id, user);
                                 switch (notif.type) {
                                   case Constants.friendRequestType:
-                                    navigateToProfileScreen(notif.targetUid!);
+                                    navigateToProfileScreen(notif.senderUid);
                                     break;
                                   case Constants.acceptRequestType:
-                                    navigateToProfileScreen(notif.targetUid!);
+                                    navigateToProfileScreen(notif.senderUid);
                                     break;
                                   default:
                                 }

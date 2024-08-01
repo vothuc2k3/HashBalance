@@ -13,7 +13,12 @@ class PushNotificationRepository {
   PushNotificationRepository();
 
   Future<void> sendFCMNotification(
-      List<String> tokens, String message, String title) async {
+    List<String> tokens,
+    String message,
+    String title,
+    Map<String, dynamic> data,
+  ) async {
+    print('TOKENS TO BE SENT: $tokens');
     final url = Uri.parse(
         'https://hash-balance-backend-6cdfcc4bcae7.herokuapp.com/sendPushNotification');
     final response = await http.post(
@@ -25,6 +30,7 @@ class PushNotificationRepository {
         'tokens': tokens,
         'message': message,
         'title': title,
+        'data': data,
       }),
     );
     if (response.statusCode == 200) {

@@ -136,8 +136,7 @@ class UserRepository {
   Future<UserModel> fetchUserByUidProvider(String uid) async {
     try {
       final userDoc = await _user.doc(uid).get();
-      final user = UserModel.fromMap(userDoc.data() as Map<String, dynamic>);
-      return user;
+      return UserModel.fromMap(userDoc.data() as Map<String, dynamic>);
     } on FirebaseException catch (e) {
       throw e.message!;
     } catch (e) {

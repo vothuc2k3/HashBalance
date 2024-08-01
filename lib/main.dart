@@ -1,5 +1,7 @@
 // ignore_for_file: avoid_print
 
+import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -15,9 +17,13 @@ import 'package:hash_balance/features/authentication/controller/auth_controller.
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
 import 'package:hash_balance/features/home/screen/home_screen.dart';
+import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
+import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/firebase_options.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -71,13 +77,50 @@ class MyAppState extends ConsumerState<MyApp> {
   }
 
   Future<void> _handleNotificationTap(NotificationResponse response) async {
+    print(response); // In ra chi tiết của NotificationResponse để kiểm tra
     if (response.payload != null) {
-      if (response.payload == 'answer_action') {
-        print('User tapped on answer action');
-      } else if (response.payload == 'decline_action') {
-        print('User tapped on decline action');
+      try {
+        // Decode the payload to a Map
+        final payloadData = jsonDecode(response.payload!);
+        print(
+            'Payload data: $payloadData'); // In ra chi tiết của payload để kiểm tra
+
+        // Check the type and navigate accordingly
+        if (payloadData['type'] == 'accept_request') {
+          // Navigate to the corresponding screen
+          final targetUser = await _fetchUserByUid(payloadData['uid']);
+          navigatorKey.currentState?.push(
+            MaterialPageRoute(
+              builder: (context) => OtherUserProfileScreen(
+                targetUser: targetUser,
+              ),
+            ),
+          );
+        } else if (payloadData['type'] == 'friend_request') {
+          // Navigate to the corresponding screen
+          final targetUser = await _fetchUserByUid(payloadData['uid']);
+          navigatorKey.currentState?.push(
+            MaterialPageRoute(
+              builder: (context) => OtherUserProfileScreen(
+                targetUser: targetUser,
+              ),
+            ),
+          );
+        } else {
+          print('Unknown action');
+        }
+      } catch (e) {
+        print('Error parsing payload: $e');
       }
+    } else {
+      print('No payload found');
     }
+  }
+
+  Future<UserModel> _fetchUserByUid(String uid) async {
+    return ref
+        .watch(userControllerProvider.notifier)
+        .fetchUserByUidProvider(uid);
   }
 
   Future<void> showLocalNotification(RemoteMessage message) async {
@@ -98,12 +141,17 @@ class MyAppState extends ConsumerState<MyApp> {
     const NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
 
+    // Tạo payload từ message data
+    final Map<String, dynamic> payloadData = message.data;
+
+    final payload = jsonEncode(payloadData); // Đảm bảo payload là JSON hợp lệ
+
     await flutterLocalNotificationsPlugin.show(
       0,
       message.notification?.title,
       message.notification?.body,
       platformChannelSpecifics,
-      payload: 'default_payload',
+      payload: payload,
     );
   }
 
@@ -129,6 +177,7 @@ class MyAppState extends ConsumerState<MyApp> {
             if (user != null) {
               _getUserData(ref, user);
               return MaterialApp(
+                navigatorKey: navigatorKey,
                 debugShowCheckedModeBanner: false,
                 title: 'Hash Balance',
                 theme: Pallete.darkModeAppTheme,
@@ -152,6 +201,7 @@ class MyAppState extends ConsumerState<MyApp> {
               );
             } else {
               return MaterialApp(
+                navigatorKey: navigatorKey,
                 debugShowCheckedModeBanner: false,
                 title: 'Hash Balance',
                 theme: Pallete.darkModeAppTheme,

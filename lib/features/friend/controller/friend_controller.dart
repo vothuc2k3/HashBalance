@@ -77,14 +77,12 @@ class FriendController extends StateNotifier<bool> {
   //SEND FRIEND REQUEST
   FutureVoid sendFriendRequest(UserModel targetUser) async {
     try {
-      final sender = _ref.watch(userProvider);
-      final requestUid = _ref.watch(userProvider)!.uid;
-      final targetUid = targetUser.uid;
+      final sender = _ref.watch(userProvider)!;
 
       final request = FriendRequest(
-        id: getUids(requestUid, targetUid),
-        requestUid: requestUid,
-        targetUid: targetUid,
+        id: getUids(sender.uid, targetUser.uid),
+        requestUid: sender.uid,
+        targetUid: targetUser.uid,
         createdAt: Timestamp.now(),
       );
       await _friendRepository.sendFriendRequest(request);
@@ -92,19 +90,25 @@ class FriendController extends StateNotifier<bool> {
       final notif = NotificationModel(
         id: await generateRandomId(),
         title: Constants.friendRequestTitle,
-        message: Constants.getFriendRequestContent(sender!.name),
-        targetUid: targetUid,
+        message: Constants.getFriendRequestContent(sender.name),
+        targetUid: targetUser.uid,
+        senderUid: sender.uid,
         type: Constants.friendRequestType,
         createdAt: Timestamp.now(),
+        isRead: false,
       );
 
       //SEND PUSH NOTIFICATION TO THE TARGET
       final targetUserDeviceIds =
-          await _userController.getUserDeviceTokens(targetUid);
+          await _userController.getUserDeviceTokens(targetUser.uid);
       await _pushNotificationController.sendPushNotification(
         targetUserDeviceIds,
         notif.message,
         notif.title,
+        {
+          'type': 'friend_request',
+          'uid': sender.uid,
+        },
       );
 
       //SEND A NOTIFICATION TO THE TARGET USER
@@ -157,8 +161,10 @@ class FriendController extends StateNotifier<bool> {
         title: Constants.acceptRequestTitle,
         message: Constants.getAcceptRequestContent(currentUser.name),
         targetUid: targetUser.uid,
+        senderUid: currentUser.uid,
         type: Constants.acceptRequestType,
         createdAt: Timestamp.now(),
+        isRead: false,
       );
 
       //SEND ACCEPT REQUEST PUSH NOTIFICATION
@@ -168,6 +174,10 @@ class FriendController extends StateNotifier<bool> {
         targetUserDeviceIds,
         notif.message,
         notif.title,
+        {
+          'type': 'accept_request',
+          'uid': currentUser.uid,
+        },
       );
 
       //SEND ACCEPT FRIEND REQUEST NOTIFICATION

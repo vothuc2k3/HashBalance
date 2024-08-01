@@ -17,7 +17,6 @@ class EmailSignInScreen extends ConsumerStatefulWidget {
 class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-  bool isPressed = false;
   late bool isPasswordValid;
 
   void checkPassword(String password) {
@@ -32,11 +31,8 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
     }
   }
 
-  void signInWithEmail( ) async {
+  void signInWithEmail() async {
     FocusScope.of(context).unfocus();
-    setState(() {
-      isPressed = true;
-    });
     final result = await ref
         .read(authControllerProvider.notifier)
         .signInWithEmailAndPassword(
@@ -47,9 +43,6 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
       if (context.mounted) {
         showToast(false, l.message);
       }
-      setState(() {
-        isPressed = false;
-      });
     }, (_) {
       Navigator.push(
         context,
@@ -82,6 +75,7 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool isLoading = ref.watch(authControllerProvider);
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
@@ -193,7 +187,7 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
                   left: 30,
                 ),
                 child: ElevatedButton(
-                  onPressed: isPressed
+                  onPressed: isLoading
                       ? () {}
                       : () {
                           signInWithEmail();
@@ -205,7 +199,7 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
                     ),
                     backgroundColor: Pallete.blueColor,
                   ),
-                  child: isPressed
+                  child: isLoading
                       ? const CircularProgressIndicator()
                       : const Text(
                           'Let\'s Go',

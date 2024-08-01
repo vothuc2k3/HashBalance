@@ -44,16 +44,7 @@ class NotificationRepository {
         for (var notif in event.docs) {
           final data = notif.data();
           notifs.add(
-            NotificationModel(
-              id: data['id'] as String,
-              title: data['title'] as String,
-              message: data['message'] as String,
-              type: data['type'] as String,
-              targetUid: data['targetUid'] as String? ?? '',
-              postId: data['postId'] as String? ?? '',
-              createdAt: data['createdAt'] as Timestamp,
-              isRead: data['isRead'] as bool,
-            ),
+            NotificationModel.fromMap(data),
           );
         }
         return notifs;
