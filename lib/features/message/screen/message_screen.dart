@@ -3,11 +3,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/features/call/screen/incoming_call_screen.dart';
+import 'package:hash_balance/features/call/screen/call_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
-import 'package:hash_balance/core/common/loading_circular.dart';
+import 'package:hash_balance/core/common/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/message/controller/message_controller.dart';
@@ -72,22 +72,28 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
     final voiceCallController = ref.watch(voiceCallControllerProvider.notifier);
 
     final result = await voiceCallController.fetchAgoraToken(uids!);
-    result.fold((l) => showToast(false, l.message), (r) => token = r);
+    result.fold((l) {
+       showToast(false, l.message);
+       return;
+    }, (r) => token = r);
+    
+    print('TOKEN: $token');
+
     await _handleCameraAndMic(Permission.camera);
     await _handleCameraAndMic(Permission.microphone);
 
-    final result2 =
-        await voiceCallController.notifyIncomingCall(widget._targetUser);
-    result2.fold(
-      (l) => showToast(false, l.message),
-      (_) {},
-    );
+    // final result2 =
+    //     await voiceCallController.notifyIncomingCall(widget._targetUser);
+    // result2.fold(
+    //   (l) => showToast(false, l.message),
+    //   (_) {},
+    // );
 
     if (mounted) {
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => IncomingCallScreen(
+          builder: (context) => CallScreen(
             caller: ref.watch(userProvider)!,
             receiver: widget._targetUser,
           ),

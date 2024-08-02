@@ -8,7 +8,7 @@ import 'package:hash_balance/features/post/screen/create_post/create_post_screen
 import 'package:icons_plus/icons_plus.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
-import 'package:hash_balance/core/common/loading_circular.dart';
+import 'package:hash_balance/core/common/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';

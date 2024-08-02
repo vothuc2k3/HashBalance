@@ -142,3 +142,7 @@ String getPostDownvoteId(String uid, String postId) {
 String getUserDeviceDocId(String uid, String postId) {
   return [uid, postId, 'downvote'].join();
 }
+
+String filterString(String input) {
+  return input.replaceAll(RegExp(r'[^a-zA-Z0-9_\-]'), '');
+}

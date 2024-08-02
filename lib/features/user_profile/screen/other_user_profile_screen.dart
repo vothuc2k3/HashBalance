@@ -4,7 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hash_balance/core/common/error_text.dart';
-import 'package:hash_balance/core/common/loading_circular.dart';
+import 'package:hash_balance/core/common/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
@@ -190,7 +190,8 @@ class _OtherUserProfileScreenState
                     _buildSocialIcon(FontAwesomeIcons.linkedin),
                   ],
                 ),
-                const SizedBox(height: 16),
+                //BUILD FOLLOWING WIDGET
+                const SizedBox(height: 8),
                 isFollowing.when(
                   data: (isFollowing) {
                     return _buildFollowButton(
@@ -203,6 +204,7 @@ class _OtherUserProfileScreenState
                       ErrorText(error: error.toString()),
                   loading: () => const Loading(),
                 ),
+                //BUILD FRIEND WIDGET
                 const SizedBox(height: 8),
                 isFriend.when(
                     data: (isFriend) {
@@ -243,7 +245,8 @@ class _OtherUserProfileScreenState
                     error: (error, stackTrace) =>
                         ErrorText(error: error.toString()),
                     loading: () => const Loading()),
-                const SizedBox(height: 16),
+                //BUILD MESSAGE USER
+                const SizedBox(height: 8),
                 ElevatedButton.icon(
                   onPressed: () {
                     messageUser(widget._targetUser);
@@ -275,8 +278,9 @@ class _OtherUserProfileScreenState
                     _buildButton(text: 'Friends', value: 52),
                     _buildVerticalDivider(),
                     _buildButton(
-                        text: 'Activity Points',
-                        value: widget._targetUser.activityPoint),
+                      text: 'Points',
+                      value: widget._targetUser.activityPoint,
+                    ),
                     _buildVerticalDivider(),
                     _buildButton(text: 'Achievements', value: 0),
                     _buildVerticalDivider(),
@@ -457,35 +461,38 @@ class _OtherUserProfileScreenState
   Widget _buildButton({
     required String text,
     required int value,
+    // required Function(dynamic) function,
   }) {
-    return MaterialButton(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      onPressed: () {},
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Text(
-            '$value',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
+    return Expanded(
+      child: MaterialButton(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        onPressed: (){},
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Text(
+              '$value',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            text,
-            style: const TextStyle(fontSize: 12),
-          ),
-        ],
+            const SizedBox(height: 2),
+            Text(
+              text,
+              style: const TextStyle(fontSize: 12),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildVerticalDivider() {
     return const VerticalDivider(
-      width: 8,
+      width: 0.1,
       thickness: 1,
       color: Colors.grey,
     );

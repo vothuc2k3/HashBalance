@@ -7,7 +7,7 @@ import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
-import 'package:hash_balance/core/common/loading_circular.dart';
+import 'package:hash_balance/core/common/loading.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/theme/pallette.dart';
 

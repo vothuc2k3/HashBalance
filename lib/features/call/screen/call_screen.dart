@@ -6,24 +6,18 @@ import 'package:agora_rtc_engine/rtc_remote_view.dart' as rtc_remote_view;
 import 'package:flutter/material.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/features/call/controller/voice_call_controller.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 class CallScreen extends ConsumerStatefulWidget {
-  /// non-modifiable channel name of the page
   final String _channelName;
 
-  /// non-modifiable client role of the page
-  final ClientRole _role;
-  final String _token;
-
-  /// Creates a call page with given channel name.
-  const CallScreen({
+  CallScreen({
     super.key,
-    required String token,
-    required String channelName,
-    required ClientRole role,
-  })  : _channelName = channelName,
-        _role = role,
-        _token = token;
+    required UserModel caller,
+    required UserModel receiver,
+  }) : _channelName = getUids(caller.uid, receiver.uid);
 
   @override
   CallScreenState createState() => CallScreenState();
@@ -34,6 +28,7 @@ class CallScreenState extends ConsumerState<CallScreen> {
   final _infoStrings = <String>[];
   bool muted = false;
   late RtcEngine _engine;
+  String? token;
 
   @override
   void dispose() {
@@ -51,28 +46,45 @@ class CallScreenState extends ConsumerState<CallScreen> {
 
   @override
   void initState() {
-    // initialize agora sdk
-    initialize();
     super.initState();
   }
 
-  Future<void> initialize() async {
-    if (Constants.agoraAppId.isEmpty) {
-      setState(() {
-        _infoStrings.add(
-          Constants.agoraAppId,
-        );
-        _infoStrings.add('Agora Engine is not starting');
-      });
-      return;
-    }
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // initialize agora sdk
+    initialize();
+  }
 
-    await _initAgoraRtcEngine();
-    _addAgoraEventHandlers();
-    VideoEncoderConfiguration configuration = VideoEncoderConfiguration();
-    configuration.dimensions = const VideoDimensions(width: 1920, height: 1080);
-    await _engine.setVideoEncoderConfiguration(configuration);
-    await _engine.joinChannel(widget._token, widget._channelName, null, 0);
+  void initialize() async {
+    final result = await ref
+        .watch(voiceCallControllerProvider.notifier)
+        .fetchAgoraToken(widget._channelName);
+    result.fold(
+      (l) {
+        showToast(false, l.message);
+      },
+      (r) async {
+        if (Constants.agoraAppId.isEmpty) {
+          setState(() {
+            _infoStrings.add(
+              'APP_ID missing, please provide your APP_ID in settings.dart',
+            );
+            _infoStrings.add('Agora Engine is not starting');
+          });
+          return;
+        }
+        token = r;
+        final filterToken = filterString(token!);
+        await _initAgoraRtcEngine();
+        _addAgoraEventHandlers();
+        final configuration = VideoEncoderConfiguration();
+        configuration.dimensions =
+            const VideoDimensions(width: 1920, height: 1080);
+        await _engine.setVideoEncoderConfiguration(configuration);
+        await _engine.joinChannel(filterToken, widget._channelName, null, 0);
+      },
+    );
   }
 
   /// Create agora sdk instance and initialize
@@ -80,7 +92,7 @@ class CallScreenState extends ConsumerState<CallScreen> {
     _engine = await RtcEngine.create(Constants.agoraAppId);
     await _engine.enableVideo();
     await _engine.setChannelProfile(ChannelProfile.LiveBroadcasting);
-    await _engine.setClientRole(widget._role);
+    await _engine.setClientRole(ClientRole.Broadcaster);
   }
 
   /// Add agora event handlers
@@ -123,9 +135,7 @@ class CallScreenState extends ConsumerState<CallScreen> {
   /// Helper function to get list of native views
   List<Widget> _getRenderViews() {
     final List<StatefulWidget> list = [];
-    if (widget._role == ClientRole.Broadcaster) {
-      list.add(const rtc_local_view.SurfaceView());
-    }
+    list.add(const rtc_local_view.SurfaceView());
     for (var uid in _users) {
       list.add(rtc_remote_view.SurfaceView(
           channelId: widget._channelName, uid: uid));
@@ -184,7 +194,6 @@ class CallScreenState extends ConsumerState<CallScreen> {
 
   /// Toolbar layout
   Widget _toolbar() {
-    if (widget._role == ClientRole.Audience) return Container();
     return Container(
       alignment: Alignment.bottomCenter,
       padding: const EdgeInsets.symmetric(vertical: 48),

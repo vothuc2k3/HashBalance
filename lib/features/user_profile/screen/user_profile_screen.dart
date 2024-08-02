@@ -212,27 +212,29 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
   }
 
   Widget _buildButton({required String text, required int value}) {
-    return MaterialButton(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      onPressed: () {},
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Text(
-            '$value',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 10,
+    return Expanded(
+      child: MaterialButton(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        onPressed: () {},
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Text(
+              '$value',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            text,
-            style: const TextStyle(fontSize: 12),
-          ),
-        ],
+            const SizedBox(height: 2),
+            Text(
+              text,
+              style: const TextStyle(fontSize: 12),
+            ),
+          ],
+        ),
       ),
     );
   }
