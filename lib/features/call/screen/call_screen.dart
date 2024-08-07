@@ -1,328 +1,83 @@
-import 'dart:async';
+// ignore_for_file: use_build_context_synchronously
 
-import 'package:agora_rtc_engine/rtc_engine.dart';
-import 'package:agora_rtc_engine/rtc_local_view.dart' as rtc_local_view;
-import 'package:agora_rtc_engine/rtc_remote_view.dart' as rtc_remote_view;
+import 'package:agora_uikit/agora_uikit.dart';
 import 'package:flutter/material.dart';
-import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/common/constants/constants.dart';
+import 'package:hash_balance/core/common/loading.dart';
 import 'package:hash_balance/core/utils.dart';
-import 'package:hash_balance/features/call/controller/voice_call_controller.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 class CallScreen extends ConsumerStatefulWidget {
-  final String _channelName;
+  final UserModel _caller;
+  final UserModel _receiver;
+  final String _token;
 
-  CallScreen({
+  const CallScreen({
     super.key,
     required UserModel caller,
     required UserModel receiver,
-  }) : _channelName = getUids(caller.uid, receiver.uid);
+    required String token,
+  })  : _caller = caller,
+        _receiver = receiver,
+        _token = token;
 
   @override
   CallScreenState createState() => CallScreenState();
 }
 
 class CallScreenState extends ConsumerState<CallScreen> {
-  final _users = <int>[];
-  final _infoStrings = <String>[];
   bool muted = false;
-  late RtcEngine _engine;
-  String? token;
+  late String channelName;
+  AgoraClient? agoraClient;
 
   @override
   void dispose() {
-    // clear users
-    _users.clear();
-    _dispose();
+    agoraClient?.engine.leaveChannel();
+    agoraClient?.engine.release();
     super.dispose();
-  }
-
-  Future<void> _dispose() async {
-    // destroy sdk
-    await _engine.leaveChannel();
-    await _engine.destroy();
   }
 
   @override
   void initState() {
     super.initState();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // initialize agora sdk
-    initialize();
-  }
-
-  void initialize() async {
-    final result = await ref
-        .watch(voiceCallControllerProvider.notifier)
-        .fetchAgoraToken(widget._channelName);
-    result.fold(
-      (l) {
-        showToast(false, l.message);
-      },
-      (r) async {
-        if (Constants.agoraAppId.isEmpty) {
-          setState(() {
-            _infoStrings.add(
-              'APP_ID missing, please provide your APP_ID in settings.dart',
-            );
-            _infoStrings.add('Agora Engine is not starting');
-          });
-          return;
-        }
-        token = r;
-        final filterToken = filterString(token!);
-        await _initAgoraRtcEngine();
-        _addAgoraEventHandlers();
-        final configuration = VideoEncoderConfiguration();
-        configuration.dimensions =
-            const VideoDimensions(width: 1920, height: 1080);
-        await _engine.setVideoEncoderConfiguration(configuration);
-        await _engine.joinChannel(filterToken, widget._channelName, null, 0);
-      },
-    );
-  }
-
-  /// Create agora sdk instance and initialize
-  Future<void> _initAgoraRtcEngine() async {
-    _engine = await RtcEngine.create(Constants.agoraAppId);
-    await _engine.enableVideo();
-    await _engine.setChannelProfile(ChannelProfile.LiveBroadcasting);
-    await _engine.setClientRole(ClientRole.Broadcaster);
-  }
-
-  /// Add agora event handlers
-  void _addAgoraEventHandlers() {
-    _engine.setEventHandler(RtcEngineEventHandler(error: (code) {
-      setState(() {
-        final info = 'onError: $code';
-        _infoStrings.add(info);
-      });
-    }, joinChannelSuccess: (channel, uid, elapsed) {
-      setState(() {
-        final info = 'onJoinChannel: $channel, uid: $uid';
-        _infoStrings.add(info);
-      });
-    }, leaveChannel: (stats) {
-      setState(() {
-        _infoStrings.add('onLeaveChannel');
-        _users.clear();
-      });
-    }, userJoined: (uid, elapsed) {
-      setState(() {
-        final info = 'userJoined: $uid';
-        _infoStrings.add(info);
-        _users.add(uid);
-      });
-    }, userOffline: (uid, elapsed) {
-      setState(() {
-        final info = 'userOffline: $uid';
-        _infoStrings.add(info);
-        _users.remove(uid);
-      });
-    }, firstRemoteVideoFrame: (uid, width, height, elapsed) {
-      setState(() {
-        final info = 'firstRemoteVideo: $uid ${width}x $height';
-        _infoStrings.add(info);
-      });
-    }));
-  }
-
-  /// Helper function to get list of native views
-  List<Widget> _getRenderViews() {
-    final List<StatefulWidget> list = [];
-    list.add(const rtc_local_view.SurfaceView());
-    for (var uid in _users) {
-      list.add(rtc_remote_view.SurfaceView(
-          channelId: widget._channelName, uid: uid));
-    }
-    return list;
-  }
-
-  /// Video view wrapper
-  Widget _videoView(view) {
-    return Expanded(child: Container(child: view));
-  }
-
-  /// Video view row wrapper
-  Widget _expandedVideoRow(List<Widget> views) {
-    final wrappedViews = views.map<Widget>(_videoView).toList();
-    return Expanded(
-      child: Row(
-        children: wrappedViews,
+    channelName = getUids(widget._caller.uid, widget._receiver.uid);
+    agoraClient = AgoraClient(
+      agoraConnectionData: AgoraConnectionData(
+        appId: Constants.agoraAppId,
+        channelName: channelName,
+        tempToken: widget._token,
       ),
     );
+    initAgora();
   }
 
-  /// Video layout wrapper
-  Widget _viewRows() {
-    final views = _getRenderViews();
-    switch (views.length) {
-      case 1:
-        return Column(
-          children: <Widget>[_videoView(views[0])],
-        );
-      case 2:
-        return Column(
-          children: <Widget>[
-            _expandedVideoRow([views[0]]),
-            _expandedVideoRow([views[1]])
-          ],
-        );
-      case 3:
-        return Column(
-          children: <Widget>[
-            _expandedVideoRow(views.sublist(0, 2)),
-            _expandedVideoRow(views.sublist(2, 3))
-          ],
-        );
-      case 4:
-        return Column(
-          children: <Widget>[
-            _expandedVideoRow(views.sublist(0, 2)),
-            _expandedVideoRow(views.sublist(2, 4))
-          ],
-        );
-      default:
-    }
-    return Container();
-  }
-
-  /// Toolbar layout
-  Widget _toolbar() {
-    return Container(
-      alignment: Alignment.bottomCenter,
-      padding: const EdgeInsets.symmetric(vertical: 48),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          RawMaterialButton(
-            onPressed: _onToggleMute,
-            shape: const CircleBorder(),
-            elevation: 2.0,
-            fillColor: muted ? Colors.blueAccent : Colors.white,
-            padding: const EdgeInsets.all(12.0),
-            child: Icon(
-              muted ? Icons.mic_off : Icons.mic,
-              color: muted ? Colors.white : Colors.blueAccent,
-              size: 20.0,
-            ),
-          ),
-          RawMaterialButton(
-            onPressed: () => _onCallEnd(context),
-            shape: const CircleBorder(),
-            elevation: 2.0,
-            fillColor: Colors.redAccent,
-            padding: const EdgeInsets.all(15.0),
-            child: const Icon(
-              Icons.call_end,
-              color: Colors.white,
-              size: 35.0,
-            ),
-          ),
-          RawMaterialButton(
-            onPressed: _onSwitchCamera,
-            shape: const CircleBorder(),
-            elevation: 2.0,
-            fillColor: Colors.white,
-            padding: const EdgeInsets.all(12.0),
-            child: const Icon(
-              Icons.switch_camera,
-              color: Colors.blueAccent,
-              size: 20.0,
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  /// Info panel to show logs
-  Widget _panel() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 48),
-      alignment: Alignment.bottomCenter,
-      child: FractionallySizedBox(
-        heightFactor: 0.5,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 48),
-          child: ListView.builder(
-            reverse: true,
-            itemCount: _infoStrings.length,
-            itemBuilder: (BuildContext context, int index) {
-              if (_infoStrings.isEmpty) {
-                return const Text(
-                    "null"); // return type can't be null, a widget was required
-              }
-              return Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 3,
-                  horizontal: 10,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 2,
-                          horizontal: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.yellowAccent,
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: Text(
-                          _infoStrings[index],
-                          style: const TextStyle(color: Colors.blueGrey),
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _onCallEnd(BuildContext context) {
-    Navigator.pop(context);
-  }
-
-  void _onToggleMute() {
-    setState(() {
-      muted = !muted;
-    });
-    _engine.muteLocalAudioStream(muted);
-  }
-
-  void _onSwitchCamera() {
-    _engine.switchCamera();
+  void initAgora() async{
+    await agoraClient!.initialize();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Agora Flutter QuickStart'),
-      ),
-      backgroundColor: Colors.black,
-      body: Center(
-        child: Stack(
-          children: <Widget>[
-            _viewRows(),
-            _panel(),
-            _toolbar(),
-          ],
-        ),
-      ),
+      body: agoraClient == null
+          ? const Loading()
+          : SafeArea(
+              child: Stack(
+                children: [
+                  AgoraVideoViewer(client: agoraClient!),
+                  AgoraVideoButtons(
+                    client: agoraClient!,
+                    disconnectButtonChild: IconButton(
+                      onPressed: () async {
+                        await agoraClient!.engine.leaveChannel();
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.call_end),
+                    ),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 }

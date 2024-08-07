@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:http/http.dart' as http;
@@ -18,8 +19,7 @@ class VoiceCallRepository {
   FutureString fetchAgoraToken(String channelName) async {
     try {
       final response = await http.get(
-        Uri.parse(
-            'https://hash-balance-backend-6cdfcc4bcae7.herokuapp.com/access_token?channelName=$channelName'),
+        Uri.parse('${Constants.domain}/access_token?channelName=$channelName'),
       );
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
@@ -34,8 +34,7 @@ class VoiceCallRepository {
 
   Future<void> notifyIncomingCall(
       List<String> tokens, String message, String callerName) async {
-    final url = Uri.parse(
-        'https://hash-balance-backend-6cdfcc4bcae7.herokuapp.com/sendPushNotification');
+    final url = Uri.parse('${Constants.domain}/sendPushNotification');
     final response = await http.post(
       url,
       headers: {

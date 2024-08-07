@@ -69,5 +69,7 @@ class Constants {
 
   static String? deviceToken;
 
-  static String agoraAppId = '8a2ac699a8c84f3f894f59e55e766fa4';
+  static String agoraAppId = 'a9942d0368fc4cdf9e59df9df19899c9';
+
+  static String domain = 'https://hash-balance-backend-6cdfcc4bcae7.herokuapp.com';
 }

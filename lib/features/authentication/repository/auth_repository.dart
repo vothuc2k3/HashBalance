@@ -40,7 +40,9 @@ class AuthRepository {
         _firebaseAuth = firebaseAuth,
         _googleSignIn = googleSignIn;
 
-  Stream<User?> get authStageChange => _firebaseAuth.authStateChanges();
+  Stream<User?> get authStageChange {
+    return _firebaseAuth.authStateChanges();
+  }
 
   //SIGN THE USER IN WITH GOOGLE
   FutureUserModel signInWithGoogle() async {
@@ -136,7 +138,7 @@ class AuthRepository {
       }
 
       final user = await getUserData(userCredential.user!.uid).first;
-      
+
       return right(user);
     } on FirebaseAuthException catch (e) {
       return left(Failures(e.message ?? 'Unknown error occurred?'));
@@ -162,23 +164,7 @@ class AuthRepository {
     final snapshot = _users.doc(uid).snapshots();
     return snapshot.map(
       (event) {
-        Timestamp createdAt = event['createdAt'];
-        int hashAge =
-            DateTime.now().difference(createdAt.toDate()).inSeconds ~/ 86400;
-        return UserModel(
-          uid: event['uid'] as String? ?? '',
-          name: event['name'] as String? ?? '',
-          email: event['email'] as String? ?? '',
-          profileImage: event['profileImage'] as String? ?? '',
-          bannerImage: event['bannerImage'] as String? ?? '',
-          isAuthenticated: event['isAuthenticated'] as bool? ?? false,
-          activityPoint: event['activityPoint'] as int? ?? 0,
-          createdAt: createdAt,
-          hashAge: hashAge,
-          isRestricted: event['isRestricted'] as bool? ?? false,
-          bio: event['bio'] as String? ?? '',
-          description: event['description'] as String? ?? '',
-        );
+        return UserModel.fromMap(event.data() as Map<String, dynamic>);
       },
     );
   }

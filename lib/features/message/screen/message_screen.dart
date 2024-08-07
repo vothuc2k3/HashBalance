@@ -1,10 +1,9 @@
-import 'package:agora_rtc_engine/rtc_engine.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/features/call/controller/voice_call_controller.dart';
 import 'package:hash_balance/features/call/screen/call_screen.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
 import 'package:hash_balance/core/common/loading.dart';
@@ -13,7 +12,6 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/message/controller/message_controller.dart';
 import 'package:hash_balance/features/message/screen/widget/message_bubble.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
-import 'package:hash_balance/features/call/controller/voice_call_controller.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:flutter/foundation.dart' as foundation;
 
@@ -31,18 +29,8 @@ class MessageScreen extends ConsumerStatefulWidget {
 
 class _MessageScreenState extends ConsumerState<MessageScreen> {
   final TextEditingController _messageController = TextEditingController();
-  String? uids;
-  String? token;
-  String? channelName;
-  final role = ClientRole.Broadcaster;
-  bool? isCaller;
 
   bool _isEmojiVisible = false;
-
-  void _init() {
-    uids = getUids(widget._targetUser.uid, ref.read(userProvider)!.uid);
-    channelName = uids;
-  }
 
   void _onEmojiSelected(Emoji emoji) {
     setState(() {
@@ -68,60 +56,22 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
         .markAsRead(widget._targetUser.uid);
   }
 
-  Future<void> onStartVoiceCall() async {
-    final voiceCallController = ref.watch(voiceCallControllerProvider.notifier);
-
-    final result = await voiceCallController.fetchAgoraToken(uids!);
-    result.fold((l) {
-       showToast(false, l.message);
-       return;
-    }, (r) => token = r);
-    
-    print('TOKEN: $token');
-
-    await _handleCameraAndMic(Permission.camera);
-    await _handleCameraAndMic(Permission.microphone);
-
-    // final result2 =
-    //     await voiceCallController.notifyIncomingCall(widget._targetUser);
-    // result2.fold(
-    //   (l) => showToast(false, l.message),
-    //   (_) {},
-    // );
-
-    if (mounted) {
-      await Navigator.push(
+  void onStartVoiceCall(String currentUid) async {
+    final result = await ref
+        .watch(voiceCallControllerProvider.notifier)
+        .fetchAgoraToken(getUids(currentUid, widget._targetUser.uid));
+    result.fold((l) => showToast(false, l.message), (r) {
+      Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => CallScreen(
             caller: ref.watch(userProvider)!,
             receiver: widget._targetUser,
+            token: r,
           ),
         ),
       );
-    } else {
-      showToast(false, 'Unexpected Error Happenned...');
-    }
-  }
-
-  Future<void> onVideoCall() async {
-    final voiceCallController = ref.watch(voiceCallControllerProvider.notifier);
-    final result2 =
-        await voiceCallController.notifyIncomingCall(widget._targetUser);
-    result2.fold(
-      (l) => showToast(false, l.message),
-      (_) {},
-    );
-  }
-
-  Future<void> _handleCameraAndMic(Permission permission) async {
-    await permission.request();
-  }
-
-  @override
-  void initState() {
-    _init();
-    super.initState();
+    });
   }
 
   @override
@@ -134,7 +84,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = ref.watch(userProvider);
+    final currentUser = ref.watch(userProvider)!;
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -155,11 +105,11 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.call),
-            onPressed: onStartVoiceCall,
+            onPressed: () => onStartVoiceCall(currentUser.uid),
           ),
           IconButton(
             icon: const Icon(Icons.videocam),
-            onPressed: onVideoCall,
+            onPressed: () {},
           ),
           IconButton(
             icon: const Icon(Icons.more_vert),
@@ -210,14 +160,14 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                             if (nextUserIsSame) {
                               return MessageBubble.next(
                                 message: chatMessage.text,
-                                isMe: currentUser!.uid == currentMessageUserId,
+                                isMe: currentUser.uid == currentMessageUserId,
                               );
                             } else {
                               return MessageBubble.first(
                                 userImage: user.profileImage,
                                 username: user.name,
                                 message: chatMessage.text,
-                                isMe: currentUser!.uid == currentMessageUserId,
+                                isMe: currentUser.uid == currentMessageUserId,
                               );
                             }
                           },

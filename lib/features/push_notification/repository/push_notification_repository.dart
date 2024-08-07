@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:http/http.dart' as http;
 
 final pushNotificationRepositoryProvider = Provider((ref) {
@@ -19,8 +20,7 @@ class PushNotificationRepository {
     Map<String, dynamic> data,
   ) async {
     print('TOKENS TO BE SENT: $tokens');
-    final url = Uri.parse(
-        'https://hash-balance-backend-6cdfcc4bcae7.herokuapp.com/sendPushNotification');
+    final url = Uri.parse('${Constants.domain}/sendPushNotification');
     final response = await http.post(
       url,
       headers: {

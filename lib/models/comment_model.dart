@@ -9,7 +9,8 @@ class Comment {
   final String postId;
   final String? content;
   final Timestamp createdAt;
-  Comment({
+
+  const Comment({
     required this.id,
     required this.uid,
     required this.postId,
@@ -23,25 +24,22 @@ class Comment {
     String? postId,
     String? content,
     Timestamp? createdAt,
-  }) {
-    return Comment(
-      id: id ?? this.id,
-      uid: uid ?? this.uid,
-      postId: postId ?? this.postId,
-      content: content ?? this.content,
-      createdAt: createdAt ?? this.createdAt,
-    );
-  }
+  }) =>
+      Comment(
+        id: id ?? this.id,
+        uid: uid ?? this.uid,
+        postId: postId ?? this.postId,
+        content: content ?? this.content,
+        createdAt: createdAt ?? this.createdAt,
+      );
 
-  Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'id': id,
-      'uid': uid,
-      'postId': postId,
-      'content': content,
-      'createdAt': createdAt,
-    };
-  }
+  Map<String, dynamic> toMap() => <String, dynamic>{
+        'id': id,
+        'uid': uid,
+        'postId': postId,
+        'content': content,
+        'createdAt': createdAt,
+      };
 
   factory Comment.fromMap(Map<String, dynamic> map) {
     return Comment(

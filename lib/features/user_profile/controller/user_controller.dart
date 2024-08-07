@@ -11,7 +11,6 @@ import 'package:hash_balance/models/user_model.dart';
 final userControllerProvider = StateNotifierProvider<UserController, bool>(
   (ref) => UserController(
     userRepository: ref.read(userRepositoryProvider),
-    ref: ref,
   ),
 );
 
@@ -27,7 +26,6 @@ class UserController extends StateNotifier<bool> {
 
   UserController({
     required UserRepository userRepository,
-    required Ref ref,
   })  : _userRepository = userRepository,
         super(false);
 
