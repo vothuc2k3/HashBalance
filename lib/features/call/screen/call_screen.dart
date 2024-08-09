@@ -33,7 +33,6 @@ class CallScreenState extends ConsumerState<CallScreen> {
 
   @override
   void dispose() {
-    agoraClient?.engine.leaveChannel();
     agoraClient?.engine.release();
     super.dispose();
   }
@@ -41,7 +40,10 @@ class CallScreenState extends ConsumerState<CallScreen> {
   @override
   void initState() {
     super.initState();
-    channelName = getUids(widget._caller.uid, widget._receiver.uid);
+    channelName = getUids(
+      widget._caller.uid,
+      widget._receiver.uid,
+    );
     agoraClient = AgoraClient(
       agoraConnectionData: AgoraConnectionData(
         appId: Constants.agoraAppId,
@@ -49,10 +51,15 @@ class CallScreenState extends ConsumerState<CallScreen> {
         tempToken: widget._token,
       ),
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     initAgora();
   }
 
-  void initAgora() async{
+  void initAgora() async {
     await agoraClient!.initialize();
   }
 

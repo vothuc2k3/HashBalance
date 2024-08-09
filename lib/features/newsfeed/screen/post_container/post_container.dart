@@ -370,7 +370,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         ref.watch(getTopCommentProvider(widget.post.id)).when(
               data: (comment) {
                 if (comment == null) {
-                  print('LMAO NO COMMENTTTTTTTTT');
                   return const SizedBox.shrink();
                 }
                 return Column(
@@ -488,10 +487,9 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                   ],
                 );
               },
-              error: (Object error, StackTrace stackTrace) =>
-                  ErrorText(error: error.toString()),
+              error: (error, stackTrace) => ErrorText(error: error.toString()),
               loading: () => const Loading(),
-            )
+            ) 
       ],
     );
   }

@@ -37,7 +37,8 @@ class Community {
       bannerImage: bannerImage ?? this.bannerImage,
       type: type ?? this.type,
       createdAt: createdAt ?? this.createdAt,
-      containsExposureContents: containsExposureContents ?? this.containsExposureContents,
+      containsExposureContents:
+          containsExposureContents ?? this.containsExposureContents,
     );
   }
 
@@ -73,42 +74,29 @@ class Community {
   @override
   bool operator ==(covariant Community other) {
     if (identical(this, other)) return true;
-  
-    return 
-      other.id == id &&
-      other.name == name &&
-      other.profileImage == profileImage &&
-      other.bannerImage == bannerImage &&
-      other.type == type &&
-      other.createdAt == createdAt &&
-      other.containsExposureContents == containsExposureContents;
+
+    return other.id == id &&
+        other.name == name &&
+        other.profileImage == profileImage &&
+        other.bannerImage == bannerImage &&
+        other.type == type &&
+        other.createdAt == createdAt &&
+        other.containsExposureContents == containsExposureContents;
   }
 
   @override
   int get hashCode {
     return id.hashCode ^
-      name.hashCode ^
-      profileImage.hashCode ^
-      bannerImage.hashCode ^
-      type.hashCode ^
-      createdAt.hashCode ^
-      containsExposureContents.hashCode;
-  }
-
-  factory Community.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return Community(
-      name: data['name'] as String,
-      id: data['id'] as String,
-      profileImage: data['profileImage'] as String,
-      bannerImage: data['bannerImage'] as String,
-      type: data['type'] as String,
-      createdAt: data['createdAt'] as Timestamp,
-      containsExposureContents: data['containsExposureContents'] as bool,
-    );
-  }
+        name.hashCode ^
+        profileImage.hashCode ^
+        bannerImage.hashCode ^
+        type.hashCode ^
+        createdAt.hashCode ^
+        containsExposureContents.hashCode;
+  } 
 
   String toJson() => json.encode(toMap());
 
-  factory Community.fromJson(String source) => Community.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory Community.fromJson(String source) =>
+      Community.fromMap(json.decode(source) as Map<String, dynamic>);
 }

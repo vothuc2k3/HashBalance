@@ -57,15 +57,7 @@ class CommunityRepository {
         final communitySnapshot = await _communities.doc(communityId).get();
         final data = communitySnapshot.data() as Map<String, dynamic>;
         communities.add(
-          Community(
-            id: data['id'] as String,
-            name: data['name'] as String,
-            profileImage: data['profileImage'] as String,
-            bannerImage: data['bannerImage'] as String,
-            type: data['type'] as String,
-            containsExposureContents: data['containsExposureContents'] as bool,
-            createdAt: data['createdAt'] as Timestamp,
-          ),
+          Community.fromMap(data),
         );
       }
       return communities;
@@ -84,17 +76,7 @@ class CommunityRepository {
             (doc.data() as Map<String, dynamic>)['communityId'] as String;
         final communitySnapshot = await _communities.doc(communityId).get();
         final data = communitySnapshot.data() as Map<String, dynamic>;
-        communities.add(
-          Community(
-            id: data['id'] as String,
-            name: data['name'] as String,
-            profileImage: data['profileImage'] as String,
-            bannerImage: data['bannerImage'] as String,
-            type: data['type'] as String,
-            containsExposureContents: data['containsExposureContents'] as bool,
-            createdAt: data['createdAt'] as Timestamp,
-          ),
-        );
+        communities.add(Community.fromMap(data));
       }
       return communities;
     });
@@ -165,16 +147,7 @@ class CommunityRepository {
         communityCountMap[communityId] = memberCount;
 
         communities.add(
-          Community(
-            id: communityData['id'] as String,
-            name: communityData['name'] as String,
-            profileImage: communityData['profileImage'] as String,
-            bannerImage: communityData['bannerImage'] as String,
-            type: communityData['type'] as String,
-            createdAt: communityData['createdAt'] as Timestamp,
-            containsExposureContents:
-                communityData['containsExposureContents'] as bool,
-          ),
+          Community.fromMap(communityData),
         );
       });
 
@@ -227,15 +200,7 @@ class CommunityRepository {
     return _communities.doc(communityId).snapshots().map(
       (event) {
         final data = event.data() as Map<String, dynamic>;
-        return Community(
-          id: data['id'] as String,
-          name: data['name'] as String,
-          profileImage: data['profileImage'] as String,
-          bannerImage: data['bannerImage'] as String,
-          type: data['type'] as String,
-          createdAt: data['createdAt'] as Timestamp,
-          containsExposureContents: data['containsExposureContents'] as bool,
-        );
+        return Community.fromMap(data);
       },
     );
   }

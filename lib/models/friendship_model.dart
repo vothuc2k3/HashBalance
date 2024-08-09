@@ -43,19 +43,20 @@ class Friendship {
 
   String toJson() => json.encode(toMap());
 
-  factory Friendship.fromJson(String source) => Friendship.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory Friendship.fromJson(String source) =>
+      Friendship.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
-  String toString() => 'Friendship(uid1: $uid1, uid2: $uid2, createdAt: $createdAt)';
+  String toString() =>
+      'Friendship(uid1: $uid1, uid2: $uid2, createdAt: $createdAt)';
 
   @override
   bool operator ==(covariant Friendship other) {
     if (identical(this, other)) return true;
-  
-    return 
-      other.uid1 == uid1 &&
-      other.uid2 == uid2 &&
-      other.createdAt == createdAt;
+
+    return other.uid1 == uid1 &&
+        other.uid2 == uid2 &&
+        other.createdAt == createdAt;
   }
 
   @override

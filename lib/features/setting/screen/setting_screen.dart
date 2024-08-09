@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/features/admin_dashboard/screen/admin_dashboard.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
 import 'package:hash_balance/theme/pallette.dart';
@@ -29,6 +30,13 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
         MaterialPageRoute(builder: (context) => const AuthScreen()),
       );
     });
+  }
+
+  void navigateToTestScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AdminDashboard()),
+    );
   }
 
   @override
@@ -71,7 +79,7 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            onTap: () {},
+            onTap: () => navigateToTestScreen(),
           ),
         ],
       ),

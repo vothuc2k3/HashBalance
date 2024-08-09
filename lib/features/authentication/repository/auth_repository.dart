@@ -96,9 +96,7 @@ class AuthRepository {
 
       UserModel? user;
       String userUid = userCredential.user!.uid;
-      UserModel copyUser = newUser.copyWith(
-        uid: userUid,
-      );
+      UserModel copyUser = newUser.copyWith(uid: userUid);
 
       await _users.doc(userUid).set(copyUser.toMap());
       user = copyUser;
@@ -116,10 +114,7 @@ class AuthRepository {
 
   //SIGN THE USER IN WITH EMAIL AND PASSWORD
   FutureUserModel signInWithEmailAndPassword(
-    String email,
-    UserDevices userDevice,
-    String password,
-  ) async {
+      String email, UserDevices userDevice, String password) async {
     try {
       final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
         email: email,

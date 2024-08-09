@@ -10,11 +10,11 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:http/http.dart' as http;
 
-final voiceCallRepositoryProvider = Provider((ref) {
-  return VoiceCallRepository();
+final callRepositoryProvider = Provider((ref) {
+  return CallRepository();
 });
 
-class VoiceCallRepository {
+class CallRepository {
   //FETCH AGORA TOKEN
   FutureString fetchAgoraToken(String channelName) async {
     try {

@@ -2,6 +2,7 @@ import 'package:animated_icon/animated_icon.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/common/dashed_line_divider.dart';
 import 'package:hash_balance/features/community/screen/create_community_screen.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
@@ -104,9 +105,8 @@ class CommunityListDrawer extends ConsumerWidget {
                               },
                             );
                           },
-                          separatorBuilder: (context, index) {
-                            return const Divider();
-                          },
+                          separatorBuilder: (context, index) =>
+                              const DashedLineDivider.horizontal(),
                         )
                       : Center(
                           child: Row(
@@ -176,7 +176,7 @@ class CommunityListDrawer extends ConsumerWidget {
                             );
                           },
                           separatorBuilder: (context, index) {
-                            return const Divider();
+                            return const DashedLineDivider.horizontal();
                           },
                         )
                       : Center(

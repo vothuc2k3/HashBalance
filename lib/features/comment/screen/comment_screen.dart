@@ -49,7 +49,11 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
     );
   }
 
-  void voteComment(String commentId, String postId, bool userVote) async {
+  void voteComment(
+    String commentId,
+    String postId,
+    bool userVote,
+  ) async {
     final result = await ref
         .read(commentControllerProvider.notifier)
         .voteComment(commentId, postId, userVote);

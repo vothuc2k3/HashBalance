@@ -226,23 +226,8 @@ class PostRepository {
       }
       var communityPosts = <Post>[];
       for (var doc in event.docs) {
-        final postData = doc.data() as Map<String, dynamic>;
-        var content = postData['content'] ?? '';
-        var image = postData['image'] ?? '';
-        var video = postData['video'] ?? '';
         communityPosts.add(
-          Post(
-            video: video as String,
-            image: image as String,
-            content: content as String,
-            communityId: postData['communityId'] as String,
-            uid: postData['uid'] as String,
-            status: postData['status'] as String,
-            upvoteCount: postData['upvoteCount'] as int,
-            downvoteCount: postData['downvoteCount'] as int,
-            createdAt: postData['createdAt'] as Timestamp,
-            id: postData['id'] as String,
-          ),
+          Post.fromMap(doc.data() as Map<String, dynamic>),
         );
       }
       return communityPosts;
@@ -261,23 +246,8 @@ class PostRepository {
         }
         final pendingPosts = <Post>[];
         for (final doc in event.docs) {
-          final postData = doc.data() as Map<String, dynamic>;
-          var content = postData['content'] ?? '';
-          var image = postData['image'] ?? '';
-          var video = postData['video'] ?? '';
           pendingPosts.add(
-            Post(
-              video: video as String,
-              image: image as String,
-              content: content as String,
-              communityId: postData['communityId'] as String,
-              uid: postData['uid'] as String,
-              status: postData['status'] as String,
-              upvoteCount: postData['upvoteCount'] as int,
-              downvoteCount: postData['downvoteCount'] as int,
-              createdAt: postData['createdAt'] as Timestamp,
-              id: postData['id'] as String,
-            ),
+            Post.fromMap(doc.data() as Map<String, dynamic>),
           );
         }
         return pendingPosts;

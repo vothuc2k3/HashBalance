@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/features/call/controller/voice_call_controller.dart';
+import 'package:hash_balance/features/call/controller/call_controller.dart';
 import 'package:hash_balance/features/call/screen/call_screen.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
@@ -58,7 +58,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
 
   void onStartVoiceCall(String currentUid) async {
     final result = await ref
-        .watch(voiceCallControllerProvider.notifier)
+        .watch(callControllerProvider.notifier)
         .fetchAgoraToken(getUids(currentUid, widget._targetUser.uid));
     result.fold((l) => showToast(false, l.message), (r) {
       Navigator.push(
