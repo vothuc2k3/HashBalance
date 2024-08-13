@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
+
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
@@ -58,7 +59,7 @@ class PostController extends StateNotifier<bool> {
     Community community,
     File? image,
     File? video,
-    String? content,
+    String content,
   ) async {
     try {
       switch (community.type) {
@@ -70,6 +71,7 @@ class PostController extends StateNotifier<bool> {
             status: 'Approved',
             upvoteCount: 0,
             downvoteCount: 0,
+            isEdited: false,
             createdAt: Timestamp.now(),
             id: await generateRandomId(),
           );
@@ -84,6 +86,7 @@ class PostController extends StateNotifier<bool> {
             uid: uid,
             content: content,
             status: 'Pending',
+            isEdited: false,
             upvoteCount: 0,
             downvoteCount: 0,
             createdAt: Timestamp.now(),
@@ -91,7 +94,9 @@ class PostController extends StateNotifier<bool> {
           );
           final result = await _postRepository.createPost(post, image, video);
           return result.fold(
-            (l) => left((Failures(l.message))),
+            (l) => left(
+              (Failures(l.message)),
+            ),
             (r) => right('Your Post Are Now Pending To Be Approved!'),
           );
       }

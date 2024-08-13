@@ -43,15 +43,7 @@ class SearchRepository {
           .map((event) {
         return event.docs.map((doc) {
           final data = doc.data() as Map<String, dynamic>;
-          return Community(
-            id: data['id'] as String,
-            name: data['name'] as String,
-            profileImage: data['profileImage'] as String,
-            bannerImage: data['bannerImage'] as String,
-            type: data['type'] as String,
-            containsExposureContents: data['containsExposureContents'] as bool,
-            createdAt: data['createdAt'] as Timestamp,
-          );
+          return Community.fromMap(data);
         }).toList();
       }).handleError((error) {
         return [];
@@ -71,17 +63,7 @@ class SearchRepository {
           .map((event) {
         return event.docs.map((doc) {
           final data = doc.data() as Map<String, dynamic>;
-          return UserModel(
-            name: data['name'] as String,
-            profileImage: data['profileImage'] as String,
-            bannerImage: data['bannerImage'] as String,
-            email: data['email'] as String,
-            uid: data['uid'] as String,
-            isAuthenticated: data['isAuthenticated'] as bool,
-            activityPoint: data['activityPoint'] as int,
-            createdAt: data['createdAt'] as Timestamp,
-            isRestricted: data['isRestricted'] as bool,
-          );
+          return UserModel.fromMap(data);
         }).toList();
       }).handleError((error) {
         return [];

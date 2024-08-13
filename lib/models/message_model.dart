@@ -9,7 +9,7 @@ class Message {
   final String text;
   final String uid;
   final Timestamp createdAt;
-  final List<String> seenBy;
+  final List<String>? seenBy;
   Message({
     required this.id,
     required this.text,
@@ -50,9 +50,9 @@ class Message {
       text: map['text'] as String,
       uid: map['uid'] as String,
       createdAt: map['createdAt'] as Timestamp,
-      seenBy: List<String>.from(
-        (map['seenBy'] as List<String>),
-      ),
+      seenBy: map['seenBy'] != null
+          ? List<String>.from((map['seenBy'] as List<String>))
+          : [''],
     );
   }
   @override

@@ -29,7 +29,7 @@ class PendingPostScreenState extends ConsumerState<PendingPostScreen> {
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                Text(post.content!),
+                Text(post.content),
                 const SizedBox(height: 20),
                 Text('Author: ${post.uid}',
                     style: const TextStyle(fontStyle: FontStyle.italic)),
@@ -86,7 +86,7 @@ class PendingPostScreenState extends ConsumerState<PendingPostScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 5),
-                      Text(post.content!),
+                      Text(post.content),
                       const SizedBox(height: 10),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,

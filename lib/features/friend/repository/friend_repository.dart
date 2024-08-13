@@ -53,12 +53,7 @@ class FriendRepository {
         final data = snapshot.data();
         if (data != null) {
           final docData = data as Map<String, dynamic>;
-          return FriendRequest(
-            id: uids,
-            requestUid: docData['requestUid'] as String,
-            targetUid: docData['targetUid'] as String,
-            createdAt: docData['createdAt'] as Timestamp,
-          );
+          return FriendRequest.fromMap(docData);
         } else {
           return null;
         }

@@ -1,28 +1,29 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/common/error_text.dart';
-import 'package:hash_balance/core/common/loading.dart';
+import 'package:hash_balance/features/community/screen/community_screen.dart';
+import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:mdi/mdi.dart';
 import 'package:video_player/video_player.dart';
 
+import 'package:hash_balance/core/common/loading.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/comment/screen/comment_screen.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
-import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 class PostContainer extends ConsumerStatefulWidget {
-  final UserModel user;
+  final UserModel author;
   final Post post;
   final Community community;
 
   const PostContainer({
     super.key,
-    required this.user,
+    required this.author,
     required this.post,
     required this.community,
   });
@@ -53,26 +54,66 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     final result = await ref
         .read(postControllerProvider.notifier)
         .votePost(widget.post, userVote);
-    result.fold((l) {
-      showToast(false, l.toString());
-    }, (_) {});
+    result.fold(
+      (l) {
+        showToast(false, l.toString());
+      },
+      (_) {},
+    );
+  }
+
+  void deletePost(Post post) async {
+    ref.watch(postControllerProvider.notifier).deletePost(post);
   }
 
   void voteComment(String commentId, String postId, bool userVote) async {
     final result = await ref
         .read(commentControllerProvider.notifier)
         .voteComment(commentId, postId, userVote);
-    result.fold((l) {
-      showToast(false, l.toString());
-    }, (_) {});
+    result.fold(
+      (l) {
+        showToast(false, l.toString());
+      },
+      (_) {},
+    );
   }
 
-  void navigateToCommentScreen(String postId) {
+  void _handleBlock() {}
+
+  void _handleDelete() {}
+
+  void _handleUnfollow() {}
+
+  void _handleUnfriend() {}
+
+  void _navigateToCommentScreen(String postId) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => CommentScreen(
-          postId: postId,
+          post: widget.post,
+        ),
+      ),
+    );
+  }
+
+  void _navigateToCommunityScreen(Community community) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CommunityScreen(
+          community: community,
+        ),
+      ),
+    );
+  }
+
+  void _navigateToOtherUserScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OtherUserProfileScreen(
+          targetUser: widget.author,
         ),
       ),
     );
@@ -87,20 +128,23 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   }
 
   Future<void> _initializeVideo() async {
-    _videoController = VideoPlayerController.networkUrl(
-      Uri.parse(widget.post.video!),
-    )..initialize().then((_) {
-        if (mounted) {
-          setState(() {
-            _videoDuration = _formatDuration(_videoController!.value.duration);
-          });
-        }
-      });
+    if (widget.post.video != null && widget.post.video != '') {
+      _videoController = VideoPlayerController.networkUrl(
+        Uri.parse(widget.post.video!),
+      )..initialize().then((_) {
+          if (mounted) {
+            setState(() {
+              _videoDuration =
+                  _formatDuration(_videoController!.value.duration);
+            });
+          }
+        });
 
-    _videoController!.addListener(_videoListener);
+      _videoController!.addListener(_videoListener);
 
-    if (mounted) {
-      setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
     }
   }
 
@@ -136,6 +180,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = ref.watch(userProvider)!;
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       padding: const EdgeInsets.all(5),
@@ -158,10 +203,16 @@ class _PostContainerState extends ConsumerState<PostContainer> {
               Expanded(
                 child: Row(
                   children: [
-                    CircleAvatar(
-                      backgroundImage:
-                          NetworkImage(widget.community.profileImage),
-                      radius: 20,
+                    InkWell(
+                      onTap: () {
+                        _navigateToCommunityScreen(widget.community);
+                      },
+                      child: CircleAvatar(
+                        backgroundImage: NetworkImage(
+                          widget.community.profileImage,
+                        ),
+                        radius: 20,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Text(
@@ -175,7 +226,9 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                 ),
               ),
               IconButton(
-                onPressed: () {},
+                onPressed: () {
+                  _showBottomSheet(currentUser.uid, widget.author.name);
+                },
                 icon: const Icon(Icons.more_horiz),
               ),
             ],
@@ -186,9 +239,9 @@ class _PostContainerState extends ConsumerState<PostContainer> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildPostHeader(widget.post, widget.user),
+                _buildPostHeader(widget.post, widget.author),
                 const SizedBox(height: 4),
-                Text(widget.post.content ?? ''),
+                Text(widget.post.content),
                 widget.post.image != ''
                     ? const SizedBox.shrink()
                     : const SizedBox(height: 6),
@@ -200,6 +253,13 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Image.network(
                     widget.post.image!,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) {
+                        return child;
+                      } else {
+                        return const Loading();
+                      }
+                    },
                   ),
                 )
               : const SizedBox.shrink(),
@@ -266,7 +326,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
               : const SizedBox.shrink(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: _buildPostStat(user: widget.user, postId: widget.post.id),
+            child: _buildPostStat(user: widget.author, postId: widget.post.id),
           ),
         ],
       ),
@@ -279,9 +339,14 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   ) {
     return Row(
       children: [
-        CircleAvatar(
-          backgroundImage: CachedNetworkImageProvider(
-            user.profileImage,
+        InkWell(
+          onTap: () {
+            _navigateToOtherUserScreen();
+          },
+          child: CircleAvatar(
+            backgroundImage: CachedNetworkImageProvider(
+              user.profileImage,
+            ),
           ),
         ),
         const SizedBox(width: 8),
@@ -329,11 +394,14 @@ class _PostContainerState extends ConsumerState<PostContainer> {
             ),
             ref.watch(getPostCommentCountProvider(widget.post.id)).whenOrNull(
                   data: (count) {
-                    return Text(
-                      '$count Comments',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 10,
+                    return InkWell(
+                      onTap: () => _navigateToCommentScreen(widget.post.id),
+                      child: Text(
+                        '$count Comments',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 10,
+                        ),
                       ),
                     );
                   },
@@ -357,7 +425,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
           post: widget.post,
           onVote: votePost,
           onComment: () {
-            navigateToCommentScreen(widget.post.id);
+            _navigateToCommentScreen(widget.post.id);
           },
           onShare: () {},
         ),
@@ -367,158 +435,54 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         ),
 
         //GET TOP COMMENT PROVIDER
-        ref.watch(getTopCommentProvider(widget.post.id)).when(
-              data: (comment) {
-                if (comment == null) {
-                  return const SizedBox.shrink();
-                }
-                return Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 20,
-                            child: ref
-                                .watch(getUserByUidProvider(comment.uid))
-                                .when(
-                                  data: (user) {
-                                    return CircleAvatar(
-                                      backgroundImage:
-                                          CachedNetworkImageProvider(
-                                              user.profileImage),
-                                      radius: 20,
-                                    );
-                                  },
-                                  loading: () =>
-                                      const CircularProgressIndicator(),
-                                  error: (_, __) => const Icon(Icons.error),
-                                ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: ref
-                                  .watch(getUserByUidProvider(comment.uid))
-                                  .whenOrNull(
-                                data: (user) {
-                                  return [
-                                    Text('#${user.name}',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleSmall),
-                                    const SizedBox(height: 4),
-                                    Text(comment.content == null
-                                        ? ''
-                                        : comment.content!),
-                                  ];
-                                },
-                              )!,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 15),
-                      child: Row(
-                        children: [
-                          Text(
-                            formatTime(comment.createdAt),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                            ),
-                          ),
-                          const SizedBox(width: 3),
-                          _buildVoteButton(
-                            icon: Icons.arrow_upward_outlined,
-                            count: ref
-                                .watch(getCommentVoteCountProvider(comment.id))
-                                .whenOrNull(data: (count) {
-                              return count['upvotes'];
-                            }),
-                            color: ref
-                                .watch(getCommentVoteStatusProvider(comment.id))
-                                .whenOrNull(
-                              data: (status) {
-                                if (status == null) {
-                                  return Colors.grey[600];
-                                } else if (status) {
-                                  return Colors.orange;
-                                } else {
-                                  return Colors.grey[600];
-                                }
-                              },
-                            ),
-                            onTap: () {
-                              voteComment(comment.id, postId, true);
-                            },
-                          ),
-                          _buildVoteButton(
-                            icon: Icons.arrow_downward_outlined,
-                            count: ref
-                                .watch(getCommentVoteCountProvider(comment.id))
-                                .whenOrNull(data: (count) {
-                              return count['downvotes'];
-                            }),
-                            color: ref
-                                .watch(getCommentVoteStatusProvider(comment.id))
-                                .whenOrNull(
-                              data: (status) {
-                                if (status == null) {
-                                  return Colors.grey[600];
-                                } else if (!status) {
-                                  return Colors.blue;
-                                } else {
-                                  return Colors.grey[600];
-                                }
-                              },
-                            ),
-                            onTap: () {
-                              voteComment(comment.id, postId, false);
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              },
-              error: (error, stackTrace) => ErrorText(error: error.toString()),
-              loading: () => const Loading(),
-            ) 
       ],
     );
   }
 
-  Widget _buildVoteButton({
-    required IconData icon,
-    required int? count,
-    required Color? color,
-    required Function onTap,
-  }) {
-    return InkWell(
-      onTap: () => onTap(),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-        child: Row(
-          children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(width: 4),
-            Text(
-              count == null ? '0' : count.toString(),
-              style: const TextStyle(color: Colors.white),
-            ),
-          ],
-        ),
-      ),
+  void _showBottomSheet(String currentUid, String postUsername) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.person_remove),
+                title: Text('Unfollow $postUsername'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _handleUnfollow();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.person_off),
+                title: Text('Unfriend $postUsername'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _handleUnfriend();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.block),
+                title: Text('Block $postUsername'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _handleBlock();
+                },
+              ),
+              if (currentUid == widget.post.uid)
+                ListTile(
+                  leading: const Icon(Icons.delete),
+                  title: const Text('Delete'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _handleDelete();
+                  },
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

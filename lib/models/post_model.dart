@@ -7,23 +7,25 @@ class Post {
   final String id;
   final String communityId;
   final String uid;
-  final String? content;
+  final String content;
   final String? image;
   final String? video;
   final int upvoteCount;
   final int downvoteCount;
   final String status;
+  final bool isEdited;
   final Timestamp createdAt;
   Post({
     required this.id,
     required this.communityId,
     required this.uid,
-    this.content,
+    required this.content,
     this.image,
     this.video,
     required this.upvoteCount,
     required this.downvoteCount,
     required this.status,
+    required this.isEdited,
     required this.createdAt,
   });
 
@@ -37,6 +39,7 @@ class Post {
     int? upvoteCount,
     int? downvoteCount,
     String? status,
+    bool? isEdited,
     Timestamp? createdAt,
   }) {
     return Post(
@@ -49,6 +52,7 @@ class Post {
       upvoteCount: upvoteCount ?? this.upvoteCount,
       downvoteCount: downvoteCount ?? this.downvoteCount,
       status: status ?? this.status,
+      isEdited: isEdited ?? this.isEdited,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -64,6 +68,7 @@ class Post {
       'upvoteCount': upvoteCount,
       'downvoteCount': downvoteCount,
       'status': status,
+      'isEdited': isEdited,
       'createdAt': createdAt,
     };
   }
@@ -73,19 +78,20 @@ class Post {
       id: map['id'] as String,
       communityId: map['communityId'] as String,
       uid: map['uid'] as String,
-      content: map['content'] != null ? map['content'] as String : '',
+      content: map['content'] as String,
       image: map['image'] != null ? map['image'] as String : '',
       video: map['video'] != null ? map['video'] as String : '',
       upvoteCount: map['upvoteCount'] as int,
       downvoteCount: map['downvoteCount'] as int,
       status: map['status'] as String,
+      isEdited: map['isEdited'] as bool,
       createdAt: map['createdAt'] as Timestamp,
     );
   }
 
   @override
   String toString() {
-    return 'Post(id: $id, communityId: $communityId, uid: $uid, content: $content, image: $image, video: $video, upvoteCount: $upvoteCount, downvoteCount: $downvoteCount, status: $status, createdAt: $createdAt)';
+    return 'Post(id: $id, communityId: $communityId, uid: $uid, content: $content, image: $image, video: $video, upvoteCount: $upvoteCount, downvoteCount: $downvoteCount, status: $status, isEdited: $isEdited, createdAt: $createdAt)';
   }
 
   @override
@@ -101,6 +107,7 @@ class Post {
         other.upvoteCount == upvoteCount &&
         other.downvoteCount == downvoteCount &&
         other.status == status &&
+        other.isEdited == isEdited &&
         other.createdAt == createdAt;
   }
 
@@ -115,6 +122,7 @@ class Post {
         upvoteCount.hashCode ^
         downvoteCount.hashCode ^
         status.hashCode ^
+        isEdited.hashCode ^
         createdAt.hashCode;
   }
 

@@ -109,7 +109,6 @@ class CommentController extends StateNotifier<bool> {
       final commentVoteModel = CommentVote(
         id: await generateRandomId(),
         commentId: commentId,
-        postId: postId,
         uid: currentUser.uid,
         isUpvoted: userVote,
         createdAt: Timestamp.now(),

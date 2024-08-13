@@ -46,7 +46,7 @@ class Comment {
       id: map['id'] as String,
       uid: map['uid'] as String,
       postId: map['postId'] as String,
-      content: map['content'] != null ? map['content'] as String : null,
+      content: map['content'] != null ? map['content'] as String : '',
       createdAt: map['createdAt'] as Timestamp,
     );
   }

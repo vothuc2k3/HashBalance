@@ -3,8 +3,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/features/newsfeed/screen/post_container/post_container.dart';
-import 'package:hash_balance/features/post/screen/create_post/create_post_screen.dart';
 import 'package:icons_plus/icons_plus.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
@@ -12,6 +10,8 @@ import 'package:hash_balance/core/common/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
+import 'package:hash_balance/features/newsfeed/screen/post_container/post_container.dart';
+import 'package:hash_balance/features/post/screen/create_post/create_post_screen.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
@@ -47,7 +47,7 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(userProvider);
+    final currentUser = ref.watch(userProvider);
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () => _refreshPosts(),
@@ -56,7 +56,7 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
           child: CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
-                child: _buildCreatePostContainer(user!),
+                child: _buildCreatePostContainer(currentUser!),
               ),
               const SliverToBoxAdapter(
                 child: SizedBox(
@@ -79,9 +79,11 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
                                   final post = posts[index];
 
                                   return ref
-                                      .watch(getUserByUidProvider(post.uid))
+                                      .watch(
+                                        getUserByUidProvider(post.uid),
+                                      )
                                       .when(
-                                          data: (user) {
+                                          data: (author) {
                                             return ref
                                                 .watch(getCommunityByIdProvider(
                                                     post.communityId))
@@ -89,19 +91,20 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
                                                   data: (community) {
                                                     if (community == null) {
                                                       return const ErrorText(
-                                                          error:
-                                                              'Unexpected Error Happenned...');
+                                                        error:
+                                                            'Unexpected Error Happenned...',
+                                                      );
                                                     }
                                                     return PostContainer(
-                                                      user: user,
+                                                      author: author,
                                                       post: post,
                                                       community: community,
                                                     );
                                                   },
                                                   error: (error, stackTrace) =>
                                                       ErrorText(
-                                                          error:
-                                                              error.toString()),
+                                                    error: error.toString(),
+                                                  ),
                                                   loading: () =>
                                                       const Loading(),
                                                 );
@@ -120,7 +123,10 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
                             );
                     },
                     error: (error, stackTrace) => SliverToBoxAdapter(
-                        child: ErrorText(error: error.toString())),
+                      child: ErrorText(
+                        error: error.toString(),
+                      ),
+                    ),
                     loading: () => const SliverToBoxAdapter(child: Loading()),
                   ),
             ],

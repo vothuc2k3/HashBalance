@@ -1,8 +1,11 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
 
 import 'package:hash_balance/core/common/error_text.dart';
@@ -21,28 +24,7 @@ class NotificationScreen extends ConsumerStatefulWidget {
   NotificationScreenState createState() => NotificationScreenState();
 }
 
-class NotificationScreenState extends ConsumerState<NotificationScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<Offset> _offsetAnimation;
-  Completer<void>? _completer;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-    );
-    _offsetAnimation = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(-1.5, 0.0),
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
-  }
-
+class NotificationScreenState extends ConsumerState<NotificationScreen> {
   void navigateToProfileScreen(String uid) async {
     final targetUser = await _fetchUserByUid(uid);
     await Navigator.push(
@@ -101,104 +83,87 @@ class NotificationScreenState extends ConsumerState<NotificationScreen>
                   itemBuilder: (context, index) {
                     var notif = notifs[index];
                     var timeString = formatTime(notif.createdAt);
-                    return SlideTransition(
-                      position: _offsetAnimation,
-                      child: Dismissible(
-                        key: Key(notif.id),
-                        direction: DismissDirection.endToStart,
-                        onDismissed: (direction) {
-                          deleteNotification(notif.id);
-                          _controller.reverse();
-                          _completer?.complete();
-                        },
-                        confirmDismiss: (direction) async {
-                          _controller.forward();
-                          _completer = Completer<void>();
-                          await _completer!.future;
-                          return true;
-                        },
-                        background: Container(
-                          color: Colors.red,
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: const Icon(Icons.delete, color: Colors.white),
+                    return Slidable(
+                      key: Key(notif.id),
+                      endActionPane: ActionPane(
+                        motion: const ScrollMotion(),
+                        dismissible: DismissiblePane(
+                          onDismissed: () {
+                            deleteNotification(notif.id);
+                          },
                         ),
-                        child: GestureDetector(
+                        children: [
+                          SlidableAction(
+                            onPressed: (context) =>
+                                deleteNotification(notif.id),
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                            icon: Icons.delete,
+                            label: 'Delete',
+                          ),
+                        ],
+                      ),
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        padding: const EdgeInsets.all(15),
+                        decoration: BoxDecoration(
+                          color: notif.isRead == true
+                              ? Colors.grey[850]
+                              : Colors.blueGrey[700],
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 5,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: ListTile(
+                          title: Text(
+                            notif.title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                notif.message,
+                                style: const TextStyle(color: Colors.white70),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                timeString,
+                                style: const TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                          trailing: notif.isRead == true
+                              ? null
+                              : const Icon(Icons.new_releases,
+                                  color: Colors.red),
                           onTap: () async {
-                            if (_controller.isCompleted) {
-                              deleteNotification(notif.id);
-                              _controller.reverse();
+                            markAsRead(notif.id, user);
+                            switch (notif.type) {
+                              case Constants.friendRequestType:
+                                navigateToProfileScreen(notif.senderUid);
+                                break;
+                              case Constants.acceptRequestType:
+                                navigateToProfileScreen(notif.senderUid);
+                                break;
+                              default:
                             }
                           },
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
-                            padding: const EdgeInsets.all(15),
-                            decoration: BoxDecoration(
-                              color: notif.isRead == true
-                                  ? Colors.grey[850]
-                                  : Colors.blueGrey[700],
-                              borderRadius: BorderRadius.circular(10),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Colors.black12,
-                                  blurRadius: 5,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: ListTile(
-                              title: Text(
-                                notif.title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    notif.message,
-                                    style:
-                                        const TextStyle(color: Colors.white70),
-                                  ),
-                                  const SizedBox(height: 5),
-                                  Text(
-                                    timeString,
-                                    style: const TextStyle(
-                                      color: Colors.white54,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              trailing: notif.isRead == true
-                                  ? null
-                                  : const Icon(Icons.new_releases,
-                                      color: Colors.red),
-                              onTap: () async {
-                                markAsRead(notif.id, user);
-                                switch (notif.type) {
-                                  case Constants.friendRequestType:
-                                    navigateToProfileScreen(notif.senderUid);
-                                    break;
-                                  case Constants.acceptRequestType:
-                                    navigateToProfileScreen(notif.senderUid);
-                                    break;
-                                  default:
-                                }
-                              },
-                            ).animate().fadeIn(duration: 600.ms).moveY(
-                                  begin: 30,
-                                  end: 0,
-                                  duration: 600.ms,
-                                  curve: Curves.easeOutBack,
-                                ),
-                          ),
                         ),
                       ),
                     );

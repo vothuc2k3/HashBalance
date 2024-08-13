@@ -110,13 +110,7 @@ class CommentRepository {
           for (var comment in event.docs) {
             final data = comment.data() as Map<String, dynamic>;
             comments.add(
-              Comment(
-                uid: data['uid'] as String,
-                content: data['content'] as String,
-                postId: postId,
-                createdAt: data['createdAt'] as Timestamp,
-                id: data['id'] as String,
-              ),
+              Comment.fromMap(data),
             );
           }
           return comments;
@@ -142,13 +136,7 @@ class CommentRepository {
           for (var comment in event.docs) {
             final data = comment.data() as Map<String, dynamic>;
             comments.add(
-              Comment(
-                uid: data['uid'] as String,
-                content: data['content'] as String,
-                postId: postId,
-                createdAt: data['createdAt'] as Timestamp,
-                id: data['id'] as String,
-              ),
+              Comment.fromMap(data),
             );
           }
           return comments;

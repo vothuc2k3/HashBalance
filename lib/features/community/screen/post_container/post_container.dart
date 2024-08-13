@@ -65,12 +65,12 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     }, (_) {});
   }
 
-  void navigateToCommentScreen(String postId) {
+  void navigateToCommentScreen() {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => CommentScreen(
-          postId: postId,
+          post: widget.post,
         ),
       ),
     );
@@ -158,7 +158,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
               children: [
                 _buildPostHeader(widget.post, widget.user),
                 const SizedBox(height: 4),
-                Text(widget.post.content ?? ''),
+                Text(widget.post.content),
                 widget.post.image != ''
                     ? const SizedBox.shrink()
                     : const SizedBox(height: 6),
@@ -327,7 +327,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
           post: widget.post,
           onVote: votePost,
           onComment: () {
-            navigateToCommentScreen(widget.post.id);
+            navigateToCommentScreen();
           },
           onShare: () {},
         ),

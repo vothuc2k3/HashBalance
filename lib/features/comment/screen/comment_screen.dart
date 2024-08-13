@@ -6,18 +6,17 @@ import 'package:hash_balance/core/common/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
-import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/comment_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 
 class CommentScreen extends ConsumerStatefulWidget {
-  final String _postId;
+  final Post _post;
 
   const CommentScreen({
     super.key,
-    required String postId,
-  }) : _postId = postId;
+    required Post post,
+  }) : _post = post;
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => _CommentScreenState();
@@ -65,152 +64,142 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
-    return ref.read(getPostByIdProvider(widget._postId)).when(
-          data: (post) {
-            return Scaffold(
-              appBar: AppBar(
-                title: const Text('Comments'),
-                actions: [
-                  PopupMenuButton<String>(
-                    onSelected: (value) {
-                      setState(() {
-                        _sortOption = value;
-                      });
-                    },
-                    itemBuilder: (BuildContext context) {
-                      return [
-                        const PopupMenuItem(
-                          value: 'newest',
-                          child: Text('Newest to Oldest'),
-                        ),
-                        const PopupMenuItem(
-                          value: 'oldest',
-                          child: Text('Oldest to Newest'),
-                        ),
-                        const PopupMenuItem(
-                          value: 'default',
-                          child: Text('Most relevant'),
-                        ),
-                      ];
-                    },
-                    icon: const Icon(Icons.sort),
-                  ),
-                ],
-              ),
-              body: Column(
-                children: [
-                  Expanded(
-                    child: _sortOption == 'newest'
-                        ? ref
-                            .watch(
-                                getNewestCommentsByPostProvider(widget._postId))
-                            .when(
-                              data: (comments) {
-                                return ListView.builder(
-                                  itemCount: comments.length,
-                                  itemBuilder: (context, index) {
-                                    return _buildCommentWidget(
-                                      comment: comments[index],
-                                      post: post,
-                                    );
-                                  },
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Comments'),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              setState(() {
+                _sortOption = value;
+              });
+            },
+            itemBuilder: (BuildContext context) {
+              return [
+                const PopupMenuItem(
+                  value: 'newest',
+                  child: Text('Newest to Oldest'),
+                ),
+                const PopupMenuItem(
+                  value: 'oldest',
+                  child: Text('Oldest to Newest'),
+                ),
+                const PopupMenuItem(
+                  value: 'default',
+                  child: Text('Most relevant'),
+                ),
+              ];
+            },
+            icon: const Icon(Icons.sort),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: _sortOption == 'newest'
+                ? ref
+                    .watch(getNewestCommentsByPostProvider(widget._post.id))
+                    .when(
+                      data: (comments) {
+                        return ListView.builder(
+                          itemCount: comments.length,
+                          itemBuilder: (context, index) {
+                            return _buildCommentWidget(
+                              comment: comments[index],
+                              post: widget._post,
+                            );
+                          },
+                        );
+                      },
+                      error: (error, stackTrace) =>
+                          ErrorText(error: error.toString()),
+                      loading: () => const Loading(),
+                    )
+                : _sortOption == 'oldest'
+                    ? ref
+                        .watch(getOldestCommentsByPostProvider(widget._post.id))
+                        .when(
+                          data: (comments) {
+                            return ListView.builder(
+                              itemCount: comments.length,
+                              itemBuilder: (context, index) {
+                                return _buildCommentWidget(
+                                  comment: comments[index],
+                                  post: widget._post,
                                 );
                               },
-                              error: (error, stackTrace) =>
-                                  ErrorText(error: error.toString()),
-                              loading: () => const Loading(),
-                            )
-                        : _sortOption == 'oldest'
-                            ? ref
-                                .watch(getOldestCommentsByPostProvider(
-                                    widget._postId))
-                                .when(
-                                  data: (comments) {
-                                    return ListView.builder(
-                                      itemCount: comments.length,
-                                      itemBuilder: (context, index) {
-                                        return _buildCommentWidget(
-                                          comment: comments[index],
-                                          post: post,
-                                        );
-                                      },
-                                    );
-                                  },
-                                  error: (error, stackTrace) =>
-                                      ErrorText(error: error.toString()),
-                                  loading: () => const Loading(),
-                                )
-                            : ref
-                                .watch(
-                                  getRelevantCommentsByPostProvider(
-                                      widget._postId),
-                                )
-                                .when(
-                                  data: (comments) {
-                                    return ListView.builder(
-                                      itemCount: comments.length,
-                                      itemBuilder: (context, index) {
-                                        return _buildCommentWidget(
-                                          comment: comments[index],
-                                          post: post,
-                                        );
-                                      },
-                                    );
-                                  },
-                                  error: (error, stackTrace) =>
-                                      ErrorText(error: error.toString()),
-                                  loading: () => const Loading(),
-                                ),
-                  ),
-                  if (user != null) ...[
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundImage: CachedNetworkImageProvider(
-                              user.profileImage,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: TextField(
-                              controller: commentTextController,
-                              decoration: InputDecoration(
-                                hintText: 'Leave a comment...',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                ),
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.send),
-                            onPressed: () {
-                              if (commentTextController.text.isNotEmpty) {
-                                comment(
-                                  post.id,
-                                  commentTextController.text.trim(),
+                            );
+                          },
+                          error: (error, stackTrace) =>
+                              ErrorText(error: error.toString()),
+                          loading: () => const Loading(),
+                        )
+                    : ref
+                        .watch(
+                          getRelevantCommentsByPostProvider(widget._post.id),
+                        )
+                        .when(
+                          data: (comments) {
+                            return ListView.builder(
+                              itemCount: comments.length,
+                              itemBuilder: (context, index) {
+                                return _buildCommentWidget(
+                                  comment: comments[index],
+                                  post: widget._post,
                                 );
-                              }
-                            },
-                          ),
-                        ],
+                              },
+                            );
+                          },
+                          error: (error, stackTrace) =>
+                              ErrorText(error: error.toString()),
+                          loading: () => const Loading(),
+                        ),
+          ),
+          if (user != null) ...[
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    backgroundImage: CachedNetworkImageProvider(
+                      user.profileImage,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: commentTextController,
+                      decoration: InputDecoration(
+                        hintText: 'Leave a comment...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                        ),
                       ),
                     ),
-                  ]
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.send),
+                    onPressed: () {
+                      if (commentTextController.text.isNotEmpty) {
+                        comment(
+                          widget._post.id,
+                          commentTextController.text.trim(),
+                        );
+                      }
+                    },
+                  ),
                 ],
               ),
-            );
-          },
-          error: (error, stackTrace) => ErrorText(
-            error: error.toString(),
-          ),
-          loading: () => const Loading(),
-        );
+            ),
+          ]
+        ],
+      ),
+    );
   }
 
   Widget _buildCommentWidget({
@@ -294,7 +283,7 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
                       },
                     ),
                     onTap: () {
-                      voteComment(comment.id, widget._postId, true);
+                      voteComment(comment.id, widget._post.id, true);
                     },
                   ),
                   _buildVoteButton(
@@ -318,7 +307,7 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
                       },
                     ),
                     onTap: () {
-                      voteComment(comment.id, widget._postId, false);
+                      voteComment(comment.id, widget._post.id, false);
                     },
                   ),
                 ],

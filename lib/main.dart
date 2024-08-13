@@ -2,12 +2,14 @@
 
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/common/constants/firebase_constants.dart';
 import 'package:toastification/toastification.dart';
 
 import 'package:hash_balance/core/common/constants/constants.dart';
@@ -52,6 +54,10 @@ class MyApp extends ConsumerStatefulWidget {
 class MyAppState extends ConsumerState<MyApp> {
   UserModel? userData;
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  //REFERENCE ALL THE USERS
+  CollectionReference get _users =>
+      _firestore.collection(FirebaseConstants.usersCollection);
 
   void _getUserData(WidgetRef ref, User data) async {
     userData = await ref
@@ -155,6 +161,21 @@ class MyAppState extends ConsumerState<MyApp> {
     );
   }
 
+  void _updateUserData() async {
+    _users.doc(userData!.uid).snapshots().listen((event) {
+      if (event.exists) {
+        final data = event.data() as Map<String, dynamic>;
+
+        final createdAt = data['createdAt'] as Timestamp;
+        final hashAge = DateTime.now().difference(createdAt.toDate()).inDays;
+
+        _users.doc(userData!.uid).update({
+          'hashAge': hashAge,
+        });
+      }
+    });
+  }
+
   @override
   void initState() {
     _setupLocalNotifications();
@@ -167,6 +188,9 @@ class MyAppState extends ConsumerState<MyApp> {
         }
       },
     );
+    if (userData != null) {
+      _updateUserData();
+    }
     super.initState();
   }
 

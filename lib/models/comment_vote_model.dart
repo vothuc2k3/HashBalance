@@ -1,4 +1,3 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -6,14 +5,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class CommentVote {
   final String id;
   final String commentId;
-  final String postId;
   final String uid;
   final bool isUpvoted;
   final Timestamp createdAt;
   CommentVote({
     required this.id,
     required this.commentId,
-    required this.postId,
     required this.uid,
     required this.isUpvoted,
     required this.createdAt,
@@ -22,7 +19,6 @@ class CommentVote {
   CommentVote copyWith({
     String? id,
     String? commentId,
-    String? postId,
     String? uid,
     bool? isUpvoted,
     Timestamp? createdAt,
@@ -30,7 +26,6 @@ class CommentVote {
     return CommentVote(
       id: id ?? this.id,
       commentId: commentId ?? this.commentId,
-      postId: postId ?? this.postId,
       uid: uid ?? this.uid,
       isUpvoted: isUpvoted ?? this.isUpvoted,
       createdAt: createdAt ?? this.createdAt,
@@ -41,7 +36,6 @@ class CommentVote {
     return <String, dynamic>{
       'id': id,
       'commentId': commentId,
-      'postId': postId,
       'uid': uid,
       'isUpvoted': isUpvoted,
       'createdAt': createdAt,
@@ -52,7 +46,6 @@ class CommentVote {
     return CommentVote(
       id: map['id'] as String,
       commentId: map['commentId'] as String,
-      postId: map['postId'] as String,
       uid: map['uid'] as String,
       isUpvoted: map['isUpvoted'] as bool,
       createdAt: map['createdAt'] as Timestamp,
@@ -66,29 +59,26 @@ class CommentVote {
 
   @override
   String toString() {
-    return 'CommentVote(id: $id, commentId: $commentId, postId: $postId, uid: $uid, isUpvoted: $isUpvoted, createdAt: $createdAt)';
+    return 'CommentVote(id: $id, commentId: $commentId, uid: $uid, isUpvoted: $isUpvoted, createdAt: $createdAt)';
   }
 
   @override
   bool operator ==(covariant CommentVote other) {
     if (identical(this, other)) return true;
-  
-    return 
-      other.id == id &&
-      other.commentId == commentId &&
-      other.postId == postId &&
-      other.uid == uid &&
-      other.isUpvoted == isUpvoted &&
-      other.createdAt == createdAt;
+
+    return other.id == id &&
+        other.commentId == commentId &&
+        other.uid == uid &&
+        other.isUpvoted == isUpvoted &&
+        other.createdAt == createdAt;
   }
 
   @override
   int get hashCode {
     return id.hashCode ^
-      commentId.hashCode ^
-      postId.hashCode ^
-      uid.hashCode ^
-      isUpvoted.hashCode ^
-      createdAt.hashCode;
+        commentId.hashCode ^
+        uid.hashCode ^
+        isUpvoted.hashCode ^
+        createdAt.hashCode;
   }
 }

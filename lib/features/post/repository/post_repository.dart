@@ -92,24 +92,26 @@ class PostRepository {
     }
   }
 
-  //VOTE THE POST
+  // VOTE THE POST
   Future<void> votePost(PostVote postVoteModel, Post post) async {
     try {
+      final batch = FirebaseFirestore.instance.batch();
       final querySnapshot = await _postVotes
           .where('postId', isEqualTo: postVoteModel.postId)
           .where('uid', isEqualTo: postVoteModel.uid)
           .get();
 
       if (querySnapshot.docs.isEmpty) {
-        await _postVotes.doc(postVoteModel.id).set(postVoteModel.toMap());
+        final postVoteRef = _postVotes.doc(postVoteModel.id);
+        batch.set(postVoteRef, postVoteModel.toMap());
         if (postVoteModel.isUpvoted) {
-          await _posts
-              .doc(post.id)
-              .update({'upvoteCount': FieldValue.increment(1)});
+          batch.update(_posts.doc(post.id), {
+            'upvoteCount': FieldValue.increment(1),
+          });
         } else {
-          await _posts
-              .doc(post.id)
-              .update({'upvoteCount': FieldValue.increment(-1)});
+          batch.update(_posts.doc(post.id), {
+            'downvoteCount': FieldValue.increment(1),
+          });
         }
       } else {
         final data = querySnapshot.docs.first.data() as Map<String, dynamic>;
@@ -119,32 +121,34 @@ class PostRepository {
 
         if (doWantToUpvote == isAlreadyUpvoted) {
           // Remove the vote
-          await _postVotes.doc(postVoteModelId).delete();
+          batch.delete(_postVotes.doc(postVoteModelId));
           if (doWantToUpvote) {
-            await _posts
-                .doc(post.id)
-                .update({'upvoteCount': FieldValue.increment(-1)});
+            batch.update(_posts.doc(post.id), {
+              'upvoteCount': FieldValue.increment(-1),
+            });
           } else {
-            await _posts
-                .doc(post.id)
-                .update({'upvoteCount': FieldValue.increment(1)});
+            batch.update(_posts.doc(post.id), {
+              'downvoteCount': FieldValue.increment(-1),
+            });
           }
         } else {
           // Update the vote
-          await _postVotes.doc(postVoteModelId).update(postVoteModel.toMap());
+          batch.update(_postVotes.doc(postVoteModelId), postVoteModel.toMap());
           if (doWantToUpvote) {
-            await _posts.doc(post.id).update({
+            batch.update(_posts.doc(post.id), {
               'upvoteCount': FieldValue.increment(1),
-              'downvoteCount': FieldValue.increment(-1)
+              'downvoteCount': FieldValue.increment(-1),
             });
           } else {
-            await _posts.doc(post.id).update({
+            batch.update(_posts.doc(post.id), {
               'upvoteCount': FieldValue.increment(-1),
-              'downvoteCount': FieldValue.increment(1)
+              'downvoteCount': FieldValue.increment(1),
             });
           }
         }
       }
+
+      await batch.commit();
     } on FirebaseException catch (e) {
       throw Failures(e.message!);
     } catch (e) {

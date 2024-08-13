@@ -84,7 +84,7 @@ class UserRepository {
       if (description != null) {
         updatedUser = updatedUser.copyWith(description: description);
       }
-      final Map<String, dynamic> updatedUserAfterCast = {
+      final updatedUserAfterCast = {
         'email': updatedUser.email,
         'name': updatedUser.name,
         'uid': updatedUser.uid,
@@ -109,17 +109,7 @@ class UserRepository {
 
   Stream<UserModel> getUserByUid(String uid) {
     return _user.doc(uid).snapshots().map((event) {
-      return UserModel(
-        email: event['email'] as String,
-        name: event['name'] as String,
-        uid: uid,
-        createdAt: event['createdAt'] as Timestamp,
-        profileImage: event['profileImage'] as String,
-        bannerImage: event['bannerImage'] as String,
-        isAuthenticated: event['isAuthenticated'] as bool,
-        isRestricted: event['isRestricted'] as bool,
-        activityPoint: event['activityPoint'] as int,
-      );
+      return UserModel.fromMap(event.data() as Map<String, dynamic>);
     });
   }
 

@@ -69,7 +69,7 @@ class AuthController extends StateNotifier<bool> {
   ) async {
     state = true;
     try {
-      UserModel userModel = UserModel(
+      final userModel = UserModel(
         email: email,
         name: name,
         uid: '',
