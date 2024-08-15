@@ -41,6 +41,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   String? _videoDuration;
   String? _currentPosition;
   bool? isLoading;
+  UserModel? currentUser;
 
   void _togglePlayPause() {
     setState(() {
@@ -65,25 +66,21 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     );
   }
 
-  void deletePost(Post post) async {
-    ref.watch(postControllerProvider.notifier).deletePost(post);
-  }
-
-  void voteComment(String commentId, String postId, bool userVote) async {
-    final result = await ref
-        .read(commentControllerProvider.notifier)
-        .voteComment(commentId, postId, userVote);
-    result.fold(
-      (l) {
-        showToast(false, l.toString());
-      },
-      (_) {},
-    );
-  }
-
   void _handleBlock() {}
 
-  void _handleDelete() {}
+  void _handleDeletePost(Post post) async {
+    final result =
+        await ref.watch(postControllerProvider.notifier).deletePostByUser(post);
+    result.fold(
+      (l) {
+        showToast(false, l.message);
+      },
+      (r) {
+        showToast(true, 'Delete successfully...');
+        setState(() {});
+      },
+    );
+  }
 
   void _handleUnfollow() {}
 
@@ -202,8 +199,13 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   }
 
   @override
+  void didChangeDependencies() {
+    currentUser = ref.watch(userProvider);
+    super.didChangeDependencies();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final currentUser = ref.watch(userProvider)!;
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       padding: const EdgeInsets.all(5),
@@ -229,7 +231,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                     InkWell(
                       onTap: () {
                         _navigateToCommunityScreen(
-                            widget.community, currentUser.uid);
+                            widget.community, currentUser!.uid);
                       },
                       child: CircleAvatar(
                         backgroundImage: NetworkImage(
@@ -251,7 +253,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
               ),
               IconButton(
                 onPressed: () {
-                  _showBottomSheet(currentUser.uid, widget.author.name);
+                  _showBottomSheet(currentUser!.uid, widget.author.name);
                 },
                 icon: const Icon(Icons.more_horiz),
               ),
@@ -498,7 +500,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                   title: const Text('Delete'),
                   onTap: () {
                     Navigator.of(context).pop();
-                    _handleDelete();
+                    _handleDeletePost(widget.post);
                   },
                 ),
             ],

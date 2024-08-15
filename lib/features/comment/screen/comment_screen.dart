@@ -9,6 +9,7 @@ import 'package:hash_balance/features/comment/controller/comment_controller.dart
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/comment_model.dart';
 import 'package:hash_balance/models/post_model.dart';
+import 'package:tuple/tuple.dart';
 
 class CommentScreen extends ConsumerStatefulWidget {
   final Post _post;
@@ -24,13 +25,12 @@ class CommentScreen extends ConsumerStatefulWidget {
 
 class _CommentScreenState extends ConsumerState<CommentScreen> {
   final commentTextController = TextEditingController();
-  String _sortOption = 'newest';
 
-  void comment(String postId, String content) async {
+  void _comment(Post post, String content) async {
     FocusScope.of(context).unfocus();
     final result = await ref
         .read(commentControllerProvider.notifier)
-        .comment(postId, content);
+        .comment(post, content);
     result.fold(
       (l) {
         showToast(
@@ -39,23 +39,19 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
         );
       },
       (r) {
-        showToast(
-          true,
-          r,
-        );
         commentTextController.clear();
       },
     );
   }
 
-  void voteComment(
-    String commentId,
-    String postId,
+  void _voteComment(
+    Comment comment,
+    Post post,
     bool userVote,
   ) async {
     final result = await ref
         .read(commentControllerProvider.notifier)
-        .voteComment(commentId, postId, userVote);
+        .voteComment(comment, post, userVote);
     result.fold((l) {
       showToast(false, l.toString());
     }, (_) {});
@@ -63,52 +59,22 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(userProvider);
-
+    final user = ref.read(userProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Comments'),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              setState(() {
-                _sortOption = value;
-              });
-            },
-            itemBuilder: (BuildContext context) {
-              return [
-                const PopupMenuItem(
-                  value: 'newest',
-                  child: Text('Newest to Oldest'),
-                ),
-                const PopupMenuItem(
-                  value: 'oldest',
-                  child: Text('Oldest to Newest'),
-                ),
-                const PopupMenuItem(
-                  value: 'default',
-                  child: Text('Most relevant'),
-                ),
-              ];
-            },
-            icon: const Icon(Icons.sort),
-          ),
-        ],
       ),
       body: Column(
         children: [
           Expanded(
-            child: _sortOption == 'newest'
-                ? ref
-                    .watch(getNewestCommentsByPostProvider(widget._post.id))
-                    .when(
+            child:
+                ref.watch(getRelevantCommentsByPostProvider(widget._post)).when(
                       data: (comments) {
                         return ListView.builder(
                           itemCount: comments.length,
                           itemBuilder: (context, index) {
                             return _buildCommentWidget(
                               comment: comments[index],
-                              post: widget._post,
                             );
                           },
                         );
@@ -116,46 +82,7 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
                       error: (error, stackTrace) =>
                           ErrorText(error: error.toString()),
                       loading: () => const Loading(),
-                    )
-                : _sortOption == 'oldest'
-                    ? ref
-                        .watch(getOldestCommentsByPostProvider(widget._post.id))
-                        .when(
-                          data: (comments) {
-                            return ListView.builder(
-                              itemCount: comments.length,
-                              itemBuilder: (context, index) {
-                                return _buildCommentWidget(
-                                  comment: comments[index],
-                                  post: widget._post,
-                                );
-                              },
-                            );
-                          },
-                          error: (error, stackTrace) =>
-                              ErrorText(error: error.toString()),
-                          loading: () => const Loading(),
-                        )
-                    : ref
-                        .watch(
-                          getRelevantCommentsByPostProvider(widget._post.id),
-                        )
-                        .when(
-                          data: (comments) {
-                            return ListView.builder(
-                              itemCount: comments.length,
-                              itemBuilder: (context, index) {
-                                return _buildCommentWidget(
-                                  comment: comments[index],
-                                  post: widget._post,
-                                );
-                              },
-                            );
-                          },
-                          error: (error, stackTrace) =>
-                              ErrorText(error: error.toString()),
-                          loading: () => const Loading(),
-                        ),
+                    ),
           ),
           if (user != null) ...[
             Padding(
@@ -186,8 +113,8 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
                     icon: const Icon(Icons.send),
                     onPressed: () {
                       if (commentTextController.text.isNotEmpty) {
-                        comment(
-                          widget._post.id,
+                        _comment(
+                          widget._post,
                           commentTextController.text.trim(),
                         );
                       }
@@ -204,7 +131,6 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
 
   Widget _buildCommentWidget({
     required Comment comment,
-    required Post post,
   }) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
@@ -265,12 +191,17 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
                   _buildVoteButton(
                     icon: Icons.arrow_upward_outlined,
                     count: ref
-                        .watch(getCommentVoteCountProvider(comment.id))
+                        .watch(
+                      getCommentVoteCountProvider(
+                        Tuple2(widget._post, comment),
+                      ),
+                    )
                         .whenOrNull(data: (count) {
                       return count['upvotes'];
                     }),
                     color: ref
-                        .watch(getCommentVoteStatusProvider(comment.id))
+                        .watch(getCommentVoteStatusProvider(
+                            Tuple2(widget._post, comment)))
                         .whenOrNull(
                       data: (status) {
                         if (status == null) {
@@ -283,18 +214,20 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
                       },
                     ),
                     onTap: () {
-                      voteComment(comment.id, widget._post.id, true);
+                      _voteComment(comment, widget._post, true);
                     },
                   ),
                   _buildVoteButton(
                     icon: Icons.arrow_downward_outlined,
                     count: ref
-                        .watch(getCommentVoteCountProvider(comment.id))
+                        .watch(getCommentVoteCountProvider(
+                            Tuple2(widget._post, comment)))
                         .whenOrNull(data: (count) {
                       return count['downvotes'];
                     }),
                     color: ref
-                        .watch(getCommentVoteStatusProvider(comment.id))
+                        .watch(getCommentVoteStatusProvider(
+                            Tuple2(widget._post, comment)))
                         .whenOrNull(
                       data: (status) {
                         if (status == null) {
@@ -307,7 +240,7 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
                       },
                     ),
                     onTap: () {
-                      voteComment(comment.id, widget._post.id, false);
+                      _voteComment(comment, widget._post, false);
                     },
                   ),
                 ],

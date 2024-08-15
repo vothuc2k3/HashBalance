@@ -144,11 +144,16 @@ class PostController extends StateNotifier<bool> {
     return _postRepository.getPostVoteCount(post);
   }
 
-  FutureString deletePost(Post post) async {
+  FutureString deletePostByUser(Post post) async {
     state = true;
     try {
-      final user = _ref.read(userProvider);
-      final result = await _postRepository.deletePost(post, user!.uid);
+      final user = _ref.watch(userProvider)!;
+      Either<Failures, void> result;
+      if (user.uid == post.uid) {
+        result = await _postRepository.deletePost(post, user.uid);
+      } else {
+        return left(Failures('You are not the author of the post'));
+      }
       return result.fold((l) {
         return left(Failures(l.message));
       }, (r) {

@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/widgets/loading.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:mdi/mdi.dart';
 import 'package:video_player/video_player.dart';
 
@@ -35,6 +36,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   bool _isPlaying = false;
   String? _videoDuration;
   String? _currentPosition;
+  UserModel? currentUser;
 
   void _togglePlayPause() {
     setState(() {
@@ -47,19 +49,10 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     });
   }
 
-  void votePost(bool userVote) async {
+  void _votePost(bool userVote) async {
     final result = await ref
         .read(postControllerProvider.notifier)
         .votePost(widget.post, userVote);
-    result.fold((l) {
-      showToast(false, l.toString());
-    }, (_) {});
-  }
-
-  void voteComment(String commentId, String postId, bool userVote) async {
-    final result = await ref
-        .read(commentControllerProvider.notifier)
-        .voteComment(commentId, postId, userVote);
     result.fold((l) {
       showToast(false, l.toString());
     }, (_) {});
@@ -76,12 +69,73 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     );
   }
 
+  void _handleBlock() {}
+
+  void _handleDelete() {}
+
+  void _handleUnfollow() {}
+
+  void _handleUnfriend() {}
+
+  void _showBottomSheet(String currentUid, String postUsername) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.person_remove),
+                title: Text('Unfollow $postUsername'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _handleUnfollow();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.person_off),
+                title: Text('Unfriend $postUsername'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _handleUnfriend();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.block),
+                title: Text('Block $postUsername'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _handleBlock();
+                },
+              ),
+              if (currentUid == widget.post.uid)
+                ListTile(
+                  leading: const Icon(Icons.delete),
+                  title: const Text('Delete'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _handleDelete();
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
     if (widget.post.video != '') {
       _initializeVideo();
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    currentUser = ref.watch(userProvider);
+    super.didChangeDependencies();
   }
 
   Future<void> _initializeVideo() async {
@@ -293,6 +347,12 @@ class _PostContainerState extends ConsumerState<PostContainer> {
             ],
           ),
         ),
+        IconButton(
+          onPressed: () {
+            _showBottomSheet(currentUser!.uid, widget.author.name);
+          },
+          icon: const Icon(Icons.more_horiz),
+        ),
       ],
     );
   }
@@ -337,7 +397,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         ),
         PostActions(
           post: widget.post,
-          onVote: votePost,
+          onVote: _votePost,
           onComment: () {
             _navigateToCommentScreen();
           },

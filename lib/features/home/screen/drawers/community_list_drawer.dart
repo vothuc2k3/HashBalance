@@ -2,6 +2,7 @@ import 'package:animated_icon/animated_icon.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/common/splash/splash_screen.dart';
 import 'package:hash_balance/core/common/widgets/dashed_line_divider.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
@@ -34,25 +35,34 @@ class _CommunityListDrawerState extends ConsumerState<CommunityListDrawer> {
   }
 
   void _navigateToCommunityScreen(Community community, String uid) async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SplashScreen(),
+      ),
+    );
     String? membershipStatus;
     final result = await ref
         .watch(moderationControllerProvider.notifier)
         .fetchMembershipStatus(getMembershipId(uid, community.id));
 
-    result.fold((l) {
-      showToast(false, 'Unexpected error happened...');
-    }, (r) async {
-      membershipStatus = r;
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CommunityScreen(
-            memberStatus: membershipStatus!,
-            community: community,
+    result.fold(
+      (l) {
+        showToast(false, 'Unexpected error happened...');
+      },
+      (r) async {
+        membershipStatus = r;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CommunityScreen(
+              memberStatus: membershipStatus!,
+              community: community,
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 
   @override

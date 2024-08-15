@@ -34,9 +34,6 @@ class PostRepository {
   //REFERENCE ALL THE USERS
   CollectionReference get _users =>
       _firestore.collection(FirebaseConstants.usersCollection);
-  //REFERENCE ALL THE POSTS
-  CollectionReference get _postVotes =>
-      _firestore.collection(FirebaseConstants.postVoteCollection);
 
   //CREATE A NEW POST
   FutureVoid createPost(
@@ -94,15 +91,16 @@ class PostRepository {
 
   // VOTE THE POST
   Future<void> votePost(PostVote postVoteModel, Post post) async {
+    final batch = _firestore.batch();
     try {
-      final batch = FirebaseFirestore.instance.batch();
-      final querySnapshot = await _postVotes
-          .where('postId', isEqualTo: postVoteModel.postId)
+      final postVoteCollection =
+          _posts.doc(post.id).collection(FirebaseConstants.postVoteCollection);
+      final querySnapshot = await postVoteCollection
           .where('uid', isEqualTo: postVoteModel.uid)
           .get();
 
       if (querySnapshot.docs.isEmpty) {
-        final postVoteRef = _postVotes.doc(postVoteModel.id);
+        final postVoteRef = postVoteCollection.doc(postVoteModel.id);
         batch.set(postVoteRef, postVoteModel.toMap());
         if (postVoteModel.isUpvoted) {
           batch.update(_posts.doc(post.id), {
@@ -114,14 +112,13 @@ class PostRepository {
           });
         }
       } else {
-        final data = querySnapshot.docs.first.data() as Map<String, dynamic>;
+        final data = querySnapshot.docs.first.data();
         final postVoteModelId = querySnapshot.docs.first.id;
         final isAlreadyUpvoted = data['isUpvoted'] as bool;
         final doWantToUpvote = postVoteModel.isUpvoted;
 
         if (doWantToUpvote == isAlreadyUpvoted) {
-          // Remove the vote
-          batch.delete(_postVotes.doc(postVoteModelId));
+          batch.delete(postVoteCollection.doc(postVoteModelId));
           if (doWantToUpvote) {
             batch.update(_posts.doc(post.id), {
               'upvoteCount': FieldValue.increment(-1),
@@ -132,8 +129,8 @@ class PostRepository {
             });
           }
         } else {
-          // Update the vote
-          batch.update(_postVotes.doc(postVoteModelId), postVoteModel.toMap());
+          batch.update(
+              postVoteCollection.doc(postVoteModelId), postVoteModel.toMap());
           if (doWantToUpvote) {
             batch.update(_posts.doc(post.id), {
               'upvoteCount': FieldValue.increment(1),
@@ -147,7 +144,6 @@ class PostRepository {
           }
         }
       }
-
       await batch.commit();
     } on FirebaseException catch (e) {
       throw Failures(e.message!);
@@ -159,8 +155,9 @@ class PostRepository {
   //CHECK VOTE STATUS OF A USER TOWARDS A POST
   Stream<bool?> getPostVoteStatus(Post post, String uid) {
     try {
-      return _postVotes
-          .where('postId', isEqualTo: post.id)
+      return _posts
+          .doc(post.id)
+          .collection(FirebaseConstants.postVoteCollection)
           .where('uid', isEqualTo: uid)
           .snapshots()
           .map((event) {
@@ -169,7 +166,7 @@ class PostRepository {
         }
         bool isUpvoted = true;
         for (var doc in event.docs) {
-          final data = doc.data() as Map<String, dynamic>;
+          final data = doc.data();
           isUpvoted = data['isUpvoted'];
           break;
         }
@@ -195,15 +192,11 @@ class PostRepository {
 
   //DELETE THE POST
   FutureVoid deletePost(Post post, String uid) async {
-    final batch = FirebaseFirestore.instance.batch();
+    final batch = _firestore.batch();
     try {
-      if (post.uid == uid) {
-        batch.delete(_posts.doc(post.id));
-        await batch.commit();
-        return right(null);
-      } else {
-        return left(Failures('You are not the owner of the post'));
-      }
+      batch.delete(_posts.doc(post.id));
+      await batch.commit();
+      return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {

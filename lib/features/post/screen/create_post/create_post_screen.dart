@@ -71,17 +71,20 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   void createPost(String uid) async {
     final result = await ref.read(postControllerProvider.notifier).createPost(
         uid, selectedCommunity!, image, video, contentController.text);
-    result.fold((l) {
-      setState(() {
-        isCreatingPost = false;
-      });
-      return showToast(false, l.toString());
-    }, (r) {
-      setState(() {
-        isCreatingPost = false;
-      });
-      return showToast(true, r);
-    });
+    result.fold(
+      (l) {
+        setState(() {
+          isCreatingPost = false;
+        });
+        return showToast(false, l.toString());
+      },
+      (r) {
+        setState(() {
+          isCreatingPost = false;
+        });
+        return showToast(true, r);
+      },
+    );
   }
 
   void navigateToCommunity() {

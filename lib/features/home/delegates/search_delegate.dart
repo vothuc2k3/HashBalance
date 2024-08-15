@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/common/splash/splash_screen.dart';
 
 import 'package:hash_balance/core/common/widgets/error_text.dart';
 import 'package:hash_balance/core/common/widgets/loading.dart';
@@ -136,8 +137,11 @@ class SearchCommunityDelegate extends SearchDelegate {
                         style: const TextStyle(color: Colors.white),
                       ),
                       onTap: () {
-                        navigateToCommunityScreen(
-                            community, currentUser.uid, context);
+                        _navigateToCommunityScreen(
+                          context,
+                          community,
+                          currentUser.uid,
+                        );
                       },
                     ),
                   );
@@ -195,27 +199,36 @@ class SearchCommunityDelegate extends SearchDelegate {
         );
   }
 
-  void navigateToCommunityScreen(
-      Community community, String uid, BuildContext context) async {
+  void _navigateToCommunityScreen(
+      BuildContext context, Community community, String uid) async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SplashScreen(),
+      ),
+    );
     String? membershipStatus;
     final result = await ref
         .watch(moderationControllerProvider.notifier)
         .fetchMembershipStatus(getMembershipId(uid, community.id));
 
-    result.fold((l) {
-      showToast(false, 'Unexpected error happened...');
-    }, (r) async {
-      membershipStatus = r;
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CommunityScreen(
-            memberStatus: membershipStatus!,
-            community: community,
+    result.fold(
+      (l) {
+        showToast(false, 'Unexpected error happened...');
+      },
+      (r) async {
+        membershipStatus = r;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CommunityScreen(
+              memberStatus: membershipStatus!,
+              community: community,
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 
   void navigateToProfileScreen(BuildContext context, UserModel targetUser) {
