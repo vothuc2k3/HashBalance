@@ -5,10 +5,11 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
-import 'package:hash_balance/core/common/error_text.dart';
-import 'package:hash_balance/core/common/loading.dart';
+import 'package:hash_balance/core/common/widgets/error_text.dart';
+import 'package:hash_balance/core/common/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
+import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
@@ -150,9 +151,8 @@ class _EditCommunityScreenState extends ConsumerState<EditCommunityScreen> {
 
   void saveChanges(Community community) async {
     final result = await ref
-        .read(communityControllerProvider.notifier)
+        .read(moderationControllerProvider.notifier)
         .editCommunityProfileOrBannerImage(
-          context: context,
           community: community,
           profileImage: profileImageFile,
           bannerImage: bannerImageFile,

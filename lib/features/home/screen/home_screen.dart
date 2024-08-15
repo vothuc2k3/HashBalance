@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:hash_balance/core/common/constants/constants.dart';
-import 'package:hash_balance/core/common/error_text.dart';
-import 'package:hash_balance/core/common/loading.dart';
+import 'package:hash_balance/core/common/widgets/error_text.dart';
+import 'package:hash_balance/core/common/widgets/loading.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/home/delegates/search_delegate.dart';

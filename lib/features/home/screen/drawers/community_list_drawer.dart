@@ -2,19 +2,28 @@ import 'package:animated_icon/animated_icon.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/common/dashed_line_divider.dart';
+import 'package:hash_balance/core/common/widgets/dashed_line_divider.dart';
+import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/screen/create_community_screen.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
+import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
 
-import 'package:hash_balance/core/common/error_text.dart';
-import 'package:hash_balance/core/common/loading.dart';
+import 'package:hash_balance/core/common/widgets/error_text.dart';
+import 'package:hash_balance/core/common/widgets/loading.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
-class CommunityListDrawer extends ConsumerWidget {
+class CommunityListDrawer extends ConsumerStatefulWidget {
   const CommunityListDrawer({super.key});
 
+  @override
+  ConsumerState<CommunityListDrawer> createState() =>
+      _CommunityListDrawerState();
+}
+
+class _CommunityListDrawerState extends ConsumerState<CommunityListDrawer> {
   void navigateToCreateCommunityScreen(BuildContext context) {
     Navigator.push(
       context,
@@ -24,24 +33,33 @@ class CommunityListDrawer extends ConsumerWidget {
     );
   }
 
-  void navigateToCommunityScreen(
-    BuildContext context,
-    Community community,
-  ) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CommunityScreen(
-          community: community,
+  void _navigateToCommunityScreen(Community community, String uid) async {
+    String? membershipStatus;
+    final result = await ref
+        .watch(moderationControllerProvider.notifier)
+        .fetchMembershipStatus(getMembershipId(uid, community.id));
+
+    result.fold((l) {
+      showToast(false, 'Unexpected error happened...');
+    }, (r) async {
+      membershipStatus = r;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CommunityScreen(
+            memberStatus: membershipStatus!,
+            community: community,
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     // ignore: unused_result
     ref.refresh(userCommunitiesProvider);
+    final currentUser = ref.watch(userProvider)!;
 
     return Drawer(
       child: SafeArea(
@@ -98,9 +116,9 @@ class CommunityListDrawer extends ConsumerWidget {
                                 ),
                               ),
                               onTap: () {
-                                navigateToCommunityScreen(
-                                  context,
+                                _navigateToCommunityScreen(
                                   community,
+                                  currentUser.uid,
                                 );
                               },
                             );
@@ -168,10 +186,8 @@ class CommunityListDrawer extends ConsumerWidget {
                                 ),
                               ),
                               onTap: () {
-                                navigateToCommunityScreen(
-                                  context,
-                                  community,
-                                );
+                                _navigateToCommunityScreen(
+                                    community, currentUser.uid);
                               },
                             );
                           },

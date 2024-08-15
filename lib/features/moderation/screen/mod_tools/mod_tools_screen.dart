@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/features/community/screen/mod_tools/edit_community_screen.dart';
-import 'package:hash_balance/features/community/screen/mod_tools/pending_post_screen.dart';
+import 'package:hash_balance/features/moderation/screen/mod_tools/edit_community_screen.dart';
+import 'package:hash_balance/features/moderation/screen/mod_tools/pending_post_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
 
 class ModToolsScreen extends ConsumerWidget {

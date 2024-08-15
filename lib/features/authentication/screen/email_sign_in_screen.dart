@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
+import 'package:hash_balance/core/common/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/screen/email_sign_up_screen.dart';
@@ -200,7 +201,7 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
                     backgroundColor: Pallete.blueColor,
                   ),
                   child: isLoading
-                      ? const CircularProgressIndicator()
+                      ? const Loading()
                       : const Text(
                           'Let\'s Go',
                           style: TextStyle(

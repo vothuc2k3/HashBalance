@@ -9,12 +9,12 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/common/constants/firebase_constants.dart';
 import 'package:toastification/toastification.dart';
 
 import 'package:hash_balance/core/common/constants/constants.dart';
-import 'package:hash_balance/core/common/error_text.dart';
-import 'package:hash_balance/core/common/loading.dart';
+import 'package:hash_balance/core/common/constants/firebase_constants.dart';
+import 'package:hash_balance/core/common/widgets/error_text.dart';
+import 'package:hash_balance/core/common/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/authentication/screen/auth_screen.dart';

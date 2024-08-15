@@ -2,10 +2,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:hash_balance/core/common/error_text.dart';
-import 'package:hash_balance/core/common/loading.dart';
+import 'package:hash_balance/core/common/widgets/error_text.dart';
+import 'package:hash_balance/core/common/widgets/loading.dart';
+import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
+import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/search/controller/search_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
@@ -37,6 +39,7 @@ class SearchCommunityDelegate extends SearchDelegate {
 
   @override
   Widget buildSuggestions(BuildContext context) {
+    final currentUser = ref.watch(userProvider)!;
     if (query.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0),
@@ -133,7 +136,8 @@ class SearchCommunityDelegate extends SearchDelegate {
                         style: const TextStyle(color: Colors.white),
                       ),
                       onTap: () {
-                        navigateToCommunityScreen(context, community);
+                        navigateToCommunityScreen(
+                            community, currentUser.uid, context);
                       },
                     ),
                   );
@@ -191,15 +195,27 @@ class SearchCommunityDelegate extends SearchDelegate {
         );
   }
 
-  void navigateToCommunityScreen(BuildContext context, Community community) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CommunityScreen(
-          community: community,
+  void navigateToCommunityScreen(
+      Community community, String uid, BuildContext context) async {
+    String? membershipStatus;
+    final result = await ref
+        .watch(moderationControllerProvider.notifier)
+        .fetchMembershipStatus(getMembershipId(uid, community.id));
+
+    result.fold((l) {
+      showToast(false, 'Unexpected error happened...');
+    }, (r) async {
+      membershipStatus = r;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CommunityScreen(
+            memberStatus: membershipStatus!,
+            community: community,
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   void navigateToProfileScreen(BuildContext context, UserModel targetUser) {

@@ -82,33 +82,12 @@ class CommunityRepository {
     });
   }
 
-  //EDIT COMMUNITY VISUAL
-  FutureVoid editCommunityProfileOrBannerImage(Community community) async {
-    try {
-      final Map<String, dynamic> communityAfterCast = {
-        'id': community.id,
-        'name': community.name,
-        'profileImage': community.profileImage,
-        'bannerImage': community.bannerImage,
-        'type': community.type,
-        'containsExposureContents': community.containsExposureContents,
-      };
 
-      return right(
-        await _communities.doc(community.id).update(communityAfterCast),
-      );
-    } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
-    } catch (e) {
-      return left(Failures(e.toString()));
-    }
-  }
 
   //LET USER JOIN COMMUNITY
   FutureVoid joinCommunity(CommunityMembership membership) async {
     try {
       await _communityMembership.doc(membership.id).set(membership.toMap());
-
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -180,20 +159,6 @@ class CommunityRepository {
         .where('communityId', isEqualTo: communityId)
         .snapshots()
         .map((snapshot) => snapshot.size);
-  }
-
-  Stream<bool> getModeratorStatus(String membershipId) {
-    return _communityMembership.doc(membershipId).snapshots().map((event) {
-      if (event.data() == null) {
-        return false;
-      }
-      final data = event.data() as Map<String, dynamic>;
-      final role = data['role'] as String;
-      if (role == Constants.moderatorRole) {
-        return true;
-      }
-      return false;
-    });
   }
 
   Stream<Community?> getCommunityById(String communityId) {

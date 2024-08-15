@@ -4,7 +4,7 @@ import 'package:agora_uikit/agora_uikit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
-import 'package:hash_balance/core/common/loading.dart';
+import 'package:hash_balance/core/common/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/models/user_model.dart';
 

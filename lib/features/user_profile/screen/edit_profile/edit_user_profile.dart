@@ -6,19 +6,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
-import 'package:hash_balance/core/common/error_text.dart';
-import 'package:hash_balance/core/common/loading.dart';
+import 'package:hash_balance/core/common/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
-import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
-  final String uid;
+  final UserModel currentUser;
   const EditProfileScreen({
     super.key,
-    required this.uid,
+    required this.currentUser,
   });
 
   @override
@@ -103,269 +101,245 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ref.watch(getUserDataProvider(widget.uid)).when(
-          data: (user) => GestureDetector(
-            onTap: FocusScope.of(context).unfocus,
-            child: isSetting
-                ? const Loading()
-                : Scaffold(
-                    appBar: AppBar(
-                      leading: IconButton(
-                        icon: const Icon(Icons.arrow_back),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                      ),
-                      title: const Text('Edit Profile'),
-                      centerTitle: false,
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            if (isNameValid) {
-                              saveChanges(user);
-                            }
-                          },
-                          child: const Text(
-                            'Save',
-                            style: TextStyle(color: Pallete.whiteColor),
-                          ),
-                        ),
-                      ],
+    return GestureDetector(
+      onTap: FocusScope.of(context).unfocus,
+      child: isSetting
+          ? const Loading()
+          : Scaffold(
+              appBar: AppBar(
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+                title: const Text('Edit Profile'),
+                centerTitle: false,
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      if (isNameValid) {
+                        saveChanges(widget.currentUser);
+                      }
+                    },
+                    child: const Text(
+                      'Save',
+                      style: TextStyle(color: Pallete.whiteColor),
                     ),
-                    body: SingleChildScrollView(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
+                  ),
+                ],
+              ),
+              body: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: 200,
+                        child: Stack(
                           children: [
-                            SizedBox(
-                              height: 200,
-                              child: Stack(
-                                children: [
-                                  DottedBorder(
-                                    borderType: BorderType.RRect,
-                                    radius: const Radius.circular(40),
-                                    dashPattern: const [10, 4],
-                                    strokeCap: StrokeCap.round,
-                                    color: Pallete.darkModeAppTheme.textTheme
-                                        .bodyMedium!.color!,
-                                    child: Container(
-                                      width: double.infinity,
-                                      height: 150,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: InkWell(
-                                        radius: 40.0,
-                                        onTap: () {
-                                          selectBannerImage();
-                                        },
-                                        child: bannerImageFile != null
-                                            ? Image.file(bannerImageFile!)
-                                            : user.bannerImage ==
-                                                    Constants.bannerDefault
-                                                ? const Center(
-                                                    child: Icon(
-                                                      Icons.camera_alt_outlined,
-                                                      size: 40,
-                                                    ),
-                                                  )
-                                                : Image.network(
-                                                    user.bannerImage,
-                                                    loadingBuilder: (context,
-                                                        child,
-                                                        loadingProgress) {
-                                                      if (loadingProgress ==
-                                                          null) {
-                                                        return child;
-                                                      }
-                                                      return Container(
-                                                        width: double.infinity,
-                                                        height: 150,
-                                                        color: Colors.black,
-                                                        child: const Center(
-                                                          child:
-                                                              CircularProgressIndicator(),
-                                                        ),
-                                                      );
-                                                    },
-                                                  ),
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    bottom: 20,
-                                    left: 20,
-                                    child: InkWell(
-                                      onTap: () {
-                                        selectProfileImage();
-                                      },
-                                      child: CircleAvatar(
-                                        radius: 30,
-                                        backgroundImage: profileImageFile !=
-                                                null
-                                            ? FileImage(profileImageFile!)
-                                            : !(Constants.avatarDefault
-                                                    .contains(
-                                                        user.profileImage))
-                                                ? CachedNetworkImageProvider(
-                                                        user.profileImage)
-                                                    as ImageProvider
-                                                : null,
-                                        child: Constants.avatarDefault
-                                                .contains(user.profileImage)
-                                            ? const Icon(
+                            DottedBorder(
+                              borderType: BorderType.RRect,
+                              radius: const Radius.circular(40),
+                              dashPattern: const [10, 4],
+                              strokeCap: StrokeCap.round,
+                              color: Pallete.darkModeAppTheme.textTheme
+                                  .bodyMedium!.color!,
+                              child: Container(
+                                width: double.infinity,
+                                height: 150,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: InkWell(
+                                  radius: 40.0,
+                                  onTap: () {
+                                    selectBannerImage();
+                                  },
+                                  child: bannerImageFile != null
+                                      ? Image.file(bannerImageFile!)
+                                      : widget.currentUser.bannerImage ==
+                                              Constants.bannerDefault
+                                          ? const Center(
+                                              child: Icon(
                                                 Icons.camera_alt_outlined,
-                                                size: 30,
-                                              )
-                                            : null,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                                                size: 40,
+                                              ),
+                                            )
+                                          : Image.network(
+                                              widget.currentUser.bannerImage,
+                                              loadingBuilder: (context, child,
+                                                  loadingProgress) {
+                                                if (loadingProgress == null) {
+                                                  return child;
+                                                }
+                                                return Container(
+                                                  width: double.infinity,
+                                                  height: 150,
+                                                  color: Colors.black,
+                                                  child: const Center(
+                                                    child:
+                                                        CircularProgressIndicator(),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                ),
                               ),
                             ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 3),
-                                //Start of Name input text field
-                                const Padding(
-                                  padding:
-                                      EdgeInsets.only(left: 10, bottom: 10),
-                                  child: Text(
-                                    'Name',
-                                    style: TextStyle(
-                                        fontSize: 15,
-                                        fontStyle: FontStyle.italic),
-                                  ),
+                            Positioned(
+                              bottom: 20,
+                              left: 20,
+                              child: InkWell(
+                                onTap: () {
+                                  selectProfileImage();
+                                },
+                                child: CircleAvatar(
+                                  radius: 30,
+                                  backgroundImage: profileImageFile != null
+                                      ? FileImage(profileImageFile!)
+                                      : !(Constants.avatarDefault.contains(
+                                              widget.currentUser.profileImage))
+                                          ? CachedNetworkImageProvider(widget
+                                              .currentUser
+                                              .profileImage) as ImageProvider
+                                          : null,
+                                  child: Constants.avatarDefault.contains(
+                                          widget.currentUser.profileImage)
+                                      ? const Icon(
+                                          Icons.camera_alt_outlined,
+                                          size: 30,
+                                        )
+                                      : null,
                                 ),
-                                const SizedBox(height: 3),
-                                TextField(
-                                  controller: nameController,
-                                  keyboardType: TextInputType.text,
-                                  autocorrect: false,
-                                  maxLength: 15,
-                                  decoration: InputDecoration(
-                                    labelText: 'Enter your name',
-                                    labelStyle: const TextStyle(
-                                      color: Color(0xFF38464E),
-                                    ),
-                                    hintText: user.name,
-                                    prefixText: '#',
-                                    enabledBorder: const OutlineInputBorder(
-                                      borderSide:
-                                          BorderSide(color: Colors.grey),
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                        color: isNameValid
-                                            ? Colors.grey
-                                            : Colors.red,
-                                      ),
-                                    ),
-                                    errorText:
-                                        isNameValid ? null : 'Invalid name',
-                                  ),
-                                  onChanged: (value) {
-                                    checkName(value, user.uid);
-                                  },
-                                  textInputAction: TextInputAction.done,
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.allow(
-                                      RegExp(r'[a-zA-Z]'),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 10),
-                                const Divider(),
-                                //Start of Bio input text field
-                                const Padding(
-                                  padding:
-                                      EdgeInsets.only(left: 10, bottom: 10),
-                                  child: Text(
-                                    'Bio',
-                                    style: TextStyle(
-                                        fontSize: 15,
-                                        fontStyle: FontStyle.italic),
-                                  ),
-                                ),
-                                const SizedBox(height: 3),
-                                TextField(
-                                  controller: bioController,
-                                  keyboardType: TextInputType.text,
-                                  autocorrect: false,
-                                  maxLength: 50,
-                                  decoration: InputDecoration(
-                                    labelText: 'Enter your bio',
-                                    labelStyle: const TextStyle(
-                                      color: Color(0xFF38464E),
-                                    ),
-                                    hintText:
-                                        'I\'m the best gamer ever lived....',
-                                    enabledBorder: const OutlineInputBorder(
-                                      borderSide:
-                                          BorderSide(color: Colors.grey),
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                        color: isNameValid
-                                            ? Colors.grey
-                                            : Colors.red,
-                                      ),
-                                    ),
-                                  ),
-                                  textInputAction: TextInputAction.done,
-                                ),
-                                const SizedBox(height: 10),
-                                const Divider(),
-                                //Start of Description input text field
-                                const Padding(
-                                  padding:
-                                      EdgeInsets.only(left: 10, bottom: 10),
-                                  child: Text(
-                                    'Description',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 3),
-                                TextField(
-                                  controller: descController,
-                                  keyboardType: TextInputType.text,
-                                  autocorrect: false,
-                                  maxLength: 100,
-                                  decoration: InputDecoration(
-                                    labelText: 'Enter your description',
-                                    labelStyle: const TextStyle(
-                                      color: Color(0xFF38464E),
-                                    ),
-                                    hintText:
-                                        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam risus justo, auctor non libero eget, pharetra suscipit leo. Nam posuere, nisl nec faucibus mattis, lacus quam tincidunt lacus....',
-                                    enabledBorder: const OutlineInputBorder(
-                                      borderSide:
-                                          BorderSide(color: Colors.grey),
-                                    ),
-                                    border: const OutlineInputBorder(
-                                      borderSide:
-                                          BorderSide(color: Colors.grey),
-                                    ),
-                                    errorText:
-                                        isNameValid ? null : 'Invalid name',
-                                  ),
-                                  textInputAction: TextInputAction.done,
-                                ),
-                              ],
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 3),
+                          //Start of Name input text field
+                          const Padding(
+                            padding: EdgeInsets.only(left: 10, bottom: 10),
+                            child: Text(
+                              'Name',
+                              style: TextStyle(
+                                  fontSize: 15, fontStyle: FontStyle.italic),
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          TextField(
+                            controller: nameController,
+                            keyboardType: TextInputType.text,
+                            autocorrect: false,
+                            maxLength: 15,
+                            decoration: InputDecoration(
+                              labelText: 'Enter your name',
+                              labelStyle: const TextStyle(
+                                color: Color(0xFF38464E),
+                              ),
+                              hintText: widget.currentUser.name,
+                              prefixText: '#',
+                              enabledBorder: const OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.grey),
+                              ),
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: isNameValid ? Colors.grey : Colors.red,
+                                ),
+                              ),
+                              errorText: isNameValid ? null : 'Invalid name',
+                            ),
+                            onChanged: (value) {
+                              checkName(value, widget.currentUser.uid);
+                            },
+                            textInputAction: TextInputAction.done,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'[a-zA-Z]'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          const Divider(),
+                          //Start of Bio input text field
+                          const Padding(
+                            padding: EdgeInsets.only(left: 10, bottom: 10),
+                            child: Text(
+                              'Bio',
+                              style: TextStyle(
+                                  fontSize: 15, fontStyle: FontStyle.italic),
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          TextField(
+                            controller: bioController,
+                            keyboardType: TextInputType.text,
+                            autocorrect: false,
+                            maxLength: 50,
+                            decoration: InputDecoration(
+                              labelText: 'Enter your bio',
+                              labelStyle: const TextStyle(
+                                color: Color(0xFF38464E),
+                              ),
+                              hintText: 'I\'m the best gamer ever lived....',
+                              enabledBorder: const OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.grey),
+                              ),
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: isNameValid ? Colors.grey : Colors.red,
+                                ),
+                              ),
+                            ),
+                            textInputAction: TextInputAction.done,
+                          ),
+                          const SizedBox(height: 10),
+                          const Divider(),
+                          //Start of Description input text field
+                          const Padding(
+                            padding: EdgeInsets.only(left: 10, bottom: 10),
+                            child: Text(
+                              'Description',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          TextField(
+                            controller: descController,
+                            keyboardType: TextInputType.text,
+                            autocorrect: false,
+                            maxLength: 100,
+                            decoration: InputDecoration(
+                              labelText: 'Enter your description',
+                              labelStyle: const TextStyle(
+                                color: Color(0xFF38464E),
+                              ),
+                              hintText:
+                                  'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam risus justo, auctor non libero eget, pharetra suscipit leo. Nam posuere, nisl nec faucibus mattis, lacus quam tincidunt lacus....',
+                              enabledBorder: const OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.grey),
+                              ),
+                              border: const OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.grey),
+                              ),
+                              errorText: isNameValid ? null : 'Invalid name',
+                            ),
+                            textInputAction: TextInputAction.done,
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-          ),
-          error: (error, stackTrace) => ErrorText(error: error.toString()),
-          loading: () => const Loading(),
-        );
+                ),
+              ),
+            ),
+    );
   }
 }

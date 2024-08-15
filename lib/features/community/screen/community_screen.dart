@@ -2,66 +2,34 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:hash_balance/core/common/error_text.dart';
-import 'package:hash_balance/core/common/loading.dart';
+import 'package:hash_balance/core/common/widgets/error_text.dart';
+import 'package:hash_balance/core/common/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
-import 'package:hash_balance/features/community/screen/mod_tools/mod_tools_screen.dart';
+import 'package:hash_balance/features/moderation/screen/mod_tools/mod_tools_screen.dart';
 import 'package:hash_balance/features/community/screen/post_container/post_container.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
-import 'package:hash_balance/theme/pallette.dart';
 
 class CommunityScreen extends ConsumerStatefulWidget {
   final Community _community;
+  final String _memberStatus;
 
   const CommunityScreen({
     super.key,
     required Community community,
-  }) : _community = community;
+    required String memberStatus,
+  })  : _community = community,
+        _memberStatus = memberStatus;
 
   @override
   CommunityScreenState createState() => CommunityScreenState();
 }
 
 class CommunityScreenState extends ConsumerState<CommunityScreen> {
-  void _showConfirmationDialog(
-    dynamic leaveCommunity,
-    bool isModerator,
-    String uid,
-    String communityId,
-  ) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Are you leaving?'),
-          content: Text(
-            isModerator
-                ? 'You\'re moderator, make sure your choice!'
-                : 'Do you want to leave this community?',
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('No'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Yes'),
-              onPressed: () {
-                leaveCommunity(uid, communityId);
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
+  String? tempMemberStatus;
 
   void joinCommunity(
     String uid,
@@ -71,15 +39,14 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
         .read(communityControllerProvider.notifier)
         .joinCommunity(uid, communityId);
     result.fold(
-      (l) => showToast(
-        false,
-        l.toString(),
-      ),
-      (r) => showToast(
-        true,
-        r.toString(),
-      ),
-    );
+        (l) => showToast(
+              false,
+              l.toString(),
+            ), (r) {
+      showToast(true, r.toString());
+      tempMemberStatus = 'member';
+      setState(() {});
+    });
   }
 
   void leaveCommunity(
@@ -90,15 +57,14 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
         .read(communityControllerProvider.notifier)
         .leaveCommunity(uid, communityId);
     result.fold(
-      (l) => showToast(
-        false,
-        l.toString(),
-      ),
-      (r) => showToast(
-        true,
-        r.toString(),
-      ),
-    );
+        (l) => showToast(
+              false,
+              l.toString(),
+            ), (r) {
+      showToast(true, r.toString());
+      tempMemberStatus = '';
+      setState(() {});
+    });
   }
 
   void navigateToModToolsScreen() {
@@ -111,44 +77,101 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
   }
 
   @override
+  void initState() {
+    tempMemberStatus = widget._memberStatus;
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final user = ref.watch(userProvider);
+    final currentUser = ref.watch(userProvider)!;
     final memberCount =
         ref.watch(getCommunityMemberCountProvider(widget._community.id));
-    final joined = ref.watch(getMemberStatusProvider(widget._community.id));
-    final isModerator = ref.watch(getModeratorStatus(widget._community.id));
-    final posts =
-        ref.watch(fetchCommunityPostsProvider(widget._community.id));
+    final posts = ref.watch(fetchCommunityPostsProvider(widget._community.id));
+    bool isLoading = ref.watch(communityControllerProvider);
     return Scaffold(
         body: NestedScrollView(
       headerSliverBuilder: (context, innerBoxIsScrolled) {
         return [
           SliverAppBar(
             actions: [
-              isModerator.when(
-                data: (isModerator) {
-                  return isModerator
-                      ? TextButton(
-                          onPressed: () {
-                            navigateToModToolsScreen();
-                          },
-                          child: const Text(
-                            'Mod Tools',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: Colors.white,
-                            ),
-                          ),
-                        )
-                      : const SizedBox.shrink();
-                },
-                error: (error, stackTrace) =>
-                    ErrorText(error: error.toString()),
-                loading: () => const Center(
-                  child: CircularProgressIndicator(),
+              if (tempMemberStatus == 'moderator')
+                TextButton(
+                  onPressed: () {
+                    navigateToModToolsScreen();
+                  },
+                  child: const Text(
+                    'Mod Tools',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-              ),
+              if (tempMemberStatus == 'member')
+                ElevatedButton(
+                  onPressed: isLoading
+                      ? () {}
+                      : () {
+                          leaveCommunity(
+                            currentUser.uid,
+                            widget._community.id,
+                          );
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: isLoading
+                      ? const Loading()
+                      : const Text(
+                          'Leave Community',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
+              if (tempMemberStatus == '')
+                ElevatedButton(
+                  onPressed: isLoading
+                      ? () {}
+                      : () {
+                          joinCommunity(
+                            currentUser.uid,
+                            widget._community.id,
+                          );
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: isLoading
+                      ? const Loading()
+                      : const Text(
+                          'Join Community',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
             ],
             expandedHeight: 150,
             flexibleSpace: Stack(
@@ -189,60 +212,15 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  isModerator.when(
-                    data: (isModerator) {
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '#=${widget._community.name}',
-                            style: const TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
-                          joined.when(
-                            data: (joined) {
-                              return OutlinedButton(
-                                onPressed: joined
-                                    ? () => _showConfirmationDialog(
-                                          leaveCommunity,
-                                          isModerator,
-                                          user!.uid,
-                                          widget._community.name,
-                                        )
-                                    : () => joinCommunity(
-                                        user!.uid, widget._community.id),
-                                style: ElevatedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(30),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 25),
-                                ),
-                                child: joined
-                                    ? const Text(
-                                        'Joined',
-                                        style: TextStyle(
-                                          color: Pallete.whiteColor,
-                                        ),
-                                      )
-                                    : const Text(
-                                        'Join',
-                                        style: TextStyle(
-                                          color: Pallete.whiteColor,
-                                        ),
-                                      ),
-                              );
-                            },
-                            error: (error, stackTrace) =>
-                                ErrorText(error: error.toString()),
-                            loading: () => const Loading(),
-                          )
-                        ],
-                      );
-                    },
-                    error: (error, stackTrace) =>
-                        ErrorText(error: error.toString()),
-                    loading: () => const Loading(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '#${widget._community.name}',
+                        style: const TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                    ],
                   ),
                   memberCount.when(
                     data: (count) {
@@ -273,18 +251,18 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
             itemBuilder: (context, index) {
               final post = posts[index];
               return ref.watch(getUserByUidProvider(post.uid)).when(
-                    data: (user) {
+                    data: (author) {
                       return ref
                           .watch(getCommunityByIdProvider(post.communityId))
                           .when(
                             data: (community) {
                               if (community == null) {
                                 return const ErrorText(
-                                  error: 'Unexpected Error Happenned....',
+                                  error: 'Unexpected Error Happened....',
                                 );
                               }
                               return PostContainer(
-                                user: user,
+                                author: author,
                                 post: post,
                                 community: community,
                               );

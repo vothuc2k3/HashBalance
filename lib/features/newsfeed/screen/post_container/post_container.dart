@@ -1,12 +1,14 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/common/splash/splash_screen.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
+import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:mdi/mdi.dart';
 import 'package:video_player/video_player.dart';
 
-import 'package:hash_balance/core/common/loading.dart';
+import 'package:hash_balance/core/common/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
@@ -38,6 +40,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   bool _isPlaying = false;
   String? _videoDuration;
   String? _currentPosition;
+  bool? isLoading;
 
   void _togglePlayPause() {
     setState(() {
@@ -86,7 +89,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
 
   void _handleUnfriend() {}
 
-  void _navigateToCommentScreen(String postId) {
+  void _navigateToCommentScreen() {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -97,14 +100,34 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     );
   }
 
-  void _navigateToCommunityScreen(Community community) {
+  void _navigateToCommunityScreen(Community community, String uid) async {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => CommunityScreen(
-          community: community,
-        ),
+        builder: (context) => const SplashScreen(),
       ),
+    );
+    String? membershipStatus;
+    final result = await ref
+        .watch(moderationControllerProvider.notifier)
+        .fetchMembershipStatus(getMembershipId(uid, community.id));
+
+    result.fold(
+      (l) {
+        showToast(false, 'Unexpected error happened...');
+      },
+      (r) async {
+        membershipStatus = r;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CommunityScreen(
+              memberStatus: membershipStatus!,
+              community: community,
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -205,7 +228,8 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                   children: [
                     InkWell(
                       onTap: () {
-                        _navigateToCommunityScreen(widget.community);
+                        _navigateToCommunityScreen(
+                            widget.community, currentUser.uid);
                       },
                       child: CircleAvatar(
                         backgroundImage: NetworkImage(
@@ -326,7 +350,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
               : const SizedBox.shrink(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: _buildPostStat(user: widget.author, postId: widget.post.id),
+            child: _buildPostStat(user: widget.author),
           ),
         ],
       ),
@@ -383,7 +407,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     );
   }
 
-  Widget _buildPostStat({required UserModel user, required String postId}) {
+  Widget _buildPostStat({required UserModel user}) {
     return Column(
       children: [
         Row(
@@ -395,7 +419,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
             ref.watch(getPostCommentCountProvider(widget.post.id)).whenOrNull(
                   data: (count) {
                     return InkWell(
-                      onTap: () => _navigateToCommentScreen(widget.post.id),
+                      onTap: () => _navigateToCommentScreen(),
                       child: Text(
                         '$count Comments',
                         style: TextStyle(
@@ -425,7 +449,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
           post: widget.post,
           onVote: votePost,
           onComment: () {
-            _navigateToCommentScreen(widget.post.id);
+            _navigateToCommentScreen();
           },
           onShare: () {},
         ),
@@ -433,8 +457,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
           thickness: 0.5,
           indent: 5,
         ),
-
-        //GET TOP COMMENT PROVIDER
       ],
     );
   }

@@ -93,7 +93,7 @@ class Community {
         type.hashCode ^
         createdAt.hashCode ^
         containsExposureContents.hashCode;
-  } 
+  }
 
   String toJson() => json.encode(toMap());
 
