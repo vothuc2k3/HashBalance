@@ -15,7 +15,7 @@ final userControllerProvider = StateNotifierProvider<UserController, bool>(
 );
 
 final getUserByUidProvider = StreamProvider.family((ref, String uid) {
-  return ref.read(userControllerProvider.notifier).getUserByUid(uid);
+  return ref.watch(userControllerProvider.notifier).getUserByUid(uid);
 });
 
 final getUserDeviceTokensProvider = FutureProvider.family((ref, String uid) =>

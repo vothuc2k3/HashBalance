@@ -251,4 +251,19 @@ class PostRepository {
       },
     );
   }
+
+  Future<Either<Failures, Post?>> fetchPostByPostId(String postId) async {
+    try {
+      final postDoc = await _posts.doc(postId).get();
+      if (postDoc.exists) {
+        return right(Post.fromMap(postDoc.data() as Map<String, dynamic>));
+      } else {
+        return right(null);
+      }
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
 }

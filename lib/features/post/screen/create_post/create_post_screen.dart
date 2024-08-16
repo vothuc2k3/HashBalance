@@ -32,17 +32,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   bool isSelectingImage = false;
   bool isSelectingVideo = false;
   VideoPlayerController? _videoPlayerController;
-
   bool isCreatingPost = false;
-
-  @override
-  void dispose() {
-    contentController.dispose();
-    if (_videoPlayerController != null) {
-      _videoPlayerController!.dispose();
-    }
-    super.dispose();
-  }
 
   void selectImage() async {
     final result = await pickImage();
@@ -92,6 +82,15 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     if (bottomNavState != null) {
       bottomNavState.onTabTapped(1);
     }
+  }
+
+  @override
+  void dispose() {
+    contentController.dispose();
+    if (_videoPlayerController != null) {
+      _videoPlayerController!.dispose();
+    }
+    super.dispose();
   }
 
   @override

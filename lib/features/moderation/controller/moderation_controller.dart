@@ -10,6 +10,7 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/moderation/repository/moderation_repository.dart';
 import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/post_model.dart';
 
 final getMembershipStatusProvider =
     StreamProvider.family.autoDispose((ref, String communityId) {
@@ -111,5 +112,20 @@ class ModerationController extends StateNotifier<bool> {
 
   FutureString fetchMembershipStatus(String membershipId) async {
     return _moderationRepository.fetchMembershipStatus(membershipId);
+  }
+
+  //PIN POST
+  FutureVoid pinPost({required Community community, required Post post}) async {
+    try {
+      final result = await _moderationRepository.pinPost(
+        community: community,
+        post: post,
+      );
+      return result;
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
   }
 }

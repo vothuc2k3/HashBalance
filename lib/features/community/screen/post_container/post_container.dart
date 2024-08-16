@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
+import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
+import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 import 'package:mdi/mdi.dart';
 import 'package:video_player/video_player.dart';
 
@@ -15,15 +18,19 @@ import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 class PostContainer extends ConsumerStatefulWidget {
+  final bool isMod;
   final UserModel author;
   final Post post;
   final Community community;
+  final bool isPinnedPost;
 
   const PostContainer({
     super.key,
+    required this.isMod,
     required this.author,
     required this.post,
     required this.community,
+    required this.isPinnedPost,
   });
 
   @override
@@ -69,6 +76,44 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     );
   }
 
+  void _navigateToOtherUserScreen(String currentUid) {
+    switch (currentUid == widget.author.uid) {
+      case true:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => UserProfileScreen(
+              user: widget.author,
+            ),
+          ),
+        );
+        break;
+      case false:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OtherUserProfileScreen(
+              targetUser: widget.author,
+            ),
+          ),
+        );
+        break;
+    }
+  }
+
+  void _handlePinPost() async {
+    final result =
+        await ref.watch(moderationControllerProvider.notifier).pinPost(
+              community: widget.community,
+              post: widget.post,
+            );
+    result.fold((l) => showToast(false, l.message), (r) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
   void _handleBlock() {}
 
   void _handleDelete() {}
@@ -83,7 +128,16 @@ class _PostContainerState extends ConsumerState<PostContainer> {
       builder: (context) {
         return SafeArea(
           child: Wrap(
-            children: <Widget>[
+            children: [
+              if (widget.isMod)
+                ListTile(
+                  leading: const Icon(Icons.person_remove),
+                  title: const Text('Pin this post'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _handlePinPost();
+                  },
+                ),
               ListTile(
                 leading: const Icon(Icons.person_remove),
                 title: Text('Unfollow $postUsername'),
@@ -192,13 +246,13 @@ class _PostContainerState extends ConsumerState<PostContainer> {
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-        color: Colors.black,
+        color: widget.isPinnedPost ? Colors.blueGrey[900] : Colors.black,
         borderRadius: BorderRadius.circular(8),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Colors.white,
+            color: widget.isPinnedPost ? Colors.orangeAccent : Colors.white,
             blurRadius: 6,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -308,13 +362,16 @@ class _PostContainerState extends ConsumerState<PostContainer> {
 
   Widget _buildPostHeader(
     Post post,
-    UserModel user,
+    UserModel author,
   ) {
     return Row(
       children: [
-        CircleAvatar(
-          backgroundImage: CachedNetworkImageProvider(
-            user.profileImage,
+        InkWell(
+          onTap: () => _navigateToOtherUserScreen(currentUser!.uid),
+          child: CircleAvatar(
+            backgroundImage: CachedNetworkImageProvider(
+              author.profileImage,
+            ),
           ),
         ),
         const SizedBox(width: 8),
@@ -323,7 +380,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '#${user.name}',
+                '#${author.name}',
                 style:
                     const TextStyle(fontWeight: FontWeight.w600, fontSize: 11),
               ),
@@ -441,15 +498,17 @@ class PostActions extends ConsumerWidget {
             return count['upvotes'];
           }),
           color: ref.watch(getPostVoteStatusProvider(_post)).whenOrNull(
-              data: (status) {
-            if (status == null) {
-              return Colors.grey[600];
-            } else if (status) {
-              return Colors.orange;
-            } else {
-              return Colors.grey[600];
-            }
-          }),
+            data: (status) {
+              switch (status) {
+                case true:
+                  return Colors.orange;
+                case false:
+                  return Colors.grey[600];
+                case null:
+                  return Colors.grey[600];
+              }
+            },
+          ),
           onTap: _onVote,
           isUpvote: true,
         ),
@@ -461,12 +520,13 @@ class PostActions extends ConsumerWidget {
           }),
           color: ref.watch(getPostVoteStatusProvider(_post)).whenOrNull(
               data: (status) {
-            if (status == null) {
-              return Colors.grey[600];
-            } else if (!status) {
-              return Colors.blue;
-            } else {
-              return Colors.grey[600];
+            switch (status) {
+              case true:
+                return Colors.grey[600];
+              case false:
+                return Colors.blue;
+              case null:
+                return Colors.grey[600];
             }
           }),
           onTap: _onVote,

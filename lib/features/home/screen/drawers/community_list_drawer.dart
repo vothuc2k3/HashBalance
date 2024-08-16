@@ -9,22 +9,17 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/community/screen/create_community_screen.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
+import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
-
 import 'package:hash_balance/core/common/widgets/error_text.dart';
 import 'package:hash_balance/core/common/widgets/loading.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
+import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
-class CommunityListDrawer extends ConsumerStatefulWidget {
+class CommunityListDrawer extends ConsumerWidget {
   const CommunityListDrawer({super.key});
 
-  @override
-  ConsumerState<CommunityListDrawer> createState() =>
-      _CommunityListDrawerState();
-}
-
-class _CommunityListDrawerState extends ConsumerState<CommunityListDrawer> {
   void navigateToCreateCommunityScreen(BuildContext context) {
     Navigator.push(
       context,
@@ -34,7 +29,12 @@ class _CommunityListDrawerState extends ConsumerState<CommunityListDrawer> {
     );
   }
 
-  void _navigateToCommunityScreen(Community community, String uid) async {
+  void _navigateToCommunityScreen(
+    BuildContext context,
+    WidgetRef ref,
+    Community community,
+    String uid,
+  ) async {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -42,9 +42,16 @@ class _CommunityListDrawerState extends ConsumerState<CommunityListDrawer> {
       ),
     );
     String? membershipStatus;
+    Post? pinnedPost;
     final result = await ref
         .watch(moderationControllerProvider.notifier)
         .fetchMembershipStatus(getMembershipId(uid, community.id));
+    if (community.pinPostId != null) {
+      final pinnedPostResult = await ref
+          .watch(postControllerProvider.notifier)
+          .fetchPostByPostId(community.pinPostId!);
+      pinnedPostResult.fold((_) {}, (r) => pinnedPost = r);
+    }
 
     result.fold(
       (l) {
@@ -52,11 +59,12 @@ class _CommunityListDrawerState extends ConsumerState<CommunityListDrawer> {
       },
       (r) async {
         membershipStatus = r;
-        Navigator.pushReplacement(
+        await Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => CommunityScreen(
               memberStatus: membershipStatus!,
+              pinnedPost: pinnedPost,
               community: community,
             ),
           ),
@@ -66,9 +74,7 @@ class _CommunityListDrawerState extends ConsumerState<CommunityListDrawer> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    // ignore: unused_result
-    ref.refresh(userCommunitiesProvider);
+  Widget build(BuildContext context, WidgetRef ref) {
     final currentUser = ref.watch(userProvider)!;
 
     return Drawer(
@@ -127,6 +133,8 @@ class _CommunityListDrawerState extends ConsumerState<CommunityListDrawer> {
                               ),
                               onTap: () {
                                 _navigateToCommunityScreen(
+                                  context,
+                                  ref,
                                   community,
                                   currentUser.uid,
                                 );
@@ -197,7 +205,7 @@ class _CommunityListDrawerState extends ConsumerState<CommunityListDrawer> {
                               ),
                               onTap: () {
                                 _navigateToCommunityScreen(
-                                    community, currentUser.uid);
+                                    context, ref, community, currentUser.uid);
                               },
                             );
                           },

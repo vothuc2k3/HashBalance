@@ -9,16 +9,18 @@ class Community {
   final String profileImage;
   final String bannerImage;
   final String type;
-  final Timestamp createdAt;
   final bool containsExposureContents;
+  final String? pinPostId;
+  final Timestamp createdAt;
   Community({
     required this.id,
     required this.name,
     required this.profileImage,
     required this.bannerImage,
     required this.type,
-    required this.createdAt,
     required this.containsExposureContents,
+    this.pinPostId,
+    required this.createdAt,
   });
 
   Community copyWith({
@@ -27,8 +29,9 @@ class Community {
     String? profileImage,
     String? bannerImage,
     String? type,
-    Timestamp? createdAt,
     bool? containsExposureContents,
+    String? pinPostId,
+    Timestamp? createdAt,
   }) {
     return Community(
       id: id ?? this.id,
@@ -36,9 +39,10 @@ class Community {
       profileImage: profileImage ?? this.profileImage,
       bannerImage: bannerImage ?? this.bannerImage,
       type: type ?? this.type,
-      createdAt: createdAt ?? this.createdAt,
       containsExposureContents:
           containsExposureContents ?? this.containsExposureContents,
+      pinPostId: pinPostId ?? this.pinPostId,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 
@@ -49,8 +53,9 @@ class Community {
       'profileImage': profileImage,
       'bannerImage': bannerImage,
       'type': type,
-      'createdAt': createdAt,
       'containsExposureContents': containsExposureContents,
+      'pinPostId': pinPostId,
+      'createdAt': createdAt,
     };
   }
 
@@ -61,14 +66,15 @@ class Community {
       profileImage: map['profileImage'] as String,
       bannerImage: map['bannerImage'] as String,
       type: map['type'] as String,
-      createdAt: map['createdAt'] as Timestamp,
       containsExposureContents: map['containsExposureContents'] as bool,
+      pinPostId: map['pinPostId'] != null ? map['pinPostId'] as String : '',
+      createdAt: map['createdAt'] as Timestamp,
     );
   }
 
   @override
   String toString() {
-    return 'Community(id: $id, name: $name, profileImage: $profileImage, bannerImage: $bannerImage, type: $type, createdAt: $createdAt, containsExposureContents: $containsExposureContents)';
+    return 'Community(id: $id, name: $name, profileImage: $profileImage, bannerImage: $bannerImage, type: $type, containsExposureContents: $containsExposureContents, pinPostId: $pinPostId, createdAt: $createdAt)';
   }
 
   @override
@@ -80,8 +86,9 @@ class Community {
         other.profileImage == profileImage &&
         other.bannerImage == bannerImage &&
         other.type == type &&
-        other.createdAt == createdAt &&
-        other.containsExposureContents == containsExposureContents;
+        other.containsExposureContents == containsExposureContents &&
+        other.pinPostId == pinPostId &&
+        other.createdAt == createdAt;
   }
 
   @override
@@ -91,8 +98,9 @@ class Community {
         profileImage.hashCode ^
         bannerImage.hashCode ^
         type.hashCode ^
-        createdAt.hashCode ^
-        containsExposureContents.hashCode;
+        containsExposureContents.hashCode ^
+        pinPostId.hashCode ^
+        createdAt.hashCode;
   }
 
   String toJson() => json.encode(toMap());

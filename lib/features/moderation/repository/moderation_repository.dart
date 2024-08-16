@@ -7,6 +7,7 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/post_model.dart';
 
 final moderationRepositoryProvider = Provider((ref) {
   return ModerationRepository(firestore: ref.watch(firebaseFirestoreProvider));
@@ -74,6 +75,23 @@ class ModerationRepository {
       return right(
         await _communities.doc(community.id).update(communityAfterCast),
       );
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  //PIN POST
+  FutureVoid pinPost({
+    required Community community,
+    required Post post,
+  }) async {
+    try {
+      await _communities.doc(community.id).update({
+        'pinPostId': post.id,
+      });
+      return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {

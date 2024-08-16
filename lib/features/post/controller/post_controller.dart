@@ -71,6 +71,8 @@ class PostController extends StateNotifier<bool> {
             status: 'Approved',
             upvoteCount: 0,
             downvoteCount: 0,
+            commentCount: 0,
+            shareCount: 0,
             isEdited: false,
             createdAt: Timestamp.now(),
             id: await generateRandomId(),
@@ -89,6 +91,8 @@ class PostController extends StateNotifier<bool> {
             isEdited: false,
             upvoteCount: 0,
             downvoteCount: 0,
+            commentCount: 0,
+            shareCount: 0,
             createdAt: Timestamp.now(),
             id: await generateRandomId(),
           );
@@ -178,5 +182,15 @@ class PostController extends StateNotifier<bool> {
 
   Stream<List<Post>?> getPendingPosts(String communityId) {
     return _postRepository.getPendingPosts(communityId);
+  }
+
+  Future<Either<Failures, Post?>> fetchPostByPostId(String postId) async {
+    try {
+      return await _postRepository.fetchPostByPostId(postId);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
   }
 }

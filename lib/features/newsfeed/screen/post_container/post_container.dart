@@ -5,6 +5,7 @@ import 'package:hash_balance/core/common/splash/splash_screen.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
+import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 import 'package:mdi/mdi.dart';
 import 'package:video_player/video_player.dart';
 
@@ -97,7 +98,10 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     );
   }
 
-  void _navigateToCommunityScreen(Community community, String uid) async {
+  void _navigateToCommunityScreen(
+    Community community,
+    String uid,
+  ) async {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -105,9 +109,16 @@ class _PostContainerState extends ConsumerState<PostContainer> {
       ),
     );
     String? membershipStatus;
+    Post? pinnedPost;
     final result = await ref
         .watch(moderationControllerProvider.notifier)
         .fetchMembershipStatus(getMembershipId(uid, community.id));
+    if (community.pinPostId != null) {
+      final pinnedPostResult = await ref
+          .watch(postControllerProvider.notifier)
+          .fetchPostByPostId(community.pinPostId!);
+      pinnedPostResult.fold((_) {}, (r) => pinnedPost = r);
+    }
 
     result.fold(
       (l) {
@@ -115,11 +126,12 @@ class _PostContainerState extends ConsumerState<PostContainer> {
       },
       (r) async {
         membershipStatus = r;
-        Navigator.pushReplacement(
+        await Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => CommunityScreen(
               memberStatus: membershipStatus!,
+              pinnedPost: pinnedPost,
               community: community,
             ),
           ),
@@ -128,15 +140,29 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     );
   }
 
-  void _navigateToOtherUserScreen() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => OtherUserProfileScreen(
-          targetUser: widget.author,
-        ),
-      ),
-    );
+  void _navigateToOtherUserScreen(String currentUid) {
+    switch (currentUid == widget.author.uid) {
+      case true:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => UserProfileScreen(
+              user: widget.author,
+            ),
+          ),
+        );
+        break;
+      case false:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OtherUserProfileScreen(
+              targetUser: widget.author,
+            ),
+          ),
+        );
+        break;
+    }
   }
 
   @override
@@ -367,7 +393,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
       children: [
         InkWell(
           onTap: () {
-            _navigateToOtherUserScreen();
+            _navigateToOtherUserScreen(currentUser!.uid);
           },
           child: CircleAvatar(
             backgroundImage: CachedNetworkImageProvider(

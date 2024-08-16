@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -6,6 +7,7 @@ class Comment {
   final String id;
   final String uid;
   final String postId;
+  final String? parentCommentId;
   final String? content;
   final int upvoteCount;
   final int downvoteCount;
@@ -14,6 +16,7 @@ class Comment {
     required this.id,
     required this.uid,
     required this.postId,
+    this.parentCommentId,
     this.content,
     required this.upvoteCount,
     required this.downvoteCount,
@@ -24,6 +27,7 @@ class Comment {
     String? id,
     String? uid,
     String? postId,
+    String? parentCommentId,
     String? content,
     int? upvoteCount,
     int? downvoteCount,
@@ -33,6 +37,7 @@ class Comment {
       id: id ?? this.id,
       uid: uid ?? this.uid,
       postId: postId ?? this.postId,
+      parentCommentId: parentCommentId ?? this.parentCommentId,
       content: content ?? this.content,
       upvoteCount: upvoteCount ?? this.upvoteCount,
       downvoteCount: downvoteCount ?? this.downvoteCount,
@@ -45,6 +50,7 @@ class Comment {
       'id': id,
       'uid': uid,
       'postId': postId,
+      'parentCommentId': parentCommentId,
       'content': content,
       'upvoteCount': upvoteCount,
       'downvoteCount': downvoteCount,
@@ -57,6 +63,8 @@ class Comment {
       id: map['id'] as String,
       uid: map['uid'] as String,
       postId: map['postId'] as String,
+      parentCommentId:
+          map['parentCommentId'] != '' ? map['parentCommentId'] as String : '',
       content: map['content'] != null ? map['content'] as String : '',
       upvoteCount: map['upvoteCount'] as int,
       downvoteCount: map['downvoteCount'] as int,
@@ -71,7 +79,7 @@ class Comment {
 
   @override
   String toString() {
-    return 'Comment(id: $id, uid: $uid, postId: $postId, content: $content, upvoteCount: $upvoteCount, downvoteCount: $downvoteCount, createdAt: $createdAt)';
+    return 'Comment(id: $id, uid: $uid, postId: $postId, parentCommentId: $parentCommentId, content: $content, upvoteCount: $upvoteCount, downvoteCount: $downvoteCount, createdAt: $createdAt)';
   }
 
   @override
@@ -81,6 +89,7 @@ class Comment {
     return other.id == id &&
         other.uid == uid &&
         other.postId == postId &&
+        other.parentCommentId == parentCommentId &&
         other.content == content &&
         other.upvoteCount == upvoteCount &&
         other.downvoteCount == downvoteCount &&
@@ -92,6 +101,7 @@ class Comment {
     return id.hashCode ^
         uid.hashCode ^
         postId.hashCode ^
+        parentCommentId.hashCode ^
         content.hashCode ^
         upvoteCount.hashCode ^
         downvoteCount.hashCode ^
