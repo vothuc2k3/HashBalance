@@ -3,7 +3,7 @@ import 'package:hash_balance/features/community/screen/community_list_screen.dar
 import 'package:hash_balance/features/message/screen/message_list_screen.dart';
 import 'package:hash_balance/features/newsfeed/screen/newsfeed_screen.dart';
 import 'package:hash_balance/features/notification/screen/notification_screen.dart';
-import 'package:hash_balance/features/post/screen/create_post/create_post_screen.dart';
+import 'package:hash_balance/features/post/screen/create_post_screen.dart';
 
 class Constants {
   static const logoPath = 'assets/images/logo.png';
@@ -71,5 +71,6 @@ class Constants {
 
   static String agoraAppId = 'a9942d0368fc4cdf9e59df9df19899c9';
 
-  static String domain = 'https://hash-balance-backend-6cdfcc4bcae7.herokuapp.com';
+  static String domain =
+      'https://hash-balance-backend-6cdfcc4bcae7.herokuapp.com';
 }

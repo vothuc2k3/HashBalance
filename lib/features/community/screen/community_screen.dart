@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:hash_balance/core/common/widgets/error_text.dart';
@@ -7,9 +8,10 @@ import 'package:hash_balance/core/common/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
-import 'package:hash_balance/features/moderation/screen/mod_tools/mod_tools_screen.dart';
 import 'package:hash_balance/features/community/screen/post_container/post_container.dart';
+import 'package:hash_balance/features/moderation/screen/mod_tools/mod_tools_screen.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
+import 'package:hash_balance/features/post/screen/create_post_screen.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/post_model.dart';
@@ -35,7 +37,7 @@ class CommunityScreen extends ConsumerStatefulWidget {
 class CommunityScreenState extends ConsumerState<CommunityScreen> {
   String? tempMemberStatus;
 
-  void _onJoinCommunity(
+  _onJoinCommunity(
     String uid,
     String communityId,
   ) async {
@@ -48,12 +50,16 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
               l.toString(),
             ), (r) {
       showToast(true, r.toString());
-      tempMemberStatus = 'member';
-      setState(() {});
+
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          tempMemberStatus = 'member';
+        });
+      });
     });
   }
 
-  void _leaveCommunity(
+  _leaveCommunity(
     String uid,
     String communityId,
   ) async {
@@ -66,12 +72,15 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
               l.toString(),
             ), (r) {
       showToast(true, r.toString());
-      tempMemberStatus = '';
-      setState(() {});
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          tempMemberStatus = '';
+        });
+      });
     });
   }
 
-  void _navigateToModToolsScreen() {
+  _navigateToModToolsScreen() {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -80,15 +89,88 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     );
   }
 
-  @override
-  void initState() {
-    tempMemberStatus = widget._memberStatus;
-    super.initState();
+  _navigateToCreatePostScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CreatePostScreen(
+          chosenCommunity: widget._community,
+          isFromCommunityScreen: true,
+        ),
+      ),
+    );
+  }
+
+  _showImage(String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.all(10),
+          child: GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: Center(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.9,
+                  maxHeight: MediaQuery.of(context).size.height * 0.9,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.5),
+                      spreadRadius: 5,
+                      blurRadius: 7,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.contain,
+                          placeholder: (context, url) => Container(
+                            color: Colors.black,
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) =>
+                              const Icon(Icons.error),
+                        ),
+                      ),
+                    ),
+                    const Positioned(
+                      top: 16,
+                      right: 16,
+                      child: Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 30,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void initState() {
+    super.initState();
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      tempMemberStatus = widget._memberStatus;
+    });
   }
 
   @override
@@ -106,9 +188,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                 actions: [
                   if (tempMemberStatus == 'moderator')
                     TextButton(
-                      onPressed: () {
-                        _navigateToModToolsScreen();
-                      },
+                      onPressed: _navigateToModToolsScreen,
                       child: const Text(
                         'Mod Tools',
                         style: TextStyle(
@@ -178,28 +258,28 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                     ),
                 ],
                 expandedHeight: 150,
-                flexibleSpace: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: Image.network(
-                        widget._community.bannerImage,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) {
-                            return child;
-                          }
-                          return Container(
+                flexibleSpace: InkWell(
+                  onTap: () => _showImage(widget._community.bannerImage),
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: CachedNetworkImage(
+                          imageUrl: widget._community.bannerImage,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
                             width: double.infinity,
                             height: 150,
                             color: Colors.black,
                             child: const Center(
                               child: CircularProgressIndicator(),
                             ),
-                          );
-                        },
+                          ),
+                          errorWidget: (context, url, error) =>
+                              const Icon(Icons.error),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               SliverPadding(
@@ -207,13 +287,24 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                 sliver: SliverList(
                   delegate: SliverChildListDelegate(
                     [
-                      Align(
-                        alignment: Alignment.topLeft,
-                        child: CircleAvatar(
-                          backgroundImage: CachedNetworkImageProvider(
-                              widget._community.profileImage),
-                          radius: 35,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          InkWell(
+                            onTap: () =>
+                                _showImage(widget._community.profileImage),
+                            child: CircleAvatar(
+                              backgroundImage: CachedNetworkImageProvider(
+                                  widget._community.profileImage),
+                              radius: 35,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: _navigateToCreatePostScreen,
+                            icon: const Icon(Icons.add, color: Colors.white),
+                            tooltip: 'Create a new post',
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       Row(

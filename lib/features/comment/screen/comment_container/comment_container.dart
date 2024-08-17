@@ -31,7 +31,7 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
 
   void _voteComment(bool userVote) async {
     final result = await ref
-        .read(commentControllerProvider.notifier)
+        .watch(commentControllerProvider.notifier)
         .voteComment(widget.comment, userVote);
     result.fold((l) {
       showToast(false, l.toString());
@@ -96,13 +96,13 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
                 _buildPostHeader(widget.comment, widget.author),
                 const SizedBox(height: 4),
                 Text(widget.comment.content!),
+                const SizedBox(height: 8),
+                CommentActions(
+                  comment: widget.comment,
+                  onVote: _voteComment,
+                  onReply: () => _showReplyDialog(context),
+                ),
               ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: _buildPostStat(
-              user: widget.author,
             ),
           ),
         ],
@@ -158,40 +158,37 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
     );
   }
 
-  Widget _buildPostStat({required UserModel user}) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            const SizedBox(width: 4),
-            const Expanded(
-              child: Text(''),
+  void _showReplyDialog(BuildContext context) {
+    final replyController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Reply to Comment'),
+          content: TextField(
+            controller: replyController,
+            decoration: const InputDecoration(
+              hintText: 'Type your reply...',
             ),
-            InkWell(
-              child: Text(
-                'Comments',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 10,
-                ),
-              ),
+            maxLines: 3,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
             ),
-            const SizedBox(width: 8),
+            ElevatedButton(
+              onPressed: () {
+                if (replyController.text.isNotEmpty) {
+                  //TODO: REPLY HERE
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Reply'),
+            ),
           ],
-        ),
-        const Divider(
-          thickness: 0.5,
-          indent: 5,
-        ),
-        CommentActions(
-          comment: widget.comment,
-          onVote: _voteComment,
-        ),
-        const Divider(
-          thickness: 0.5,
-          indent: 5,
-        ),
-      ],
+        );
+      },
     );
   }
 }
@@ -199,13 +196,16 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
 class CommentActions extends ConsumerWidget {
   final Comment _comment;
   final Function _onVote;
+  final Function _onReply;
 
   const CommentActions({
     super.key,
     required Comment comment,
     required Function onVote,
+    required Function onReply,
   })  : _comment = comment,
-        _onVote = onVote;
+        _onVote = onVote,
+        _onReply = onReply;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -214,11 +214,12 @@ class CommentActions extends ConsumerWidget {
       children: [
         _buildVoteButton(
           icon: Icons.arrow_upward_rounded,
-          count: ref.watch(getCommentVoteCountProvider(_comment)).whenOrNull(
+          count: ref.watch(getCommentVoteCountProvider(_comment.id)).whenOrNull(
               data: (count) {
             return count['upvotes'];
           }),
-          color: ref.watch(getCommentVoteStatusProvider(_comment)).whenOrNull(
+          color:
+              ref.watch(getCommentVoteStatusProvider(_comment.id)).whenOrNull(
             data: (status) {
               switch (status) {
                 case true:
@@ -230,17 +231,17 @@ class CommentActions extends ConsumerWidget {
               }
             },
           ),
-          onTap: _onVote,
-          isUpvote: true,
+          onTap: () => _onVote(true),
         ),
         _buildVoteButton(
           icon: Mdi.arrowDown,
-          count: ref.watch(getCommentVoteCountProvider(_comment)).whenOrNull(
+          count: ref.watch(getCommentVoteCountProvider(_comment.id)).whenOrNull(
               data: (count) {
             return count['downvotes'];
           }),
-          color: ref.watch(getCommentVoteStatusProvider(_comment)).whenOrNull(
-              data: (status) {
+          color: ref
+              .watch(getCommentVoteStatusProvider(_comment.id))
+              .whenOrNull(data: (status) {
             switch (status) {
               case true:
                 return Colors.grey[600];
@@ -250,8 +251,11 @@ class CommentActions extends ConsumerWidget {
                 return Colors.grey[600];
             }
           }),
-          onTap: _onVote,
-          isUpvote: false,
+          onTap: () => _onVote(false),
+        ),
+        IconButton(
+          icon: const Icon(Icons.reply, color: Colors.white),
+          onPressed: () => _onReply(),
         ),
       ],
     );
@@ -261,11 +265,10 @@ class CommentActions extends ConsumerWidget {
     required IconData icon,
     required int? count,
     required Color? color,
-    required Function onTap,
-    required bool isUpvote,
+    required VoidCallback onTap,
   }) {
     return InkWell(
-      onTap: () => onTap(isUpvote),
+      onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
           color: Colors.black,

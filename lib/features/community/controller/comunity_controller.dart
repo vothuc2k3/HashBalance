@@ -74,7 +74,7 @@ class CommunityController extends StateNotifier<bool> {
         super(false);
 
   //CREATE A WHOLE NEW COMMUNITY
-  void createCommunity(
+  FutureString createCommunity(
     BuildContext context,
     String name,
     String type,
@@ -87,6 +87,7 @@ class CommunityController extends StateNotifier<bool> {
       name: name,
       profileImage: Constants
           .avatarDefault[Random().nextInt(Constants.avatarDefault.length)],
+          pinPostId: '',
       bannerImage: Constants.bannerDefault,
       type: type,
       containsExposureContents: containsExposureContents,
@@ -97,15 +98,7 @@ class CommunityController extends StateNotifier<bool> {
 
     final result = await _communityRepository.createCommunity(community);
 
-    result.fold(
-      (error) {
-        return showToast(false, error.message);
-      },
-      (right) {
-        showToast(true, 'Your Community Created Successfully. Have Fun!');
-        Navigator.pop(context);
-      },
-    );
+    return result;
   }
 
   //GET THE COMMUNITIES BY CURRENT USER

@@ -13,8 +13,8 @@ import 'package:hash_balance/models/post_vote_model.dart';
 
 final postRepositoryProvider = Provider((ref) {
   return PostRepository(
-    firestore: ref.read(firebaseFirestoreProvider),
-    storageRepository: ref.read(storageRepositoryProvider),
+    firestore: ref.watch(firebaseFirestoreProvider),
+    storageRepository: ref.watch(storageRepositoryProvider),
   );
 });
 

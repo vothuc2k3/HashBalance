@@ -157,8 +157,8 @@ class _EditCommunityScreenState extends ConsumerState<EditCommunityScreen> {
           profileImage: profileImageFile,
           bannerImage: bannerImageFile,
         );
-    result.fold((l) => showToast(false, l.toString()),
-        (r) => showToast(true, r.toString()));
+    result.fold(
+        (l) => showToast(false, l.toString()), (r) => showToast(true, r));
   }
 
   @override
@@ -177,10 +177,12 @@ class _EditCommunityScreenState extends ConsumerState<EditCommunityScreen> {
                 actions: [
                   TextButton(
                     onPressed: () => saveChanges(community),
-                    child: const Text(
-                      'Save',
-                      style: TextStyle(color: Pallete.whiteColor),
-                    ),
+                    child: isLoading
+                        ? const Loading()
+                        : const Text(
+                            'Save',
+                            style: TextStyle(color: Pallete.whiteColor),
+                          ),
                   ),
                 ],
               ),

@@ -89,8 +89,7 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
       }
     }, (r) {
       if (context.mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
+        Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const HomeScreen()),
           (Route<dynamic> route) => false,
         );

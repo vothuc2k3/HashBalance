@@ -567,12 +567,13 @@ class PostActions extends ConsumerWidget {
           }),
           color: ref.watch(getPostVoteStatusProvider(_post)).whenOrNull(
               data: (status) {
-            if (status == null) {
-              return Colors.grey[600];
-            } else if (status) {
-              return Colors.orange;
-            } else {
-              return Colors.grey[600];
+            switch (status) {
+              case true:
+                return Colors.orange;
+              case false:
+                return Colors.grey[600];
+              case null:
+                return Colors.grey[600];
             }
           }),
           onTap: _onVote,
@@ -586,12 +587,13 @@ class PostActions extends ConsumerWidget {
           }),
           color: ref.watch(getPostVoteStatusProvider(_post)).whenOrNull(
               data: (status) {
-            if (status == null) {
-              return Colors.grey[600];
-            } else if (!status) {
-              return Colors.blue;
-            } else {
-              return Colors.grey[600];
+            switch (status) {
+              case true:
+                return Colors.grey[600];
+              case false:
+                return Colors.blue;
+              case null:
+                return Colors.grey[600];
             }
           }),
           onTap: _onVote,

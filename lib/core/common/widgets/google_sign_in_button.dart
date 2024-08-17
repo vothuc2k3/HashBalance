@@ -13,7 +13,7 @@ class GoogleSignInButton extends ConsumerWidget {
 
   void signInWithGoogle(WidgetRef ref) async {
     final result =
-        await ref.read(authControllerProvider.notifier).signInWithGoogle();
+        await ref.watch(authControllerProvider.notifier).signInWithGoogle();
     result.fold((l) {
       showToast(false, l.message);
     }, (r) {});

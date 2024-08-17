@@ -17,7 +17,15 @@ import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
 class CreatePostScreen extends ConsumerStatefulWidget {
-  const CreatePostScreen({super.key});
+  final Community? _chosenCommunity;
+  final bool? _isFromCommunityScreen;
+
+  const CreatePostScreen({
+    super.key,
+    Community? chosenCommunity,
+    bool? isFromCommunityScreen,
+  })  : _chosenCommunity = chosenCommunity,
+        _isFromCommunityScreen = isFromCommunityScreen;
 
   @override
   CreatePostScreenState createState() => CreatePostScreenState();
@@ -32,9 +40,66 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   bool isSelectingImage = false;
   bool isSelectingVideo = false;
   VideoPlayerController? _videoPlayerController;
-  bool isCreatingPost = false;
 
-  void selectImage() async {
+  @override
+  void initState() {
+    super.initState();
+    selectedCommunity = widget._chosenCommunity;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (selectedCommunity == null) {
+        _showSelectCommunityDialog();
+      }
+    });
+  }
+
+  void _showSelectCommunityDialog() async {
+    final chosenCommunity = await showDialog<Community>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Select Community'),
+          content: ref.watch(userCommunitiesProvider).when(
+                data: (communities) {
+                  if (communities.isEmpty) {
+                    return const Text('No communities available.');
+                  }
+                  return SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: communities.map(
+                        (community) {
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundImage: CachedNetworkImageProvider(
+                                community.profileImage,
+                              ),
+                            ),
+                            title: Text('#${community.name}'),
+                            onTap: () {
+                              Navigator.of(context).pop(community);
+                            },
+                          );
+                        },
+                      ).toList(),
+                    ),
+                  );
+                },
+                error: (error, stackTrace) =>
+                    ErrorText(error: error.toString()),
+                loading: () => const Loading(),
+              ),
+        );
+      },
+    );
+
+    if (chosenCommunity != null) {
+      setState(() {
+        selectedCommunity = chosenCommunity;
+      });
+    }
+  }
+
+  void _selectImage() async {
     final result = await pickImage();
     if (result != null) {
       setState(() {
@@ -43,7 +108,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     }
   }
 
-  void selectVideo() async {
+  void _selectVideo() async {
     final result = await pickVideo();
     if (result != null) {
       setState(() {
@@ -58,26 +123,35 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     }
   }
 
-  void createPost(String uid) async {
-    final result = await ref.read(postControllerProvider.notifier).createPost(
-        uid, selectedCommunity!, image, video, contentController.text);
+  void _createPost() async {
+    if (selectedCommunity == null) {
+      showToast(false, 'Please select a community to post in.');
+      return;
+    }
+    final result = await ref.watch(postControllerProvider.notifier).createPost(
+          selectedCommunity!,
+          image,
+          video,
+          contentController.text,
+        );
     result.fold(
       (l) {
-        setState(() {
-          isCreatingPost = false;
-        });
-        return showToast(false, l.toString());
+        showToast(false, l.toString());
       },
       (r) {
-        setState(() {
-          isCreatingPost = false;
-        });
-        return showToast(true, r);
+        showToast(true, r);
+        switch (widget._isFromCommunityScreen) {
+          case true:
+            Navigator.of(context).pop();
+            break;
+          default:
+            break;
+        }
       },
     );
   }
 
-  void navigateToCommunity() {
+  void _navigateToCommunityListScreen() {
     final bottomNavState = context.findAncestorStateOfType<HomeScreenState>();
     if (bottomNavState != null) {
       bottomNavState.onTabTapped(1);
@@ -95,6 +169,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool isCreatingPost = ref.watch(postControllerProvider);
     final user = ref.watch(userProvider);
     final isInAnyCommunities = ref.watch(userCommunitiesProvider);
     return Scaffold(
@@ -126,7 +201,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                       const SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: () {
-                          navigateToCommunity();
+                          _navigateToCommunityListScreen();
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.teal,
@@ -153,6 +228,52 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        InkWell(
+                          onTap: widget._isFromCommunityScreen != null &&
+                                  widget._isFromCommunityScreen == true
+                              ? () {}
+                              : () => _showSelectCommunityDialog(),
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            color: Colors.grey[900],
+                            child: selectedCommunity == null
+                                ? Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.add_circle_outline,
+                                        color: Colors.white.withOpacity(0.7),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        'Select a Community',
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.7),
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Row(
+                                    children: [
+                                      CircleAvatar(
+                                        backgroundImage:
+                                            CachedNetworkImageProvider(
+                                          selectedCommunity!.profileImage,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        '#${selectedCommunity!.name}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                          ),
+                        ),
                         Container(
                           padding: const EdgeInsets.all(10),
                           child: Row(
@@ -210,7 +331,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                 isSelectingImage
                                     ? InkWell(
                                         onTap: () {
-                                          selectImage();
+                                          _selectImage();
                                         },
                                         onLongPress: () {
                                           showDialog(
@@ -296,7 +417,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                 isSelectingVideo
                                     ? InkWell(
                                         onTap: () {
-                                          selectVideo();
+                                          _selectVideo();
                                         },
                                         onLongPress: () {
                                           showDialog(
@@ -390,8 +511,9 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                       )
                                     : const SizedBox.shrink(),
                                 if (!(contentController.text.trim() == '' &&
-                                    image == null &&
-                                    video == null))
+                                        image == null &&
+                                        video == null) &&
+                                    selectedCommunity == null)
                                   ref.watch(userCommunitiesProvider).when(
                                     data: (communities) {
                                       if (communities.isEmpty) {
@@ -436,7 +558,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                                       ),
                                                       const SizedBox(width: 8),
                                                       Text(
-                                                          '#=${community.name}'),
+                                                          '#${community.name}'),
                                                     ],
                                                   ),
                                                 );
@@ -526,13 +648,16 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                           onPressed: () {
                                             setState(() {
                                               isCreatingPost = true;
-                                              createPost(user.uid);
+                                              _createPost();
                                             });
                                           },
                                           child: const Center(
-                                              child: Text('Post',
-                                                  style: TextStyle(
-                                                      color: Colors.black))),
+                                            child: Text(
+                                              'Post',
+                                              style: TextStyle(
+                                                  color: Colors.black),
+                                            ),
+                                          ),
                                         ),
                                 ),
                                 const SizedBox(height: 16),

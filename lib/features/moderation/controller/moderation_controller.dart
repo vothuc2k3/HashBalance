@@ -54,6 +54,7 @@ class ModerationController extends StateNotifier<bool> {
     required File? profileImage,
     required File? bannerImage,
   }) async {
+    state = true;
     try {
       Community updatedCommunity = community;
 
@@ -107,6 +108,8 @@ class ModerationController extends StateNotifier<bool> {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
+    } finally {
+      state = false;
     }
   }
 

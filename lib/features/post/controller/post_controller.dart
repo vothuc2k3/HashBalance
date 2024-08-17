@@ -35,7 +35,7 @@ final fetchCommunityPostsProvider = StreamProvider.family(
 
 final postControllerProvider = StateNotifierProvider<PostController, bool>(
   (ref) => PostController(
-      postRepository: ref.read(postRepositoryProvider), ref: ref),
+      postRepository: ref.watch(postRepositoryProvider), ref: ref),
 );
 
 final getPostByIdProvider = StreamProvider.family((ref, String postId) {
@@ -55,13 +55,13 @@ class PostController extends StateNotifier<bool> {
 
   //CREATE A NEW POST
   FutureString createPost(
-    String uid,
     Community community,
     File? image,
     File? video,
     String content,
   ) async {
     try {
+      final uid = _ref.watch(userProvider)!.uid;
       switch (community.type) {
         case 'Public':
           final post = Post(

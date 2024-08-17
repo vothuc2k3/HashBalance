@@ -12,8 +12,8 @@ import 'package:hash_balance/models/post_model.dart';
 
 final commentRepositoryProvider = Provider((ref) {
   return CommentRepository(
-    firestore: ref.read(firebaseFirestoreProvider),
-    storageRepository: ref.read(storageRepositoryProvider),
+    firestore: ref.watch(firebaseFirestoreProvider),
+    storageRepository: ref.watch(storageRepositoryProvider),
   );
 });
 
@@ -109,14 +109,14 @@ class CommentRepository {
     }
   }
 
-  // GET COMMENT VOTE COUNT
+  //GET COMMENT VOTE COUNT
   Stream<Map<String, int>> getCommentVoteCount(String commentId) {
     return _comments.doc(commentId).snapshots().map(
       (event) {
         final data = event.data() as Map<String, dynamic>?;
         if (data != null) {
-          final upvoteCount = data['upvoteCount'];
-          final downvoteCount = data['downvoteCount'];
+          final upvoteCount = data['upvoteCount'] ?? 0;
+          final downvoteCount = data['downvoteCount'] ?? 0;
           return {
             'upvotes': upvoteCount,
             'downvotes': downvoteCount,
@@ -162,7 +162,7 @@ class CommentRepository {
     });
   }
 
-// CHECK VOTE STATUS OF A USER TOWARDS A COMMENT
+  // CHECK VOTE STATUS OF A USER TOWARDS A COMMENT
   Stream<bool?> getCommentVoteStatus(String commentId, String uid) {
     try {
       return _comments
@@ -206,5 +206,19 @@ class CommentRepository {
     } catch (e) {
       throw Failures(e.toString());
     }
+  }
+
+  //CHECK IF THE USER HAS UPVOTED THE POST OR NOT
+  Future<bool?> fetchVoteCommentStatus(String commentId, String uid) async {
+    final doc = await _comments
+        .doc(commentId)
+        .collection(FirebaseConstants.commentVoteCollection)
+        .doc(uid)
+        .get();
+    if (doc.exists) {
+      final data = doc.data()!;
+      return data['isUpvoted'];
+    }
+    return null;
   }
 }

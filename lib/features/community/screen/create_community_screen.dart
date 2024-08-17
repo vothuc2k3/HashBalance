@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
 import 'package:hash_balance/core/common/widgets/loading.dart';
+import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
@@ -13,8 +14,7 @@ class CreateCommunityScreen extends ConsumerStatefulWidget {
       _CreateCommunityScreenState();
 }
 
-class _CreateCommunityScreenState
-    extends ConsumerState<CreateCommunityScreen> {
+class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
   final communityNameController = TextEditingController();
   String selectedCommunityType = Constants.communityTypes[0];
   String? selectedCommunityTypeDesc = Constants.communityTypesDescMap['Public'];
@@ -27,12 +27,17 @@ class _CreateCommunityScreenState
   }
 
   void createCommunity() async {
-    ref.read(communityControllerProvider.notifier).createCommunity(
-          context,
-          communityNameController.text.trim(),
-          selectedCommunityType,
-          containsExposureContents,
-        );
+    final result =
+        await ref.watch(communityControllerProvider.notifier).createCommunity(
+              context,
+              communityNameController.text.trim(),
+              selectedCommunityType,
+              containsExposureContents,
+            );
+    result.fold((l) => showToast(false, l.message), (r) {
+      showToast(true, r);
+      Navigator.pop(context);
+    });
   }
 
   void _showCommunityTypeModal() {
@@ -139,7 +144,8 @@ class _CreateCommunityScreenState
                     borderRadius: BorderRadius.all(Radius.circular(20)),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                  contentPadding:
+                      EdgeInsets.symmetric(vertical: 15, horizontal: 20),
                 ),
                 validator: (value) {
                   if (value!.isEmpty) {
@@ -163,7 +169,8 @@ class _CreateCommunityScreenState
                 child: Padding(
                   padding: const EdgeInsets.only(top: 15, bottom: 10),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 15, horizontal: 20),
                     decoration: BoxDecoration(
                       color: Pallete.greyColor,
                       borderRadius: BorderRadius.circular(20),

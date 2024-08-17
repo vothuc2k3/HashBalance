@@ -16,17 +16,17 @@ final getPostCommentsProvider = StreamProvider.family((ref, String postId) {
 });
 
 final getCommentVoteStatusProvider =
-    StreamProvider.family((ref, Comment comment) {
+    StreamProvider.family((ref, String commentId) {
   return ref
       .watch(commentControllerProvider.notifier)
-      .getCommentVoteStatus(comment);
+      .getCommentVoteStatus(commentId);
 });
 
 final getCommentVoteCountProvider =
-    StreamProvider.family((ref, Comment comment) {
+    StreamProvider.family((ref, String commentId) {
   return ref
       .watch(commentControllerProvider.notifier)
-      .getCommentVoteCount(comment);
+      .getCommentVoteCount(commentId);
 });
 
 final getRelevantCommentsByPostProvider =
@@ -62,7 +62,7 @@ class CommentController extends StateNotifier<bool> {
         super(false);
 
   //COMMENT
-  FutureString comment(
+  FutureVoid comment(
     Post post,
     String? content,
   ) async {
@@ -74,13 +74,14 @@ class CommentController extends StateNotifier<bool> {
         createdAt: Timestamp.now(),
         content: content,
         id: await generateRandomId(),
+        parentCommentId: '',
         upvoteCount: 0,
         downvoteCount: 0,
       );
       final result = await _commentRepository.comment(comment);
       return result.fold(
         (l) => left((Failures(l.message))),
-        (r) => right('Comment Was Successfully Done!'),
+        (r) => right(null),
       );
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -112,8 +113,8 @@ class CommentController extends StateNotifier<bool> {
     }
   }
 
-  Stream<Map<String, int>> getCommentVoteCount(Comment comment) {
-    return _commentRepository.getCommentVoteCount(comment.id);
+  Stream<Map<String, int>> getCommentVoteCount(String commentId) {
+    return _commentRepository.getCommentVoteCount(commentId);
   }
 
   //GET POST COMMENT COUNT
@@ -127,11 +128,11 @@ class CommentController extends StateNotifier<bool> {
     }
   }
 
-  Stream<bool?> getCommentVoteStatus(Comment comment) {
+  Stream<bool?> getCommentVoteStatus(String commentId) {
     try {
       final currentUser = _ref.watch(userProvider)!;
       return _commentRepository.getCommentVoteStatus(
-          comment.id, currentUser.uid);
+          commentId, currentUser.uid);
     } on FirebaseException catch (e) {
       throw Failures(e.message!);
     } catch (e) {
@@ -159,5 +160,11 @@ class CommentController extends StateNotifier<bool> {
     } catch (e) {
       throw Failures(e.toString());
     }
+  }
+
+  Future<bool?> fetchVoteCommentStatus(String commentId) async {
+    final currentUser = _ref.watch(userProvider)!;
+    return await _commentRepository.fetchVoteCommentStatus(
+        commentId, currentUser.uid);
   }
 }

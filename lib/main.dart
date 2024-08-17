@@ -64,7 +64,7 @@ class MyAppState extends ConsumerState<MyApp> {
         .watch(authControllerProvider.notifier)
         .getUserData(data.uid)
         .first;
-    ref.read(userProvider.notifier).update((state) => userData);
+    ref.watch(userProvider.notifier).update((state) => userData);
   }
 
   void _setupLocalNotifications() async {

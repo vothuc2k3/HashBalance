@@ -27,16 +27,15 @@ class CommunityRepository {
       _firestore.collection(FirebaseConstants.communityMembershipCollection);
 
   //CREATE A WHOLE NEW COMMUNITY
-  FutureVoid createCommunity(Community community) async {
+  FutureString createCommunity(Community community) async {
     try {
       var communityDoc = await _communities.doc(community.id).get();
 
       if (communityDoc.exists) {
         throw 'The name is already exists!';
       }
-      return right(
-        _communities.doc(community.id).set(community.toMap()),
-      );
+      await _communities.doc(community.id).set(community.toMap());
+      return right('Successfully created community');
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {
@@ -81,8 +80,6 @@ class CommunityRepository {
       return communities;
     });
   }
-
-
 
   //LET USER JOIN COMMUNITY
   FutureVoid joinCommunity(CommunityMembership membership) async {

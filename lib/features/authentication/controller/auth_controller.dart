@@ -15,7 +15,7 @@ import 'package:hash_balance/models/user_model.dart';
 
 final authControllerProvider = StateNotifierProvider<AuthController, bool>(
   (ref) => AuthController(
-    authRepository: ref.read(authRepositoryProvider),
+    authRepository: ref.watch(authRepositoryProvider),
     ref: ref,
   ),
 );
@@ -49,7 +49,7 @@ class AuthController extends StateNotifier<bool> {
     try {
       final result = await _authRepository.signInWithGoogle();
       return result.fold((l) => left(Failures(l.message)), (userModel) {
-        _ref.read(userProvider.notifier).update((state) => userModel);
+        _ref.watch(userProvider.notifier).update((state) => userModel);
         return right(userModel);
       });
     } on FirebaseException catch (e) {
@@ -99,7 +99,7 @@ class AuthController extends StateNotifier<bool> {
           (l) => left(
                 Failures(l.message),
               ), (userModel) async {
-        _ref.read(userProvider.notifier).update(
+        _ref.watch(userProvider.notifier).update(
               (state) => userModel,
             );
         return right(userModel);
@@ -128,7 +128,7 @@ class AuthController extends StateNotifier<bool> {
       final result = await _authRepository.signInWithEmailAndPassword(
           email, userDevice, password);
       return result.fold((l) => left(Failures(l.message)), (userModel) async {
-        _ref.read(userProvider.notifier).update((state) => userModel);
+        _ref.watch(userProvider.notifier).update((state) => userModel);
         return right(userModel);
       });
     } on FirebaseAuthException catch (e) {

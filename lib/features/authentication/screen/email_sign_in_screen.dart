@@ -45,11 +45,9 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
         showToast(false, l.message);
       }
     }, (_) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        (Route<dynamic> route) => false,
       );
     });
   }
