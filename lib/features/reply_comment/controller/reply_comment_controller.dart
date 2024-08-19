@@ -6,36 +6,40 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/features/comment/repository/comment_repository.dart';
+import 'package:hash_balance/features/reply_comment/repository/reply_comment_repository.dart';
 import 'package:hash_balance/models/comment_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 
-final getPostCommentsProvider = StreamProvider.family((ref, String postId) {
-  return ref.watch(commentControllerProvider.notifier).getPostComments(postId);
+final getCommentRepliesProvider =
+    StreamProvider.family((ref, String parentCommentId) {
+  return ref
+      .watch(replyCommentControllerProvider.notifier)
+      .getCommentReplies(parentCommentId);
 });
 
-final commentControllerProvider =
-    StateNotifierProvider<CommentController, bool>(
-  (ref) => CommentController(
-    commentRepository: ref.watch(commentRepositoryProvider),
+final replyCommentControllerProvider =
+    StateNotifierProvider<ReplyCommentController, bool>(
+  (ref) => ReplyCommentController(
+    replyCommentRepository: ref.watch(replyCommentRepositoryProvider),
     ref: ref,
   ),
 );
 
-class CommentController extends StateNotifier<bool> {
-  final CommentRepository _commentRepository;
+class ReplyCommentController extends StateNotifier<bool> {
+  final ReplyCommentRepository _replyRepository;
   final Ref _ref;
 
-  CommentController({
-    required CommentRepository commentRepository,
+  ReplyCommentController({
+    required ReplyCommentRepository replyCommentRepository,
     required Ref ref,
-  })  : _commentRepository = commentRepository,
+  })  : _replyRepository = replyCommentRepository,
         _ref = ref,
         super(false);
 
   //COMMENT
-  FutureVoid comment(
+  FutureVoid reply(
     Post post,
+    String parentCommentId,
     String? content,
   ) async {
     try {
@@ -46,9 +50,9 @@ class CommentController extends StateNotifier<bool> {
         createdAt: Timestamp.now(),
         content: content,
         id: await generateRandomId(),
-        parentCommentId: '',
+        parentCommentId: parentCommentId,
       );
-      final result = await _commentRepository.comment(comment);
+      final result = await _replyRepository.reply(comment);
       return result.fold(
         (l) => left((Failures(l.message))),
         (r) => right(null),
@@ -60,8 +64,8 @@ class CommentController extends StateNotifier<bool> {
     }
   }
 
-  //FETCH ALL COMMENTS OF A POST
-  Stream<List<CommentModel>?> getPostComments(String postId) {
-    return _commentRepository.getPostComments(postId);
+  //FETCH ALL COMMENT'S REPLIES
+  Stream<List<CommentModel>?> getCommentReplies(String parentCommentId) {
+    return _replyRepository.getCommentReplies(parentCommentId);
   }
 }

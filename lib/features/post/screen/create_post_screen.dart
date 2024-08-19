@@ -37,6 +37,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   File? video;
   Community? selectedCommunity;
 
+
   bool isSelectingImage = false;
   bool isSelectingVideo = false;
   VideoPlayerController? _videoPlayerController;
@@ -45,11 +46,6 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   void initState() {
     super.initState();
     selectedCommunity = widget._chosenCommunity;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (selectedCommunity == null) {
-        _showSelectCommunityDialog();
-      }
-    });
   }
 
   void _showSelectCommunityDialog() async {
@@ -58,7 +54,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       builder: (context) {
         return AlertDialog(
           title: const Text('Select Community'),
-          content: ref.watch(userCommunitiesProvider).when(
+          content: mounted ? ref.watch(userCommunitiesProvider).when(
                 data: (communities) {
                   if (communities.isEmpty) {
                     return const Text('No communities available.');
@@ -87,7 +83,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                 error: (error, stackTrace) =>
                     ErrorText(error: error.toString()),
                 loading: () => const Loading(),
-              ),
+              ) : const SizedBox.shrink(),
         );
       },
     );

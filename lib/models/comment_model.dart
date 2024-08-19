@@ -3,44 +3,36 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class Comment {
+class CommentModel {
   final String id;
   final String uid;
   final String postId;
   final String? parentCommentId;
   final String? content;
-  final int upvoteCount;
-  final int downvoteCount;
   final Timestamp createdAt;
-  Comment({
+  CommentModel({
     required this.id,
     required this.uid,
     required this.postId,
     this.parentCommentId,
     this.content,
-    required this.upvoteCount,
-    required this.downvoteCount,
     required this.createdAt,
   });
 
-  Comment copyWith({
+  CommentModel copyWith({
     String? id,
     String? uid,
     String? postId,
     String? parentCommentId,
     String? content,
-    int? upvoteCount,
-    int? downvoteCount,
     Timestamp? createdAt,
   }) {
-    return Comment(
+    return CommentModel(
       id: id ?? this.id,
       uid: uid ?? this.uid,
       postId: postId ?? this.postId,
       parentCommentId: parentCommentId ?? this.parentCommentId,
       content: content ?? this.content,
-      upvoteCount: upvoteCount ?? this.upvoteCount,
-      downvoteCount: downvoteCount ?? this.downvoteCount,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -52,38 +44,35 @@ class Comment {
       'postId': postId,
       'parentCommentId': parentCommentId,
       'content': content,
-      'upvoteCount': upvoteCount,
-      'downvoteCount': downvoteCount,
       'createdAt': createdAt,
     };
   }
 
-  factory Comment.fromMap(Map<String, dynamic> map) {
-    return Comment(
+  factory CommentModel.fromMap(Map<String, dynamic> map) {
+    return CommentModel(
       id: map['id'] as String,
       uid: map['uid'] as String,
       postId: map['postId'] as String,
-      parentCommentId:
-          map['parentCommentId'] != '' ? map['parentCommentId'] as String : '',
-      content: map['content'] != null ? map['content'] as String : '',
-      upvoteCount: map['upvoteCount'] as int,
-      downvoteCount: map['downvoteCount'] as int,
+      parentCommentId: map['parentCommentId'] != null
+          ? map['parentCommentId'] as String
+          : null,
+      content: map['content'] != null ? map['content'] as String : null,
       createdAt: map['createdAt'] as Timestamp,
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory Comment.fromJson(String source) =>
-      Comment.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory CommentModel.fromJson(String source) =>
+      CommentModel.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
-    return 'Comment(id: $id, uid: $uid, postId: $postId, parentCommentId: $parentCommentId, content: $content, upvoteCount: $upvoteCount, downvoteCount: $downvoteCount, createdAt: $createdAt)';
+    return 'Comment(id: $id, uid: $uid, postId: $postId, parentCommentId: $parentCommentId, content: $content, createdAt: $createdAt)';
   }
 
   @override
-  bool operator ==(covariant Comment other) {
+  bool operator ==(covariant CommentModel other) {
     if (identical(this, other)) return true;
 
     return other.id == id &&
@@ -91,8 +80,6 @@ class Comment {
         other.postId == postId &&
         other.parentCommentId == parentCommentId &&
         other.content == content &&
-        other.upvoteCount == upvoteCount &&
-        other.downvoteCount == downvoteCount &&
         other.createdAt == createdAt;
   }
 
@@ -103,8 +90,6 @@ class Comment {
         postId.hashCode ^
         parentCommentId.hashCode ^
         content.hashCode ^
-        upvoteCount.hashCode ^
-        downvoteCount.hashCode ^
         createdAt.hashCode;
   }
 }

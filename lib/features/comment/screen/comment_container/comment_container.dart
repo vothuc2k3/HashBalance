@@ -1,24 +1,33 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mdi/mdi.dart';
-
+import 'package:hash_balance/core/common/widgets/error_text.dart';
+import 'package:hash_balance/core/common/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/features/comment/controller/comment_controller.dart';
+import 'package:hash_balance/features/reply_comment/controller/reply_comment_controller.dart';
+import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 import 'package:hash_balance/models/comment_model.dart';
+import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:comment_tree/data/comment.dart';
+import 'package:comment_tree/widgets/comment_tree_widget.dart';
+import 'package:comment_tree/widgets/tree_theme_data.dart';
 
 class CommentContainer extends ConsumerStatefulWidget {
   final UserModel author;
-  final Comment comment;
+  final CommentModel comment;
+  final Post post;
+  final bool isReply;
 
   const CommentContainer({
     super.key,
     required this.author,
     required this.comment,
+    required this.post,
+    this.isReply = false,
   });
 
   @override
@@ -26,41 +35,40 @@ class CommentContainer extends ConsumerStatefulWidget {
 }
 
 class _CommentContainerState extends ConsumerState<CommentContainer> {
-  TextEditingController commentTextController = TextEditingController();
+  late TextEditingController _commentController;
+  late TextEditingController _replyController;
   UserModel? currentUser;
 
-  void _voteComment(bool userVote) async {
-    final result = await ref
-        .watch(commentControllerProvider.notifier)
-        .voteComment(widget.comment, userVote);
-    result.fold((l) {
-      showToast(false, l.toString());
-    }, (_) {});
+  void _navigateToOtherUserScreen(String currentUid) {
+    if (currentUid == widget.author.uid) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => UserProfileScreen(user: widget.author),
+        ),
+      );
+    } else {
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                OtherUserProfileScreen(targetUser: widget.author),
+          ));
+    }
   }
 
-  void _navigateToOtherUserScreen(String currentUid) {
-    switch (currentUid == widget.author.uid) {
-      case true:
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => UserProfileScreen(
-              user: widget.author,
-            ),
-          ),
-        );
-        break;
-      case false:
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => OtherUserProfileScreen(
-              targetUser: widget.author,
-            ),
-          ),
-        );
-        break;
-    }
+  void _replyComment(String content) async {
+    final result = await ref
+        .watch(replyCommentControllerProvider.notifier)
+        .reply(widget.post, widget.comment.id, content);
+    result.fold((l) => showToast(false, l.message), (_) {});
+  }
+
+  @override
+  void initState() {
+    _commentController = TextEditingController();
+    _replyController = TextEditingController();
+    super.initState();
   }
 
   @override
@@ -72,10 +80,13 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      margin: const EdgeInsets.symmetric(
+        vertical: 8,
+        horizontal: 12,
+      ),
       padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-        color: Colors.black,
+        color: widget.isReply ? Colors.grey[850] : Colors.black,
         borderRadius: BorderRadius.circular(8),
         boxShadow: const [
           BoxShadow(
@@ -85,88 +96,88 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildPostHeader(widget.comment, widget.author),
-                const SizedBox(height: 4),
-                Text(widget.comment.content!),
-                const SizedBox(height: 8),
-                CommentActions(
-                  comment: widget.comment,
-                  onVote: _voteComment,
-                  onReply: () => _showReplyDialog(context),
-                ),
-              ],
+      child: CommentTreeWidget<CommentModel, CommentModel>(
+        widget.comment,
+        ref.watch(getCommentRepliesProvider(widget.comment.id)).when(
+              data: (replies) {
+                return replies ??
+                    []; // Trả về một danh sách trống nếu replies là null
+              },
+              error: (e, s) => [], // Trả về một danh sách trống khi có lỗi
+              loading: () => [], // Trả về một danh sách trống khi đang tải
             ),
+        treeThemeData: const TreeThemeData(
+          lineColor: Colors.green,
+          lineWidth: 2,
+        ),
+        avatarRoot: (context, data) => PreferredSize(
+          preferredSize: const Size.fromRadius(18),
+          child: CircleAvatar(
+            radius: 18,
+            backgroundColor: Colors.grey,
+            backgroundImage:
+                CachedNetworkImageProvider(widget.author.profileImage),
+          ),
+        ),
+        avatarChild: (context, data) => PreferredSize(
+          preferredSize: const Size.fromRadius(12),
+          child: CircleAvatar(
+            radius: 12,
+            backgroundColor: Colors.grey,
+            backgroundImage:
+                CachedNetworkImageProvider(widget.author.profileImage),
+          ),
+        ),
+        contentRoot: (context, data) =>
+            _buildContent(widget.author, widget.comment),
+        contentChild: (context, data) =>
+            ref.watch(getUserByUidProvider(data.uid)).when(
+                  data: (replyAuthor) {
+                    return _buildContent(replyAuthor, data);
+                  },
+                  error: (e, s) => ErrorText(error: e.toString()),
+                  loading: () => const Loading(),
+                ),
+      ),
+    );
+  }
+
+  Widget _buildContent(UserModel author, CommentModel comment) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: () => _navigateToOtherUserScreen(currentUser!.uid),
+            child: Text(
+              '#${author.name}',
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 11),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            comment.content!,
+            style: const TextStyle(fontSize: 12),
+          ),
+          const SizedBox(height: 8),
+          CommentActions(
+            comment: comment,
+            onReply: () => _showReplyDialog(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPostHeader(
-    Comment post,
-    UserModel author,
-  ) {
-    return Row(
-      children: [
-        InkWell(
-          onTap: () => _navigateToOtherUserScreen(currentUser!.uid),
-          child: CircleAvatar(
-            backgroundImage: CachedNetworkImageProvider(
-              author.profileImage,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '#${author.name}',
-                style:
-                    const TextStyle(fontWeight: FontWeight.w600, fontSize: 11),
-              ),
-              Row(
-                children: [
-                  Text(
-                    formatTime(post.createdAt),
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(width: 3),
-                  const Icon(
-                    Icons.public,
-                    color: Colors.grey,
-                    size: 12,
-                  ),
-                ],
-              )
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _showReplyDialog(BuildContext context) {
-    final replyController = TextEditingController();
+  void _showReplyDialog() {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (context) {
         return AlertDialog(
           title: const Text('Reply to Comment'),
           content: TextField(
-            controller: replyController,
+            controller: _replyController,
             decoration: const InputDecoration(
               hintText: 'Type your reply...',
             ),
@@ -179,8 +190,8 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
             ),
             ElevatedButton(
               onPressed: () {
-                if (replyController.text.isNotEmpty) {
-                  //TODO: REPLY HERE
+                if (_replyController.text.isNotEmpty) {
+                  _replyComment(_replyController.text);
                   Navigator.of(context).pop();
                 }
               },
@@ -194,98 +205,29 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
 }
 
 class CommentActions extends ConsumerWidget {
-  final Comment _comment;
-  final Function _onVote;
+  final CommentModel _comment;
   final Function _onReply;
 
   const CommentActions({
     super.key,
-    required Comment comment,
-    required Function onVote,
+    required CommentModel comment,
     required Function onReply,
   })  : _comment = comment,
-        _onVote = onVote,
         _onReply = onReply;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(
+    BuildContext context,
+    WidgetRef ref,
+  ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildVoteButton(
-          icon: Icons.arrow_upward_rounded,
-          count: ref.watch(getCommentVoteCountProvider(_comment.id)).whenOrNull(
-              data: (count) {
-            return count['upvotes'];
-          }),
-          color:
-              ref.watch(getCommentVoteStatusProvider(_comment.id)).whenOrNull(
-            data: (status) {
-              switch (status) {
-                case true:
-                  return Colors.orange;
-                case false:
-                  return Colors.grey[600];
-                case null:
-                  return Colors.grey[600];
-              }
-            },
-          ),
-          onTap: () => _onVote(true),
-        ),
-        _buildVoteButton(
-          icon: Mdi.arrowDown,
-          count: ref.watch(getCommentVoteCountProvider(_comment.id)).whenOrNull(
-              data: (count) {
-            return count['downvotes'];
-          }),
-          color: ref
-              .watch(getCommentVoteStatusProvider(_comment.id))
-              .whenOrNull(data: (status) {
-            switch (status) {
-              case true:
-                return Colors.grey[600];
-              case false:
-                return Colors.blue;
-              case null:
-                return Colors.grey[600];
-            }
-          }),
-          onTap: () => _onVote(false),
-        ),
         IconButton(
           icon: const Icon(Icons.reply, color: Colors.white),
           onPressed: () => _onReply(),
         ),
       ],
-    );
-  }
-
-  Widget _buildVoteButton({
-    required IconData icon,
-    required int? count,
-    required Color? color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-        child: Row(
-          children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(width: 4),
-            Text(
-              count == null ? '0' : count.toString(),
-              style: const TextStyle(color: Colors.white),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -13,6 +13,10 @@ import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/post_vote_model.dart';
 
+final getPostCommentCountProvider = StreamProvider.family((ref, String postId) {
+  return ref.watch(postControllerProvider.notifier).getPostCommentCount(postId);
+});
+
 final getPendingPostsProvider =
     StreamProvider.family.autoDispose((ref, String communityId) {
   return ref
@@ -191,6 +195,17 @@ class PostController extends StateNotifier<bool> {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
+    }
+  }
+
+  //GET POST COMMENT COUNT
+  Stream<int> getPostCommentCount(String postId) {
+    try {
+      return _postRepository.getPostCommentCount(postId);
+    } on FirebaseException catch (e) {
+      throw Failures(e.message!);
+    } catch (e) {
+      throw Failures(e.toString());
     }
   }
 }

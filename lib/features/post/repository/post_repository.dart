@@ -31,6 +31,9 @@ class PostRepository {
   //REFERENCE ALL THE POSTS
   CollectionReference get _posts =>
       _firestore.collection(FirebaseConstants.postsCollection);
+  //REFERENCE ALL THE COMMENTS
+  CollectionReference get _comments =>
+      _firestore.collection(FirebaseConstants.commentsCollection);
   //REFERENCE ALL THE USERS
   CollectionReference get _users =>
       _firestore.collection(FirebaseConstants.usersCollection);
@@ -265,5 +268,15 @@ class PostRepository {
     } catch (e) {
       return left(Failures(e.toString()));
     }
+  }
+
+  // GET TOTAL COMMENTS COUNT OF A POST
+  Stream<int> getPostCommentCount(String postId) {
+    return _comments
+        .where('postId', isEqualTo: postId)
+        .snapshots()
+        .map((event) {
+      return event.size;
+    });
   }
 }

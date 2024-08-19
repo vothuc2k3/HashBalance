@@ -29,10 +29,6 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
   void _handleMenuItemClick(String value, String commentId) async {
     switch (value) {
       case 'Option1':
-        final result = await ref
-            .watch(commentControllerProvider.notifier)
-            .fetchVoteCommentStatus(commentId);
-        print('THIS IS THE RESULTTTTT: $result');
         break;
       case 'Option2':
         // Handle Option 2 action
@@ -125,6 +121,7 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
                                 return CommentContainer(
                                   author: author,
                                   comment: comment,
+                                  post: widget._post,
                                 );
                               },
                               error: (error, stackTrace) => ErrorText(

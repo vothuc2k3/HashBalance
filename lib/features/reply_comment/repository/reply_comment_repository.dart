@@ -7,14 +7,15 @@ import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/comment_model.dart';
 
-final commentRepositoryProvider = Provider((ref) {
-  return CommentRepository(firestore: ref.watch(firebaseFirestoreProvider));
+final replyCommentRepositoryProvider = Provider((ref) {
+  return ReplyCommentRepository(
+      firestore: ref.watch(firebaseFirestoreProvider));
 });
 
-class CommentRepository {
+class ReplyCommentRepository {
   final FirebaseFirestore _firestore;
 
-  CommentRepository({
+  ReplyCommentRepository({
     required FirebaseFirestore firestore,
   }) : _firestore = firestore;
 
@@ -23,7 +24,7 @@ class CommentRepository {
       _firestore.collection(FirebaseConstants.commentsCollection);
 
 //COMMENT ON A POST
-  FutureVoid comment(CommentModel comment) async {
+  FutureVoid reply(CommentModel comment) async {
     try {
       await _comments.doc(comment.id).set(comment.toMap());
       return right(null);
@@ -34,25 +35,22 @@ class CommentRepository {
     }
   }
 
-  //FETCH ALL COMMENTS OF A POST
-  Stream<List<CommentModel>?> getPostComments(String postId) {
+  //FETCH ALL COMMENT'S REPLIES
+  Stream<List<CommentModel>?> getCommentReplies(String parentCommentId) {
     return _comments
-        .where('postId', isEqualTo: postId)
-        .where('parentCommentId', isEqualTo: '')
+        .where('parentCommentId', isEqualTo: parentCommentId)
         .snapshots()
-        .map(
-      (event) {
-        if (event.docs.isEmpty) {
-          return null;
-        } else {
-          List<CommentModel> comments = <CommentModel>[];
-          for (var doc in event.docs) {
-            final data = doc.data() as Map<String, dynamic>;
-            comments.add(CommentModel.fromMap(data));
-          }
-          return comments;
-        }
-      },
-    );
+        .map((event) {
+      if (event.docs.isEmpty) {
+        return null;
+      }
+      List<CommentModel> replies = [];
+      for (final doc in event.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        replies.add(CommentModel.fromMap(data));
+      }
+      final repliess = replies;
+      return repliess;
+    });
   }
 }
