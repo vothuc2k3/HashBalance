@@ -5,6 +5,7 @@ import 'package:hash_balance/core/common/widgets/error_text.dart';
 import 'package:hash_balance/core/common/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/reply_comment/controller/reply_comment_controller.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
@@ -12,7 +13,6 @@ import 'package:hash_balance/features/user_profile/screen/user_profile_screen.da
 import 'package:hash_balance/models/comment_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
-import 'package:comment_tree/data/comment.dart';
 import 'package:comment_tree/widgets/comment_tree_widget.dart';
 import 'package:comment_tree/widgets/tree_theme_data.dart';
 
@@ -35,7 +35,6 @@ class CommentContainer extends ConsumerStatefulWidget {
 }
 
 class _CommentContainerState extends ConsumerState<CommentContainer> {
-  late TextEditingController _commentController;
   late TextEditingController _replyController;
   UserModel? currentUser;
 
@@ -64,9 +63,15 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
     result.fold((l) => showToast(false, l.message), (_) {});
   }
 
+  void _voteComment(String commentId, bool isUpvoted) async {
+    final result = await ref
+        .watch(commentControllerProvider.notifier)
+        .voteComment(commentId, isUpvoted);
+    result.fold((l) => showToast(false, l.message), (r) {});
+  }
+
   @override
   void initState() {
-    _commentController = TextEditingController();
     _replyController = TextEditingController();
     super.initState();
   }
@@ -75,6 +80,12 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
   void didChangeDependencies() {
     currentUser = ref.watch(userProvider);
     super.didChangeDependencies();
+  }
+
+  @override
+  void dispose() {
+    _replyController.dispose();
+    super.dispose();
   }
 
   @override
@@ -100,11 +111,10 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
         widget.comment,
         ref.watch(getCommentRepliesProvider(widget.comment.id)).when(
               data: (replies) {
-                return replies ??
-                    []; // Trả về một danh sách trống nếu replies là null
+                return replies ?? [];
               },
-              error: (e, s) => [], // Trả về một danh sách trống khi có lỗi
-              loading: () => [], // Trả về một danh sách trống khi đang tải
+              error: (e, s) => [],
+              loading: () => [],
             ),
         treeThemeData: const TreeThemeData(
           lineColor: Colors.green,
@@ -152,17 +162,107 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
             onTap: () => _navigateToOtherUserScreen(currentUser!.uid),
             child: Text(
               '#${author.name}',
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 11),
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
             ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Text(
+                formatTime(comment.createdAt),
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(width: 5),
+              const Icon(
+                Icons.public,
+                color: Colors.grey,
+                size: 12,
+              ),
+            ],
           ),
           const SizedBox(height: 4),
           Text(
             comment.content!,
-            style: const TextStyle(fontSize: 12),
+            style: const TextStyle(fontSize: 14),
           ),
           const SizedBox(height: 8),
+          Row(
+            children: [
+              // Upvote button
+              ref.read(getCommentVoteStatusProvider(comment.id)).when(
+                    data: (isUpvoted) {
+                      return IconButton(
+                        icon: Icon(
+                          Icons.arrow_upward,
+                          color:
+                              isUpvoted == true ? Colors.green : Colors.white,
+                          size: 20,
+                        ),
+                        onPressed: () {
+                          _voteComment(comment.id, true);
+                        },
+                      );
+                    },
+                    error: (e, s) => const IconButton(
+                      icon: Icon(Icons.arrow_upward,
+                          color: Colors.white, size: 20),
+                      onPressed: null,
+                    ),
+                    loading: () => const CircularProgressIndicator(),
+                  ),
+              // Upvote count
+              ref.read(getCommentVoteCountProvider(comment.id)).when(
+                    data: (voteCounts) {
+                      return Text(
+                        voteCounts['upvotes'].toString(),
+                        style: const TextStyle(color: Colors.white),
+                      );
+                    },
+                    error: (e, s) =>
+                        const Text('0', style: TextStyle(color: Colors.white)),
+                    loading: () => const CircularProgressIndicator(),
+                  ),
+              const SizedBox(width: 10),
+              // Downvote button
+              ref.read(getCommentVoteStatusProvider(comment.id)).when(
+                    data: (isUpvoted) {
+                      return IconButton(
+                        icon: Icon(
+                          Icons.arrow_downward,
+                          color: isUpvoted == false ? Colors.red : Colors.white,
+                          size: 20,
+                        ),
+                        onPressed: () {
+                          _voteComment(comment.id, false);
+                        },
+                      );
+                    },
+                    error: (e, s) => const IconButton(
+                      icon: Icon(Icons.arrow_downward,
+                          color: Colors.white, size: 20),
+                      onPressed: null,
+                    ),
+                    loading: () => const CircularProgressIndicator(),
+                  ),
+              // Downvote count
+              ref.read(getCommentVoteCountProvider(comment.id)).when(
+                    data: (voteCounts) {
+                      return Text(
+                        voteCounts['downvotes'].toString(),
+                        style: const TextStyle(color: Colors.white),
+                      );
+                    },
+                    error: (e, s) =>
+                        const Text('0', style: TextStyle(color: Colors.white)),
+                    loading: () => const CircularProgressIndicator(),
+                  ),
+            ],
+          ),
+          const SizedBox(height: 4),
           CommentActions(
-            comment: comment,
             onReply: () => _showReplyDialog(),
           ),
         ],
@@ -205,15 +305,12 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
 }
 
 class CommentActions extends ConsumerWidget {
-  final CommentModel _comment;
   final Function _onReply;
 
   const CommentActions({
     super.key,
-    required CommentModel comment,
     required Function onReply,
-  })  : _comment = comment,
-        _onReply = onReply;
+  }) : _onReply = onReply;
 
   @override
   Widget build(
@@ -221,10 +318,13 @@ class CommentActions extends ConsumerWidget {
     WidgetRef ref,
   ) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      mainAxisAlignment: MainAxisAlignment.end,
       children: [
         IconButton(
-          icon: const Icon(Icons.reply, color: Colors.white),
+          icon: const Icon(
+            Icons.reply,
+            color: Colors.white,
+          ),
           onPressed: () => _onReply(),
         ),
       ],

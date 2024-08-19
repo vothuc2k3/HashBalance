@@ -8,7 +8,22 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/comment/repository/comment_repository.dart';
 import 'package:hash_balance/models/comment_model.dart';
+import 'package:hash_balance/models/comment_vote.dart';
 import 'package:hash_balance/models/post_model.dart';
+
+final getCommentVoteStatusProvider =
+    StreamProvider.family((ref, String commentId) {
+  return ref
+      .watch(commentControllerProvider.notifier)
+      .getCommentVoteStatus(commentId);
+});
+
+final getCommentVoteCountProvider =
+    StreamProvider.family((ref, String commentId) {
+  return ref
+      .watch(commentControllerProvider.notifier)
+      .getCommentVoteCount(commentId);
+});
 
 final getPostCommentsProvider = StreamProvider.family((ref, String postId) {
   return ref.watch(commentControllerProvider.notifier).getPostComments(postId);
@@ -63,5 +78,32 @@ class CommentController extends StateNotifier<bool> {
   //FETCH ALL COMMENTS OF A POST
   Stream<List<CommentModel>?> getPostComments(String postId) {
     return _commentRepository.getPostComments(postId);
+  }
+
+  //VOTE THE COMMENT
+  FutureVoid voteComment(String commentId, bool isUpvoted) async {
+    try {
+      final currentUser = _ref.watch(userProvider)!;
+      final commentVote = CommentVote(
+        uid: currentUser.uid,
+        commentId: commentId,
+        isUpvoted: isUpvoted,
+        createdAt: Timestamp.now(),
+      );
+      return await _commentRepository.voteComment(commentVote);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  Stream<bool?> getCommentVoteStatus(String commentId) {
+    final currentUser = _ref.read(userProvider)!;
+    return _commentRepository.getCommentVoteStatus(commentId, currentUser.uid);
+  }
+
+  Stream<Map<String, int>> getCommentVoteCount(String commentId) {
+    return _commentRepository.getCommentVoteCount(commentId);
   }
 }
