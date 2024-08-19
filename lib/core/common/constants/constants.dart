@@ -55,6 +55,7 @@ class Constants {
   ];
   static const String friendRequestTitle = 'New Friend Request';
   static const String acceptRequestTitle = 'Friend Request Accepted';
+  static const String incomingMessageTitle = 'New Message!';
 
   static const String friendRequestType = 'friend_request';
   static const String acceptRequestType = 'accept_request';
@@ -67,10 +68,13 @@ class Constants {
     return '$name has accepted your friend request!';
   }
 
+  static String getIncomingMessageContent(String name) {
+    return '$name has sent you a message!';
+  }
+
   static String? deviceToken;
 
   static String agoraAppId = 'a9942d0368fc4cdf9e59df9df19899c9';
 
-  static String domain =
-      'https://hash-balance-backend-6cdfcc4bcae7.herokuapp.com';
+  static String domain = 'https://web-production-f331.up.railway.app';
 }

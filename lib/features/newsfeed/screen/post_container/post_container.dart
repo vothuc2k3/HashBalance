@@ -1,11 +1,9 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/splash/splash_screen.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
-import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
-import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
+import 'package:hash_balance/features/post_share/post_share_controller/post_share_controller.dart';
 import 'package:mdi/mdi.dart';
 import 'package:video_player/video_player.dart';
 
@@ -36,6 +34,7 @@ class PostContainer extends ConsumerStatefulWidget {
 
 class _PostContainerState extends ConsumerState<PostContainer> {
   TextEditingController commentTextController = TextEditingController();
+  TextEditingController shareTextController = TextEditingController();
   VideoPlayerController? _videoController;
   bool _isPlaying = false;
   String? _videoDuration;
@@ -54,7 +53,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     });
   }
 
-  void votePost(bool userVote) async {
+  void _votePost(bool userVote) async {
     final result = await ref
         .read(postControllerProvider.notifier)
         .votePost(widget.post, userVote);
@@ -64,6 +63,15 @@ class _PostContainerState extends ConsumerState<PostContainer> {
       },
       (_) {},
     );
+  }
+
+  void _sharePost(String? content) async {
+    final result = await ref
+        .watch(postShareControllerProvider.notifier)
+        .sharePost(postId: widget.post.id, content: content);
+    result.fold((l) => showToast(false, l.message), (r) {
+      showToast(true, 'Share successfully...');
+    });
   }
 
   void _handleBlock() {}
@@ -139,29 +147,37 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     );
   }
 
-  void _navigateToOtherUserScreen(String currentUid) {
-    switch (currentUid == widget.author.uid) {
-      case true:
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => UserProfileScreen(
-              user: widget.author,
+  void _showShareDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Share Post'),
+          content: TextField(
+            controller: shareTextController,
+            decoration: const InputDecoration(
+              hintText: 'Add a message to your share...',
             ),
+            maxLines: 3,
           ),
-        );
-        break;
-      case false:
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => OtherUserProfileScreen(
-              targetUser: widget.author,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
             ),
-          ),
+            ElevatedButton(
+              onPressed: () {
+                if (shareTextController.text.isNotEmpty) {
+                  _sharePost(shareTextController.text);
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Share'),
+            ),
+          ],
         );
-        break;
-    }
+      },
+    );
   }
 
   @override
@@ -248,50 +264,13 @@ class _PostContainerState extends ConsumerState<PostContainer> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        _navigateToCommunityScreen(
-                            widget.community, currentUser!.uid);
-                      },
-                      child: CircleAvatar(
-                        backgroundImage: NetworkImage(
-                          widget.community.profileImage,
-                        ),
-                        radius: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '#=${widget.community.name}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                onPressed: () {
-                  _showBottomSheet(currentUser!.uid, widget.author.name);
-                },
-                icon: const Icon(Icons.more_horiz),
-              ),
-            ],
-          ),
+          _buildPostHeader(),
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildPostHeader(widget.post, widget.author),
-                const SizedBox(height: 4),
                 Text(widget.post.content),
                 widget.post.image != ''
                     ? const SizedBox.shrink()
@@ -377,64 +356,68 @@ class _PostContainerState extends ConsumerState<PostContainer> {
               : const SizedBox.shrink(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: _buildPostStat(user: widget.author),
+            child: _buildPostStat(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPostHeader(
-    Post post,
-    UserModel user,
-  ) {
+  Widget _buildPostHeader() {
     return Row(
       children: [
-        InkWell(
-          onTap: () {
-            _navigateToOtherUserScreen(currentUser!.uid);
-          },
-          child: CircleAvatar(
-            backgroundImage: CachedNetworkImageProvider(
-              user.profileImage,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Text(
-                '#${user.name}',
-                style:
-                    const TextStyle(fontWeight: FontWeight.w600, fontSize: 11),
+              InkWell(
+                onTap: () {
+                  _navigateToCommunityScreen(
+                      widget.community, currentUser!.uid);
+                },
+                child: CircleAvatar(
+                  backgroundImage: NetworkImage(
+                    widget.community.profileImage,
+                  ),
+                  radius: 20,
+                ),
               ),
-              Row(
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    formatTime(post.createdAt),
-                    style: TextStyle(
-                      color: Colors.grey[600],
+                    '#${widget.community.name}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
                       fontSize: 12,
                     ),
                   ),
-                  const SizedBox(width: 3),
-                  const Icon(
-                    Icons.public,
-                    color: Colors.grey,
-                    size: 12,
+                  const SizedBox(height: 4),
+                  Text(
+                    formatTime(
+                      widget.post.createdAt,
+                    ),
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 10,
+                    ),
                   ),
                 ],
-              )
+              ),
             ],
           ),
+        ),
+        IconButton(
+          onPressed: () {
+            _showBottomSheet(currentUser!.uid, widget.author.name);
+          },
+          icon: const Icon(Icons.more_horiz),
         ),
       ],
     );
   }
 
-  Widget _buildPostStat({required UserModel user}) {
+  Widget _buildPostStat() {
     return Column(
       children: [
         Row(
@@ -459,13 +442,17 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                 ) ??
                 const Text(''),
             const SizedBox(width: 8),
-            Text(
-              '69 Shares',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 10,
-              ),
-            ),
+            ref.watch(getPostShareCountProvider(widget.post.id)).whenOrNull(
+                    data: (count) {
+                  return Text(
+                    '$count Shares',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 10,
+                    ),
+                  );
+                }) ??
+                const Text(''),
           ],
         ),
         const Divider(
@@ -474,11 +461,11 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         ),
         PostActions(
           post: widget.post,
-          onVote: votePost,
+          onVote: _votePost,
           onComment: () {
             _navigateToCommentScreen();
           },
-          onShare: () {},
+          onShare: _showShareDialog,
         ),
         const Divider(
           thickness: 0.5,

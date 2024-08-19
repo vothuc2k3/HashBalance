@@ -12,4 +12,5 @@ class FirebaseConstants {
   static const postVoteCollection = 'post_vote';
   static const commentVoteCollection = 'comment_vote';
   static const followerCollection = 'follower';
+  static const postShareCollection = 'post_shares';
 }

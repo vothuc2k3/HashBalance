@@ -9,6 +9,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/common/splash/splash_screen.dart';
+import 'package:hash_balance/features/message/screen/message_screen.dart';
 import 'package:toastification/toastification.dart';
 
 import 'package:hash_balance/core/common/constants/constants.dart';
@@ -77,7 +79,7 @@ class MyAppState extends ConsumerState<MyApp> {
     flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (response) async {
-        _handleNotificationTap(response);
+        await _handleNotificationTap(response);
       },
     );
   }
@@ -88,32 +90,61 @@ class MyAppState extends ConsumerState<MyApp> {
       try {
         // Decode the payload to a Map
         final payloadData = jsonDecode(response.payload!);
-        print(
-            'Payload data: $payloadData'); // In ra chi tiết của payload để kiểm tra
 
-        // Check the type and navigate accordingly
-        if (payloadData['type'] == 'accept_request') {
-          // Navigate to the corresponding screen
-          final targetUser = await _fetchUserByUid(payloadData['uid']);
-          navigatorKey.currentState?.push(
-            MaterialPageRoute(
-              builder: (context) => OtherUserProfileScreen(
-                targetUser: targetUser,
+        switch (payloadData['type']) {
+          case 'accept_request':
+            navigatorKey.currentState?.push(
+              MaterialPageRoute(
+                builder: (context) => const SplashScreen(),
               ),
-            ),
-          );
-        } else if (payloadData['type'] == 'friend_request') {
-          // Navigate to the corresponding screen
-          final targetUser = await _fetchUserByUid(payloadData['uid']);
-          navigatorKey.currentState?.push(
-            MaterialPageRoute(
-              builder: (context) => OtherUserProfileScreen(
-                targetUser: targetUser,
+            );
+
+            final targetUser = await _fetchUserByUid(payloadData['uid']);
+            navigatorKey.currentState?.pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => OtherUserProfileScreen(
+                  targetUser: targetUser,
+                ),
               ),
-            ),
-          );
-        } else {
-          print('Unknown action');
+            );
+            break;
+
+          case 'friend_request':
+            navigatorKey.currentState?.push(
+              MaterialPageRoute(
+                builder: (context) => const SplashScreen(),
+              ),
+            );
+            final targetUser = await _fetchUserByUid(payloadData['uid']);
+
+            navigatorKey.currentState?.pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => OtherUserProfileScreen(
+                  targetUser: targetUser,
+                ),
+              ),
+            );
+            break;
+          case 'incoming_message':
+            navigatorKey.currentState?.push(
+              MaterialPageRoute(
+                builder: (context) => const SplashScreen(),
+              ),
+            );
+            final targetUser = await _fetchUserByUid(payloadData['uid']);
+
+            navigatorKey.currentState?.pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => MessageScreen(
+                  targetUser: targetUser,
+                ),
+              ),
+            );
+            break;
+
+          default:
+            print('Unknown action');
+            break;
         }
       } catch (e) {
         print('Error parsing payload: $e');
@@ -150,7 +181,7 @@ class MyAppState extends ConsumerState<MyApp> {
     // Tạo payload từ message data
     final Map<String, dynamic> payloadData = message.data;
 
-    final payload = jsonEncode(payloadData); // Đảm bảo payload là JSON hợp lệ
+    final payload = jsonEncode(payloadData);
 
     await flutterLocalNotificationsPlugin.show(
       0,
@@ -161,7 +192,7 @@ class MyAppState extends ConsumerState<MyApp> {
     );
   }
 
-  void _updateUserData() async {
+  void _updateUserData() {
     _users.doc(userData!.uid).snapshots().listen((event) {
       if (event.exists) {
         final data = event.data() as Map<String, dynamic>;

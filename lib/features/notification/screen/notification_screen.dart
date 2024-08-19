@@ -7,6 +7,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:hash_balance/core/common/constants/constants.dart';
+import 'package:hash_balance/core/common/splash/splash_screen.dart';
 
 import 'package:hash_balance/core/common/widgets/error_text.dart';
 import 'package:hash_balance/core/common/widgets/loading.dart';
@@ -26,8 +27,14 @@ class NotificationScreen extends ConsumerStatefulWidget {
 
 class NotificationScreenState extends ConsumerState<NotificationScreen> {
   void navigateToProfileScreen(String uid) async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SplashScreen(),
+      ),
+    );
     final targetUser = await _fetchUserByUid(uid);
-    await Navigator.push(
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (context) => OtherUserProfileScreen(

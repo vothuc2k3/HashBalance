@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/common/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
+import 'package:hash_balance/features/post_share/post_share_controller/post_share_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 import 'package:mdi/mdi.dart';
@@ -38,6 +39,7 @@ class PostContainer extends ConsumerStatefulWidget {
 
 class _PostContainerState extends ConsumerState<PostContainer> {
   TextEditingController commentTextController = TextEditingController();
+  TextEditingController shareTextController = TextEditingController();
   VideoPlayerController? _videoController;
   bool _isPlaying = false;
   String? _videoDuration;
@@ -62,6 +64,15 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     result.fold((l) {
       showToast(false, l.toString());
     }, (_) {});
+  }
+
+  void _sharePost(String? content) async {
+    final result = await ref
+        .watch(postShareControllerProvider.notifier)
+        .sharePost(postId: widget.post.id, content: content);
+    result.fold((l) => showToast(false, l.message), (r) {
+      showToast(true, 'Share successfully...');
+    });
   }
 
   void _navigateToCommentScreen() {
@@ -98,6 +109,39 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         );
         break;
     }
+  }
+
+  void _showShareDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Share Post'),
+          content: TextField(
+            controller: shareTextController,
+            decoration: const InputDecoration(
+              hintText: 'Add a message to your share...',
+            ),
+            maxLines: 3,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (shareTextController.text.isNotEmpty) {
+                  _sharePost(shareTextController.text);
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Share'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _handlePinPost() async {
@@ -438,13 +482,17 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                 ) ??
                 const Text(''),
             const SizedBox(width: 8),
-            Text(
-              '69 Shares',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 10,
-              ),
-            ),
+            ref.watch(getPostShareCountProvider(widget.post.id)).whenOrNull(
+                    data: (count) {
+                  return Text(
+                    '$count Shares',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 10,
+                    ),
+                  );
+                }) ??
+                const Text(''),
           ],
         ),
         const Divider(
@@ -457,7 +505,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
           onComment: () {
             _navigateToCommentScreen();
           },
-          onShare: () {},
+          onShare: _showShareDialog,
         ),
         const Divider(
           thickness: 0.5,
