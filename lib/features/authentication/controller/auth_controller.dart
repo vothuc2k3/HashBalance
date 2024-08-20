@@ -6,11 +6,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
-import 'package:hash_balance/core/common/constants/constants.dart';
+import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/models/user_devices_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 final authControllerProvider = StateNotifierProvider<AuthController, bool>(
@@ -84,15 +83,9 @@ class AuthController extends StateNotifier<bool> {
         bio: 'New user',
         description: 'Nothing, I\'m a new user here....',
       );
-      final userDevice = UserDevices(
-        uid: '',
-        deviceToken: Constants.deviceToken ?? '',
-        createdAt: Timestamp.now(),
-      );
 
       final result = await _authRepository.signUpWithEmailAndPassword(
         userModel,
-        userDevice,
         password,
       );
       return result.fold(
@@ -120,13 +113,8 @@ class AuthController extends StateNotifier<bool> {
   ) async {
     state = true;
     try {
-      final userDevice = UserDevices(
-        uid: '',
-        deviceToken: Constants.deviceToken!,
-        createdAt: Timestamp.now(),
-      );
-      final result = await _authRepository.signInWithEmailAndPassword(
-          email, userDevice, password);
+      final result =
+          await _authRepository.signInWithEmailAndPassword(email, password);
       return result.fold((l) => left(Failures(l.message)), (userModel) async {
         _ref.watch(userProvider.notifier).update((state) => userModel);
         return right(userModel);

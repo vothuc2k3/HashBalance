@@ -2,25 +2,27 @@
 
 import 'dart:convert';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/common/splash/splash_screen.dart';
-import 'package:hash_balance/features/message/screen/message_screen.dart';
+import 'package:hash_balance/core/hive_models/hive_user_model.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:toastification/toastification.dart';
 
-import 'package:hash_balance/core/common/constants/constants.dart';
-import 'package:hash_balance/core/common/constants/firebase_constants.dart';
-import 'package:hash_balance/core/common/widgets/error_text.dart';
-import 'package:hash_balance/core/common/widgets/loading.dart';
+import 'package:hash_balance/core/constants/constants.dart';
+import 'package:hash_balance/core/services/device_token_service.dart';
+import 'package:hash_balance/core/services/user_friends_service.dart';
+import 'package:hash_balance/core/splash/splash_screen.dart';
+import 'package:hash_balance/core/widgets/error_text.dart';
+import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
 import 'package:hash_balance/features/home/screen/home_screen.dart';
+import 'package:hash_balance/features/message/screen/message_screen.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/firebase_options.dart';
@@ -34,6 +36,8 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await Hive.initFlutter();
+  Hive.registerAdapter(HiveUserModelAdapter());
   Constants.deviceToken = await FirebaseMessaging.instance.getToken();
   runApp(
     const ProviderScope(
@@ -56,10 +60,8 @@ class MyApp extends ConsumerStatefulWidget {
 class MyAppState extends ConsumerState<MyApp> {
   UserModel? userData;
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  //REFERENCE ALL THE USERS
-  CollectionReference get _users =>
-      _firestore.collection(FirebaseConstants.usersCollection);
+  late final DeviceTokenService _deviceTokenService;
+  late final UserFriendsService _userFriendService;
 
   void _getUserData(WidgetRef ref, User data) async {
     userData = await ref
@@ -67,6 +69,8 @@ class MyAppState extends ConsumerState<MyApp> {
         .getUserData(data.uid)
         .first;
     ref.watch(userProvider.notifier).update((state) => userData);
+    await _deviceTokenService.updateUserData(userData);
+    await _userFriendService.fetchUserFriends(userData);
   }
 
   void _setupLocalNotifications() async {
@@ -141,7 +145,6 @@ class MyAppState extends ConsumerState<MyApp> {
               ),
             );
             break;
-
           default:
             print('Unknown action');
             break;
@@ -192,21 +195,6 @@ class MyAppState extends ConsumerState<MyApp> {
     );
   }
 
-  void _updateUserData() {
-    _users.doc(userData!.uid).snapshots().listen((event) {
-      if (event.exists) {
-        final data = event.data() as Map<String, dynamic>;
-
-        final createdAt = data['createdAt'] as Timestamp;
-        final hashAge = DateTime.now().difference(createdAt.toDate()).inDays;
-
-        _users.doc(userData!.uid).update({
-          'hashAge': hashAge,
-        });
-      }
-    });
-  }
-
   @override
   void initState() {
     _setupLocalNotifications();
@@ -219,9 +207,8 @@ class MyAppState extends ConsumerState<MyApp> {
         }
       },
     );
-    if (userData != null) {
-      _updateUserData();
-    }
+    _deviceTokenService = DeviceTokenService();
+    _userFriendService = UserFriendsService();
     super.initState();
   }
 

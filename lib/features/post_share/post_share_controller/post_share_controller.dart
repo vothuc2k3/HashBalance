@@ -6,13 +6,16 @@ import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/post_share/post_share_repository/post_share_repository.dart';
+import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/post_share_model.dart';
 
-final getPostShareCountProvider = StreamProvider.family((ref, String postId) {
-  return ref
-      .watch(postShareControllerProvider.notifier)
-      .getPostShareCount(postId);
-});
+final getFriendsSharePostsProvider = StreamProvider.family(
+    (ref, List<String> friendUids) => ref
+        .watch(postShareControllerProvider.notifier)
+        .getFriendsSharePosts(friendUids));
+
+final getPostShareCountProvider = StreamProvider.family((ref, String postId) =>
+    ref.watch(postShareControllerProvider.notifier).getPostShareCount(postId));
 
 final postShareControllerProvider = StateNotifierProvider((ref) {
   return PostShareController(
@@ -55,5 +58,10 @@ class PostShareController extends StateNotifier<bool> {
   //FETCH THE NUMBER OF SHARE COUNT OF A POST
   Stream<int> getPostShareCount(String postId) {
     return _postShareRepository.getPostShareCount(postId);
+  }
+
+  // FETCH FRIENDS' SHARE POSTS
+  Stream<List<Post>?> getFriendsSharePosts(List<String> friendUids) {
+    return _postShareRepository.getFriendsSharePosts(friendUids);
   }
 }

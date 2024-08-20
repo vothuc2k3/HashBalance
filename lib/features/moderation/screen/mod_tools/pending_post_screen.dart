@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/common/widgets/error_text.dart';
-import 'package:hash_balance/core/common/widgets/loading.dart';
+import 'package:hash_balance/core/widgets/error_text.dart';
+import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/models/post_model.dart';
 

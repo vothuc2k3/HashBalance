@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:icons_plus/icons_plus.dart';
 
-import 'package:hash_balance/core/common/widgets/error_text.dart';
-import 'package:hash_balance/core/common/widgets/loading.dart';
+import 'package:hash_balance/core/widgets/error_text.dart';
+import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
@@ -28,7 +28,7 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
     ref.refresh(getCommunitiesPostsProvider);
   }
 
-  void navigateToCreatePostScreen() {
+  void _navigateToCreatePostScreen() {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -111,11 +111,10 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
                                           },
                                           error: (error, stackTrace) =>
                                               Container(
-                                                padding:
-                                                    const EdgeInsets.all(16),
-                                                child: ErrorText(
-                                                    error: error.toString()),
-                                              ),
+                                                  padding:
+                                                      const EdgeInsets.all(16),
+                                                  child: ErrorText(
+                                                      error: error.toString())),
                                           loading: () => const Loading());
                                 },
                                 childCount: posts.length,
@@ -157,7 +156,7 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
                 ),
                 Expanded(
                   child: GestureDetector(
-                    onTap: navigateToCreatePostScreen,
+                    onTap: _navigateToCreatePostScreen,
                     child: const TextField(
                       decoration: InputDecoration(
                         labelText: 'Share your moments....',

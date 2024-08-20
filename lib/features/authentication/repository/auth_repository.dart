@@ -6,13 +6,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:hash_balance/core/common/constants/constants.dart';
-import 'package:hash_balance/core/common/constants/firebase_constants.dart';
+import 'package:hash_balance/core/constants/constants.dart';
+import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
-import 'package:hash_balance/models/user_devices_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 final userProvider = StateProvider<UserModel?>((ref) => null);
@@ -87,7 +86,7 @@ class AuthRepository {
 
   //SIGN UP WITH EMAIL AND PASSWORD
   FutureUserModel signUpWithEmailAndPassword(
-      UserModel newUser, UserDevices userDevice, String password) async {
+      UserModel newUser, String password) async {
     try {
       final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: newUser.email,
@@ -100,9 +99,6 @@ class AuthRepository {
 
       await _users.doc(userUid).set(copyUser.toMap());
       user = copyUser;
-      var userDeviceCopy = userDevice.copyWith(uid: copyUser.uid);
-
-      await _userDevices.doc().set(userDeviceCopy.toMap());
 
       return right(user);
     } on FirebaseAuthException catch (e) {
@@ -114,23 +110,12 @@ class AuthRepository {
 
   //SIGN THE USER IN WITH EMAIL AND PASSWORD
   FutureUserModel signInWithEmailAndPassword(
-      String email, UserDevices userDevice, String password) async {
+      String email, String password) async {
     try {
       final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-
-      final devicesDoc = await _userDevices
-          .where('uid', isEqualTo: userCredential.user!.uid)
-          .where('deviceToken', isEqualTo: userDevice.deviceToken)
-          .get();
-
-      //CHECK DUPLICATE DEVICES
-      if (devicesDoc.docs.isEmpty) {
-        var userDeviceCopy = userDevice.copyWith(uid: userCredential.user!.uid);
-        await _userDevices.doc().set(userDeviceCopy.toMap());
-      }
 
       final user = await getUserData(userCredential.user!.uid).first;
 

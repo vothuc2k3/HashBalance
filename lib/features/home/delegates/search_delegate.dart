@@ -1,10 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/common/splash/splash_screen.dart';
+import 'package:hash_balance/core/splash/splash_screen.dart';
 
-import 'package:hash_balance/core/common/widgets/error_text.dart';
-import 'package:hash_balance/core/common/widgets/loading.dart';
+import 'package:hash_balance/core/widgets/error_text.dart';
+import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';

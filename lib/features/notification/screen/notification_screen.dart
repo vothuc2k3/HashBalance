@@ -6,11 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:hash_balance/core/common/constants/constants.dart';
-import 'package:hash_balance/core/common/splash/splash_screen.dart';
+import 'package:hash_balance/core/constants/constants.dart';
+import 'package:hash_balance/core/splash/splash_screen.dart';
 
-import 'package:hash_balance/core/common/widgets/error_text.dart';
-import 'package:hash_balance/core/common/widgets/loading.dart';
+import 'package:hash_balance/core/widgets/error_text.dart';
+import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';

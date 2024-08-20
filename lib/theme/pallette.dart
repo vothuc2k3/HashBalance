@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hash_balance/core/common/animations/custom_page_transition.dart';
+import 'package:hash_balance/core/animations/custom_page_transition.dart';
 
 class Pallete {
   // Colors

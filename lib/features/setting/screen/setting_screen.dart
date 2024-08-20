@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/features/admin_dashboard/screen/admin_dashboard.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
 import 'package:hash_balance/theme/pallette.dart';
@@ -19,7 +18,7 @@ class SettingScreen extends ConsumerStatefulWidget {
 class SettingScreenState extends ConsumerState<SettingScreen> {
   bool isTrySigningOut = false;
 
-  void signOut() {
+  void _signOut() {
     setState(() {
       isTrySigningOut = true;
     });
@@ -32,12 +31,7 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
     });
   }
 
-  void navigateToTestScreen() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const AdminDashboard()),
-    );
-  }
+  void _testButton() async {}
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +60,7 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            onTap: () => signOut(),
+            onTap: _signOut,
           ),
           ListTile(
             leading: Icon(
@@ -74,12 +68,12 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
               color: Pallete.redColor,
             ),
             title: const Text(
-              'Open the test screen',
+              'TEST BUTTON',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
               ),
             ),
-            onTap: () => navigateToTestScreen(),
+            onTap: _testButton,
           ),
         ],
       ),
