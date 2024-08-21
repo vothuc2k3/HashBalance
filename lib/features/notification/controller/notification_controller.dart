@@ -7,13 +7,13 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/notification/repository/notification_repository.dart';
 import 'package:hash_balance/models/notification_model.dart';
 
-final deleteNotifProvider = FutureProvider.family((ref, String notifId) {
+final deleteNotifProvider = FutureProvider.family.autoDispose((ref, String notifId) {
   return ref
       .watch(notificationControllerProvider.notifier)
       .deleteNotif(notifId);
 });
 
-final getNotifsProvider = StreamProvider.family((ref, String uid) {
+final getNotifsProvider = StreamProvider.family.autoDispose((ref, String uid) {
   return ref
       .watch(notificationControllerProvider.notifier)
       .getNotificationByUid(uid);

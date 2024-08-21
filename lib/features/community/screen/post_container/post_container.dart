@@ -44,7 +44,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   bool _isPlaying = false;
   String? _videoDuration;
   String? _currentPosition;
-  UserModel? currentUser;
 
   void _togglePlayPause() {
     setState(() {
@@ -231,7 +230,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
 
   @override
   void didChangeDependencies() {
-    currentUser = ref.watch(userProvider);
     super.didChangeDependencies();
   }
 
@@ -407,10 +405,11 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     Post post,
     UserModel author,
   ) {
+    final currentUser = ref.watch(userProvider)!;
     return Row(
       children: [
         InkWell(
-          onTap: () => _navigateToOtherUserScreen(currentUser!.uid),
+          onTap: () => _navigateToOtherUserScreen(author.uid),
           child: CircleAvatar(
             backgroundImage: CachedNetworkImageProvider(
               author.profileImage,
@@ -449,7 +448,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         ),
         IconButton(
           onPressed: () {
-            _showBottomSheet(currentUser!.uid, widget.author.name);
+            _showBottomSheet(currentUser.uid, widget.author.name);
           },
           icon: const Icon(Icons.more_horiz),
         ),

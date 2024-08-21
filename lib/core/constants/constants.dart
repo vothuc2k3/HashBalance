@@ -15,7 +15,6 @@ class Constants {
   static const bannerDefault = 'https://i.imgur.com/gKLRsMZ.jpg';
   static const cameraIcon = 'https://i.imgur.com/cqjP4oR.png';
   static const avatarDefault = [
-    'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/avatars/89/89496ab402ac222c0ddaed7add5d9eb6deb759f9_full.jpg',
     'https://ichef.bbci.co.uk/news/976/cpsprodpb/16620/production/_91408619_55df76d5-2245-41c1-8031-07a4da3f313f.jpg',
     'https://media.vanityfair.com/photos/5f5156490ca7fe28f9ec3f55/4:3/w_1775,h_1331,c_limit/feels-good-man-film.jpg'
   ];
@@ -71,8 +70,6 @@ class Constants {
   static String getIncomingMessageContent(String name) {
     return '$name has sent you a message!';
   }
-
-  static String? deviceToken;
 
   static String agoraAppId = 'a9942d0368fc4cdf9e59df9df19899c9';
 

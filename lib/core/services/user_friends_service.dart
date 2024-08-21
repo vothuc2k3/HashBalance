@@ -3,7 +3,7 @@ import 'package:hash_balance/models/user_model.dart';
 import 'package:hive/hive.dart';
 
 import 'package:hash_balance/core/constants/firebase_constants.dart';
-import 'package:hash_balance/core/hive_models/hive_user_model.dart';
+import 'package:hash_balance/core/hive_models/user_model/hive_user_model.dart';
 
 class UserFriendsService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

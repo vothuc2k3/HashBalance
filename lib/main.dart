@@ -8,12 +8,13 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/hive_models/hive_user_model.dart';
+import 'package:hash_balance/core/hive_models/community/hive_community_model.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:toastification/toastification.dart';
 
-import 'package:hash_balance/core/constants/constants.dart';
+import 'package:hash_balance/core/hive_models/user_model/hive_user_model.dart';
 import 'package:hash_balance/core/services/device_token_service.dart';
+import 'package:hash_balance/core/services/joined_communities_service.dart';
 import 'package:hash_balance/core/services/user_friends_service.dart';
 import 'package:hash_balance/core/splash/splash_screen.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
@@ -38,7 +39,8 @@ void main() async {
   );
   await Hive.initFlutter();
   Hive.registerAdapter(HiveUserModelAdapter());
-  Constants.deviceToken = await FirebaseMessaging.instance.getToken();
+  Hive.registerAdapter(HiveCommunityModelAdapter());
+  await FirebaseMessaging.instance.getToken();
   runApp(
     const ProviderScope(
       child: ToastificationWrapper(
@@ -62,15 +64,17 @@ class MyAppState extends ConsumerState<MyApp> {
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   late final DeviceTokenService _deviceTokenService;
   late final UserFriendsService _userFriendService;
+  late final JoinedCommunitiesService _joinedCommunitiesService;
 
-  void _getUserData(WidgetRef ref, User data) async {
+  void _getUserData(User data) async {
     userData = await ref
         .watch(authControllerProvider.notifier)
         .getUserData(data.uid)
         .first;
     ref.watch(userProvider.notifier).update((state) => userData);
-    await _deviceTokenService.updateUserData(userData);
+    await _deviceTokenService.updateUserDeviceToken(userData);
     await _userFriendService.fetchUserFriends(userData);
+    await _joinedCommunitiesService.fetchJoinedCommunities(userData);
   }
 
   void _setupLocalNotifications() async {
@@ -89,10 +93,8 @@ class MyAppState extends ConsumerState<MyApp> {
   }
 
   Future<void> _handleNotificationTap(NotificationResponse response) async {
-    print(response); // In ra chi tiết của NotificationResponse để kiểm tra
     if (response.payload != null) {
       try {
-        // Decode the payload to a Map
         final payloadData = jsonDecode(response.payload!);
 
         switch (payloadData['type']) {
@@ -209,37 +211,24 @@ class MyAppState extends ConsumerState<MyApp> {
     );
     _deviceTokenService = DeviceTokenService();
     _userFriendService = UserFriendsService();
+    _joinedCommunitiesService = JoinedCommunitiesService();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    final userData = ref.watch(userProvider);
+
     return ref.watch(authStageChangeProvider).when(
           data: (user) {
             if (user != null) {
-              _getUserData(ref, user);
+              _getUserData(user);
               return MaterialApp(
                 navigatorKey: navigatorKey,
                 debugShowCheckedModeBanner: false,
                 title: 'Hash Balance',
                 theme: Pallete.darkModeAppTheme,
-                home: Consumer(
-                  builder: (context, watch, child) {
-                    final userData = ref.watch(userProvider);
-                    if (userData != null) {
-                      return PopScope(
-                        onPopInvoked: (didPop) {
-                          final authController =
-                              ref.watch(authControllerProvider.notifier);
-                          authController.signOut(ref);
-                        },
-                        child: const HomeScreen(),
-                      );
-                    } else {
-                      return const Loading();
-                    }
-                  },
-                ),
+                home: userData != null ? const HomeScreen() : const Loading(),
               );
             } else {
               return MaterialApp(

@@ -131,6 +131,7 @@ class AuthController extends StateNotifier<bool> {
   void signOut(WidgetRef ref) {
     final uid = _ref.watch(userProvider)!.uid;
     _authRepository.signOut(ref, uid);
+    
   }
 
   FutureString changeUserPrivacy({

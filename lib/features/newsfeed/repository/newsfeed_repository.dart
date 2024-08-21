@@ -17,10 +17,7 @@ class NewsfeedRepository {
   //GET THE COMMUNITIES BY CURRENT USER
   Stream<List<Post>> getJoinedCommunitiesPosts(String uid) {
     return _communityMembership
-        .where(
-          'uid',
-          isEqualTo: uid,
-        )
+        .where('uid', isEqualTo: uid)
         .snapshots()
         .asyncMap((data) async {
       final communitiesId =

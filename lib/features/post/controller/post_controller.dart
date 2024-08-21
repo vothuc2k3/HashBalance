@@ -13,9 +13,8 @@ import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/post_vote_model.dart';
 
-
-
-final getPostCommentCountProvider = StreamProvider.family((ref, String postId) {
+final getPostCommentCountProvider =
+    StreamProvider.family.autoDispose((ref, String postId) {
   return ref.watch(postControllerProvider.notifier).getPostCommentCount(postId);
 });
 
@@ -26,27 +25,30 @@ final getPendingPostsProvider =
       .getPendingPosts(communityId);
 });
 
-final getPostVoteCountProvider = StreamProvider.family((ref, Post post) {
+final getPostVoteCountProvider =
+    StreamProvider.family.autoDispose((ref, Post post) {
   return ref.watch(postControllerProvider.notifier).getPostVoteCount(post);
 });
 
-final getPostVoteStatusProvider = StreamProvider.family((ref, Post post) {
+final getPostVoteStatusProvider =
+    StreamProvider.family.autoDispose((ref, Post post) {
   return ref.watch(postControllerProvider.notifier).getPostVoteStatus(post);
 });
 
-final fetchCommunityPostsProvider = StreamProvider.family(
+final fetchCommunityPostsProvider = StreamProvider.family.autoDispose(
     (ref, String communityId) => ref
         .watch(postControllerProvider.notifier)
         .fetchCommunityPosts(communityId));
+        
+final getPostByIdProvider =
+    StreamProvider.autoDispose.family((ref, String postId) {
+  return ref.watch(postControllerProvider.notifier).getPostById(postId);
+});
 
 final postControllerProvider = StateNotifierProvider<PostController, bool>(
   (ref) => PostController(
       postRepository: ref.watch(postRepositoryProvider), ref: ref),
 );
-
-final getPostByIdProvider = StreamProvider.family((ref, String postId) {
-  return ref.watch(postControllerProvider.notifier).getPostById(postId);
-});
 
 class PostController extends StateNotifier<bool> {
   final PostRepository _postRepository;

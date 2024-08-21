@@ -6,13 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/community/screen/post_container/post_container.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/mod_tools_screen.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/features/post/screen/create_post_screen.dart';
-import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 
@@ -339,7 +339,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
               if (widget._pinnedPost != null)
                 SliverToBoxAdapter(
                   child: ref
-                      .watch(getUserByUidProvider(widget._pinnedPost!.uid))
+                      .watch(getUserDataProvider(widget._pinnedPost!.uid))
                       .when(
                         data: (author) {
                           return PostContainer(
@@ -382,7 +382,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
                         final post = filteredPosts[index];
-                        return ref.watch(getUserByUidProvider(post.uid)).when(
+                        return ref.watch(getUserDataProvider(post.uid)).when(
                               data: (author) {
                                 return PostContainer(
                                   isMod: tempMemberStatus == 'moderator',

@@ -11,7 +11,7 @@ import 'package:hash_balance/models/comment_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 
 final getCommentRepliesProvider =
-    StreamProvider.family((ref, String parentCommentId) {
+    StreamProvider.family.autoDispose((ref, String parentCommentId) {
   return ref
       .watch(replyCommentControllerProvider.notifier)
       .getCommentReplies(parentCommentId);

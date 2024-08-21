@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/reply_comment/controller/reply_comment_controller.dart';
-import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 import 'package:hash_balance/models/comment_model.dart';
@@ -141,7 +141,7 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
         contentRoot: (context, data) =>
             _buildContent(widget.author, widget.comment),
         contentChild: (context, data) =>
-            ref.watch(getUserByUidProvider(data.uid)).when(
+            ref.watch(getUserDataProvider(data.uid)).when(
                   data: (replyAuthor) {
                     return _buildContent(replyAuthor, data);
                   },
@@ -192,7 +192,7 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
           Row(
             children: [
               // Upvote button
-              ref.read(getCommentVoteStatusProvider(comment.id)).when(
+              ref.watch(getCommentVoteStatusProvider(comment.id)).when(
                     data: (isUpvoted) {
                       return IconButton(
                         icon: Icon(
@@ -214,7 +214,7 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
                     loading: () => const CircularProgressIndicator(),
                   ),
               // Upvote count
-              ref.read(getCommentVoteCountProvider(comment.id)).when(
+              ref.watch(getCommentVoteCountProvider(comment.id)).when(
                     data: (voteCounts) {
                       return Text(
                         voteCounts['upvotes'].toString(),

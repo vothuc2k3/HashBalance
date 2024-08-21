@@ -4,10 +4,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/message/controller/message_controller.dart';
 import 'package:hash_balance/features/message/screen/message_screen.dart';
-import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/message_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
@@ -65,7 +65,7 @@ class _MessageListScreenState extends ConsumerState<MessageListScreen> {
                 );
 
                 final otherUser = ref.watch(
-                  getUserByUidProvider(
+                  getUserDataProvider(
                     conversation.participantUids
                         .firstWhere((uid) => uid != currentUser!.uid),
                   ),

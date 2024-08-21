@@ -46,7 +46,7 @@ class CommunityListDrawer extends ConsumerWidget {
     final result = await ref
         .watch(moderationControllerProvider.notifier)
         .fetchMembershipStatus(getMembershipId(uid, community.id));
-    if (community.pinPostId != null) {
+    if (community.pinPostId != '') {
       final pinnedPostResult = await ref
           .watch(postControllerProvider.notifier)
           .fetchPostByPostId(community.pinPostId!);

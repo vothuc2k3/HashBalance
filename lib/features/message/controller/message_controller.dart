@@ -13,18 +13,18 @@ import 'package:hash_balance/models/conversation_model.dart';
 import 'package:hash_balance/models/message_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 
-final getCurrentUserConversationProvider = StreamProvider((ref) {
+final getCurrentUserConversationProvider = StreamProvider.autoDispose((ref) {
   return ref
       .watch(messageControllerProvider.notifier)
       .getCurrentUserConversation();
 });
 
-final loadMessagesProvider = StreamProvider.family((ref, String targetUid) {
+final loadMessagesProvider = StreamProvider.family.autoDispose((ref, String targetUid) {
   return ref.watch(messageControllerProvider.notifier).loadMessages(targetUid);
 });
 
 final getLastMessageByConversationProvider =
-    StreamProvider.family((ref, String id) {
+    StreamProvider.family.autoDispose((ref, String id) {
   return ref
       .watch(messageControllerProvider.notifier)
       .getLastMessageByConversation(id);

@@ -263,7 +263,7 @@ class PostRepository {
       } else {
         return right(null);
       }
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e) {  
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));

@@ -14,7 +14,7 @@ class DeviceTokenService {
 
   DeviceTokenService();
 
-  Future<void> updateUserData(UserModel? userData) async {
+  Future<void> updateUserDeviceToken(UserModel? userData) async {
     if (userData != null) {
       final currentDeviceToken = await _firebaseMessaging.getToken();
       if (currentDeviceToken != null) {

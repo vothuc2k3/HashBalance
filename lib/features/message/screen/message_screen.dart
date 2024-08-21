@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/call/controller/call_controller.dart';
 import 'package:hash_balance/features/call/screen/call_screen.dart';
 
@@ -11,7 +12,6 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/message/controller/message_controller.dart';
 import 'package:hash_balance/features/message/screen/widget/message_bubble.dart';
-import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:flutter/foundation.dart' as foundation;
 
@@ -154,7 +154,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                             nextMessageUserId == currentMessageUserId;
 
                         return ref
-                            .watch(getUserByUidProvider(chatMessage.uid))
+                            .watch(getUserDataProvider(chatMessage.uid))
                             .whenOrNull(
                           data: (user) {
                             if (nextUserIsSame) {

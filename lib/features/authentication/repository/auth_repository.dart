@@ -129,14 +129,8 @@ class AuthRepository {
 
   //SIGN OUT
   void signOut(WidgetRef ref, String uid) async {
-    final userDevices = await _userDevices
-        .where('uid', isEqualTo: uid)
-        .where('deviceToken', isEqualTo: Constants.deviceToken)
-        .get();
-    for (var doc in userDevices.docs) {
-      await doc.reference.delete();
-    }
     await _firebaseAuth.signOut();
+    ref.watch(userProvider.notifier).update((state) => null);
   }
 
   //GET THE USER DATA
@@ -182,7 +176,4 @@ class AuthRepository {
   //REFERENCE ALL THE USERS
   CollectionReference get _users =>
       _firestore.collection(FirebaseConstants.usersCollection);
-  //REFERENCE ALL THE USERS
-  CollectionReference get _userDevices =>
-      _firestore.collection(FirebaseConstants.userDevicesCollection);
 }

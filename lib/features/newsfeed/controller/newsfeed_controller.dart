@@ -5,9 +5,10 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/newsfeed/repository/newsfeed_repository.dart';
 import 'package:hash_balance/models/post_model.dart';
 
-final getCommunitiesPostsProvider = StreamProvider((ref) {
-  final newsfeedController = ref.watch(newsfeedControllerProvider.notifier);
-  return newsfeedController.getJoinedCommunitiesPosts();
+final getCommunitiesPostsProvider = StreamProvider.autoDispose((ref) {
+  return ref
+      .watch(newsfeedControllerProvider.notifier)
+      .getJoinedCommunitiesPosts();
 });
 
 final newsfeedControllerProvider =
@@ -36,7 +37,7 @@ class NewsfeedController extends StateNotifier<bool> {
         super(false);
 
   Stream<List<Post>> getJoinedCommunitiesPosts() {
-    final user = _ref.read(userProvider);
+    final user = _ref.watch(userProvider);
     return _newsfeedRepository.getJoinedCommunitiesPosts(user!.uid);
   }
 }

@@ -14,10 +14,6 @@ final userControllerProvider = StateNotifierProvider<UserController, bool>(
   ),
 );
 
-final getUserByUidProvider = StreamProvider.family((ref, String uid) {
-  return ref.watch(userControllerProvider.notifier).getUserByUid(uid);
-});
-
 final getUserDeviceTokensProvider = FutureProvider.family((ref, String uid) =>
     ref.watch(userControllerProvider.notifier).getUserDeviceTokens(uid));
 
@@ -54,9 +50,7 @@ class UserController extends StateNotifier<bool> {
     }
   }
 
-  Stream<UserModel> getUserByUid(String uid) {
-    return _userRepository.getUserByUid(uid);
-  }
+
 
   Future<List<String>> getUserDeviceTokens(String uid) async {
     return await _userRepository.getUserDeviceTokens(uid);

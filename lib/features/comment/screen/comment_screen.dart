@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/comment/screen/comment_container/comment_container.dart';
-import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:flutter/foundation.dart' as foundation;
 
@@ -115,7 +115,7 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
                       itemBuilder: (context, index) {
                         final comment = comments[index];
                         return ref
-                            .watch(getUserByUidProvider(comment.uid))
+                            .watch(getUserDataProvider(comment.uid))
                             .when(
                               data: (author) {
                                 return CommentContainer(
