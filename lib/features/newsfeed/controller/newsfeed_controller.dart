@@ -36,7 +36,7 @@ class NewsfeedController extends StateNotifier<bool> {
         _ref = ref,
         super(false);
 
-  Stream<List<Post>> getJoinedCommunitiesPosts() {
+  Stream<List<Post>?> getJoinedCommunitiesPosts() {
     final user = _ref.watch(userProvider);
     return _newsfeedRepository.getJoinedCommunitiesPosts(user!.uid);
   }

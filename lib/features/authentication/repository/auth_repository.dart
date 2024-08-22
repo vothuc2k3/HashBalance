@@ -127,12 +127,6 @@ class AuthRepository {
     }
   }
 
-  //SIGN OUT
-  void signOut(WidgetRef ref, String uid) async {
-    await _firebaseAuth.signOut();
-    ref.watch(userProvider.notifier).update((state) => null);
-  }
-
   //GET THE USER DATA
   Stream<UserModel> getUserData(String uid) {
     final snapshot = _users.doc(uid).snapshots();

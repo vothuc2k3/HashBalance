@@ -387,7 +387,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                             ),
                           ],
                         )
-                      : const CircularProgressIndicator(),
+                      : const Loading(),
                 )
               : const SizedBox.shrink(),
           Padding(

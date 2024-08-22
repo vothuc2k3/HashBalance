@@ -13,18 +13,19 @@ import 'package:hash_balance/features/community/controller/comunity_controller.d
 import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
 import 'package:hash_balance/features/newsfeed/screen/post_container/post_container.dart';
 import 'package:hash_balance/features/post/screen/create_post_screen.dart';
-import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
 class NewsfeedScreen extends ConsumerStatefulWidget {
-  const NewsfeedScreen({super.key});
+  const NewsfeedScreen({
+    super.key,
+  });
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _NewsfeedScreenState();
+  ConsumerState<ConsumerStatefulWidget> createState() => NewsfeedScreenState();
 }
 
-class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
+class NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
   Future<void> _refreshPosts() async {
     ref.refresh(getCommunitiesPostsProvider);
   }
@@ -37,8 +38,6 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
       ),
     );
   }
-
-  
 
   @override
   Widget build(BuildContext context) {
@@ -56,68 +55,64 @@ class _NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
               const SliverToBoxAdapter(
                 child: SizedBox(height: 20),
               ),
-              FutureBuilder<List<Post>>(
-                future: ref
-                    .watch(newsfeedControllerProvider.notifier)
-                    .getJoinedCommunitiesPosts()
-                    .first, // Lấy dữ liệu từ Future
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const SliverToBoxAdapter(child: Loading());
-                  } else if (snapshot.hasError) {
-                    return SliverToBoxAdapter(
-                      child: ErrorText(error: snapshot.error.toString()),
-                    );
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const SliverToBoxAdapter(
-                      child: Text(
-                        'NOTHING',
-                        textAlign: TextAlign.center,
-                      ),
-                    );
-                  } else {
-                    final posts = snapshot.data!;
-                    return SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final post = posts[index];
-                          return ref.watch(getUserDataProvider(post.uid)).when(
-                                data: (author) {
+              ref.watch(getCommunitiesPostsProvider).when(
+                    data: (posts) {
+                      return posts == null
+                          ? const SliverToBoxAdapter(
+                              child: Text(
+                                'NOTHING',
+                                textAlign: TextAlign.center,
+                              ),
+                            )
+                          : SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  final post = posts[index];
                                   return ref
-                                      .watch(getCommunityByIdProvider(
-                                          post.communityId))
+                                      .watch(getUserDataProvider(post.uid))
                                       .when(
-                                        data: (community) {
-                                          if (community == null) {
-                                            return const ErrorText(
-                                              error:
-                                                  'Unexpected Error Happened...',
-                                            );
-                                          }
-                                          return PostContainer(
-                                            author: author,
-                                            post: post,
-                                            community: community,
-                                          );
+                                        data: (author) {
+                                          return ref
+                                              .watch(getCommunityByIdProvider(
+                                                  post.communityId))
+                                              .when(
+                                                data: (community) {
+                                                  if (community == null) {
+                                                    return const ErrorText(
+                                                      error:
+                                                          'Unexpected Error Happened...',
+                                                    );
+                                                  }
+                                                  return PostContainer(
+                                                    author: author,
+                                                    post: post,
+                                                    community: community,
+                                                  );
+                                                },
+                                                error: (error, stackTrace) =>
+                                                    ErrorText(
+                                                        error:
+                                                            error.toString()),
+                                                loading: () => const Loading(),
+                                              );
                                         },
-                                        error: (error, stackTrace) =>
-                                            ErrorText(error: error.toString()),
+                                        error: (error, stackTrace) => Container(
+                                            padding: const EdgeInsets.all(16),
+                                            child: ErrorText(
+                                                error: error.toString())),
                                         loading: () => const Loading(),
                                       );
                                 },
-                                error: (error, stackTrace) => Container(
-                                  padding: const EdgeInsets.all(16),
-                                  child: ErrorText(error: error.toString()),
-                                ),
-                                loading: () => const Loading(),
-                              );
-                        },
-                        childCount: posts.length,
+                              ),
+                            );
+                    },
+                    error: (error, stackTrace) => SliverToBoxAdapter(
+                      child: ErrorText(
+                        error: error.toString(),
                       ),
-                    );
-                  }
-                },
-              ),
+                    ),
+                    loading: () => const SliverToBoxAdapter(child: Loading()),
+                  ),
             ],
           ),
         ),

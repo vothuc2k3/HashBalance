@@ -15,7 +15,7 @@ class NewsfeedRepository {
       : _firestore = firestore;
 
   //GET THE COMMUNITIES BY CURRENT USER
-  Stream<List<Post>> getJoinedCommunitiesPosts(String uid) {
+  Stream<List<Post>?> getJoinedCommunitiesPosts(String uid) {
     return _communityMembership
         .where('uid', isEqualTo: uid)
         .snapshots()
@@ -26,10 +26,14 @@ class NewsfeedRepository {
       for (var communityId in communitiesId) {
         final communityPosts =
             await _posts.where('communityId', isEqualTo: communityId).get();
-        for (var postDoc in communityPosts.docs) {
-          posts.add(
-            Post.fromMap(postDoc.data() as Map<String, dynamic>),
-          );
+        if (communityPosts.docs.isEmpty) {
+          return null;
+        } else {
+          for (var postDoc in communityPosts.docs) {
+            posts.add(
+              Post.fromMap(postDoc.data() as Map<String, dynamic>),
+            );
+          }
         }
       }
       return posts;
