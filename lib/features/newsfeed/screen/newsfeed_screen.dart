@@ -7,7 +7,6 @@ import 'package:hash_balance/models/post_data_model.dart';
 import 'package:icons_plus/icons_plus.dart';
 
 import 'package:hash_balance/core/widgets/error_text.dart';
-import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
 import 'package:hash_balance/features/newsfeed/screen/post_container/post_container.dart';
@@ -60,9 +59,7 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
                       .read(newsfeedControllerProvider)
                       .getJoinedCommunitiesPosts(),
                   builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Loading();
-                    } else if (snapshot.hasError) {
+                    if (snapshot.hasError) {
                       return ErrorText(error: snapshot.error.toString());
                     } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                       return const Center(
@@ -80,7 +77,7 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
                           return PostContainer(
                               author: postData.author,
                               post: postData.post,
-                              community: postData.communty);
+                              community: postData.community);
                         },
                       );
                     }

@@ -54,13 +54,47 @@ class NewsfeedRepository {
           postDataList.add(PostDataModel(
             post: post,
             author: author,
-            communty: community,
+            community: community,
           ));
         }));
       }
     }
 
     return postDataList;
+  }
+
+  //GET ALL POST OF A COMMUNITY
+  Future<List<PostDataModel>> getCommunityPosts(String communityId) async {
+    try {
+      final postQuerySnapshot =
+          await _posts.where('communityId', isEqualTo: communityId).get();
+
+      final List<PostDataModel> postDataModels = [];
+
+      for (final postDoc in postQuerySnapshot.docs) {
+        final postData = Post.fromMap(postDoc.data() as Map<String, dynamic>);
+
+        final authorDoc = await _users.doc(postData.uid).get();
+        final authorData =
+            UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
+
+        final communityDoc = await _communities.doc(postData.communityId).get();
+        final communityData =
+            Community.fromMap(communityDoc.data() as Map<String, dynamic>);
+
+        final postDataModel = PostDataModel(
+          post: postData,
+          author: authorData,
+          community: communityData,
+        );
+
+        postDataModels.add(postDataModel);
+      }
+
+      return postDataModels;
+    } on FirebaseException catch (e) {
+      throw e.toString();
+    }
   }
 
   //REFERENCE THE POSTS DATA

@@ -8,14 +8,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
-import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/community/screen/post_container/post_container.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/mod_tools_screen.dart';
+import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/features/post/screen/create_post_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/post_data_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 
 class CommunityScreen extends ConsumerStatefulWidget {
@@ -347,71 +348,39 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
           },
           body: CustomScrollView(
             slivers: [
-              // if (widget._pinnedPost != null)
-              //   SliverToBoxAdapter(
-              //     child: ref
-              //         .watch(combinedPostDataProvider(widget._pinnedPost!))
-              //         .when(
-              //           data: (combinedData) {
-              //             return PostContainer(
-              //               isMod: tempMemberStatus == 'moderator',
-              //               author: combinedData.author,
-              //               post: combinedData.post,
-              //               community: widget._community,
-              //               isPinnedPost: true,
-              //             );
-              //           },
-              //           error: (error, stackTrace) =>
-              //               ErrorText(error: error.toString()),
-              //           loading: () => const Loading(),
-              //         ),
-              //   ),
-              ref.watch(fetchCommunityPostsProvider(widget._community.id)).when(
-                    data: (posts) {
-                      if (posts == null || posts.isEmpty) {
-                        return const SliverToBoxAdapter(
-                          child: Text(
-                            'NOTHING',
-                            textAlign: TextAlign.center,
-                          ),
-                        );
-                      } else {
-                        return SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) {
-                              if (index >= posts.length) {
-                                return const SizedBox.shrink();
-                              }
-                              final post = posts[index];
-                              return ref
-                                  .watch(getUserDataProvider(post.uid))
-                                  .when(
-                                    data: (author) {
-                                      return PostContainer(
-                                        isPinnedPost: false,
-                                        isMod: tempMemberStatus == 'moderator',
-                                        author: author,
-                                        post: post,
-                                        community: widget._community,
-                                      );
-                                    },
-                                    error: (e, s) =>
-                                        ErrorText(error: e.toString()),
-                                    loading: () => const Loading(),
-                                  );
-                            },
-                            childCount: posts.length,
-                          ),
-                        );
-                      }
-                    },
-                    error: (error, stackTrace) => SliverToBoxAdapter(
-                      child: ErrorText(
-                        error: error.toString(),
-                      ),
-                    ),
-                    loading: () => const SliverToBoxAdapter(child: Loading()),
-                  ),
+              SliverToBoxAdapter(
+                child: FutureBuilder<List<PostDataModel>>(
+                  future: ref
+                      .read(newsfeedControllerProvider)
+                      .getCommunityPosts(widget._community.id),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return ErrorText(error: snapshot.error.toString());
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return const Center(
+                        child: Text('No posts available'),
+                      );
+                    } else {
+                      final posts = snapshot.data!;
+                      return ListView.builder(
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: posts.length,
+                        itemBuilder: (context, index) {
+                          final postData = posts[index];
+                          return PostContainer(
+                            isMod: tempMemberStatus == 'moderator',
+                            isPinnedPost: false,
+                            author: postData.author,
+                            post: postData.post,
+                            community: postData.community,
+                          );
+                        },
+                      );
+                    }
+                  },
+                ),
+              ),
             ],
           ),
         ),

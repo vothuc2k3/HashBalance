@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/splash/splash_screen.dart';
@@ -333,14 +334,10 @@ class _PostContainerState extends ConsumerState<PostContainer> {
           if (widget.post.image != null && widget.post.image != '')
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Image.network(
-                widget.post.image!,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) {
-                    return child;
-                  } else {
-                    return const Loading();
-                  }
+              child: CachedNetworkImage(
+                imageUrl: widget.post.image!,
+                progressIndicatorBuilder: (context, url, downloadProgress) {
+                  return const Loading();
                 },
               ),
             ),
@@ -494,9 +491,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                   .read(postControllerProvider.notifier)
                   .getPostCommentCount(widget.post.id),
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Loading();
-                }
                 return InkWell(
                   onTap: () => _navigateToCommentScreen(),
                   child: Text(
@@ -515,9 +509,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                   .read(postControllerProvider.notifier)
                   .getPostShareCount(widget.post.id),
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Loading();
-                }
                 return InkWell(
                   onTap: () => _navigateToCommentScreen(),
                   child: Text(
@@ -577,9 +568,7 @@ class PostActions extends ConsumerWidget {
           .read(postControllerProvider.notifier)
           .getPostVoteCountAndStatus(_post),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Loading();
-        } else if (snapshot.hasError) {
+        if (snapshot.hasError) {
           return Text('Error: ${snapshot.error}');
         } else if (snapshot.hasData) {
           final data = snapshot.data!;
