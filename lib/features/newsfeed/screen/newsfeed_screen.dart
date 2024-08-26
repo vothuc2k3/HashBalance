@@ -25,6 +25,7 @@ class NewsfeedScreen extends ConsumerStatefulWidget {
 
 class NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
   Future<void> _refreshPosts() async {
+    ref.invalidate(newsfeedControllerProvider);
     ref.refresh(newsfeedControllerProvider).getJoinedCommunitiesPosts();
   }
 

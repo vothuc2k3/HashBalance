@@ -10,8 +10,6 @@ class Post {
   final String content;
   final String? image;
   final String? video;
-  final int upvoteCount;
-  final int downvoteCount;
   final int commentCount;
   final int shareCount;
   final String status;
@@ -24,8 +22,6 @@ class Post {
     required this.content,
     this.image,
     this.video,
-    required this.upvoteCount,
-    required this.downvoteCount,
     required this.commentCount,
     required this.shareCount,
     required this.status,
@@ -55,8 +51,6 @@ class Post {
       content: content ?? this.content,
       image: image ?? this.image,
       video: video ?? this.video,
-      upvoteCount: upvoteCount ?? this.upvoteCount,
-      downvoteCount: downvoteCount ?? this.downvoteCount,
       commentCount: commentCount ?? this.commentCount,
       shareCount: shareCount ?? this.shareCount,
       status: status ?? this.status,
@@ -73,8 +67,6 @@ class Post {
       'content': content,
       'image': image,
       'video': video,
-      'upvoteCount': upvoteCount,
-      'downvoteCount': downvoteCount,
       'commentCount': commentCount,
       'shareCount': shareCount,
       'status': status,
@@ -91,8 +83,6 @@ class Post {
       content: map['content'] as String,
       image: map['image'] != null ? map['image'] as String : '',
       video: map['video'] != null ? map['video'] as String : '',
-      upvoteCount: map['upvoteCount'] as int,
-      downvoteCount: map['downvoteCount'] as int,
       commentCount: map['commentCount'] as int,
       shareCount: map['shareCount'] as int,
       status: map['status'] as String,
@@ -103,47 +93,43 @@ class Post {
 
   String toJson() => json.encode(toMap());
 
-  factory Post.fromJson(String source) => Post.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory Post.fromJson(String source) =>
+      Post.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
-    return 'Post(id: $id, communityId: $communityId, uid: $uid, content: $content, image: $image, video: $video, upvoteCount: $upvoteCount, downvoteCount: $downvoteCount, commentCount: $commentCount, shareCount: $shareCount, status: $status, isEdited: $isEdited, createdAt: $createdAt)';
+    return 'Post(id: $id, communityId: $communityId, uid: $uid, content: $content, image: $image, video: $video, commentCount: $commentCount, shareCount: $shareCount, status: $status, isEdited: $isEdited, createdAt: $createdAt)';
   }
 
   @override
   bool operator ==(covariant Post other) {
     if (identical(this, other)) return true;
-  
-    return 
-      other.id == id &&
-      other.communityId == communityId &&
-      other.uid == uid &&
-      other.content == content &&
-      other.image == image &&
-      other.video == video &&
-      other.upvoteCount == upvoteCount &&
-      other.downvoteCount == downvoteCount &&
-      other.commentCount == commentCount &&
-      other.shareCount == shareCount &&
-      other.status == status &&
-      other.isEdited == isEdited &&
-      other.createdAt == createdAt;
+
+    return other.id == id &&
+        other.communityId == communityId &&
+        other.uid == uid &&
+        other.content == content &&
+        other.image == image &&
+        other.video == video &&
+        other.commentCount == commentCount &&
+        other.shareCount == shareCount &&
+        other.status == status &&
+        other.isEdited == isEdited &&
+        other.createdAt == createdAt;
   }
 
   @override
   int get hashCode {
     return id.hashCode ^
-      communityId.hashCode ^
-      uid.hashCode ^
-      content.hashCode ^
-      image.hashCode ^
-      video.hashCode ^
-      upvoteCount.hashCode ^
-      downvoteCount.hashCode ^
-      commentCount.hashCode ^
-      shareCount.hashCode ^
-      status.hashCode ^
-      isEdited.hashCode ^
-      createdAt.hashCode;
+        communityId.hashCode ^
+        uid.hashCode ^
+        content.hashCode ^
+        image.hashCode ^
+        video.hashCode ^
+        commentCount.hashCode ^
+        shareCount.hashCode ^
+        status.hashCode ^
+        isEdited.hashCode ^
+        createdAt.hashCode;
   }
 }

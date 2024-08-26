@@ -6,6 +6,7 @@ import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/post_share/post_share_controller/post_share_controller.dart';
+import 'package:hash_balance/features/vote_post/controller/vote_post_controller.dart';
 import 'package:mdi/mdi.dart';
 import 'package:video_player/video_player.dart';
 
@@ -55,20 +56,34 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   }
 
   void _votePost(bool userVote) async {
-    final result = await ref
-        .read(postControllerProvider.notifier)
-        .votePost(widget.post, userVote);
-    result.fold(
-      (l) {
-        showToast(false, l.toString());
-      },
-      (_) {
-        setState(() {});
-        ref
-            .refresh(postControllerProvider.notifier)
-            .getPostVoteCountAndStatus(widget.post);
-      },
-    );
+    switch (userVote) {
+      case true:
+        final result = await ref
+            .read(upvotePostControllerProvider.notifier)
+            .votePost(widget.post);
+        result.fold((l) {
+          showToast(false, l.toString());
+        }, (_) {
+          setState(() {});
+          ref
+              .refresh(postControllerProvider.notifier)
+              .getPostVoteCountAndStatus(widget.post);
+        });
+        break;
+      case false:
+        final result = await ref
+            .read(downvotePostControllerProvider.notifier)
+            .votePost(widget.post);
+        result.fold((l) {
+          showToast(false, l.toString());
+        }, (_) {
+          setState(() {});
+          ref
+              .refresh(postControllerProvider.notifier)
+              .getPostVoteCountAndStatus(widget.post);
+        });
+        break;
+    }
   }
 
   void _sharePost(String? content) async {
@@ -560,9 +575,10 @@ class PostActions extends ConsumerWidget {
         _onVote = onVote,
         _onComment = onComment,
         _onShare = onShare;
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+
+
     return FutureBuilder<Map<String, dynamic>>(
       future: ref
           .read(postControllerProvider.notifier)

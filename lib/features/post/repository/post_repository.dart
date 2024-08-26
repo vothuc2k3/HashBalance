@@ -9,7 +9,6 @@ import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/post_model.dart';
-import 'package:hash_balance/models/post_vote_model.dart';
 
 final postRepositoryProvider = Provider((ref) {
   return PostRepository(
@@ -95,104 +94,22 @@ class PostRepository {
     }
   }
 
-  // VOTE THE POST
-  Future<void> votePost(PostVote postVoteModel, Post post) async {
-    final batch = _firestore.batch();
-    try {
-      final postVoteCollection =
-          _posts.doc(post.id).collection(FirebaseConstants.postVoteCollection);
-      final querySnapshot = await postVoteCollection
-          .where('uid', isEqualTo: postVoteModel.uid)
-          .get();
-
-      if (querySnapshot.docs.isEmpty) {
-        final postVoteRef = postVoteCollection.doc(postVoteModel.id);
-        batch.set(postVoteRef, postVoteModel.toMap());
-        if (postVoteModel.isUpvoted) {
-          batch.update(_posts.doc(post.id), {
-            'upvoteCount': FieldValue.increment(1),
-          });
-        } else {
-          batch.update(_posts.doc(post.id), {
-            'downvoteCount': FieldValue.increment(1),
-          });
-        }
-      } else {
-        final data = querySnapshot.docs.first.data();
-        final postVoteModelId = querySnapshot.docs.first.id;
-        final isAlreadyUpvoted = data['isUpvoted'] as bool;
-        final doWantToUpvote = postVoteModel.isUpvoted;
-
-        if (doWantToUpvote == isAlreadyUpvoted) {
-          batch.delete(postVoteCollection.doc(postVoteModelId));
-          if (doWantToUpvote) {
-            batch.update(_posts.doc(post.id), {
-              'upvoteCount': FieldValue.increment(-1),
-            });
-          } else {
-            batch.update(_posts.doc(post.id), {
-              'downvoteCount': FieldValue.increment(-1),
-            });
-          }
-        } else {
-          batch.update(
-              postVoteCollection.doc(postVoteModelId), postVoteModel.toMap());
-          if (doWantToUpvote) {
-            batch.update(_posts.doc(post.id), {
-              'upvoteCount': FieldValue.increment(1),
-              'downvoteCount': FieldValue.increment(-1),
-            });
-          } else {
-            batch.update(_posts.doc(post.id), {
-              'upvoteCount': FieldValue.increment(-1),
-              'downvoteCount': FieldValue.increment(1),
-            });
-          }
-        }
-      }
-      await batch.commit();
-    } on FirebaseException catch (e) {
-      throw Failures(e.message!);
-    } catch (e) {
-      throw Failures(e.toString());
-    }
-  }
-
-  //CHECK VOTE STATUS OF A USER TOWARDS A POST
-  Stream<bool?> getPostVoteStatus(Post post, String uid) {
-    try {
-      return _posts
-          .doc(post.id)
-          .collection(FirebaseConstants.postVoteCollection)
-          .where('uid', isEqualTo: uid)
-          .snapshots()
-          .map((event) {
-        if (event.docs.isEmpty) {
-          return null;
-        }
-        bool isUpvoted = true;
-        for (var doc in event.docs) {
-          final data = doc.data();
-          isUpvoted = data['isUpvoted'];
-          break;
-        }
-        return isUpvoted;
-      });
-    } on FirebaseException catch (e) {
-      throw Failures(e.message!);
-    } catch (e) {
-      throw Failures(e.toString());
-    }
-  }
-
   Future<Map<String, dynamic>> getPostVoteCountAndStatus(
       Post post, String uid) async {
     try {
-      // Lấy dữ liệu của post
-      final querySnapshot = await _posts.doc(post.id).get();
-      final data = querySnapshot.data() as Map<String, dynamic>;
+      final upvoteDataQuery = await _posts
+          .doc(post.id)
+          .collection(FirebaseConstants.postVoteCollection)
+          .where('isUpvoted', isEqualTo: true)
+          .get();
+      final downvoteDataQuery = await _posts
+          .doc(post.id)
+          .collection(FirebaseConstants.postVoteCollection)
+          .where('isUpvoted', isEqualTo: false)
+          .get();
+      final upvote = upvoteDataQuery.size;
+      final downvote = downvoteDataQuery.size;
 
-      // Lấy thông tin vote của người dùng
       final voteStatusSnapshot = await _posts
           .doc(post.id)
           .collection(FirebaseConstants.postVoteCollection)
@@ -201,8 +118,7 @@ class PostRepository {
 
       String? userVoteStatus;
       if (voteStatusSnapshot.docs.isNotEmpty) {
-        final voteData =
-            voteStatusSnapshot.docs.first.data();
+        final voteData = voteStatusSnapshot.docs.first.data();
         userVoteStatus =
             voteData['isUpvoted'] == true ? 'upvoted' : 'downvoted';
       } else {
@@ -210,8 +126,49 @@ class PostRepository {
       }
 
       return {
-        'upvotes': data['upvoteCount'] ?? 0,
-        'downvotes': data['downvoteCount'] ?? 0,
+        'upvotes': upvote,
+        'downvotes': downvote,
+        'userVoteStatus': userVoteStatus,
+      };
+    } catch (e) {
+      throw Failures(e.toString());
+    }
+  }
+
+  Stream<Map<String, dynamic>> getPostVoteCountAndStatusStream(
+      Post post, String uid) async* {
+    try {
+      final upvoteDataQuery = await _posts
+          .doc(post.id)
+          .collection(FirebaseConstants.postVoteCollection)
+          .where('isUpvoted', isEqualTo: true)
+          .get();
+      final downvoteDataQuery = await _posts
+          .doc(post.id)
+          .collection(FirebaseConstants.postVoteCollection)
+          .where('isUpvoted', isEqualTo: false)
+          .get();
+      final upvote = upvoteDataQuery.size;
+      final downvote = downvoteDataQuery.size;
+
+      final voteStatusSnapshot = await _posts
+          .doc(post.id)
+          .collection(FirebaseConstants.postVoteCollection)
+          .where('uid', isEqualTo: uid)
+          .get();
+
+      String? userVoteStatus;
+      if (voteStatusSnapshot.docs.isNotEmpty) {
+        final voteData = voteStatusSnapshot.docs.first.data();
+        userVoteStatus =
+            voteData['isUpvoted'] == true ? 'upvoted' : 'downvoted';
+      } else {
+        userVoteStatus = null;
+      }
+
+      yield {
+        'upvotes': upvote,
+        'downvotes': downvote,
         'userVoteStatus': userVoteStatus,
       };
     } catch (e) {
@@ -223,7 +180,15 @@ class PostRepository {
   FutureVoid deletePost(Post post, String uid) async {
     final batch = _firestore.batch();
     try {
+      final postVotes = await _posts
+          .doc(post.id)
+          .collection(FirebaseConstants.postVoteCollection)
+          .get();
+      for (final postVote in postVotes.docs) {
+        await postVote.reference.delete();
+      }
       await _posts.doc(post.id).delete();
+
       await _storageRepository.deleteFile(
         path: 'posts/images/${post.id}',
       );
@@ -237,34 +202,6 @@ class PostRepository {
     } catch (e) {
       return left(Failures(e.toString()));
     }
-  }
-
-  //GET POST DATA BY ID
-  Stream<Post> getPostById(String postId) {
-    return _posts.doc(postId).snapshots().map((event) {
-      final data = event.data() as Map<String, dynamic>;
-      return Post.fromMap(data);
-    });
-  }
-
-  //FETCH POSTS BY COMMUNITIES
-  Stream<List<Post>?> fetchCommunityPosts(String communityId) {
-    return _posts
-        .where('communityId', isEqualTo: communityId)
-        .where('status', isEqualTo: 'Approved')
-        .snapshots()
-        .map((event) {
-      if (event.docs.isEmpty) {
-        return null;
-      }
-      var communityPosts = <Post>[];
-      for (final doc in event.docs) {
-        communityPosts.add(
-          Post.fromMap(doc.data() as Map<String, dynamic>),
-        );
-      }
-      return communityPosts;
-    });
   }
 
   Stream<List<Post>?> getPendingPosts(String communityId) {

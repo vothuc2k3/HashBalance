@@ -13,6 +13,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/community/repository/community_repository.dart';
 import 'package:hash_balance/models/community_membership_model.dart';
 import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/post_data_model.dart';
 
 final fetchCommunityByIdProvider =
     FutureProviderFamily((ref, String communityId) {
@@ -225,5 +226,13 @@ class CommunityController extends StateNotifier<bool> {
 
   Future<Community> fetchCommunityById(String communityId) async {
     return await _communityRepository.fetchCommunityById(communityId);
+  }
+
+  Future<List<PostDataModel>> getCommunityPosts(String communityId) async {
+    final list = await _communityRepository.getCommunityPosts(communityId);
+    for(final item in list){
+      print(item.toString());
+    }
+    return list;
   }
 }

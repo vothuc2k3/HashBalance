@@ -37,6 +37,7 @@ class NewsfeedRepository {
       final communityPosts = await _posts
           .where('communityId', isEqualTo: communityId)
           .where('status', isEqualTo: 'Approved')
+          .orderBy('createdAt', descending: true)
           .get();
 
       if (communityPosts.docs.isNotEmpty) {
@@ -66,12 +67,15 @@ class NewsfeedRepository {
   //GET ALL POST OF A COMMUNITY
   Future<List<PostDataModel>> getCommunityPosts(String communityId) async {
     try {
-      final postQuerySnapshot =
-          await _posts.where('communityId', isEqualTo: communityId).get();
+      final communityPosts = await _posts
+          .where('communityId', isEqualTo: communityId)
+          .where('status', isEqualTo: 'Approved')
+          .orderBy('createdAt', descending: true)
+          .get();
 
       final List<PostDataModel> postDataModels = [];
 
-      for (final postDoc in postQuerySnapshot.docs) {
+      for (final postDoc in communityPosts.docs) {
         final postData = Post.fromMap(postDoc.data() as Map<String, dynamic>);
 
         final authorDoc = await _users.doc(postData.uid).get();
@@ -81,14 +85,13 @@ class NewsfeedRepository {
         final communityDoc = await _communities.doc(postData.communityId).get();
         final communityData =
             Community.fromMap(communityDoc.data() as Map<String, dynamic>);
-
-        final postDataModel = PostDataModel(
-          post: postData,
-          author: authorData,
-          community: communityData,
+        postDataModels.add(
+          PostDataModel(
+            post: postData,
+            author: authorData,
+            community: communityData,
+          ),
         );
-
-        postDataModels.add(postDataModel);
       }
 
       return postDataModels;

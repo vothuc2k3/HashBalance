@@ -13,7 +13,6 @@ import 'package:hash_balance/features/comment/controller/comment_controller.dart
 import 'package:hash_balance/features/post/repository/post_repository.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/post_model.dart';
-import 'package:hash_balance/models/post_vote_model.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
 
 final getPostCommentCountProvider = FutureProvider.family((ref, String postId) {
@@ -28,21 +27,9 @@ final getPendingPostsProvider =
 });
 
 final getPostVoteCountProvider = FutureProvider.family((ref, Post post) {
-  return ref.watch(postControllerProvider.notifier).getPostVoteCountAndStatus(post);
-});
-
-final getPostVoteStatusProvider = StreamProvider.family((ref, Post post) {
-  return ref.watch(postControllerProvider.notifier).getPostVoteStatus(post);
-});
-
-final fetchCommunityPostsProvider = StreamProvider.family.autoDispose(
-    (ref, String communityId) => ref
-        .watch(postControllerProvider.notifier)
-        .fetchCommunityPosts(communityId));
-
-final getPostByIdProvider =
-    StreamProvider.autoDispose.family((ref, String postId) {
-  return ref.watch(postControllerProvider.notifier).getPostById(postId);
+  return ref
+      .watch(postControllerProvider.notifier)
+      .getPostVoteCountAndStatus(post);
 });
 
 final postControllerProvider = StateNotifierProvider<PostController, bool>(
@@ -75,7 +62,7 @@ class PostController extends StateNotifier<bool> {
         super(false);
 
   //CREATE A NEW POST
-  FutureString createPost(
+  FutureVoid createPost(
     Community community,
     File? image,
     File? video,
@@ -94,8 +81,6 @@ class PostController extends StateNotifier<bool> {
             uid: uid,
             content: content,
             status: 'Approved',
-            upvoteCount: 0,
-            downvoteCount: 0,
             commentCount: 0,
             shareCount: 0,
             isEdited: false,
@@ -103,10 +88,7 @@ class PostController extends StateNotifier<bool> {
             id: await generateRandomId(),
           );
           final result = await _postRepository.createPost(post, image, video);
-          return result.fold(
-            (l) => left((Failures(l.message))),
-            (r) => right('Your Post Was Successfuly Uploaded!'),
-          );
+          return result;
         default:
           final post = Post(
             communityId: community.id,
@@ -114,20 +96,13 @@ class PostController extends StateNotifier<bool> {
             content: content,
             status: 'Pending',
             isEdited: false,
-            upvoteCount: 0,
-            downvoteCount: 0,
             commentCount: 0,
             shareCount: 0,
             createdAt: Timestamp.now(),
             id: await generateRandomId(),
           );
           final result = await _postRepository.createPost(post, image, video);
-          return result.fold(
-            (l) => left(
-              (Failures(l.message)),
-            ),
-            (r) => right('Your Post Are Now Pending To Be Approved!'),
-          );
+          return result;
       }
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -138,42 +113,16 @@ class PostController extends StateNotifier<bool> {
     }
   }
 
-  FutureVoid votePost(Post post, bool userVote) async {
-    try {
-      final currentUser = _ref.read(userProvider)!;
-      final postVoteModel = PostVote(
-        id: await generateRandomId(),
-        postId: post.id,
-        uid: currentUser.uid,
-        isUpvoted: userVote,
-        createdAt: Timestamp.now(),
-      );
-
-      await _postRepository.votePost(postVoteModel, post);
-      return right(null);
-    } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
-    } catch (e) {
-      return left(Failures(
-        e.toString(),
-      ));
-    }
-  }
-
-  Stream<bool?> getPostVoteStatus(Post post) {
-    try {
-      final uid = _ref.watch(userProvider)!.uid;
-      return _postRepository.getPostVoteStatus(post, uid);
-    } on FirebaseException catch (e) {
-      throw Failures(e.message!);
-    } catch (e) {
-      throw Failures(e.toString());
-    }
-  }
-
   Future<Map<String, dynamic>> getPostVoteCountAndStatus(Post post) async {
     final currentUser = _ref.watch(userProvider)!;
-    return await _postRepository.getPostVoteCountAndStatus(post, currentUser.uid);
+    return await _postRepository.getPostVoteCountAndStatus(
+        post, currentUser.uid);
+  }
+
+  Stream<Map<String, dynamic>> getPostVoteCountAndStatusStream(Post post) {
+    final currentUser = _ref.watch(userProvider)!;
+    return _postRepository.getPostVoteCountAndStatusStream(
+        post, currentUser.uid);
   }
 
   FutureVoid deletePost(Post post) async {
@@ -184,12 +133,12 @@ class PostController extends StateNotifier<bool> {
       if (user.uid == post.uid) {
         result = await _postRepository.deletePost(post, user.uid);
         result.fold((l) => left(l), (r) async {
-          if (post.image != null) {
+          if (post.image != '') {
             _storageRepository.deleteFile(
               path: 'posts/images/${post.id}',
             );
           }
-          if (post.video != null) {
+          if (post.video != '') {
             _storageRepository.deleteFile(
               path: 'posts/videos/${post.id}',
             );
@@ -207,14 +156,6 @@ class PostController extends StateNotifier<bool> {
     } finally {
       state = false;
     }
-  }
-
-  Stream<List<Post>?> fetchCommunityPosts(String communityId) {
-    return _postRepository.fetchCommunityPosts(communityId);
-  }
-
-  Stream<Post> getPostById(String postId) {
-    return _postRepository.getPostById(postId);
   }
 
   Stream<List<Post>?> getPendingPosts(String communityId) {

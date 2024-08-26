@@ -8,6 +8,9 @@ import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/community_membership_model.dart';
 import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/post_data_model.dart';
+import 'package:hash_balance/models/post_model.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 final communityRepositoryProvider = Provider((ref) {
   return CommunityRepository(firestore: ref.watch(firebaseFirestoreProvider));
@@ -25,6 +28,12 @@ class CommunityRepository {
   //GET THE COMMUNITIES DATA
   CollectionReference get _communityMembership =>
       _firestore.collection(FirebaseConstants.communityMembershipCollection);
+  //GET THE COMMUNITIES DATA
+  CollectionReference get _users =>
+      _firestore.collection(FirebaseConstants.usersCollection);
+  //GET THE COMMUNITIES DATA
+  CollectionReference get _posts =>
+      _firestore.collection(FirebaseConstants.postsCollection);
 
   //CREATE A WHOLE NEW COMMUNITY
   FutureString createCommunity(Community community) async {
@@ -167,8 +176,43 @@ class CommunityRepository {
     );
   }
 
-  Future<Community> fetchCommunityById(String communityId)async{
+  Future<Community> fetchCommunityById(String communityId) async {
     final doc = await _communities.doc(communityId).get();
     return Community.fromMap(doc.data() as Map<String, dynamic>);
+  }
+
+  //GET ALL POST OF A COMMUNITY
+  Future<List<PostDataModel>> getCommunityPosts(String communityId) async {
+    try {
+      final communityPosts = await _posts
+          .where('communityId', isEqualTo: communityId)
+          .where('status', isEqualTo: 'Approved')
+          .get();
+
+      final List<PostDataModel> postDataModels = [];
+
+      for (final postDoc in communityPosts.docs) {
+        final postData = Post.fromMap(postDoc.data() as Map<String, dynamic>);
+
+        final authorDoc = await _users.doc(postData.uid).get();
+        final authorData =
+            UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
+
+        final communityDoc = await _communities.doc(postData.communityId).get();
+        final communityData =
+            Community.fromMap(communityDoc.data() as Map<String, dynamic>);
+        postDataModels.add(
+          PostDataModel(
+            post: postData,
+            author: authorData,
+            community: communityData,
+          ),
+        );
+      }
+
+      return postDataModels;
+    } on FirebaseException catch (e) {
+      throw e.toString();
+    }
   }
 }

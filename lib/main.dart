@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/hive_models/community/hive_community_model.dart';
+import 'package:hash_balance/core/services/device_token_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:toastification/toastification.dart';
 
@@ -61,6 +62,8 @@ class MyAppState extends ConsumerState<MyApp> {
   UserModel? userData;
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   late final JoinedCommunitiesService _joinedCommunitiesService;
+  late final DeviceTokenService _deviceTokenService;
+
 
   void _getUserData(User data) async {
     userData = await ref
@@ -202,12 +205,14 @@ class MyAppState extends ConsumerState<MyApp> {
       },
     );
     _joinedCommunitiesService = JoinedCommunitiesService();
+    _deviceTokenService = DeviceTokenService();
     _joinedCommunitiesService.fetchJoinedCommunities(userData);
+    _deviceTokenService.updateUserDeviceToken(userData);
     super.initState();
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { 
     final userData = ref.watch(userProvider);
 
     return ref.watch(authStageChangeProvider).when(

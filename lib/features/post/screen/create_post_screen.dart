@@ -120,27 +120,26 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     }
   }
 
-  void _createPost() async {
+  Future<void> _createPost() async {
     if (selectedCommunity == null) {
       showToast(false, 'Please select a community to post in.');
       return;
     } else if (contentController.text.isEmpty) {
-      showToast(false, 'Please enter some contentóto post.');
+      showToast(false, 'Please enter some content post.');
       return;
     } else {
-      final result =
-          await ref.read(postControllerProvider.notifier).createPost(
-                selectedCommunity!,
-                image,
-                video,
-                contentController.text,
-              );
+      final result = await ref.read(postControllerProvider.notifier).createPost(
+            selectedCommunity!,
+            image,
+            video,
+            contentController.text,
+          );
       result.fold(
         (l) {
           showToast(false, l.toString());
         },
         (r) {
-          showToast(true, r);
+          showToast(true, 'Your post is successfully created!');
           switch (widget._isFromCommunityScreen) {
             case true:
               Navigator.of(context).pop();
@@ -568,11 +567,8 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: Colors.grey,
                                           ),
-                                          onPressed: () {
-                                            setState(() {
-                                              isCreatingPost = true;
-                                              _createPost();
-                                            });
+                                          onPressed: () async {
+                                            await _createPost();
                                           },
                                           child: const Center(
                                             child: Text(

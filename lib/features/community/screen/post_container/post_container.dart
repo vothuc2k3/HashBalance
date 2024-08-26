@@ -7,7 +7,7 @@ import 'package:hash_balance/features/moderation/controller/moderation_controlle
 import 'package:hash_balance/features/post_share/post_share_controller/post_share_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
-import 'package:mdi/mdi.dart';
+import 'package:hash_balance/features/vote_post/controller/vote_post_controller.dart';
 import 'package:video_player/video_player.dart';
 
 import 'package:hash_balance/core/utils.dart';
@@ -38,6 +38,7 @@ class PostContainer extends ConsumerStatefulWidget {
 }
 
 class _PostContainerState extends ConsumerState<PostContainer> {
+  late Future<Map<String, dynamic>> _postVoteCountAndStatus;
   TextEditingController commentTextController = TextEditingController();
   TextEditingController shareTextController = TextEditingController();
   VideoPlayerController? _videoController;
@@ -57,12 +58,34 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   }
 
   void _votePost(bool userVote) async {
-    final result = await ref
-        .read(postControllerProvider.notifier)
-        .votePost(widget.post, userVote);
-    result.fold((l) {
-      showToast(false, l.toString());
-    }, (_) {});
+    switch (userVote) {
+      case true:
+        final result = await ref
+            .read(upvotePostControllerProvider.notifier)
+            .votePost(widget.post);
+        result.fold((l) {
+          showToast(false, l.toString());
+        }, (_) {
+          setState(() {});
+          _postVoteCountAndStatus = ref
+              .read(postControllerProvider.notifier)
+              .getPostVoteCountAndStatus(widget.post);
+        });
+        break;
+      case false:
+        final result = await ref
+            .read(downvotePostControllerProvider.notifier)
+            .votePost(widget.post);
+        result.fold((l) {
+          showToast(false, l.toString());
+        }, (_) {
+          setState(() {});
+          _postVoteCountAndStatus = ref
+              .read(postControllerProvider.notifier)
+              .getPostVoteCountAndStatus(widget.post);
+        });
+        break;
+    }
   }
 
   void _sharePost(String? content) async {
@@ -226,6 +249,9 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     if (widget.post.video != '') {
       _initializeVideo();
     }
+    _postVoteCountAndStatus = ref
+        .read(postControllerProvider.notifier)
+        .getPostVoteCountAndStatus(widget.post);
   }
 
   @override
@@ -503,12 +529,12 @@ class _PostContainerState extends ConsumerState<PostContainer> {
           indent: 5,
         ),
         PostActions(
-          post: widget.post,
           onVote: _votePost,
           onComment: () {
             _navigateToCommentScreen();
           },
           onShare: _showShareDialog,
+          postVoteCountAndStatus: _postVoteCountAndStatus,
         ),
         const Divider(
           thickness: 0.5,
@@ -520,28 +546,26 @@ class _PostContainerState extends ConsumerState<PostContainer> {
 }
 
 class PostActions extends ConsumerWidget {
-  final Post _post;
   final Function _onVote;
   final Function _onComment;
   final Function _onShare;
+  final Future<Map<String, dynamic>> _postVoteCountAndStatus;
 
   const PostActions({
     super.key,
-    required Post post,
-    required Function onVote,
+    required Function(bool) onVote,
     required Function onComment,
     required Function onShare,
-  })  : _post = post,
-        _onVote = onVote,
+    required Future<Map<String, dynamic>> postVoteCountAndStatus,
+  })  : _onVote = onVote,
         _onComment = onComment,
-        _onShare = onShare;
+        _onShare = onShare,
+        _postVoteCountAndStatus = postVoteCountAndStatus;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return FutureBuilder<Map<String, dynamic>>(
-      future: ref
-          .read(postControllerProvider.notifier)
-          .getPostVoteCountAndStatus(_post),
+      future: _postVoteCountAndStatus,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Text('Error: ${snapshot.error}');
@@ -562,19 +586,19 @@ class PostActions extends ConsumerWidget {
                 isUpvote: true,
               ),
               _buildVoteButton(
-                icon: Mdi.arrowDown,
+                icon: Icons.arrow_downward_rounded,
                 count: downvotes,
                 color: status == 'downvoted' ? Colors.blue : Colors.grey[600],
                 onTap: (isUpvote) => _onVote(isUpvote),
                 isUpvote: false,
               ),
               _buildActionButton(
-                icon: Mdi.commentOutline,
+                icon: Icons.comment_rounded,
                 label: 'Comments',
                 onTap: _onComment,
               ),
               _buildActionButton(
-                icon: Mdi.shareOutline,
+                icon: Icons.share_rounded,
                 label: 'Share',
                 onTap: _onShare,
               ),

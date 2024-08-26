@@ -37,7 +37,7 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen> {
     final result = await ref
         .watch(moderationControllerProvider.notifier)
         .fetchMembershipStatus(getMembershipId(uid, community.id));
-    if (community.pinPostId != '') {
+    if (community.pinPostId != null &&community.pinPostId != '') {
       final pinnedPostResult = await ref
           .watch(postControllerProvider.notifier)
           .fetchPostByPostId(community.pinPostId!);
