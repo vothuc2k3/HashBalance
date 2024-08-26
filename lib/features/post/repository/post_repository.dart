@@ -37,6 +37,9 @@ class PostRepository {
   //REFERENCE ALL THE USERS
   CollectionReference get _users =>
       _firestore.collection(FirebaseConstants.usersCollection);
+  //REFERENCE ALL THE POST SHARES
+  CollectionReference get _postShares =>
+      _firestore.collection(FirebaseConstants.postShareCollection);
 
   //CREATE A NEW POST
   FutureVoid createPost(
@@ -182,15 +185,38 @@ class PostRepository {
     }
   }
 
-  //GET VOTE COUNT OF A POST
-  Stream<Map<String, int>> getPostVoteCount(Post post) {
-    return _posts.doc(post.id).snapshots().map((doc) {
-      final data = doc.data() as Map<String, dynamic>;
+  Future<Map<String, dynamic>> getPostVoteCountAndStatus(
+      Post post, String uid) async {
+    try {
+      // Lấy dữ liệu của post
+      final querySnapshot = await _posts.doc(post.id).get();
+      final data = querySnapshot.data() as Map<String, dynamic>;
+
+      // Lấy thông tin vote của người dùng
+      final voteStatusSnapshot = await _posts
+          .doc(post.id)
+          .collection(FirebaseConstants.postVoteCollection)
+          .where('uid', isEqualTo: uid)
+          .get();
+
+      String? userVoteStatus;
+      if (voteStatusSnapshot.docs.isNotEmpty) {
+        final voteData =
+            voteStatusSnapshot.docs.first.data();
+        userVoteStatus =
+            voteData['isUpvoted'] == true ? 'upvoted' : 'downvoted';
+      } else {
+        userVoteStatus = null;
+      }
+
       return {
-        'upvotes': data['upvoteCount'],
-        'downvotes': data['downvoteCount'],
+        'upvotes': data['upvoteCount'] ?? 0,
+        'downvotes': data['downvoteCount'] ?? 0,
+        'userVoteStatus': userVoteStatus,
       };
-    });
+    } catch (e) {
+      throw Failures(e.toString());
+    }
   }
 
   //DELETE THE POST
@@ -278,13 +304,17 @@ class PostRepository {
   }
 
   // GET TOTAL COMMENTS COUNT OF A POST
-  Stream<int> getPostCommentCount(String postId) {
-    return _comments
-        .where('postId', isEqualTo: postId)
-        .snapshots()
-        .map((event) {
-      return event.size;
-    });
+  Future<int> getPostCommentCount(String postId) async {
+    final querySnapshot =
+        await _comments.where('postId', isEqualTo: postId).get();
+    return querySnapshot.size;
+  }
+
+  //GET TOTAL SHARE COUNT OF A POST
+  Future<int> getPostShareCount(String postId) async {
+    final querySnapshot =
+        await _postShares.where('postId', isEqualTo: postId).get();
+    return querySnapshot.size;
   }
 
   FutureVoid updatePostStatus(Post post, String status) async {

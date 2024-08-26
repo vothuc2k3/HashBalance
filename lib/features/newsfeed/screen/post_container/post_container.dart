@@ -61,7 +61,12 @@ class _PostContainerState extends ConsumerState<PostContainer> {
       (l) {
         showToast(false, l.toString());
       },
-      (_) {},
+      (_) {
+        setState(() {});
+        ref
+            .refresh(postControllerProvider.notifier)
+            .getPostVoteCountAndStatus(widget.post);
+      },
     );
   }
 
@@ -78,7 +83,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
 
   void _handleDeletePost(Post post) async {
     final result =
-        await ref.watch(postControllerProvider.notifier).deletePost(post);
+        await ref.read(postControllerProvider.notifier).deletePost(post);
     result.fold(
       (l) {
         showToast(false, l.message);
@@ -288,7 +293,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
 
   @override
   void didChangeDependencies() {
-    currentUser = ref.watch(userProvider);
+    currentUser = ref.read(userProvider);
     super.didChangeDependencies();
   }
 
@@ -325,7 +330,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
               ],
             ),
           ),
-          if (widget.post.image != null || widget.post.image != '')
+          if (widget.post.image != null && widget.post.image != '')
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Image.network(
@@ -484,33 +489,47 @@ class _PostContainerState extends ConsumerState<PostContainer> {
             const Expanded(
               child: Text(''),
             ),
-            ref.watch(getPostCommentCountProvider(widget.post.id)).whenOrNull(
-                  data: (count) {
-                    return InkWell(
-                      onTap: () => _navigateToCommentScreen(),
-                      child: Text(
-                        '$count Comments',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 10,
-                        ),
-                      ),
-                    );
-                  },
-                ) ??
-                const Text(''),
-            const SizedBox(width: 8),
-            ref.watch(getPostShareCountProvider(widget.post.id)).whenOrNull(
-                    data: (count) {
-                  return Text(
-                    '$count Shares',
+            FutureBuilder<int>(
+              future: ref
+                  .read(postControllerProvider.notifier)
+                  .getPostCommentCount(widget.post.id),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Loading();
+                }
+                return InkWell(
+                  onTap: () => _navigateToCommentScreen(),
+                  child: Text(
+                    '${snapshot.data} Comments',
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 10,
                     ),
-                  );
-                }) ??
-                const Text(''),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(width: 8),
+            FutureBuilder<int>(
+              future: ref
+                  .read(postControllerProvider.notifier)
+                  .getPostShareCount(widget.post.id),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Loading();
+                }
+                return InkWell(
+                  onTap: () => _navigateToCommentScreen(),
+                  child: Text(
+                    '${snapshot.data} Shares',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 10,
+                    ),
+                  ),
+                );
+              },
+            ),
           ],
         ),
         const Divider(
@@ -543,7 +562,7 @@ class PostActions extends ConsumerWidget {
   const PostActions({
     super.key,
     required Post post,
-    required Function onVote,
+    required Function(bool) onVote,
     required Function onComment,
     required Function onShare,
   })  : _post = post,
@@ -553,60 +572,54 @@ class PostActions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _buildVoteButton(
-          icon: Icons.arrow_upward_rounded,
-          count: ref.watch(getPostVoteCountProvider(_post)).whenOrNull(
-              data: (count) {
-            return count['upvotes'];
-          }),
-          color: ref.watch(getPostVoteStatusProvider(_post)).whenOrNull(
-              data: (status) {
-            switch (status) {
-              case true:
-                return Colors.orange;
-              case false:
-                return Colors.grey[600];
-              case null:
-                return Colors.grey[600];
-            }
-          }),
-          onTap: _onVote,
-          isUpvote: true,
-        ),
-        _buildVoteButton(
-          icon: Mdi.arrowDown,
-          count: ref.watch(getPostVoteCountProvider(_post)).whenOrNull(
-              data: (count) {
-            return count['downvotes'];
-          }),
-          color: ref.watch(getPostVoteStatusProvider(_post)).whenOrNull(
-              data: (status) {
-            switch (status) {
-              case true:
-                return Colors.grey[600];
-              case false:
-                return Colors.blue;
-              case null:
-                return Colors.grey[600];
-            }
-          }),
-          onTap: _onVote,
-          isUpvote: false,
-        ),
-        _buildActionButton(
-          icon: Mdi.commentOutline,
-          label: 'Comments',
-          onTap: _onComment,
-        ),
-        _buildActionButton(
-          icon: Mdi.shareOutline,
-          label: 'Share',
-          onTap: _onShare,
-        ),
-      ],
+    return FutureBuilder<Map<String, dynamic>>(
+      future: ref
+          .read(postControllerProvider.notifier)
+          .getPostVoteCountAndStatus(_post),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Loading();
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else if (snapshot.hasData) {
+          final data = snapshot.data!;
+          final upvotes = data['upvotes'] ?? 0;
+          final downvotes = data['downvotes'] ?? 0;
+          final status = data['userVoteStatus'];
+
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildVoteButton(
+                icon: Icons.arrow_upward_rounded,
+                count: upvotes,
+                color: status == 'upvoted' ? Colors.orange : Colors.grey[600],
+                onTap: (isUpvote) => _onVote(isUpvote),
+                isUpvote: true,
+              ),
+              _buildVoteButton(
+                icon: Mdi.arrowDown,
+                count: downvotes,
+                color: status == 'downvoted' ? Colors.blue : Colors.grey[600],
+                onTap: (isUpvote) => _onVote(isUpvote),
+                isUpvote: false,
+              ),
+              _buildActionButton(
+                icon: Mdi.commentOutline,
+                label: 'Comments',
+                onTap: _onComment,
+              ),
+              _buildActionButton(
+                icon: Mdi.shareOutline,
+                label: 'Share',
+                onTap: _onShare,
+              ),
+            ],
+          );
+        } else {
+          return const Text('No data available');
+        }
+      },
     );
   }
 

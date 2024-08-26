@@ -16,9 +16,8 @@ import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/post_vote_model.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
 
-final getPostCommentCountProvider =
-    StreamProvider.family.autoDispose((ref, String postId) {
-  return ref.watch(postControllerProvider.notifier).getPostCommentCount(postId);
+final getPostCommentCountProvider = FutureProvider.family((ref, String postId) {
+  return ref.read(postControllerProvider.notifier).getPostCommentCount(postId);
 });
 
 final getPendingPostsProvider =
@@ -28,13 +27,11 @@ final getPendingPostsProvider =
       .getPendingPosts(communityId);
 });
 
-final getPostVoteCountProvider =
-    StreamProvider.family.autoDispose((ref, Post post) {
-  return ref.watch(postControllerProvider.notifier).getPostVoteCount(post);
+final getPostVoteCountProvider = FutureProvider.family((ref, Post post) {
+  return ref.watch(postControllerProvider.notifier).getPostVoteCountAndStatus(post);
 });
 
-final getPostVoteStatusProvider =
-    StreamProvider.family.autoDispose((ref, Post post) {
+final getPostVoteStatusProvider = StreamProvider.family((ref, Post post) {
   return ref.watch(postControllerProvider.notifier).getPostVoteStatus(post);
 });
 
@@ -52,7 +49,8 @@ final postControllerProvider = StateNotifierProvider<PostController, bool>(
   (ref) => PostController(
       commentController: ref.watch(commentControllerProvider.notifier),
       postRepository: ref.watch(postRepositoryProvider),
-      pushNotificationController: ref.watch(pushNotificationControllerProvider.notifier),
+      pushNotificationController:
+          ref.watch(pushNotificationControllerProvider.notifier),
       storageRepository: ref.watch(storageRepositoryProvider),
       ref: ref),
 );
@@ -173,8 +171,9 @@ class PostController extends StateNotifier<bool> {
     }
   }
 
-  Stream<Map<String, int>> getPostVoteCount(Post post) {
-    return _postRepository.getPostVoteCount(post);
+  Future<Map<String, dynamic>> getPostVoteCountAndStatus(Post post) async {
+    final currentUser = _ref.watch(userProvider)!;
+    return await _postRepository.getPostVoteCountAndStatus(post, currentUser.uid);
   }
 
   FutureVoid deletePost(Post post) async {
@@ -233,9 +232,20 @@ class PostController extends StateNotifier<bool> {
   }
 
   //GET POST COMMENT COUNT
-  Stream<int> getPostCommentCount(String postId) {
+  Future<int> getPostCommentCount(String postId) {
     try {
       return _postRepository.getPostCommentCount(postId);
+    } on FirebaseException catch (e) {
+      throw Failures(e.message!);
+    } catch (e) {
+      throw Failures(e.toString());
+    }
+  }
+
+  //GET POST SHARE COUNT
+  Future<int> getPostShareCount(String postId) {
+    try {
+      return _postRepository.getPostShareCount(postId);
     } on FirebaseException catch (e) {
       throw Failures(e.message!);
     } catch (e) {
