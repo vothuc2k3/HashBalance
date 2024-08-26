@@ -8,14 +8,28 @@ import 'package:hash_balance/models/post_model.dart';
 class PendingPostScreen extends ConsumerStatefulWidget {
   final String _communityId;
 
-  const PendingPostScreen({super.key, required String communityId})
-      : _communityId = communityId;
+  const PendingPostScreen({
+    super.key,
+    required String communityId,
+  }) : _communityId = communityId;
 
   @override
   PendingPostScreenState createState() => PendingPostScreenState();
 }
 
 class PendingPostScreenState extends ConsumerState<PendingPostScreen> {
+  void _handleApprovePost(Post post) {
+    ref
+        .watch(postControllerProvider.notifier)
+        .updatePostStatus(post, 'Approved');
+  }
+
+  void _handleRejectPost(Post post) {
+    ref
+        .watch(postControllerProvider.notifier)
+        .updatePostStatus(post, 'Rejected');
+  }
+
   void showPostDetails(BuildContext context, Post post) {
     showDialog(
       context: context,
@@ -24,15 +38,21 @@ class PendingPostScreenState extends ConsumerState<PendingPostScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15.0),
           ),
-          title: const Text('Post Title',
-              style: TextStyle(fontWeight: FontWeight.bold)),
+          title: const Text(
+            'Post Title',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
                 Text(post.content),
                 const SizedBox(height: 20),
-                Text('Author: ${post.uid}',
-                    style: const TextStyle(fontStyle: FontStyle.italic)),
+                Text(
+                  'Author: ${post.uid}',
+                  style: const TextStyle(fontStyle: FontStyle.italic),
+                ),
               ],
             ),
           ),
@@ -40,15 +60,15 @@ class PendingPostScreenState extends ConsumerState<PendingPostScreen> {
             TextButton(
               child: const Text('Approve'),
               onPressed: () {
+                _handleApprovePost(post);
                 Navigator.of(context).pop();
-                // approvePost(context, post);
               },
             ),
             TextButton(
               child: const Text('Reject'),
               onPressed: () {
+                _handleRejectPost(post);
                 Navigator.of(context).pop();
-                // rejectPost(context, post);
               },
             ),
           ],
@@ -97,15 +117,16 @@ class PendingPostScreenState extends ConsumerState<PendingPostScreen> {
                               'Status: ${post.status == 'Approved' ? 'Approved' : 'Pending'}'),
                         ],
                       ),
+                      const SizedBox(height: 10),
                     ],
                   ),
                   trailing: PopupMenuButton<String>(
                     onSelected: (String result) {
-                      // if (result == 'approve') {
-                      //   approvePost(context, post);
-                      // } else if (result == 'reject') {
-                      //   rejectPost(context, post);
-                      // }
+                      if (result == 'approve') {
+                        _handleApprovePost(post);
+                      } else if (result == 'reject') {
+                        _handleRejectPost(post);
+                      }
                     },
                     itemBuilder: (BuildContext context) =>
                         <PopupMenuEntry<String>>[

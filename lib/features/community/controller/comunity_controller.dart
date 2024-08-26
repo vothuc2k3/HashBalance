@@ -14,6 +14,13 @@ import 'package:hash_balance/features/community/repository/community_repository.
 import 'package:hash_balance/models/community_membership_model.dart';
 import 'package:hash_balance/models/community_model.dart';
 
+final fetchCommunityByIdProvider =
+    FutureProviderFamily((ref, String communityId) {
+  return ref
+      .watch(communityControllerProvider.notifier)
+      .fetchCommunityById(communityId);
+});
+
 final getCommunityMemberCountProvider =
     StreamProvider.family.autoDispose((ref, String communityId) {
   return ref
@@ -87,16 +94,15 @@ class CommunityController extends StateNotifier<bool> {
       name: name,
       profileImage: Constants
           .avatarDefault[Random().nextInt(Constants.avatarDefault.length)],
-          pinPostId: '',
+      pinPostId: '',
       bannerImage: Constants.bannerDefault,
       type: type,
       containsExposureContents: containsExposureContents,
       createdAt: Timestamp.now(),
     );
+    final result = await _communityRepository.createCommunity(community);
 
     await joinCommunityAsModerator(currentUser!.uid, community.id);
-
-    final result = await _communityRepository.createCommunity(community);
 
     return result;
   }
@@ -213,7 +219,11 @@ class CommunityController extends StateNotifier<bool> {
     return _communityRepository.getCommunityMemberCount(communityId);
   }
 
-  Stream<Community?> getCommunityById(String communityId) {
+  Stream<Community> getCommunityById(String communityId) {
     return _communityRepository.getCommunityById(communityId);
+  }
+
+  Future<Community> fetchCommunityById(String communityId) async {
+    return await _communityRepository.fetchCommunityById(communityId);
   }
 }

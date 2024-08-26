@@ -37,7 +37,6 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   File? video;
   Community? selectedCommunity;
 
-
   bool isSelectingImage = false;
   bool isSelectingVideo = false;
   VideoPlayerController? _videoPlayerController;
@@ -54,36 +53,38 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       builder: (context) {
         return AlertDialog(
           title: const Text('Select Community'),
-          content: mounted ? ref.watch(userCommunitiesProvider).when(
-                data: (communities) {
-                  if (communities.isEmpty) {
-                    return const Text('No communities available.');
-                  }
-                  return SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: communities.map(
-                        (community) {
-                          return ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage: CachedNetworkImageProvider(
-                                community.profileImage,
-                              ),
-                            ),
-                            title: Text('#${community.name}'),
-                            onTap: () {
-                              Navigator.of(context).pop(community);
+          content: mounted
+              ? ref.watch(userCommunitiesProvider).when(
+                    data: (communities) {
+                      if (communities.isEmpty) {
+                        return const Text('No communities available.');
+                      }
+                      return SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: communities.map(
+                            (community) {
+                              return ListTile(
+                                leading: CircleAvatar(
+                                  backgroundImage: CachedNetworkImageProvider(
+                                    community.profileImage,
+                                  ),
+                                ),
+                                title: Text('#${community.name}'),
+                                onTap: () {
+                                  Navigator.of(context).pop(community);
+                                },
+                              );
                             },
-                          );
-                        },
-                      ).toList(),
-                    ),
-                  );
-                },
-                error: (error, stackTrace) =>
-                    ErrorText(error: error.toString()),
-                loading: () => const Loading(),
-              ) : const SizedBox.shrink(),
+                          ).toList(),
+                        ),
+                      );
+                    },
+                    error: (error, stackTrace) =>
+                        ErrorText(error: error.toString()),
+                    loading: () => const Loading(),
+                  )
+              : const SizedBox.shrink(),
         );
       },
     );
@@ -123,28 +124,33 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     if (selectedCommunity == null) {
       showToast(false, 'Please select a community to post in.');
       return;
+    } else if (contentController.text.isEmpty) {
+      showToast(false, 'Please enter some content to post.');
+      return;
+    } else {
+      final result =
+          await ref.watch(postControllerProvider.notifier).createPost(
+                selectedCommunity!,
+                image,
+                video,
+                contentController.text,
+              );
+      result.fold(
+        (l) {
+          showToast(false, l.toString());
+        },
+        (r) {
+          showToast(true, r);
+          switch (widget._isFromCommunityScreen) {
+            case true:
+              Navigator.of(context).pop();
+              break;
+            default:
+              break;
+          }
+        },
+      );
     }
-    final result = await ref.watch(postControllerProvider.notifier).createPost(
-          selectedCommunity!,
-          image,
-          video,
-          contentController.text,
-        );
-    result.fold(
-      (l) {
-        showToast(false, l.toString());
-      },
-      (r) {
-        showToast(true, r);
-        switch (widget._isFromCommunityScreen) {
-          case true:
-            Navigator.of(context).pop();
-            break;
-          default:
-            break;
-        }
-      },
-    );
   }
 
   void _navigateToCommunityListScreen() {
@@ -321,6 +327,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                       border: InputBorder.none,
                                     ),
                                     maxLines: null,
+                                    maxLength: 3000,
                                     style: const TextStyle(color: Colors.white),
                                   ),
                                 ),
@@ -506,86 +513,6 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                                         ),
                                       )
                                     : const SizedBox.shrink(),
-                                if (!(contentController.text.trim() == '' &&
-                                        image == null &&
-                                        video == null) &&
-                                    selectedCommunity == null)
-                                  ref.watch(userCommunitiesProvider).when(
-                                    data: (communities) {
-                                      if (communities.isEmpty) {
-                                        return const Text(
-                                            'No communities available.');
-                                      } else {
-                                        if (selectedCommunity == null ||
-                                            !communities.any((community) =>
-                                                community ==
-                                                selectedCommunity)) {
-                                          selectedCommunity = null;
-                                        }
-                                        return Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            const SizedBox(height: 15),
-                                            DropdownButtonFormField<Community>(
-                                              value: selectedCommunity,
-                                              hint: const Text(
-                                                  'Choose community'),
-                                              onChanged: (newValue) {
-                                                setState(() {
-                                                  selectedCommunity = newValue;
-                                                });
-                                              },
-                                              items: communities.map<
-                                                      DropdownMenuItem<
-                                                          Community>>(
-                                                  (Community community) {
-                                                return DropdownMenuItem<
-                                                    Community>(
-                                                  value: community,
-                                                  child: Row(
-                                                    children: [
-                                                      CircleAvatar(
-                                                        radius: 16,
-                                                        backgroundImage:
-                                                            CachedNetworkImageProvider(
-                                                                community
-                                                                    .profileImage),
-                                                      ),
-                                                      const SizedBox(width: 8),
-                                                      Text(
-                                                          '#${community.name}'),
-                                                    ],
-                                                  ),
-                                                );
-                                              }).toList(),
-                                              decoration: InputDecoration(
-                                                border: OutlineInputBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                ),
-                                                contentPadding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 12),
-                                                filled: true,
-                                                fillColor: Colors.black,
-                                                errorText: selectedCommunity ==
-                                                        null
-                                                    ? 'This field is required'
-                                                    : null,
-                                              ),
-                                            ),
-                                          ],
-                                        );
-                                      }
-                                    },
-                                    error: (error, stackTrace) {
-                                      return ErrorText(error: error.toString());
-                                    },
-                                    loading: () {
-                                      return const Loading();
-                                    },
-                                  ),
                                 Padding(
                                   padding:
                                       const EdgeInsets.symmetric(horizontal: 1),

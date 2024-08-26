@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field, unused_result
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -173,15 +175,21 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     });
   }
 
+  Future<void> _refreshPosts() async {
+    ref.refresh(fetchCommunityPostsProvider(widget._community.id));
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(userProvider)!;
     final memberCount =
         ref.watch(getCommunityMemberCountProvider(widget._community.id));
-    final posts = ref.watch(fetchCommunityPostsProvider(widget._community.id));
     bool isLoading = ref.watch(communityControllerProvider);
+
     return Scaffold(
-      body: NestedScrollView(
+      body: RefreshIndicator(
+        onRefresh: _refreshPosts,
+        child: NestedScrollView(
           headerSliverBuilder: (context, innerBoxIsScrolled) {
             return [
               SliverAppBar(
@@ -301,7 +309,10 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                           ),
                           IconButton(
                             onPressed: _navigateToCreatePostScreen,
-                            icon: const Icon(Icons.add, color: Colors.white),
+                            icon: const Icon(
+                              Icons.add,
+                              color: Colors.white,
+                            ),
                             tooltip: 'Create a new post',
                           ),
                         ],
@@ -336,83 +347,75 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
           },
           body: CustomScrollView(
             slivers: [
-              if (widget._pinnedPost != null)
-                SliverToBoxAdapter(
-                  child: ref
-                      .watch(getUserDataProvider(widget._pinnedPost!.uid))
-                      .when(
-                        data: (author) {
-                          return PostContainer(
-                            isMod: tempMemberStatus == 'moderator',
-                            author: author,
-                            post: widget._pinnedPost!,
-                            community: widget._community,
-                            isPinnedPost: true,
-                          );
-                        },
-                        error: (error, stackTrace) => ErrorText(
-                          error: error.toString(),
-                        ),
-                        loading: () => const Loading(),
+              // if (widget._pinnedPost != null)
+              //   SliverToBoxAdapter(
+              //     child: ref
+              //         .watch(combinedPostDataProvider(widget._pinnedPost!))
+              //         .when(
+              //           data: (combinedData) {
+              //             return PostContainer(
+              //               isMod: tempMemberStatus == 'moderator',
+              //               author: combinedData.author,
+              //               post: combinedData.post,
+              //               community: widget._community,
+              //               isPinnedPost: true,
+              //             );
+              //           },
+              //           error: (error, stackTrace) =>
+              //               ErrorText(error: error.toString()),
+              //           loading: () => const Loading(),
+              //         ),
+              //   ),
+              ref.watch(fetchCommunityPostsProvider(widget._community.id)).when(
+                    data: (posts) {
+                      if (posts == null || posts.isEmpty) {
+                        return const SliverToBoxAdapter(
+                          child: Text(
+                            'NOTHING',
+                            textAlign: TextAlign.center,
+                          ),
+                        );
+                      } else {
+                        return SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              if (index >= posts.length) {
+                                return const SizedBox.shrink();
+                              }
+                              final post = posts[index];
+                              return ref
+                                  .watch(getUserDataProvider(post.uid))
+                                  .when(
+                                    data: (author) {
+                                      return PostContainer(
+                                        isPinnedPost: false,
+                                        isMod: tempMemberStatus == 'moderator',
+                                        author: author,
+                                        post: post,
+                                        community: widget._community,
+                                      );
+                                    },
+                                    error: (e, s) =>
+                                        ErrorText(error: e.toString()),
+                                    loading: () => const Loading(),
+                                  );
+                            },
+                            childCount: posts.length,
+                          ),
+                        );
+                      }
+                    },
+                    error: (error, stackTrace) => SliverToBoxAdapter(
+                      child: ErrorText(
+                        error: error.toString(),
                       ),
-                ),
-              posts.when(
-                data: (posts) {
-                  if (posts == null || posts.isEmpty) {
-                    return const SliverToBoxAdapter(
-                      child: Center(
-                        child: Text('No posts available.'),
-                      ),
-                    );
-                  }
-
-                  final filteredPosts = widget._pinnedPost != null
-                      ? posts
-                          .where((post) => post.id != widget._pinnedPost!.id)
-                          .toList()
-                      : posts;
-
-                  if (filteredPosts.isEmpty) {
-                    return const SliverToBoxAdapter(
-                      child: SizedBox.shrink(),
-                    );
-                  }
-
-                  return SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final post = filteredPosts[index];
-                        return ref.watch(getUserDataProvider(post.uid)).when(
-                              data: (author) {
-                                return PostContainer(
-                                  isMod: tempMemberStatus == 'moderator',
-                                  author: author,
-                                  post: post,
-                                  community: widget._community,
-                                  isPinnedPost: false,
-                                );
-                              },
-                              error: (error, stackTrace) => ErrorText(
-                                error: error.toString(),
-                              ),
-                              loading: () => const Loading(),
-                            );
-                      },
-                      childCount: filteredPosts.length,
                     ),
-                  );
-                },
-                error: (error, stackTrace) => SliverToBoxAdapter(
-                  child: ErrorText(
-                    error: error.toString(),
+                    loading: () => const SliverToBoxAdapter(child: Loading()),
                   ),
-                ),
-                loading: () => const SliverToBoxAdapter(
-                  child: Loading(),
-                ),
-              ),
             ],
-          )),
+          ),
+        ),
+      ),
     );
   }
 }

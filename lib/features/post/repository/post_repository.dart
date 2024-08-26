@@ -197,7 +197,13 @@ class PostRepository {
   FutureVoid deletePost(Post post, String uid) async {
     final batch = _firestore.batch();
     try {
-      batch.delete(_posts.doc(post.id));
+      await _posts.doc(post.id).delete();
+      await _storageRepository.deleteFile(
+        path: 'posts/images/${post.id}',
+      );
+      await _storageRepository.deleteFile(
+        path: 'posts/videos/${post.id}',
+      );
       await batch.commit();
       return right(null);
     } on FirebaseException catch (e) {
@@ -219,13 +225,14 @@ class PostRepository {
   Stream<List<Post>?> fetchCommunityPosts(String communityId) {
     return _posts
         .where('communityId', isEqualTo: communityId)
+        .where('status', isEqualTo: 'Approved')
         .snapshots()
         .map((event) {
       if (event.docs.isEmpty) {
         return null;
       }
       var communityPosts = <Post>[];
-      for (var doc in event.docs) {
+      for (final doc in event.docs) {
         communityPosts.add(
           Post.fromMap(doc.data() as Map<String, dynamic>),
         );
@@ -263,7 +270,7 @@ class PostRepository {
       } else {
         return right(null);
       }
-    } on FirebaseException catch (e) {  
+    } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
@@ -278,5 +285,16 @@ class PostRepository {
         .map((event) {
       return event.size;
     });
+  }
+
+  FutureVoid updatePostStatus(Post post, String status) async {
+    try {
+      await _posts.doc(post.id).update({'status': status});
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
   }
 }

@@ -14,7 +14,9 @@ import 'package:hash_balance/features/home/screen/drawers/user_profile_drawer.da
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({
+    super.key,
+  });
 
   @override
   HomeScreenState createState() => HomeScreenState();

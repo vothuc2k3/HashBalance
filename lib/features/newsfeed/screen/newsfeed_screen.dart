@@ -3,13 +3,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
+import 'package:hash_balance/models/post_data_model.dart';
 import 'package:icons_plus/icons_plus.dart';
 
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
 import 'package:hash_balance/features/newsfeed/screen/post_container/post_container.dart';
 import 'package:hash_balance/features/post/screen/create_post_screen.dart';
@@ -27,7 +26,7 @@ class NewsfeedScreen extends ConsumerStatefulWidget {
 
 class NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
   Future<void> _refreshPosts() async {
-    ref.refresh(getCommunitiesPostsProvider);
+    ref.refresh(newsfeedControllerProvider).getJoinedCommunitiesPosts();
   }
 
   void _navigateToCreatePostScreen() {
@@ -41,7 +40,7 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = ref.watch(userProvider);
+    final currentUser = ref.read(userProvider);
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: _refreshPosts,
@@ -55,64 +54,39 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
               const SliverToBoxAdapter(
                 child: SizedBox(height: 20),
               ),
-              ref.watch(getCommunitiesPostsProvider).when(
-                    data: (posts) {
-                      return posts == null
-                          ? const SliverToBoxAdapter(
-                              child: Text(
-                                'NOTHING',
-                                textAlign: TextAlign.center,
-                              ),
-                            )
-                          : SliverList(
-                              delegate: SliverChildBuilderDelegate(
-                                (context, index) {
-                                  final post = posts[index];
-                                  return ref
-                                      .watch(getUserDataProvider(post.uid))
-                                      .when(
-                                        data: (author) {
-                                          return ref
-                                              .watch(getCommunityByIdProvider(
-                                                  post.communityId))
-                                              .when(
-                                                data: (community) {
-                                                  if (community == null) {
-                                                    return const ErrorText(
-                                                      error:
-                                                          'Unexpected Error Happened...',
-                                                    );
-                                                  }
-                                                  return PostContainer(
-                                                    author: author,
-                                                    post: post,
-                                                    community: community,
-                                                  );
-                                                },
-                                                error: (error, stackTrace) =>
-                                                    ErrorText(
-                                                        error:
-                                                            error.toString()),
-                                                loading: () => const Loading(),
-                                              );
-                                        },
-                                        error: (error, stackTrace) => Container(
-                                            padding: const EdgeInsets.all(16),
-                                            child: ErrorText(
-                                                error: error.toString())),
-                                        loading: () => const Loading(),
-                                      );
-                                },
-                              ),
-                            );
-                    },
-                    error: (error, stackTrace) => SliverToBoxAdapter(
-                      child: ErrorText(
-                        error: error.toString(),
-                      ),
-                    ),
-                    loading: () => const SliverToBoxAdapter(child: Loading()),
-                  ),
+              SliverToBoxAdapter(
+                child: FutureBuilder<List<PostDataModel>?>(
+                  future: ref
+                      .read(newsfeedControllerProvider)
+                      .getJoinedCommunitiesPosts(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Loading();
+                    } else if (snapshot.hasError) {
+                      return ErrorText(error: snapshot.error.toString());
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return const Center(
+                        child: Text('No posts available'),
+                      );
+                    } else {
+                      final posts = snapshot.data!;
+
+                      return ListView.builder(
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: posts.length,
+                        itemBuilder: (context, index) {
+                          final postData = posts[index];
+                          return PostContainer(
+                              author: postData.author,
+                              post: postData.post,
+                              community: postData.communty);
+                        },
+                      );
+                    }
+                  },
+                ),
+              ),
             ],
           ),
         ),

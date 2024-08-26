@@ -12,11 +12,14 @@ class Constants {
   static const facebookLogoPath = 'assets/images/facebookLogo.png';
   static const emailLogoPath = 'assets/images/emailLogo.png';
 
-  static const bannerDefault = 'https://i.imgur.com/gKLRsMZ.jpg';
-  static const cameraIcon = 'https://i.imgur.com/cqjP4oR.png';
+  static const bannerDefault =
+      'https://firebasestorage.googleapis.com/v0/b/hash-balance-official-2.appspot.com/o/defaultbanner.jpeg?alt=media&token=1f1f6ff7-7344-42b8-9c69-7cfbe36165bb';
+  static const cameraIcon =
+      'https://firebasestorage.googleapis.com/v0/b/hash-balance-official-2.appspot.com/o/defaultcamera.png?alt=media&token=6279e21f-0d6e-4744-b689-b1d600d25f75';
   static const avatarDefault = [
-    'https://ichef.bbci.co.uk/news/976/cpsprodpb/16620/production/_91408619_55df76d5-2245-41c1-8031-07a4da3f313f.jpg',
-    'https://media.vanityfair.com/photos/5f5156490ca7fe28f9ec3f55/4:3/w_1775,h_1331,c_limit/feels-good-man-film.jpg'
+    'https://firebasestorage.googleapis.com/v0/b/hash-balance-official-2.appspot.com/o/defaultavatar1.jpg?alt=media&token=0e12b61c-7b42-4e49-882c-1c398a9af543',
+    'https://firebasestorage.googleapis.com/v0/b/hash-balance-official-2.appspot.com/o/defaultavatar2.jpg?alt=media&token=8fb5265b-e049-4867-94e4-ed5a1a34d887',
+    'https://firebasestorage.googleapis.com/v0/b/hash-balance-official-2.appspot.com/o/defaultavatar3.jpg?alt=media&token=04299647-a572-4477-9705-25dfb0cc0595',
   ];
 
   static const communityTypes = ['Public', 'Restricted', 'Private'];
@@ -74,4 +77,6 @@ class Constants {
   static String agoraAppId = 'a9942d0368fc4cdf9e59df9df19899c9';
 
   static String domain = 'https://web-production-f331.up.railway.app';
+
+  static List<String> communityIds = <String>[];
 }

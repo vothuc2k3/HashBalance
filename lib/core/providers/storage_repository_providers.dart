@@ -35,4 +35,17 @@ class StorageRepository {
       return left(Failures(e.toString()));
     }
   }
+
+  FutureVoid deleteFile({
+    required String path,
+  }) async {
+    try {
+      _firebaseStorage.ref().child(path).delete();
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
 }

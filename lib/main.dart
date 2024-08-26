@@ -13,9 +13,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:toastification/toastification.dart';
 
 import 'package:hash_balance/core/hive_models/user_model/hive_user_model.dart';
-import 'package:hash_balance/core/services/device_token_service.dart';
 import 'package:hash_balance/core/services/joined_communities_service.dart';
-import 'package:hash_balance/core/services/user_friends_service.dart';
 import 'package:hash_balance/core/splash/splash_screen.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
@@ -37,10 +35,10 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await FirebaseMessaging.instance.getToken();
   await Hive.initFlutter();
   Hive.registerAdapter(HiveUserModelAdapter());
   Hive.registerAdapter(HiveCommunityModelAdapter());
-  await FirebaseMessaging.instance.getToken();
   runApp(
     const ProviderScope(
       child: ToastificationWrapper(
@@ -62,8 +60,6 @@ class MyApp extends ConsumerStatefulWidget {
 class MyAppState extends ConsumerState<MyApp> {
   UserModel? userData;
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-  late final DeviceTokenService _deviceTokenService;
-  late final UserFriendsService _userFriendService;
   late final JoinedCommunitiesService _joinedCommunitiesService;
 
   void _getUserData(User data) async {
@@ -72,9 +68,6 @@ class MyAppState extends ConsumerState<MyApp> {
         .getUserData(data.uid)
         .first;
     ref.watch(userProvider.notifier).update((state) => userData);
-    await _deviceTokenService.updateUserDeviceToken(userData);
-    await _userFriendService.fetchUserFriends(userData);
-    await _joinedCommunitiesService.fetchJoinedCommunities(userData);
   }
 
   void _setupLocalNotifications() async {
@@ -183,7 +176,6 @@ class MyAppState extends ConsumerState<MyApp> {
     const NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
 
-    // Tạo payload từ message data
     final Map<String, dynamic> payloadData = message.data;
 
     final payload = jsonEncode(payloadData);
@@ -209,9 +201,8 @@ class MyAppState extends ConsumerState<MyApp> {
         }
       },
     );
-    _deviceTokenService = DeviceTokenService();
-    _userFriendService = UserFriendsService();
     _joinedCommunitiesService = JoinedCommunitiesService();
+    _joinedCommunitiesService.fetchJoinedCommunities(userData);
     super.initState();
   }
 

@@ -7,8 +7,18 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/comment/screen/comment_container/comment_container.dart';
+import 'package:hash_balance/models/comment_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:flutter/foundation.dart' as foundation;
+
+// Define the providers
+final currentCommentProvider = Provider<CommentModel>((ref) {
+  throw UnimplementedError('currentCommentProvider not overridden');
+});
+
+final currentPostProvider = Provider<Post>((ref) {
+  throw UnimplementedError('currentPostProvider not overridden');
+});
 
 class CommentScreen extends ConsumerStatefulWidget {
   final Post _post;
@@ -69,79 +79,84 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
   @override
   Widget build(BuildContext context) {
     final loading = ref.watch(commentControllerProvider);
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Comments'),
-        backgroundColor: Colors.black,
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) =>
-                _handleMenuItemClick(value, 'QPeVjW5xz41AMBxNGneGX'),
-            icon: const Icon(Icons.more_horiz),
-            itemBuilder: (BuildContext context) {
-              return [
-                const PopupMenuItem<String>(
-                  value: 'Option1',
-                  child: Text('Option 1'),
-                ),
-                const PopupMenuItem<String>(
-                  value: 'Option2',
-                  child: Text('Option 2'),
-                ),
-                const PopupMenuItem<String>(
-                  value: 'Option3',
-                  child: Text('Option 3'),
-                ),
-              ];
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ref.watch(getPostCommentsProvider(widget._post.id)).when(
-                  data: (comments) {
-                    if (comments == null) {
-                      return const Center(
-                        child: Text(
-                          'No comments available.',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      );
-                    }
-                    return ListView.builder(
-                      itemCount: comments.length,
-                      itemBuilder: (context, index) {
-                        final comment = comments[index];
-                        return ref
-                            .watch(getUserDataProvider(comment.uid))
-                            .when(
-                              data: (author) {
-                                return CommentContainer(
-                                  author: author,
-                                  comment: comment,
-                                  post: widget._post,
-                                );
-                              },
-                              error: (error, stackTrace) => ErrorText(
-                                error: error.toString(),
-                              ),
-                              loading: () => const Loading(),
-                            );
-                      },
-                    );
-                  },
-                  error: (error, stackTrace) => ErrorText(
-                    error: error.toString(),
+    final commentsAsyncValue =
+        ref.watch(getPostCommentsProvider(widget._post.id));
+
+    return ProviderScope(
+      overrides: [
+        currentPostProvider.overrideWithValue(widget._post),
+      ],
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Comments'),
+          backgroundColor: Colors.black,
+          actions: [
+            PopupMenuButton<String>(
+              onSelected: (value) =>
+                  _handleMenuItemClick(value, 'QPeVjW5xz41AMBxNGneGX'),
+              icon: const Icon(Icons.more_horiz),
+              itemBuilder: (BuildContext context) {
+                return [
+                  const PopupMenuItem<String>(
+                    value: 'Option1',
+                    child: Text('Option 1'),
                   ),
-                  loading: () => const Loading(),
-                ),
-          ),
-          loading ? const Loading() : _buildInputArea(),
-          if (_isEmojiVisible) _buildEmojiPicker(),
-        ],
+                  const PopupMenuItem<String>(
+                    value: 'Option2',
+                    child: Text('Option 2'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'Option3',
+                    child: Text('Option 3'),
+                  ),
+                ];
+              },
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: _buildCommentsList(commentsAsyncValue),
+            ),
+            loading ? const Loading() : _buildInputArea(),
+            if (_isEmojiVisible) _buildEmojiPicker(),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildCommentsList(
+      AsyncValue<List<CommentModel>?> commentsAsyncValue) {
+    return commentsAsyncValue.when(
+      data: (comments) {
+        if (comments == null || comments.isEmpty) {
+          return const Center(
+            child: Text(
+              'No comments available.',
+              style: TextStyle(color: Colors.white),
+            ),
+          );
+        }
+        return ListView.builder(
+          itemCount: comments.length,
+          itemBuilder: (context, index) => _buildCommentItem(comments[index]),
+        );
+      },
+      error: (error, stackTrace) => ErrorText(
+        error: error.toString(),
+      ),
+      loading: () => const Loading(),
+    );
+  }
+
+  Widget _buildCommentItem(CommentModel comment) {
+    return ProviderScope(
+      overrides: [
+        currentCommentProvider.overrideWithValue(comment),
+      ],
+      child: const CommentItemWidget(),
     );
   }
 
@@ -200,6 +215,27 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
           searchViewConfig: const SearchViewConfig(),
         ),
       ),
+    );
+  }
+}
+
+class CommentItemWidget extends ConsumerWidget {
+  const CommentItemWidget({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final comment = ref.watch(currentCommentProvider);
+    final post = ref.watch(currentPostProvider);
+    final authorAsyncValue = ref.watch(getUserDataProvider(comment.uid));
+
+    return authorAsyncValue.when(
+      data: (author) => CommentContainer(
+        author: author,
+        comment: comment,
+        post: post,
+      ),
+      error: (error, stackTrace) => ErrorText(error: error.toString()),
+      loading: () => const Loading(),
     );
   }
 }

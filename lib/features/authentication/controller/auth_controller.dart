@@ -12,6 +12,10 @@ import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/models/user_model.dart';
 
+final fetchUserDataProvider = FutureProviderFamily((ref, String uid) {
+  return ref.watch(authControllerProvider.notifier).fetchUserData(uid);
+});
+
 final authControllerProvider = StateNotifierProvider<AuthController, bool>(
   (ref) => AuthController(
     authRepository: ref.watch(authRepositoryProvider),
@@ -155,6 +159,10 @@ class AuthController extends StateNotifier<bool> {
 
   Stream<UserModel> getUserData(String uid) {
     return _authRepository.getUserData(uid);
+  }
+
+  Future<UserModel> fetchUserData(String uid) async {
+    return _authRepository.fetchUserData(uid);
   }
 
   FutureVoid sendResetPasswordLink(String email) async {

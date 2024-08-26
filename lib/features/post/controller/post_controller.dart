@@ -5,13 +5,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
 import 'package:hash_balance/core/failures.dart';
+import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/post/repository/post_repository.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/post_vote_model.dart';
+import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
 
 final getPostCommentCountProvider =
     StreamProvider.family.autoDispose((ref, String postId) {
@@ -39,7 +42,7 @@ final fetchCommunityPostsProvider = StreamProvider.family.autoDispose(
     (ref, String communityId) => ref
         .watch(postControllerProvider.notifier)
         .fetchCommunityPosts(communityId));
-        
+
 final getPostByIdProvider =
     StreamProvider.autoDispose.family((ref, String postId) {
   return ref.watch(postControllerProvider.notifier).getPostById(postId);
@@ -47,17 +50,29 @@ final getPostByIdProvider =
 
 final postControllerProvider = StateNotifierProvider<PostController, bool>(
   (ref) => PostController(
-      postRepository: ref.watch(postRepositoryProvider), ref: ref),
+      commentController: ref.watch(commentControllerProvider.notifier),
+      postRepository: ref.watch(postRepositoryProvider),
+      pushNotificationController: ref.watch(pushNotificationControllerProvider.notifier),
+      storageRepository: ref.watch(storageRepositoryProvider),
+      ref: ref),
 );
 
 class PostController extends StateNotifier<bool> {
   final PostRepository _postRepository;
+  final StorageRepository _storageRepository;
+  final PushNotificationController _pushNotificationController;
   final Ref _ref;
-
+  final CommentController _commentController;
   PostController({
     required PostRepository postRepository,
+    required StorageRepository storageRepository,
+    required PushNotificationController pushNotificationController,
+    required CommentController commentController,
     required Ref ref,
   })  : _postRepository = postRepository,
+        _storageRepository = storageRepository,
+        _pushNotificationController = pushNotificationController,
+        _commentController = commentController,
         _ref = ref,
         super(false);
 
@@ -68,7 +83,11 @@ class PostController extends StateNotifier<bool> {
     File? video,
     String content,
   ) async {
+    state = true;
     try {
+      if (content.isEmpty && image == null && video == null) {
+        return left(Failures('Post cannot be empty'));
+      }
       final uid = _ref.watch(userProvider)!.uid;
       switch (community.type) {
         case 'Public':
@@ -116,6 +135,8 @@ class PostController extends StateNotifier<bool> {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
+    } finally {
+      state = false;
     }
   }
 
@@ -143,7 +164,7 @@ class PostController extends StateNotifier<bool> {
 
   Stream<bool?> getPostVoteStatus(Post post) {
     try {
-      final uid = _ref.read(userProvider)!.uid;
+      final uid = _ref.watch(userProvider)!.uid;
       return _postRepository.getPostVoteStatus(post, uid);
     } on FirebaseException catch (e) {
       throw Failures(e.message!);
@@ -156,21 +177,30 @@ class PostController extends StateNotifier<bool> {
     return _postRepository.getPostVoteCount(post);
   }
 
-  FutureString deletePostByUser(Post post) async {
+  FutureVoid deletePost(Post post) async {
     state = true;
     try {
       final user = _ref.watch(userProvider)!;
       Either<Failures, void> result;
       if (user.uid == post.uid) {
         result = await _postRepository.deletePost(post, user.uid);
+        result.fold((l) => left(l), (r) async {
+          if (post.image != null) {
+            _storageRepository.deleteFile(
+              path: 'posts/images/${post.id}',
+            );
+          }
+          if (post.video != null) {
+            _storageRepository.deleteFile(
+              path: 'posts/videos/${post.id}',
+            );
+          }
+          await _commentController.clearPostComments(post.id);
+        });
       } else {
         return left(Failures('You are not the author of the post'));
       }
-      return result.fold((l) {
-        return left(Failures(l.message));
-      }, (r) {
-        return right('Successfully Deleted Post');
-      });
+      return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {
@@ -211,5 +241,9 @@ class PostController extends StateNotifier<bool> {
     } catch (e) {
       throw Failures(e.toString());
     }
+  }
+
+  FutureVoid updatePostStatus(Post post, String status) async {
+    return await _postRepository.updatePostStatus(post, status);
   }
 }

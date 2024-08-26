@@ -35,7 +35,7 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
   void signInWithEmail() async {
     FocusScope.of(context).unfocus();
     final result = await ref
-        .read(authControllerProvider.notifier)
+        .watch(authControllerProvider.notifier)
         .signInWithEmailAndPassword(
           emailController.text.toLowerCase().trim(),
           passwordController.text,

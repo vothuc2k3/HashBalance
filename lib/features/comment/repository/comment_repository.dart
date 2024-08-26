@@ -35,6 +35,21 @@ class CommentRepository {
     }
   }
 
+  FutureVoid clearPostComments(String postId) async {
+    try {
+      await _comments.where('postId', isEqualTo: postId).get().then((value) {
+        for (var doc in value.docs) {
+          doc.reference.delete();
+        }
+      });
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
   //FETCH ALL COMMENTS OF A POST
   Stream<List<CommentModel>?> getPostComments(String postId) {
     return _comments

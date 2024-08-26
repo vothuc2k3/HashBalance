@@ -80,6 +80,11 @@ class CommentController extends StateNotifier<bool> {
     return _commentRepository.getPostComments(postId);
   }
 
+  //DELETE A COMMENT
+  FutureVoid clearPostComments(String postId) async {
+    return await _commentRepository.clearPostComments(postId);
+  }
+
   //VOTE THE COMMENT
   FutureVoid voteComment(String commentId, bool isUpvoted) async {
     try {

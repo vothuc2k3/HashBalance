@@ -2,7 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
+import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/post_data_model.dart';
 import 'package:hash_balance/models/post_model.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 final newsfeedRepositoryProvider = Provider((ref) {
   return NewsfeedRepository(firestore: ref.watch(firebaseFirestoreProvider));
@@ -11,33 +14,53 @@ final newsfeedRepositoryProvider = Provider((ref) {
 class NewsfeedRepository {
   final FirebaseFirestore _firestore;
 
-  NewsfeedRepository({required FirebaseFirestore firestore})
-      : _firestore = firestore;
+  NewsfeedRepository({
+    required FirebaseFirestore firestore,
+  }) : _firestore = firestore;
 
-  //GET THE COMMUNITIES BY CURRENT USER
-  Stream<List<Post>?> getJoinedCommunitiesPosts(String uid) {
-    return _communityMembership
-        .where('uid', isEqualTo: uid)
-        .snapshots()
-        .asyncMap((data) async {
-      final communitiesId =
-          data.docs.map((doc) => doc['communityId'] as String).toList();
-      final List<Post> posts = [];
-      for (var communityId in communitiesId) {
-        final communityPosts =
-            await _posts.where('communityId', isEqualTo: communityId).get();
-        if (communityPosts.docs.isEmpty) {
-          return null;
-        } else {
-          for (var postDoc in communityPosts.docs) {
-            posts.add(
-              Post.fromMap(postDoc.data() as Map<String, dynamic>),
-            );
-          }
-        }
+  //REFERENCE ALL THE USERS
+  CollectionReference get _users =>
+      _firestore.collection(FirebaseConstants.usersCollection);
+  //REFERENCE ALL THE COMMUNITIES
+  CollectionReference get _communities =>
+      _firestore.collection(FirebaseConstants.communitiesCollection);
+
+  //GET THE COMMUNITIES' POSTS BY CURRENT USER
+  Future<List<PostDataModel>> getJoinedCommunitiesPosts(String uid) async {
+    final data = await _communityMembership.where('uid', isEqualTo: uid).get();
+    final communitiesId =
+        data.docs.map((doc) => doc['communityId'] as String).toList();
+
+    final List<PostDataModel> postDataList = [];
+
+    for (var communityId in communitiesId) {
+      final communityPosts = await _posts
+          .where('communityId', isEqualTo: communityId)
+          .where('status', isEqualTo: 'Approved')
+          .get();
+
+      if (communityPosts.docs.isNotEmpty) {
+        await Future.wait(communityPosts.docs.map((postDoc) async {
+          final post = Post.fromMap(postDoc.data() as Map<String, dynamic>);
+
+          final authorDoc = await _users.doc(post.uid).get();
+          final author =
+              UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
+
+          final communityDoc = await _communities.doc(communityId).get();
+          final community =
+              Community.fromMap(communityDoc.data() as Map<String, dynamic>);
+
+          postDataList.add(PostDataModel(
+            post: post,
+            author: author,
+            communty: community,
+          ));
+        }));
       }
-      return posts;
-    });
+    }
+
+    return postDataList;
   }
 
   //REFERENCE THE POSTS DATA

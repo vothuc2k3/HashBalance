@@ -87,6 +87,33 @@ class _OtherUserProfileScreenState
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget._targetUser.isRestricted) {
+        _showRestrictedProfileDialog();
+      }
+    });
+  }
+
+  void _showRestrictedProfileDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Restricted Profile'),
+          content: const Text('This user currently does not allow their profile to be viewed.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Close'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -125,24 +152,19 @@ class _OtherUserProfileScreenState
               children: [
                 Container(
                   color: Colors.grey,
-                  child: Image.network(
-                    widget._targetUser.bannerImage,
+                  child: CachedNetworkImage(
+                    imageUrl: widget._targetUser.bannerImage,
                     width: double.infinity,
                     height: coverHeight,
                     fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) {
-                        return child;
-                      }
-                      return Container(
-                        width: double.infinity,
-                        height: coverHeight,
-                        color: Colors.black,
-                        child: const Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                      );
-                    },
+                    placeholder: (context, url) => Container(
+                      width: double.infinity,
+                      height: coverHeight,
+                      color: Colors.black,
+                      child: const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
                   ),
                 ),
                 Positioned(
@@ -556,3 +578,4 @@ class _OtherUserProfileScreenState
     );
   }
 }
+

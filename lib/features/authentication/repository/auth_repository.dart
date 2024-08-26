@@ -118,7 +118,6 @@ class AuthRepository {
       );
 
       final user = await getUserData(userCredential.user!.uid).first;
-
       return right(user);
     } on FirebaseAuthException catch (e) {
       return left(Failures(e.message ?? 'Unknown error occurred?'));
@@ -135,6 +134,12 @@ class AuthRepository {
         return UserModel.fromMap(event.data() as Map<String, dynamic>);
       },
     );
+  }
+
+  //FETCH USER DATA
+  Future<UserModel> fetchUserData(String uid) async {
+    final doc = await _users.doc(uid).get();
+    return UserModel.fromMap(doc.data() as Map<String, dynamic>);
   }
 
   //CHANGE USER PRIVACY SETTING

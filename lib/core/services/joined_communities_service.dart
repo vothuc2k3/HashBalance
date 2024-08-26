@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/hive_models/community/hive_community_model.dart';
 import 'package:hive/hive.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
@@ -15,25 +16,24 @@ class JoinedCommunitiesService {
   CollectionReference get _communities =>
       _firestore.collection(FirebaseConstants.communitiesCollection);
 
-  Future<List<HiveCommunityModel>> fetchJoinedCommunities(
-      UserModel? userData) async {
+  void fetchJoinedCommunities(
+    UserModel? userData,
+  ) async {
     List<HiveCommunityModel> joinedCommunities = [];
 
     if (userData != null) {
-      // Initialize Hive Box inside the fetch function
-      final Box<HiveCommunityModel> joinedCommunitiesBox =
+      final joinedCommunitiesBox =
           await Hive.openBox<HiveCommunityModel>('joined_communities_box');
 
       final uid = userData.uid;
 
-      // Get the list of community IDs that the user has joined
       final userSnapshot = await _users.doc(uid).get();
       if (userSnapshot.exists) {
         final data = userSnapshot.data() as Map<String, dynamic>;
-        final List<String> joinedCommunityIds =
+        final joinedCommunityIds =
             List<String>.from(data['joinedCommunities'] ?? []);
 
-        for (String communityId in joinedCommunityIds) {
+        for (final communityId in joinedCommunityIds) {
           final communitySnapshot = await _communities.doc(communityId).get();
           if (communitySnapshot.exists) {
             final communityData =
@@ -46,9 +46,10 @@ class JoinedCommunitiesService {
             joinedCommunitiesBox.put(communityId, hiveCommunityModel);
           }
         }
+        for (final community in joinedCommunitiesBox.values) {
+          Constants.communityIds.add(community.id);
+        }
       }
     }
-
-    return joinedCommunities;
   }
 }

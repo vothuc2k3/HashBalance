@@ -158,12 +158,17 @@ class CommunityRepository {
         .map((snapshot) => snapshot.size);
   }
 
-  Stream<Community?> getCommunityById(String communityId) {
+  Stream<Community> getCommunityById(String communityId) {
     return _communities.doc(communityId).snapshots().map(
       (event) {
         final data = event.data() as Map<String, dynamic>;
         return Community.fromMap(data);
       },
     );
+  }
+
+  Future<Community> fetchCommunityById(String communityId)async{
+    final doc = await _communities.doc(communityId).get();
+    return Community.fromMap(doc.data() as Map<String, dynamic>);
   }
 }

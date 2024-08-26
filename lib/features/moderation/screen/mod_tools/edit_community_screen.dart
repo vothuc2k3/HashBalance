@@ -166,9 +166,6 @@ class _EditCommunityScreenState extends ConsumerState<EditCommunityScreen> {
     final isLoading = ref.watch(communityControllerProvider);
     return ref.watch(getCommunityByIdProvider(widget.id)).when(
           data: (community) {
-            if (community == null) {
-              return const ErrorText(error: 'Unexpected Error Happenned');
-            }
             return Scaffold(
               backgroundColor: Pallete.darkModeAppTheme.colorScheme.surface,
               appBar: AppBar(

@@ -78,7 +78,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
 
   void _handleDeletePost(Post post) async {
     final result =
-        await ref.watch(postControllerProvider.notifier).deletePostByUser(post);
+        await ref.watch(postControllerProvider.notifier).deletePost(post);
     result.fold(
       (l) {
         showToast(false, l.message);
@@ -93,6 +93,53 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   void _handleUnfollow() {}
 
   void _handleUnfriend() {}
+
+  void _showPostOptionsMenu(String currentUid, String postUsername) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.person_remove),
+                title: Text('Unfollow $postUsername'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _handleUnfollow();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.person_off),
+                title: Text('Unfriend $postUsername'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _handleUnfriend();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.block),
+                title: Text('Block $postUsername'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _handleBlock();
+                },
+              ),
+              if (currentUid == widget.post.uid)
+                ListTile(
+                  leading: const Icon(Icons.delete),
+                  title: const Text('Delete'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _handleDeletePost(widget.post);
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   void _navigateToCommentScreen() {
     Navigator.push(
@@ -272,88 +319,99 @@ class _PostContainerState extends ConsumerState<PostContainer> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(widget.post.content),
-                widget.post.image != ''
-                    ? const SizedBox.shrink()
-                    : const SizedBox(height: 6),
+                widget.post.image != '' && widget.post.video == ''
+                    ? const SizedBox(height: 6)
+                    : const SizedBox.shrink(),
               ],
             ),
           ),
-          widget.post.image != ''
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Image.network(
-                    widget.post.image!,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) {
-                        return child;
-                      } else {
-                        return const Loading();
-                      }
-                    },
-                  ),
-                )
-              : const SizedBox.shrink(),
-          widget.post.video != ''
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: _videoController != null &&
-                          _videoController!.value.isInitialized
-                      ? Column(
-                          children: [
-                            AspectRatio(
-                              aspectRatio: _videoController!.value.aspectRatio,
-                              child: GestureDetector(
-                                onTap: _togglePlayPause,
-                                child: Stack(
-                                  alignment: Alignment.bottomCenter,
-                                  children: [
-                                    VideoPlayer(
-                                      _videoController!,
-                                    ),
-                                    if (!_isPlaying)
-                                      const Center(
-                                        child: Icon(
+          if (widget.post.image != null || widget.post.image != '')
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Image.network(
+                widget.post.image!,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) {
+                    return child;
+                  } else {
+                    return const Loading();
+                  }
+                },
+              ),
+            ),
+          if (widget.post.video != '')
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: _videoController != null &&
+                      _videoController!.value.isInitialized
+                  ? LayoutBuilder(
+                      builder: (context, constraints) {
+                        final videoAspectRatio =
+                            _videoController!.value.aspectRatio;
+                        final screenWidth = constraints.maxWidth;
+                        final videoHeight = screenWidth / videoAspectRatio;
+                        final maxHeight =
+                            MediaQuery.of(context).size.height * 0.6;
+                        final finalHeight =
+                            videoHeight > maxHeight ? maxHeight : videoHeight;
+
+                        return Center(
+                          child: AspectRatio(
+                            aspectRatio: videoAspectRatio,
+                            child: ConstrainedBox(
+                              constraints:
+                                  BoxConstraints(maxHeight: finalHeight),
+                              child: Stack(
+                                alignment: Alignment.bottomCenter,
+                                children: [
+                                  VideoPlayer(_videoController!),
+                                  if (!_isPlaying)
+                                    Center(
+                                      child: IconButton(
+                                        icon: const Icon(
                                           Icons.play_arrow,
                                           color: Colors.white,
-                                          size: 100.0,
+                                          size: 64.0,
                                         ),
-                                      ),
-                                    VideoProgressIndicator(
-                                      _videoController!,
-                                      allowScrubbing: true,
-                                      colors: const VideoProgressColors(
-                                        playedColor: Colors.red,
-                                        backgroundColor: Colors.black,
-                                        bufferedColor: Colors.grey,
+                                        onPressed: _togglePlayPause,
                                       ),
                                     ),
-                                    Positioned(
-                                      bottom: 8,
-                                      left: 8,
-                                      child: Text(
-                                        _currentPosition ?? '0:00',
-                                        style: const TextStyle(
-                                            color: Colors.white),
-                                      ),
+                                  VideoProgressIndicator(
+                                    _videoController!,
+                                    allowScrubbing: true,
+                                    colors: const VideoProgressColors(
+                                      playedColor: Colors.red,
+                                      backgroundColor: Colors.black54,
+                                      bufferedColor: Colors.grey,
                                     ),
-                                    Positioned(
-                                      bottom: 8,
-                                      right: 8,
-                                      child: Text(
-                                        _videoDuration ?? '0:00',
-                                        style: const TextStyle(
-                                            color: Colors.white),
-                                      ),
+                                  ),
+                                  Positioned(
+                                    bottom: 8,
+                                    left: 8,
+                                    child: Text(
+                                      _currentPosition ?? '0:00',
+                                      style:
+                                          const TextStyle(color: Colors.white),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                  Positioned(
+                                    bottom: 8,
+                                    right: 8,
+                                    child: Text(
+                                      _videoDuration ?? '0:00',
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        )
-                      : const Loading(),
-                )
-              : const SizedBox.shrink(),
+                          ),
+                        );
+                      },
+                    )
+                  : const Loading(),
+            ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: _buildPostStat(),
@@ -409,7 +467,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         ),
         IconButton(
           onPressed: () {
-            _showBottomSheet(currentUser!.uid, widget.author.name);
+            _showPostOptionsMenu(currentUser!.uid, widget.author.name);
           },
           icon: const Icon(Icons.more_horiz),
         ),
@@ -472,53 +530,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
           indent: 5,
         ),
       ],
-    );
-  }
-
-  void _showBottomSheet(String currentUid, String postUsername) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return SafeArea(
-          child: Wrap(
-            children: <Widget>[
-              ListTile(
-                leading: const Icon(Icons.person_remove),
-                title: Text('Unfollow $postUsername'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _handleUnfollow();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.person_off),
-                title: Text('Unfriend $postUsername'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _handleUnfriend();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.block),
-                title: Text('Block $postUsername'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _handleBlock();
-                },
-              ),
-              if (currentUid == widget.post.uid)
-                ListTile(
-                  leading: const Icon(Icons.delete),
-                  title: const Text('Delete'),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    _handleDeletePost(widget.post);
-                  },
-                ),
-            ],
-          ),
-        );
-      },
     );
   }
 }
