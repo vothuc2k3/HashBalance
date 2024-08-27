@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field
+
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -12,18 +14,12 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/post/repository/post_repository.dart';
 import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/post_data_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
 
 final getPostCommentCountProvider = FutureProvider.family((ref, String postId) {
   return ref.read(postControllerProvider.notifier).getPostCommentCount(postId);
-});
-
-final getPendingPostsProvider =
-    StreamProvider.family.autoDispose((ref, String communityId) {
-  return ref
-      .watch(postControllerProvider.notifier)
-      .getPendingPosts(communityId);
 });
 
 final getPostVoteCountProvider = FutureProvider.family((ref, Post post) {
@@ -68,7 +64,6 @@ class PostController extends StateNotifier<bool> {
     File? video,
     String content,
   ) async {
-    state = true;
     try {
       if (content.isEmpty && image == null && video == null) {
         return left(Failures('Post cannot be empty'));
@@ -84,6 +79,7 @@ class PostController extends StateNotifier<bool> {
             commentCount: 0,
             shareCount: 0,
             isEdited: false,
+            isPinned: false,
             createdAt: Timestamp.now(),
             id: await generateRandomId(),
           );
@@ -96,6 +92,7 @@ class PostController extends StateNotifier<bool> {
             content: content,
             status: 'Pending',
             isEdited: false,
+            isPinned: false,
             commentCount: 0,
             shareCount: 0,
             createdAt: Timestamp.now(),
@@ -108,15 +105,12 @@ class PostController extends StateNotifier<bool> {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
-    } finally {
-      state = false;
-    }
+    } finally {}
   }
 
-  Future<Map<String, dynamic>> getPostVoteCountAndStatus(Post post) async {
+  Stream<Map<String, dynamic>> getPostVoteCountAndStatus(Post post) {
     final currentUser = _ref.watch(userProvider)!;
-    return await _postRepository.getPostVoteCountAndStatus(
-        post, currentUser.uid);
+    return _postRepository.getPostVoteCountAndStatus(post, currentUser.uid);
   }
 
   Stream<Map<String, dynamic>> getPostVoteCountAndStatusStream(Post post) {
@@ -158,18 +152,8 @@ class PostController extends StateNotifier<bool> {
     }
   }
 
-  Stream<List<Post>?> getPendingPosts(String communityId) {
-    return _postRepository.getPendingPosts(communityId);
-  }
-
-  Future<Either<Failures, Post?>> fetchPostByPostId(String postId) async {
-    try {
-      return await _postRepository.fetchPostByPostId(postId);
-    } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
-    } catch (e) {
-      return left(Failures(e.toString()));
-    }
+  Future<List<PostDataModel>> getPendingPosts(Community community) {
+    return _postRepository.getPendingPosts(community);
   }
 
   //GET POST COMMENT COUNT
@@ -181,6 +165,11 @@ class PostController extends StateNotifier<bool> {
     } catch (e) {
       throw Failures(e.toString());
     }
+  }
+
+  //FETCH PIN POST
+  Future<PostDataModel?> getCommunityPinnedPost(Community community) async {
+    return await _postRepository.getCommunityPinnedPost(community);
   }
 
   //GET POST SHARE COUNT

@@ -1,161 +1,87 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
+import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
+import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/post_data_model.dart';
+import 'package:hash_balance/features/moderation/screen/post_container/pending_post_container.dart';
 import 'package:hash_balance/models/post_model.dart';
 
 class PendingPostScreen extends ConsumerStatefulWidget {
-  final String _communityId;
+  final Community _community;
 
   const PendingPostScreen({
     super.key,
-    required String communityId,
-  }) : _communityId = communityId;
+    required Community community,
+  }) : _community = community;
 
   @override
   PendingPostScreenState createState() => PendingPostScreenState();
 }
 
 class PendingPostScreenState extends ConsumerState<PendingPostScreen> {
-  void _handleApprovePost(Post post) {
-    ref
-        .watch(postControllerProvider.notifier)
-        .updatePostStatus(post, 'Approved');
-  }
+  late Future<List<PostDataModel>> pendingPosts;
 
-  void _handleRejectPost(Post post) {
-    ref
-        .watch(postControllerProvider.notifier)
-        .updatePostStatus(post, 'Rejected');
-  }
-
-  void showPostDetails(BuildContext context, Post post) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15.0),
-          ),
-          title: const Text(
-            'Post Title',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text(post.content),
-                const SizedBox(height: 20),
-                Text(
-                  'Author: ${post.uid}',
-                  style: const TextStyle(fontStyle: FontStyle.italic),
-                ),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Approve'),
-              onPressed: () {
-                _handleApprovePost(post);
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Reject'),
-              onPressed: () {
-                _handleRejectPost(post);
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
+  void _handlePostApproval(Post post, String decision) async {
+    final result = await ref
+        .read(moderationControllerProvider.notifier)
+        .handlePostApproval(post, decision);
+    result.fold(
+      (l) => showToast(false, l.message),
+      (r) {
+        showToast(true, 'Approved post!');
+        setState(() {
+          pendingPosts = ref
+              .read(postControllerProvider.notifier)
+              .getPendingPosts(widget._community);
+        });
       },
     );
   }
 
   @override
-  Widget build(BuildContext context) {
-    final posts = ref.watch(getPendingPostsProvider(widget._communityId));
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    pendingPosts = ref
+        .read(postControllerProvider.notifier)
+        .getPendingPosts(widget._community);
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pending Posts'),
       ),
-      body: posts.when(
-        data: (posts) {
-          if (posts == null) {
-            return const Text('There\'s no pending posts...');
+      body: FutureBuilder<List<PostDataModel>>(
+        future: pendingPosts,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Loading();
+          } else if (snapshot.hasError) {
+            return ErrorText(error: snapshot.error.toString());
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(
+              child: Text('There\'s no pending posts...'),
+            );
+          } else {
+            final posts = snapshot.data!;
+            return ListView.builder(
+              itemCount: posts.length,
+              itemBuilder: (context, index) {
+                final post = posts[index];
+                return PendingPostContainer(
+                  author: post.author,
+                  post: post.post,
+                  handlePostApproval: _handlePostApproval,
+                );
+              },
+            );
           }
-          return ListView.builder(
-            itemCount: posts.length,
-            itemBuilder: (context, index) {
-              final post = posts[index];
-              return Card(
-                margin: const EdgeInsets.all(10.0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                ),
-                elevation: 5,
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(15.0),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 5),
-                      Text(post.content),
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Author: Authorrrr',
-                              style: TextStyle(fontStyle: FontStyle.italic)),
-                          Text(
-                              'Status: ${post.status == 'Approved' ? 'Approved' : 'Pending'}'),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                    ],
-                  ),
-                  trailing: PopupMenuButton<String>(
-                    onSelected: (String result) {
-                      if (result == 'approve') {
-                        _handleApprovePost(post);
-                      } else if (result == 'reject') {
-                        _handleRejectPost(post);
-                      }
-                    },
-                    itemBuilder: (BuildContext context) =>
-                        <PopupMenuEntry<String>>[
-                      const PopupMenuItem<String>(
-                        value: 'approve',
-                        child: ListTile(
-                          leading: Icon(Icons.check, color: Colors.green),
-                          title: Text('Approve'),
-                        ),
-                      ),
-                      const PopupMenuItem<String>(
-                        value: 'reject',
-                        child: ListTile(
-                          leading: Icon(Icons.clear, color: Colors.red),
-                          title: Text('Reject'),
-                        ),
-                      ),
-                    ],
-                  ),
-                  onTap: () {
-                    showPostDetails(context, post);
-                  },
-                ),
-              );
-            },
-          );
         },
-        error: (error, stackTrace) => ErrorText(error: error.toString()),
-        loading: () => const Loading(),
       ),
     );
   }

@@ -9,11 +9,9 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
-import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/features/search/controller/search_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
-import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 class SearchCommunityDelegate extends SearchDelegate {
@@ -213,16 +211,10 @@ class SearchCommunityDelegate extends SearchDelegate {
       ),
     );
     String? membershipStatus;
-    Post? pinnedPost;
     final result = await ref
         .watch(moderationControllerProvider.notifier)
         .fetchMembershipStatus(getMembershipId(uid, community.id));
-    if (community.pinPostId != null && community.pinPostId != '') {
-      final pinnedPostResult = await ref
-          .watch(postControllerProvider.notifier)
-          .fetchPostByPostId(community.pinPostId!);
-      pinnedPostResult.fold((_) {}, (r) => pinnedPost = r);
-    }
+
 
     result.fold(
       (l) {
@@ -235,7 +227,6 @@ class SearchCommunityDelegate extends SearchDelegate {
           MaterialPageRoute(
             builder: (context) => CommunityScreen(
               memberStatus: membershipStatus!,
-              pinnedPost: pinnedPost,
               community: community,
             ),
           ),

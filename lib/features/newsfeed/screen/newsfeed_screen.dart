@@ -1,5 +1,3 @@
-// ignore_for_file: unused_result
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,9 +22,10 @@ class NewsfeedScreen extends ConsumerStatefulWidget {
 }
 
 class NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
+  late Future<List<PostDataModel>> posts;
+
   Future<void> _refreshPosts() async {
-    ref.invalidate(newsfeedControllerProvider);
-    ref.refresh(newsfeedControllerProvider).getJoinedCommunitiesPosts();
+    posts = ref.read(newsfeedControllerProvider).getJoinedCommunitiesPosts();
   }
 
   void _navigateToCreatePostScreen() {
@@ -36,6 +35,12 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
         builder: (context) => const CreatePostScreen(),
       ),
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    posts = ref.read(newsfeedControllerProvider).getJoinedCommunitiesPosts();
   }
 
   @override
@@ -56,15 +61,13 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
               ),
               SliverToBoxAdapter(
                 child: FutureBuilder<List<PostDataModel>?>(
-                  future: ref
-                      .read(newsfeedControllerProvider)
-                      .getJoinedCommunitiesPosts(),
+                  future: posts,
                   builder: (context, snapshot) {
                     if (snapshot.hasError) {
                       return ErrorText(error: snapshot.error.toString());
                     } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                       return const Center(
-                        child: Text('No posts available'),
+                        child: SizedBox.shrink(),
                       );
                     } else {
                       final posts = snapshot.data!;

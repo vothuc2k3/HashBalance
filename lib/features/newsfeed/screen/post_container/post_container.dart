@@ -184,16 +184,9 @@ class _PostContainerState extends ConsumerState<PostContainer> {
       ),
     );
     String? membershipStatus;
-    Post? pinnedPost;
     final result = await ref
         .watch(moderationControllerProvider.notifier)
         .fetchMembershipStatus(getMembershipId(uid, community.id));
-    if (community.pinPostId != null) {
-      final pinnedPostResult = await ref
-          .watch(postControllerProvider.notifier)
-          .fetchPostByPostId(community.pinPostId!);
-      pinnedPostResult.fold((_) {}, (r) => pinnedPost = r);
-    }
 
     result.fold(
       (l) {
@@ -206,7 +199,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
           MaterialPageRoute(
             builder: (context) => CommunityScreen(
               memberStatus: membershipStatus!,
-              pinnedPost: pinnedPost,
               community: community,
             ),
           ),
@@ -577,10 +569,8 @@ class PostActions extends ConsumerWidget {
         _onShare = onShare;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-
-
-    return FutureBuilder<Map<String, dynamic>>(
-      future: ref
+    return StreamBuilder<Map<String, dynamic>>(
+      stream: ref
           .read(postControllerProvider.notifier)
           .getPostVoteCountAndStatus(_post),
       builder: (context, snapshot) {
@@ -622,7 +612,7 @@ class PostActions extends ConsumerWidget {
             ],
           );
         } else {
-          return const Text('No data available');
+          return const SizedBox.shrink();
         }
       },
     );

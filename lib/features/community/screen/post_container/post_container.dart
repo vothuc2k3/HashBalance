@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/post_share/post_share_controller/post_share_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
@@ -23,6 +22,8 @@ class PostContainer extends ConsumerStatefulWidget {
   final Post post;
   final Community community;
   final bool isPinnedPost;
+  final Function(Post)? onPinPost;
+  final Function(Post)? onUnPinPost;
 
   const PostContainer({
     super.key,
@@ -31,6 +32,8 @@ class PostContainer extends ConsumerStatefulWidget {
     required this.post,
     required this.community,
     required this.isPinnedPost,
+    this.onPinPost,
+    this.onUnPinPost,
   });
 
   @override
@@ -38,7 +41,7 @@ class PostContainer extends ConsumerStatefulWidget {
 }
 
 class _PostContainerState extends ConsumerState<PostContainer> {
-  late Future<Map<String, dynamic>> _postVoteCountAndStatus;
+  late Stream<Map<String, dynamic>> _postVoteCountAndStatus;
   TextEditingController commentTextController = TextEditingController();
   TextEditingController shareTextController = TextEditingController();
   VideoPlayerController? _videoController;
@@ -166,19 +169,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     );
   }
 
-  void _handlePinPost() async {
-    final result =
-        await ref.read(moderationControllerProvider.notifier).pinPost(
-              community: widget.community,
-              post: widget.post,
-            );
-    result.fold((l) => showToast(false, l.message), (r) {
-      if (mounted) {
-        setState(() {});
-      }
-    });
-  }
-
   void _handleBlock() {}
 
   void _handleDelete() {}
@@ -194,13 +184,26 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         return SafeArea(
           child: Wrap(
             children: [
-              if (widget.isMod)
+              if (widget.isMod && !widget.isPinnedPost)
                 ListTile(
                   leading: const Icon(Icons.person_remove),
                   title: const Text('Pin this post'),
                   onTap: () {
                     Navigator.of(context).pop();
-                    _handlePinPost();
+                    if (widget.onPinPost != null) {
+                      widget.onPinPost!(widget.post);
+                    }
+                  },
+                ),
+              if (widget.isMod && widget.isPinnedPost)
+                ListTile(
+                  leading: const Icon(Icons.person_remove),
+                  title: const Text('Unpin this post'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    if (widget.onUnPinPost != null) {
+                      widget.onUnPinPost!(widget.post);
+                    }
                   },
                 ),
               ListTile(
@@ -260,20 +263,23 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   }
 
   Future<void> _initializeVideo() async {
-    _videoController = VideoPlayerController.networkUrl(
-      Uri.parse(widget.post.video!),
-    )..initialize().then((_) {
-        if (mounted) {
-          setState(() {
-            _videoDuration = _formatDuration(_videoController!.value.duration);
-          });
-        }
-      });
+    if (widget.post.video != null && widget.post.video != '') {
+      _videoController = VideoPlayerController.networkUrl(
+        Uri.parse(widget.post.video!),
+      )..initialize().then((_) {
+          if (mounted) {
+            setState(() {
+              _videoDuration =
+                  _formatDuration(_videoController!.value.duration);
+            });
+          }
+        });
 
-    _videoController!.addListener(_videoListener);
+      _videoController!.addListener(_videoListener);
 
-    if (mounted) {
-      setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
     }
   }
 
@@ -340,7 +346,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
               ],
             ),
           ),
-          widget.post.image != ''
+          widget.post.image != null && widget.post.image != ''
               ? Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: CachedNetworkImage(
@@ -351,7 +357,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                   ),
                 )
               : const SizedBox.shrink(),
-          widget.post.video != ''
+          widget.post.video != null && widget.post.video != ''
               ? Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: _videoController != null &&
@@ -549,14 +555,14 @@ class PostActions extends ConsumerWidget {
   final Function _onVote;
   final Function _onComment;
   final Function _onShare;
-  final Future<Map<String, dynamic>> _postVoteCountAndStatus;
+  final Stream<Map<String, dynamic>> _postVoteCountAndStatus;
 
   const PostActions({
     super.key,
     required Function(bool) onVote,
     required Function onComment,
     required Function onShare,
-    required Future<Map<String, dynamic>> postVoteCountAndStatus,
+    required Stream<Map<String, dynamic>> postVoteCountAndStatus,
   })  : _onVote = onVote,
         _onComment = onComment,
         _onShare = onShare,
@@ -564,8 +570,8 @@ class PostActions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: _postVoteCountAndStatus,
+    return StreamBuilder<Map<String, dynamic>>(
+      stream: _postVoteCountAndStatus,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Text('Error: ${snapshot.error}');
@@ -605,7 +611,7 @@ class PostActions extends ConsumerWidget {
             ],
           );
         } else {
-          return const Text('No data available');
+          return const SizedBox.shrink();
         }
       },
     );

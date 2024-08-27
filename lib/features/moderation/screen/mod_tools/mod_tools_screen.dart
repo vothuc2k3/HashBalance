@@ -27,7 +27,7 @@ class ModToolsScreen extends ConsumerWidget {
       context,
       MaterialPageRoute(
         builder: (context) => PendingPostScreen(
-          communityId: community.id,
+          community: community,
         ),
       ),
     );

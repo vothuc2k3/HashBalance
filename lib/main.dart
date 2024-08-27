@@ -64,13 +64,14 @@ class MyAppState extends ConsumerState<MyApp> {
   late final JoinedCommunitiesService _joinedCommunitiesService;
   late final DeviceTokenService _deviceTokenService;
 
-
   void _getUserData(User data) async {
     userData = await ref
         .watch(authControllerProvider.notifier)
         .getUserData(data.uid)
         .first;
     ref.watch(userProvider.notifier).update((state) => userData);
+    _joinedCommunitiesService.fetchJoinedCommunities(userData);
+    _deviceTokenService.updateUserDeviceToken(userData);
   }
 
   void _setupLocalNotifications() async {
@@ -206,13 +207,11 @@ class MyAppState extends ConsumerState<MyApp> {
     );
     _joinedCommunitiesService = JoinedCommunitiesService();
     _deviceTokenService = DeviceTokenService();
-    _joinedCommunitiesService.fetchJoinedCommunities(userData);
-    _deviceTokenService.updateUserDeviceToken(userData);
     super.initState();
   }
 
   @override
-  Widget build(BuildContext context) { 
+  Widget build(BuildContext context) {
     final userData = ref.watch(userProvider);
 
     return ref.watch(authStageChangeProvider).when(

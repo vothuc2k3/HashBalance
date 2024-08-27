@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/splash/splash_screen.dart';
 
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
@@ -9,8 +10,9 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/community/screen/post_container/post_container.dart';
+import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/mod_tools_screen.dart';
-import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
+import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/features/post/screen/create_post_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/post_data_model.dart';
@@ -18,16 +20,13 @@ import 'package:hash_balance/models/post_model.dart';
 
 class CommunityScreen extends ConsumerStatefulWidget {
   final Community _community;
-  final Post? _pinnedPost;
   final String _memberStatus;
 
   const CommunityScreen({
     super.key,
     required Community community,
-    required Post? pinnedPost,
     required String memberStatus,
   })  : _community = community,
-        _pinnedPost = pinnedPost,
         _memberStatus = memberStatus;
 
   @override
@@ -37,6 +36,7 @@ class CommunityScreen extends ConsumerStatefulWidget {
 class CommunityScreenState extends ConsumerState<CommunityScreen> {
   String? tempMemberStatus;
   Future<List<PostDataModel>>? posts;
+  Future<PostDataModel?>? pinnedPost;
 
   _onJoinCommunity(
     String uid,
@@ -79,6 +79,61 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
         });
       });
     });
+  }
+
+  void handlePinPost(Post post) async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SplashScreen(),
+      ),
+    );
+    final result = await ref
+        .read(moderationControllerProvider.notifier)
+        .pinPost(post: post);
+    result.fold(
+      (l) => showToast(false, l.message),
+      (r) {
+        setState(() {
+          pinnedPost = ref
+              .read(postControllerProvider.notifier)
+              .getCommunityPinnedPost(widget._community);
+          posts = ref
+              .read(communityControllerProvider.notifier)
+              .getCommunityPosts(widget._community.id);
+        });
+      },
+    );
+    if (mounted) {
+      Navigator.pop(context);
+    }
+  }
+
+  void handleUnPinPost(Post post) async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SplashScreen(),
+      ),
+    );
+    final result =
+        await ref.read(moderationControllerProvider.notifier).unPinPost(post);
+    result.fold(
+      (l) => showToast(false, l.message),
+      (r) {
+        setState(() {
+          pinnedPost = ref
+              .read(postControllerProvider.notifier)
+              .getCommunityPinnedPost(widget._community);
+          posts = ref
+              .read(communityControllerProvider.notifier)
+              .getCommunityPosts(widget._community.id);
+        });
+      },
+    );
+    if (mounted) {
+      Navigator.pop(context);
+    }
   }
 
   _navigateToModToolsScreen() {
@@ -166,15 +221,28 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     );
   }
 
+  Future<void> _refreshPosts() async {
+    setState(() {
+      posts = ref
+          .read(communityControllerProvider.notifier)
+          .getCommunityPosts(widget._community.id);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      tempMemberStatus = widget._memberStatus;
-      posts = ref
-          .read(newsfeedControllerProvider)
-          .getCommunityPosts(widget._community.id);
-    });
+    SchedulerBinding.instance.addPostFrameCallback(
+      (_) {
+        tempMemberStatus = widget._memberStatus;
+        posts = ref
+            .read(communityControllerProvider.notifier)
+            .getCommunityPosts(widget._community.id);
+        pinnedPost = ref
+            .read(postControllerProvider.notifier)
+            .getCommunityPinnedPost(widget._community);
+      },
+    );
   }
 
   @override
@@ -185,195 +253,223 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     bool isLoading = ref.watch(communityControllerProvider);
 
     return Scaffold(
-      body: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) {
-          return [
-            SliverAppBar(
-              actions: [
-                if (tempMemberStatus == 'moderator')
-                  TextButton(
-                    onPressed: _navigateToModToolsScreen,
-                    child: const Text(
-                      'Mod Tools',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                if (tempMemberStatus == 'member')
-                  ElevatedButton(
-                    onPressed: isLoading
-                        ? () {}
-                        : () {
-                            _leaveCommunity(
-                              currentUser.uid,
-                              widget._community.id,
-                            );
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: isLoading
-                        ? const Loading()
-                        : const Text(
-                            'Leave Community',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: Colors.white,
-                            ),
-                          ),
-                  ),
-                if (tempMemberStatus == '')
-                  ElevatedButton(
-                    onPressed: isLoading
-                        ? () {}
-                        : () {
-                            _onJoinCommunity(
-                              currentUser.uid,
-                              widget._community.id,
-                            );
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: isLoading
-                        ? const Loading()
-                        : const Text(
-                            'Join Community',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: Colors.white,
-                            ),
-                          ),
-                  ),
-              ],
-              expandedHeight: 150,
-              flexibleSpace: InkWell(
-                onTap: () => _showImage(widget._community.bannerImage),
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: CachedNetworkImage(
-                        imageUrl: widget._community.bannerImage,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          width: double.infinity,
-                          height: 150,
-                          color: Colors.black,
-                          child: const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                        ),
-                        errorWidget: (context, url, error) =>
-                            const Icon(Icons.error),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.all(16),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate(
-                  [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        InkWell(
-                          onTap: () =>
-                              _showImage(widget._community.profileImage),
-                          child: CircleAvatar(
-                            backgroundImage: CachedNetworkImageProvider(
-                                widget._community.profileImage),
-                            radius: 35,
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: _navigateToCreatePostScreen,
-                          icon: const Icon(
-                            Icons.add,
+      body: RefreshIndicator.adaptive(
+        onRefresh: _refreshPosts,
+        child: Scaffold(
+          body: NestedScrollView(
+            headerSliverBuilder: (context, innerBoxIsScrolled) {
+              return [
+                SliverAppBar(
+                  actions: [
+                    if (tempMemberStatus == 'moderator')
+                      TextButton(
+                        onPressed: _navigateToModToolsScreen,
+                        child: const Text(
+                          'Mod Tools',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
                             color: Colors.white,
                           ),
-                          tooltip: 'Create a new post',
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '#${widget._community.name}',
-                          style: const TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                    if (tempMemberStatus == 'member')
+                      ElevatedButton(
+                        onPressed: isLoading
+                            ? () {}
+                            : () {
+                                _leaveCommunity(
+                                  currentUser.uid,
+                                  widget._community.id,
+                                );
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
-                      ],
-                    ),
-                    memberCount.when(
-                      data: (countt) {
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 10),
-                          child: Text('$countt members'),
-                        );
-                      },
-                      error: (error, stackTrace) =>
-                          ErrorText(error: error.toString()),
-                      loading: () => const Loading(),
-                    ),
+                        child: isLoading
+                            ? const Loading()
+                            : const Text(
+                                'Leave Community',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
+                    if (tempMemberStatus == '')
+                      ElevatedButton(
+                        onPressed: isLoading
+                            ? () {}
+                            : () {
+                                _onJoinCommunity(
+                                  currentUser.uid,
+                                  widget._community.id,
+                                );
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: isLoading
+                            ? const Loading()
+                            : const Text(
+                                'Join Community',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
                   ],
+                  expandedHeight: 150,
+                  flexibleSpace: InkWell(
+                    onTap: () => _showImage(widget._community.bannerImage),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: CachedNetworkImage(
+                            imageUrl: widget._community.bannerImage,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              width: double.infinity,
+                              height: 150,
+                              color: Colors.black,
+                              child: const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            ),
+                            errorWidget: (context, url, error) =>
+                                const Icon(Icons.error),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ];
-        },
-        body: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: FutureBuilder<List<PostDataModel>>(
-                future: posts,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text('No posts available'));
-                  }
-                  final posts = snapshot.data!;
-                  return ListView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    itemCount: posts.length,
-                    itemBuilder: (context, index) {
-                      final postData = posts[index];
+                SliverPadding(
+                  padding: const EdgeInsets.all(16),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate(
+                      [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            InkWell(
+                              onTap: () =>
+                                  _showImage(widget._community.profileImage),
+                              child: CircleAvatar(
+                                backgroundImage: CachedNetworkImageProvider(
+                                    widget._community.profileImage),
+                                radius: 35,
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: _navigateToCreatePostScreen,
+                              icon: const Icon(
+                                Icons.add,
+                                color: Colors.white,
+                              ),
+                              tooltip: 'Create a new post',
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '#${widget._community.name}',
+                              style: const TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        memberCount.when(
+                          data: (countt) {
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 10),
+                              child: Text('$countt members'),
+                            );
+                          },
+                          error: (error, stackTrace) =>
+                              ErrorText(error: error.toString()),
+                          loading: () => const Loading(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ];
+            },
+            body: CustomScrollView(
+              slivers: [
+                //PIN POST RENDER
+                SliverToBoxAdapter(
+                  child: FutureBuilder<PostDataModel?>(
+                    future: pinnedPost,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      } else if (!snapshot.hasData) {
+                        return const SizedBox.shrink();
+                      }
+                      final post = snapshot.data!;
                       return PostContainer(
                         isMod: tempMemberStatus == 'moderator',
-                        isPinnedPost: false,
-                        author: postData.author,
-                        post: postData.post,
-                        community: postData.community,
+                        isPinnedPost: true,
+                        author: post.author,
+                        post: post.post,
+                        community: post.community,
+                        onUnPinPost: handleUnPinPost,
                       );
                     },
-                  );
-                },
-              ),
+                  ),
+                ),
+                //THE REMAINING POSTS
+                SliverToBoxAdapter(
+                  child: FutureBuilder<List<PostDataModel>>(
+                    future: posts,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      final posts = snapshot.data!;
+
+                      return ListView.builder(
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: posts.length,
+                        itemBuilder: (context, index) {
+                          final postData = posts[index];
+                          return PostContainer(
+                            isMod: tempMemberStatus == 'moderator',
+                            isPinnedPost: false,
+                            author: postData.author,
+                            post: postData.post,
+                            community: postData.community,
+                            onPinPost: handlePinPost,
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

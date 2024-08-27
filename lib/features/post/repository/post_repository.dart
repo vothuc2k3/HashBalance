@@ -8,7 +8,10 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
+import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/post_data_model.dart';
 import 'package:hash_balance/models/post_model.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 final postRepositoryProvider = Provider((ref) {
   return PostRepository(
@@ -30,6 +33,9 @@ class PostRepository {
   //REFERENCE ALL THE POSTS
   CollectionReference get _posts =>
       _firestore.collection(FirebaseConstants.postsCollection);
+  //REFERENCE ALL THE COMMUNITIES
+  CollectionReference get _communities =>
+      _firestore.collection(FirebaseConstants.communitiesCollection);
   //REFERENCE ALL THE COMMENTS
   CollectionReference get _comments =>
       _firestore.collection(FirebaseConstants.commentsCollection);
@@ -94,86 +100,90 @@ class PostRepository {
     }
   }
 
-  Future<Map<String, dynamic>> getPostVoteCountAndStatus(
-      Post post, String uid) async {
+  Stream<Map<String, dynamic>> getPostVoteCountAndStatus(
+      Post post, String uid) async* {
     try {
-      final upvoteDataQuery = await _posts
+      final upvoteDataStream = _posts
           .doc(post.id)
           .collection(FirebaseConstants.postVoteCollection)
           .where('isUpvoted', isEqualTo: true)
-          .get();
-      final downvoteDataQuery = await _posts
+          .snapshots();
+
+      final downvoteDataStream = _posts
           .doc(post.id)
           .collection(FirebaseConstants.postVoteCollection)
           .where('isUpvoted', isEqualTo: false)
-          .get();
-      final upvote = upvoteDataQuery.size;
-      final downvote = downvoteDataQuery.size;
+          .snapshots();
 
-      final voteStatusSnapshot = await _posts
+      final userVoteStatusStream = _posts
           .doc(post.id)
           .collection(FirebaseConstants.postVoteCollection)
           .where('uid', isEqualTo: uid)
-          .get();
+          .snapshots();
 
-      String? userVoteStatus;
-      if (voteStatusSnapshot.docs.isNotEmpty) {
-        final voteData = voteStatusSnapshot.docs.first.data();
-        userVoteStatus =
-            voteData['isUpvoted'] == true ? 'upvoted' : 'downvoted';
-      } else {
-        userVoteStatus = null;
+      await for (final upvoteSnapshot in upvoteDataStream) {
+        final downvoteSnapshot = await downvoteDataStream.first;
+        final voteStatusSnapshot = await userVoteStatusStream.first;
+
+        final upvote = upvoteSnapshot.size;
+        final downvote = downvoteSnapshot.size;
+
+        String? userVoteStatus;
+        if (voteStatusSnapshot.docs.isNotEmpty) {
+          final voteData = voteStatusSnapshot.docs.first.data();
+          userVoteStatus =
+              voteData['isUpvoted'] == true ? 'upvoted' : 'downvoted';
+        } else {
+          userVoteStatus = null;
+        }
+
+        yield {
+          'upvotes': upvote,
+          'downvotes': downvote,
+          'userVoteStatus': userVoteStatus,
+        };
       }
-
-      return {
-        'upvotes': upvote,
-        'downvotes': downvote,
-        'userVoteStatus': userVoteStatus,
-      };
     } catch (e) {
       throw Failures(e.toString());
     }
   }
 
   Stream<Map<String, dynamic>> getPostVoteCountAndStatusStream(
-      Post post, String uid) async* {
-    try {
-      final upvoteDataQuery = await _posts
-          .doc(post.id)
-          .collection(FirebaseConstants.postVoteCollection)
-          .where('isUpvoted', isEqualTo: true)
-          .get();
-      final downvoteDataQuery = await _posts
-          .doc(post.id)
-          .collection(FirebaseConstants.postVoteCollection)
-          .where('isUpvoted', isEqualTo: false)
-          .get();
-      final upvote = upvoteDataQuery.size;
-      final downvote = downvoteDataQuery.size;
-
-      final voteStatusSnapshot = await _posts
-          .doc(post.id)
-          .collection(FirebaseConstants.postVoteCollection)
-          .where('uid', isEqualTo: uid)
-          .get();
-
-      String? userVoteStatus;
-      if (voteStatusSnapshot.docs.isNotEmpty) {
-        final voteData = voteStatusSnapshot.docs.first.data();
-        userVoteStatus =
-            voteData['isUpvoted'] == true ? 'upvoted' : 'downvoted';
-      } else {
-        userVoteStatus = null;
-      }
-
-      yield {
-        'upvotes': upvote,
-        'downvotes': downvote,
-        'userVoteStatus': userVoteStatus,
-      };
-    } catch (e) {
-      throw Failures(e.toString());
-    }
+      Post post, String uid) {
+    return _posts.doc(post.id).snapshots().asyncMap(
+      (event) async {
+        final upvoteDataQuery = await _posts
+            .doc(post.id)
+            .collection(FirebaseConstants.postVoteCollection)
+            .where('isUpvoted', isEqualTo: true)
+            .get();
+        final downvoteDataQuery = await _posts
+            .doc(post.id)
+            .collection(FirebaseConstants.postVoteCollection)
+            .where('isUpvoted', isEqualTo: false)
+            .get();
+        final upvote = upvoteDataQuery.size;
+        final downvote = downvoteDataQuery.size;
+        final voteStatusSnapshot = await _posts
+            .doc(post.id)
+            .collection(FirebaseConstants.postVoteCollection)
+            .where('uid', isEqualTo: uid)
+            .get();
+        String? userVoteStatus;
+        if (voteStatusSnapshot.docs.isNotEmpty) {
+          final voteData = voteStatusSnapshot.docs.first.data();
+          userVoteStatus =
+              voteData['isUpvoted'] == true ? 'upvoted' : 'downvoted';
+        } else {
+          userVoteStatus = null;
+        }
+        return {
+          'upvotes': upvote,
+          'downvotes': downvote,
+          'userVoteStatus': userVoteStatus,
+        };
+      },
+    );
   }
 
   //DELETE THE POST
@@ -204,39 +214,40 @@ class PostRepository {
     }
   }
 
-  Stream<List<Post>?> getPendingPosts(String communityId) {
-    return _posts
-        .where('communityId', isEqualTo: communityId)
+  Future<List<PostDataModel>> getPendingPosts(Community community) async {
+    final pendingPostsDoc = await _posts
+        .where('communityId', isEqualTo: community.id)
         .where('status', isEqualTo: 'Pending')
-        .snapshots()
-        .map(
-      (event) {
-        if (event.docs.isEmpty) {
-          return null;
-        }
-        final pendingPosts = <Post>[];
-        for (final doc in event.docs) {
-          pendingPosts.add(
-            Post.fromMap(doc.data() as Map<String, dynamic>),
-          );
-        }
-        return pendingPosts;
-      },
-    );
+        .orderBy('createdAt', descending: true)
+        .get();
+    List<PostDataModel> posts = <PostDataModel>[];
+    for (var postDoc in pendingPostsDoc.docs) {
+      final post = Post.fromMap(postDoc.data() as Map<String, dynamic>);
+      final authorDoc = await _users.doc(post.uid).get();
+      final author =
+          UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
+      posts
+          .add(PostDataModel(post: post, author: author, community: community));
+    }
+
+    return posts;
   }
 
-  Future<Either<Failures, Post?>> fetchPostByPostId(String postId) async {
-    try {
-      final postDoc = await _posts.doc(postId).get();
-      if (postDoc.exists) {
-        return right(Post.fromMap(postDoc.data() as Map<String, dynamic>));
-      } else {
-        return right(null);
-      }
-    } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
-    } catch (e) {
-      return left(Failures(e.toString()));
+  //FETCH PIN POST
+  Future<PostDataModel?> getCommunityPinnedPost(Community community) async {
+    final pinnedPostDoc = await _posts
+        .where('communityId', isEqualTo: community.id)
+        .where('isPinned', isEqualTo: true)
+        .get();
+    if (pinnedPostDoc.docs.isNotEmpty) {
+      final post =
+          Post.fromMap(pinnedPostDoc.docs.first.data() as Map<String, dynamic>);
+      final authorDoc = await _users.doc(post.uid).get();
+      final author =
+          UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
+      return PostDataModel(post: post, author: author, community: community);
+    } else {
+      return null;
     }
   }
 
@@ -256,7 +267,10 @@ class PostRepository {
 
   FutureVoid updatePostStatus(Post post, String status) async {
     try {
-      await _posts.doc(post.id).update({'status': status});
+      await _posts.doc(post.id).update({
+        'status': status,
+        'createdAt': Timestamp.now(),
+      });
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));

@@ -9,9 +9,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
-import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
-import 'package:hash_balance/models/post_model.dart';
 
 class CommunityListScreen extends ConsumerStatefulWidget {
   const CommunityListScreen({super.key});
@@ -33,16 +31,10 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen> {
       ),
     );
     String? membershipStatus;
-    Post? pinnedPost;
     final result = await ref
         .watch(moderationControllerProvider.notifier)
         .fetchMembershipStatus(getMembershipId(uid, community.id));
-    if (community.pinPostId != null &&community.pinPostId != '') {
-      final pinnedPostResult = await ref
-          .watch(postControllerProvider.notifier)
-          .fetchPostByPostId(community.pinPostId!);
-      pinnedPostResult.fold((_) {}, (r) => pinnedPost = r);
-    }
+
 
     result.fold(
       (l) {
@@ -55,7 +47,6 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen> {
           MaterialPageRoute(
             builder: (context) => CommunityScreen(
               memberStatus: membershipStatus!,
-              pinnedPost: pinnedPost,
               community: community,
             ),
           ),

@@ -13,6 +13,7 @@ class Post {
   final int commentCount;
   final int shareCount;
   final String status;
+  final bool isPinned;
   final bool isEdited;
   final Timestamp createdAt;
   Post({
@@ -25,6 +26,7 @@ class Post {
     required this.commentCount,
     required this.shareCount,
     required this.status,
+    required this.isPinned,
     required this.isEdited,
     required this.createdAt,
   });
@@ -36,11 +38,10 @@ class Post {
     String? content,
     String? image,
     String? video,
-    int? upvoteCount,
-    int? downvoteCount,
     int? commentCount,
     int? shareCount,
     String? status,
+    bool? isPinned,
     bool? isEdited,
     Timestamp? createdAt,
   }) {
@@ -54,6 +55,7 @@ class Post {
       commentCount: commentCount ?? this.commentCount,
       shareCount: shareCount ?? this.shareCount,
       status: status ?? this.status,
+      isPinned: isPinned ?? this.isPinned,
       isEdited: isEdited ?? this.isEdited,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -70,6 +72,7 @@ class Post {
       'commentCount': commentCount,
       'shareCount': shareCount,
       'status': status,
+      'isPinned': isPinned,
       'isEdited': isEdited,
       'createdAt': createdAt,
     };
@@ -86,6 +89,7 @@ class Post {
       commentCount: map['commentCount'] as int,
       shareCount: map['shareCount'] as int,
       status: map['status'] as String,
+      isPinned: map['isPinned'] as bool,
       isEdited: map['isEdited'] as bool,
       createdAt: map['createdAt'] as Timestamp,
     );
@@ -98,38 +102,41 @@ class Post {
 
   @override
   String toString() {
-    return 'Post(id: $id, communityId: $communityId, uid: $uid, content: $content, image: $image, video: $video, commentCount: $commentCount, shareCount: $shareCount, status: $status, isEdited: $isEdited, createdAt: $createdAt)';
+    return 'Post(id: $id, communityId: $communityId, uid: $uid, content: $content, image: $image, video: $video, commentCount: $commentCount, shareCount: $shareCount, status: $status, isPinned: $isPinned, isEdited: $isEdited, createdAt: $createdAt)';
   }
 
   @override
   bool operator ==(covariant Post other) {
     if (identical(this, other)) return true;
-
-    return other.id == id &&
-        other.communityId == communityId &&
-        other.uid == uid &&
-        other.content == content &&
-        other.image == image &&
-        other.video == video &&
-        other.commentCount == commentCount &&
-        other.shareCount == shareCount &&
-        other.status == status &&
-        other.isEdited == isEdited &&
-        other.createdAt == createdAt;
+  
+    return 
+      other.id == id &&
+      other.communityId == communityId &&
+      other.uid == uid &&
+      other.content == content &&
+      other.image == image &&
+      other.video == video &&
+      other.commentCount == commentCount &&
+      other.shareCount == shareCount &&
+      other.status == status &&
+      other.isPinned == isPinned &&
+      other.isEdited == isEdited &&
+      other.createdAt == createdAt;
   }
 
   @override
   int get hashCode {
     return id.hashCode ^
-        communityId.hashCode ^
-        uid.hashCode ^
-        content.hashCode ^
-        image.hashCode ^
-        video.hashCode ^
-        commentCount.hashCode ^
-        shareCount.hashCode ^
-        status.hashCode ^
-        isEdited.hashCode ^
-        createdAt.hashCode;
+      communityId.hashCode ^
+      uid.hashCode ^
+      content.hashCode ^
+      image.hashCode ^
+      video.hashCode ^
+      commentCount.hashCode ^
+      shareCount.hashCode ^
+      status.hashCode ^
+      isPinned.hashCode ^
+      isEdited.hashCode ^
+      createdAt.hashCode;
   }
 }

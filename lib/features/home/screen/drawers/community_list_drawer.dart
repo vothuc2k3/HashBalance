@@ -3,18 +3,15 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/splash/splash_screen.dart';
-import 'package:hash_balance/core/widgets/dashed_line_divider.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/screen/create_community_screen.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
-import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
-import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
 class CommunityListDrawer extends ConsumerWidget {
@@ -42,16 +39,9 @@ class CommunityListDrawer extends ConsumerWidget {
       ),
     );
     String? membershipStatus;
-    Post? pinnedPost;
     final result = await ref
         .watch(moderationControllerProvider.notifier)
         .fetchMembershipStatus(getMembershipId(uid, community.id));
-    if (community.pinPostId != null && community.pinPostId != '') {
-      final pinnedPostResult = await ref
-          .watch(postControllerProvider.notifier)
-          .fetchPostByPostId(community.pinPostId!);
-      pinnedPostResult.fold((_) {}, (r) => pinnedPost = r);
-    }
 
     result.fold(
       (l) {
@@ -64,7 +54,6 @@ class CommunityListDrawer extends ConsumerWidget {
           MaterialPageRoute(
             builder: (context) => CommunityScreen(
               memberStatus: membershipStatus!,
-              pinnedPost: pinnedPost,
               community: community,
             ),
           ),
@@ -125,11 +114,24 @@ class CommunityListDrawer extends ConsumerWidget {
                                 backgroundImage: CachedNetworkImageProvider(
                                     community.profileImage),
                               ),
-                              title: Text(
-                                '#=${community.name}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              title: Row(
+                                children: [
+                                  Text(
+                                    '#=${community.name}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  community.type == 'Public'
+                                      ? const Icon(Icons.public)
+                                      : community.type == 'Private'
+                                          ? const Icon(
+                                              Icons.private_connectivity)
+                                          : const Icon(
+                                              (Icons.lock),
+                                            )
+                                ],
                               ),
                               onTap: () {
                                 _navigateToCommunityScreen(
@@ -141,8 +143,9 @@ class CommunityListDrawer extends ConsumerWidget {
                               },
                             );
                           },
-                          separatorBuilder: (context, index) =>
-                              const DashedLineDivider.horizontal(),
+                          separatorBuilder: (context, index) {
+                            return const SizedBox(height: 3);
+                          },
                         )
                       : Center(
                           child: Row(
@@ -197,20 +200,37 @@ class CommunityListDrawer extends ConsumerWidget {
                                 backgroundImage: CachedNetworkImageProvider(
                                     community.profileImage),
                               ),
-                              title: Text(
-                                '#=${community.name}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              title: Row(
+                                children: [
+                                  Text(
+                                    '#=${community.name}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  community.type == 'Public'
+                                      ? const Icon(Icons.public)
+                                      : community.type == 'Private'
+                                          ? const Icon(
+                                              Icons.private_connectivity)
+                                          : const Icon(
+                                              (Icons.lock),
+                                            )
+                                ],
                               ),
                               onTap: () {
                                 _navigateToCommunityScreen(
-                                    context, ref, community, currentUser.uid);
+                                  context,
+                                  ref,
+                                  community,
+                                  currentUser.uid,
+                                );
                               },
                             );
                           },
                           separatorBuilder: (context, index) {
-                            return const DashedLineDivider.horizontal();
+                            return const SizedBox(height: 3);
                           },
                         )
                       : Center(

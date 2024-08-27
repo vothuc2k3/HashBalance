@@ -11,6 +11,8 @@ class DeviceTokenService {
   //REFERENCE ALL THE USERS DEVICES
   CollectionReference get _userDevices =>
       _firestore.collection(FirebaseConstants.userDevicesCollection);
+
+  //UPDATE USER DEVICE TOKEN
   Future<void> updateUserDeviceToken(UserModel? userData) async {
     if (userData != null) {
       final currentDeviceToken = await _firebaseMessaging.getToken();
@@ -35,6 +37,8 @@ class DeviceTokenService {
           }
         });
       }
+    } else {
+      return;
     }
   }
 }

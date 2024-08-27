@@ -187,6 +187,7 @@ class CommunityRepository {
       final communityPosts = await _posts
           .where('communityId', isEqualTo: communityId)
           .where('status', isEqualTo: 'Approved')
+          .where('isPinned', isEqualTo: false)
           .get();
 
       final List<PostDataModel> postDataModels = [];
@@ -209,7 +210,8 @@ class CommunityRepository {
           ),
         );
       }
-
+      postDataModels
+          .sort((a, b) => b.post.createdAt.compareTo(a.post.createdAt));
       return postDataModels;
     } on FirebaseException catch (e) {
       throw e.toString();

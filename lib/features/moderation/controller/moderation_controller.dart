@@ -118,13 +118,33 @@ class ModerationController extends StateNotifier<bool> {
   }
 
   //PIN POST
-  FutureVoid pinPost({required Community community, required Post post}) async {
+  FutureVoid pinPost({required Post post}) async {
     try {
       final result = await _moderationRepository.pinPost(
-        community: community,
         post: post,
       );
       return result;
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  FutureVoid unPinPost(Post post) async {
+    try {
+      return await _moderationRepository.unPinPost(post: post);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  //APPROVE [OR] REJECT POST
+  FutureVoid handlePostApproval(Post post, String decision) async {
+    try {
+      return await _moderationRepository.handlePostApproval(post, decision);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {

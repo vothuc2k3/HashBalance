@@ -37,67 +37,37 @@ class NewsfeedRepository {
       final communityPosts = await _posts
           .where('communityId', isEqualTo: communityId)
           .where('status', isEqualTo: 'Approved')
-          .orderBy('createdAt', descending: true)
           .get();
 
       if (communityPosts.docs.isNotEmpty) {
-        await Future.wait(communityPosts.docs.map((postDoc) async {
-          final post = Post.fromMap(postDoc.data() as Map<String, dynamic>);
+        await Future.wait(
+          communityPosts.docs.map(
+            (postDoc) async {
+              final post = Post.fromMap(postDoc.data() as Map<String, dynamic>);
 
-          final authorDoc = await _users.doc(post.uid).get();
-          final author =
-              UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
+              final authorDoc = await _users.doc(post.uid).get();
+              final author =
+                  UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
 
-          final communityDoc = await _communities.doc(communityId).get();
-          final community =
-              Community.fromMap(communityDoc.data() as Map<String, dynamic>);
+              final communityDoc = await _communities.doc(communityId).get();
+              final community = Community.fromMap(
+                  communityDoc.data() as Map<String, dynamic>);
 
-          postDataList.add(PostDataModel(
-            post: post,
-            author: author,
-            community: community,
-          ));
-        }));
-      }
-    }
-
-    return postDataList;
-  }
-
-  //GET ALL POST OF A COMMUNITY
-  Future<List<PostDataModel>> getCommunityPosts(String communityId) async {
-    try {
-      final communityPosts = await _posts
-          .where('communityId', isEqualTo: communityId)
-          .where('status', isEqualTo: 'Approved')
-          .orderBy('createdAt', descending: true)
-          .get();
-
-      final List<PostDataModel> postDataModels = [];
-
-      for (final postDoc in communityPosts.docs) {
-        final postData = Post.fromMap(postDoc.data() as Map<String, dynamic>);
-
-        final authorDoc = await _users.doc(postData.uid).get();
-        final authorData =
-            UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
-
-        final communityDoc = await _communities.doc(postData.communityId).get();
-        final communityData =
-            Community.fromMap(communityDoc.data() as Map<String, dynamic>);
-        postDataModels.add(
-          PostDataModel(
-            post: postData,
-            author: authorData,
-            community: communityData,
+              postDataList.add(
+                PostDataModel(
+                  post: post,
+                  author: author,
+                  community: community,
+                ),
+              );
+            },
           ),
         );
       }
-
-      return postDataModels;
-    } on FirebaseException catch (e) {
-      throw e.toString();
     }
+
+    postDataList.sort((a, b) => b.post.createdAt.compareTo(a.post.createdAt));
+    return postDataList;
   }
 
   //REFERENCE THE POSTS DATA

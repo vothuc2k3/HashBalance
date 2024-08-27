@@ -29,9 +29,4 @@ class NewsfeedController {
     final list = await _newsfeedRepository.getJoinedCommunitiesPosts(user.uid);
     return list;
   }
-
-  Future<List<PostDataModel>> getCommunityPosts(String communityId) async {
-    final list = await _newsfeedRepository.getCommunityPosts(communityId);
-    return list;
-  }
 }

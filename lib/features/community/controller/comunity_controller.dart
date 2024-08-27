@@ -95,7 +95,6 @@ class CommunityController extends StateNotifier<bool> {
       name: name,
       profileImage: Constants
           .avatarDefault[Random().nextInt(Constants.avatarDefault.length)],
-      pinPostId: '',
       bannerImage: Constants.bannerDefault,
       type: type,
       containsExposureContents: containsExposureContents,
@@ -230,9 +229,6 @@ class CommunityController extends StateNotifier<bool> {
 
   Future<List<PostDataModel>> getCommunityPosts(String communityId) async {
     final list = await _communityRepository.getCommunityPosts(communityId);
-    for(final item in list){
-      print(item.toString());
-    }
     return list;
   }
 }

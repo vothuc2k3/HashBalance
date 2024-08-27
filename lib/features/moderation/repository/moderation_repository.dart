@@ -24,6 +24,8 @@ class ModerationRepository {
       _firestore.collection(FirebaseConstants.communityMembershipCollection);
   CollectionReference get _communities =>
       _firestore.collection(FirebaseConstants.communitiesCollection);
+  CollectionReference get _posts =>
+      _firestore.collection(FirebaseConstants.postsCollection);
 
   //GET MODERATOR STATUS
   Stream<String> getMembershipStatus(String membershipId) {
@@ -84,13 +86,40 @@ class ModerationRepository {
 
   //PIN POST
   FutureVoid pinPost({
-    required Community community,
     required Post post,
   }) async {
     try {
-      await _communities.doc(community.id).update({
-        'pinPostId': post.id,
+      await _posts.doc(post.id).update({
+        'isPinned': true,
       });
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  //PIN POST
+  FutureVoid unPinPost({
+    required Post post,
+  }) async {
+    try {
+      await _posts.doc(post.id).update({
+        'isPinned': false,
+      });
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  //APPROVE [OR] REJECT POST
+  FutureVoid handlePostApproval(Post post, String decision) async {
+    try {
+      await _posts.doc(post.id).update({'status': decision});
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));

@@ -10,7 +10,6 @@ class Community {
   final String bannerImage;
   final String type;
   final bool containsExposureContents;
-  final String? pinPostId;
   final Timestamp createdAt;
   Community({
     required this.id,
@@ -19,7 +18,6 @@ class Community {
     required this.bannerImage,
     required this.type,
     required this.containsExposureContents,
-    this.pinPostId,
     required this.createdAt,
   });
 
@@ -41,7 +39,6 @@ class Community {
       type: type ?? this.type,
       containsExposureContents:
           containsExposureContents ?? this.containsExposureContents,
-      pinPostId: pinPostId ?? this.pinPostId,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -54,7 +51,6 @@ class Community {
       'bannerImage': bannerImage,
       'type': type,
       'containsExposureContents': containsExposureContents,
-      'pinPostId': pinPostId,
       'createdAt': createdAt,
     };
   }
@@ -67,14 +63,13 @@ class Community {
       bannerImage: map['bannerImage'] as String,
       type: map['type'] as String,
       containsExposureContents: map['containsExposureContents'] as bool,
-      pinPostId: map['pinPostId'] != null ? map['pinPostId'] as String : '',
       createdAt: map['createdAt'] as Timestamp,
     );
   }
 
   @override
   String toString() {
-    return 'Community(id: $id, name: $name, profileImage: $profileImage, bannerImage: $bannerImage, type: $type, containsExposureContents: $containsExposureContents, pinPostId: $pinPostId, createdAt: $createdAt)';
+    return 'Community(id: $id, name: $name, profileImage: $profileImage, bannerImage: $bannerImage, type: $type, containsExposureContents: $containsExposureContents, createdAt: $createdAt)';
   }
 
   @override
@@ -87,7 +82,6 @@ class Community {
         other.bannerImage == bannerImage &&
         other.type == type &&
         other.containsExposureContents == containsExposureContents &&
-        other.pinPostId == pinPostId &&
         other.createdAt == createdAt;
   }
 
@@ -99,7 +93,6 @@ class Community {
         bannerImage.hashCode ^
         type.hashCode ^
         containsExposureContents.hashCode ^
-        pinPostId.hashCode ^
         createdAt.hashCode;
   }
 
