@@ -1,5 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -63,24 +61,35 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
-    return ref.watch(getNotifsProvider(user!.uid)).when(
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF000000), // Màu đen ở trên
+              Color(0xFF0D47A1), // Màu xanh ở giữa
+              Color(0xFF1976D2), // Màu xanh đậm ở dưới
+            ],
+          ),
+        ),
+        child: ref.watch(getNotifsProvider(user!.uid)).when(
           data: (notifs) {
             if (notifs == null || notifs.isEmpty) {
-              return Scaffold(
-                body: Center(
-                  child: const Text(
-                    'You have no new notifications',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white70,
+              return Center(
+                child: const Text(
+                  'You have no new notifications',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white70,
+                  ),
+                ).animate().fadeIn(duration: 600.ms).moveY(
+                      begin: 30,
+                      end: 0,
+                      duration: 600.ms,
+                      curve: Curves.easeOutBack,
                     ),
-                  ).animate().fadeIn(duration: 600.ms).moveY(
-                        begin: 30,
-                        end: 0,
-                        duration: 600.ms,
-                        curve: Curves.easeOutBack,
-                      ),
-                ),
               );
             }
             return LayoutBuilder(
@@ -181,6 +190,8 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
           },
           error: (error, stackTrace) => ErrorText(error: error.toString()),
           loading: () => const Loading(),
-        );
+        ),
+      ),
+    );
   }
 }

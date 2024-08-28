@@ -47,48 +47,61 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
   Widget build(BuildContext context) {
     final currentUser = ref.read(userProvider);
     return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: _refreshPosts,
-        child: GestureDetector(
-          onTap: FocusScope.of(context).unfocus,
-          child: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: _buildCreatePostContainer(currentUser!),
-              ),
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 20),
-              ),
-              SliverToBoxAdapter(
-                child: FutureBuilder<List<PostDataModel>?>(
-                  future: posts,
-                  builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      return ErrorText(error: snapshot.error.toString());
-                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Center(
-                        child: SizedBox.shrink(),
-                      );
-                    } else {
-                      final posts = snapshot.data!;
-
-                      return ListView.builder(
-                        physics: const NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        itemCount: posts.length,
-                        itemBuilder: (context, index) {
-                          final postData = posts[index];
-                          return PostContainer(
-                              author: postData.author,
-                              post: postData.post,
-                              community: postData.community);
-                        },
-                      );
-                    }
-                  },
-                ),
-              ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF000000), // Màu đen ở trên
+              Color(0xFF0D47A1), // Màu xanh ở giữa
+              Color(0xFF1976D2), // Màu xanh đậm ở dưới
             ],
+          ),
+        ),
+        child: RefreshIndicator(
+          onRefresh: _refreshPosts,
+          child: GestureDetector(
+            onTap: FocusScope.of(context).unfocus,
+            child: CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: _buildCreatePostContainer(currentUser!),
+                ),
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: 20),
+                ),
+                SliverToBoxAdapter(
+                  child: FutureBuilder<List<PostDataModel>?>(
+                    future: posts,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return ErrorText(error: snapshot.error.toString());
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Center(
+                          child: SizedBox.shrink(),
+                        );
+                      } else {
+                        final posts = snapshot.data!;
+
+                        return ListView.builder(
+                          physics: const NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
+                          itemCount: posts.length,
+                          itemBuilder: (context, index) {
+                            final postData = posts[index];
+                            return PostContainer(
+                                author: postData.author,
+                                post: postData.post,
+                                community: postData.community);
+                          },
+                        );
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

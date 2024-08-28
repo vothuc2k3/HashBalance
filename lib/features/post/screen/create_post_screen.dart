@@ -140,11 +140,15 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         },
         (r) {
           showToast(true, 'Your post is successfully created!');
+          contentController.clear();
           switch (widget._isFromCommunityScreen) {
             case true:
               Navigator.of(context).pop();
               break;
             default:
+              final homeScreenState =
+                  context.findAncestorStateOfType<HomeScreenState>();
+              homeScreenState?.onTabTapped(0);
               break;
           }
         },
@@ -174,58 +178,66 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final user = ref.watch(userProvider);
     final isInAnyCommunities = ref.watch(userCommunitiesProvider);
     return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.black,
-          title: const Text('Create Your Own Post'),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF000000), // Màu đen ở trên
+              Color(0xFF0D47A1), // Màu xanh ở giữa
+              Color(0xFF1976D2), // Màu xanh đậm ở dưới
+            ],
+          ),
         ),
-        body: isInAnyCommunities.when(
-            data: (communities) {
-              if (communities.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.group_add,
-                        color: Colors.white.withOpacity(0.6),
-                        size: 80,
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'You have to join at least ONE community to create a post!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
-                          fontSize: 18,
+        child: Scaffold(
+          backgroundColor: Colors.transparent, // Để không ghi đè gradient
+          body: isInAnyCommunities.when(
+              data: (communities) {
+                if (communities.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.group_add,
+                          color: Colors.white.withOpacity(0.6),
+                          size: 80,
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: () {
-                          _navigateToCommunityListScreen();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.teal,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 10,
-                          ),
-                          textStyle: const TextStyle(
-                            fontSize: 16,
+                        const SizedBox(height: 20),
+                        Text(
+                          'You have to join at least ONE community to create a post!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 18,
                           ),
                         ),
-                        child: const Text('Join a Community'),
-                      ),
-                    ],
-                  ),
-                );
-              } else {
-                return GestureDetector(
-                  onTap: () {
-                    FocusScope.of(context).unfocus();
-                  },
-                  child: Container(
-                    color: Colors.black,
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: () {
+                            _navigateToCommunityListScreen();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.teal,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 10,
+                            ),
+                            textStyle: const TextStyle(
+                              fontSize: 16,
+                            ),
+                          ),
+                          child: const Text('Join a Community'),
+                        ),
+                      ],
+                    ),
+                  );
+                } else {
+                  return GestureDetector(
+                    onTap: () {
+                      FocusScope.of(context).unfocus();
+                    },
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -586,12 +598,14 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                         ),
                       ],
                     ),
-                  ),
-                );
-              }
-            },
-            error: (Object error, StackTrace stackTrace) =>
-                ErrorText(error: error.toString()),
-            loading: () => const Loading()));
+                  );
+                }
+              },
+              error: (Object error, StackTrace stackTrace) =>
+                  ErrorText(error: error.toString()),
+              loading: () => const Loading()),
+        ),
+      ),
+    );
   }
 }

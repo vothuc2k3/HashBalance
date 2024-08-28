@@ -71,107 +71,123 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
     return Scaffold(
-      appBar: AppBar(
-        title: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: Text(
-            Constants.titles[_page],
-            key: ValueKey(_page),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF000000), // Màu đen ở trên
+              Color(0xFF0D47A1), // Màu xanh ở giữa
+              Color(0xFF1976D2), // Màu xanh đậm ở dưới
+            ],
           ),
         ),
-        centerTitle: false,
-        leading: Builder(builder: (context) {
-          return IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () => displayCommunityListDrawer(context),
-          );
-        }),
-        actions: [
-          IconButton(
-            onPressed: () {
-              showSearch(
-                context: context,
-                delegate: SearchCommunityDelegate(ref),
-              );
-            },
-            icon: const Icon(
-              Icons.search,
+        child: Scaffold(
+          backgroundColor: Colors.transparent, // Để không ghi đè gradient
+          appBar: AppBar(
+            title: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: Text(
+                Constants.titles[_page],
+                key: ValueKey(_page),
+              ),
             ),
-          ),
-          Builder(
-            builder: (context) {
+            centerTitle: false,
+            leading: Builder(builder: (context) {
               return IconButton(
-                icon: CircleAvatar(
-                  backgroundImage:
-                      CachedNetworkImageProvider(user!.profileImage),
-                ),
-                onPressed: () => displayUserProfileDrawer(context),
+                icon: const Icon(Icons.menu),
+                onPressed: () => displayCommunityListDrawer(context),
               );
-            },
-          ),
-        ],
-      ),
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: onPageChanged,
-        children: Constants.tabWidgets,
-      ),
-      drawer: const CommunityListDrawer(),
-      endDrawer: UserProfileDrawer(homeScreenContext: context),
-      bottomNavigationBar: CupertinoTabBar(
-        backgroundColor: Colors.black87,
-        activeColor: Colors.teal,
-        inactiveColor: Colors.white70,
-        iconSize: 28.0,
-        items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.person_search_outlined),
-            label: 'Communities',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle_outline_outlined),
-            label: 'Create',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.message_outlined),
-            label: 'Chat',
-          ),
-          BottomNavigationBarItem(
-            icon: ref.watch(getNotifsProvider(user!.uid)).when(
-                data: (notifs) {
-                  if (notifs == null || notifs.isEmpty) {
-                    return const Icon(Icons.notification_add_outlined);
-                  }
-                  int unreadCount = 0;
-                  for (var notif in notifs) {
-                    if (notif.isRead == false) {
-                      unreadCount++;
-                    }
-                  }
-                  return unreadCount == 0
-                      ? const Icon(Icons.notification_add_outlined)
-                      : Badge(
-                          label: Text(
-                            '$unreadCount',
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 10),
-                          ),
-                          isLabelVisible: true,
-                          child: const Icon(Icons.notification_add_outlined),
-                        );
+            }),
+            actions: [
+              IconButton(
+                onPressed: () {
+                  showSearch(
+                    context: context,
+                    delegate: SearchCommunityDelegate(ref),
+                  );
                 },
-                error: (Object error, StackTrace stackTrace) =>
-                    ErrorText(error: error.toString()),
-                loading: () => const Loading()),
-            label: 'Inbox',
+                icon: const Icon(
+                  Icons.search,
+                ),
+              ),
+              Builder(
+                builder: (context) {
+                  return IconButton(
+                    icon: CircleAvatar(
+                      backgroundImage:
+                          CachedNetworkImageProvider(user!.profileImage),
+                    ),
+                    onPressed: () => displayUserProfileDrawer(context),
+                  );
+                },
+              ),
+            ],
           ),
-        ],
-        onTap: onTabTapped,
-        currentIndex: _page,
+          body: PageView(
+            controller: _pageController,
+            onPageChanged: onPageChanged,
+            children: Constants.tabWidgets,
+          ),
+          drawer: const CommunityListDrawer(),
+          endDrawer: UserProfileDrawer(homeScreenContext: context),
+          bottomNavigationBar: CupertinoTabBar(
+            backgroundColor: Colors.black87,
+            activeColor: Colors.teal,
+            inactiveColor: Colors.white70,
+            iconSize: 28.0,
+            items: [
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.home),
+                label: 'Home',
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.person_search_outlined),
+                label: 'Communities',
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.add_circle_outline_outlined),
+                label: 'Create',
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.message_outlined),
+                label: 'Chat',
+              ),
+              BottomNavigationBarItem(
+                icon: ref.watch(getNotifsProvider(user!.uid)).when(
+                    data: (notifs) {
+                      if (notifs == null || notifs.isEmpty) {
+                        return const Icon(Icons.notification_add_outlined);
+                      }
+                      int unreadCount = 0;
+                      for (var notif in notifs) {
+                        if (notif.isRead == false) {
+                          unreadCount++;
+                        }
+                      }
+                      return unreadCount == 0
+                          ? const Icon(Icons.notification_add_outlined)
+                          : Badge(
+                              label: Text(
+                                '$unreadCount',
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 10),
+                              ),
+                              isLabelVisible: true,
+                              child: const Icon(Icons.notification_add_outlined),
+                            );
+                    },
+                    error: (Object error, StackTrace stackTrace) =>
+                        ErrorText(error: error.toString()),
+                    loading: () => const Loading()),
+                label: 'Inbox',
+              ),
+            ],
+            onTap: onTabTapped,
+            currentIndex: _page,
+          ),
+        ),
       ),
     );
   }

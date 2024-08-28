@@ -35,7 +35,6 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen> {
         .watch(moderationControllerProvider.notifier)
         .fetchMembershipStatus(getMembershipId(uid, community.id));
 
-
     result.fold(
       (l) {
         showToast(false, 'Unexpected error happened...');
@@ -60,65 +59,78 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen> {
     final currentUser = ref.watch(userProvider)!;
     final communityList = ref.watch(getTopCommunityListProvider);
     return Scaffold(
-      body: communityList.when(
-        data: (communities) {
-          if (communities == null || communities.isEmpty) {
-            return const Center(
-                child: Text('You have not joined any communities'));
-          } else {
-            return ListView.builder(
-              padding: const EdgeInsets.all(10),
-              itemCount: communities.length,
-              itemBuilder: (context, index) {
-                final community = communities[index];
-                return Card(
-                  color: Colors.black,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundImage: CachedNetworkImageProvider(
-                        community.profileImage,
-                      ),
-                      radius: 30,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF000000), // Màu đen ở trên
+              Color(0xFF0D47A1), // Màu xanh ở giữa
+              Color(0xFF1976D2), // Màu xanh đậm ở dưới
+            ],
+          ),
+        ),
+        child: communityList.when(
+          data: (communities) {
+            if (communities == null || communities.isEmpty) {
+              return const Center(
+                  child: Text('You have not joined any communities'));
+            } else {
+              return ListView.builder(
+                padding: const EdgeInsets.all(10),
+                itemCount: communities.length,
+                itemBuilder: (context, index) {
+                  final community = communities[index];
+                  return Card(
+                    color: Colors.black,
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
                     ),
-                    title: Text(
-                      community.name,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    subtitle: const Text(
-                      'THIS IS A COMMUNITY',
-                      style: TextStyle(color: Colors.white70),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    trailing: const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.people, color: Colors.white70),
-                        SizedBox(height: 4),
-                        Text(
-                          // '${community.members.length} members',
-                          '82964',
-                          style: TextStyle(color: Colors.white70),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundImage: CachedNetworkImageProvider(
+                          community.profileImage,
                         ),
-                      ],
+                        radius: 30,
+                      ),
+                      title: Text(
+                        community.name,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: const Text(
+                        'THIS IS A COMMUNITY',
+                        style: TextStyle(color: Colors.white70),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.people, color: Colors.white70),
+                          SizedBox(height: 4),
+                          Text(
+                            // '${community.members.length} members',
+                            '82964',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                        ],
+                      ),
+                      onTap: () => _navigateToCommunityScreen(
+                          community, currentUser.uid),
                     ),
-                    onTap: () =>
-                        _navigateToCommunityScreen(community, currentUser.uid),
-                  ),
-                );
-              },
-            );
-          }
-        },
-        error: (error, stackTrace) => ErrorText(error: error.toString()),
-        loading: () => const Loading(),
+                  );
+                },
+              );
+            }
+          },
+          error: (error, stackTrace) => ErrorText(error: error.toString()),
+          loading: () => const Loading(),
+        ),
       ),
     );
   }
