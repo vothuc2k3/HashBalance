@@ -36,18 +36,18 @@ final getMemberStatusProvider =
       .getMemberStatus(communityId);
 });
 
-final getTopCommunityListProvider = StreamProvider.autoDispose((ref) {
+final getTopCommunityListProvider = StreamProvider((ref) {
   return ref
       .watch(communityControllerProvider.notifier)
       .getTopCommunitiesList();
 });
 
-final myCommunitiesProvider = StreamProvider.autoDispose((ref) {
+final myCommunitiesProvider = StreamProvider((ref) {
   final communityController = ref.watch(communityControllerProvider.notifier);
   return communityController.getMyCommunities();
 });
 
-final userCommunitiesProvider = StreamProvider.autoDispose((ref) {
+final userCommunitiesProvider = StreamProvider((ref) {
   final communityController = ref.watch(communityControllerProvider.notifier);
   return communityController.getUserCommunities();
 });

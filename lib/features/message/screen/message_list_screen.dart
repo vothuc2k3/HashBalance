@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
@@ -51,13 +52,19 @@ class _MessageListScreenState extends ConsumerState<MessageListScreen> {
         child: conversations.when(
           data: (data) {
             if (data == null || data.isEmpty) {
-              return const Center(
-                child: Text(
-                  'There\'s no conversations...',
+              return Center(
+                child: const Text(
+                  'You have no conversation going on...',
                   style: TextStyle(
-                    color: Colors.white,
+                    fontSize: 18,
+                    color: Colors.white70,
                   ),
-                ),
+                ).animate().fadeIn(duration: 600.ms).moveY(
+                      begin: 30,
+                      end: 0,
+                      duration: 600.ms,
+                      curve: Curves.easeOutBack,
+                    ),
               );
             } else {
               Message? lastMessage;

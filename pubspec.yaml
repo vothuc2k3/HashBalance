@@ -74,6 +74,7 @@ dependencies:
   comment_tree: ^0.3.0
   hive: ^2.2.3
   hive_flutter: ^1.1.0
+  dropdown_search: ^5.0.6
 
 dependency_overrides:
   lints: ^3.0.0
@@ -107,6 +108,8 @@ flutter:
     - assets/images/signinEmote.png
     - assets/images/emailLogo.png
     - assets/images/facebookLogo.png
+    - assets/images/user_profile_placeholder.png
+    - assets/images/post_image_placeholder.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

@@ -1,8 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/models/post_data_model.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
@@ -21,11 +23,14 @@ class NewsfeedScreen extends ConsumerStatefulWidget {
   ConsumerState<ConsumerStatefulWidget> createState() => NewsfeedScreenState();
 }
 
-class NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
+class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
+    with AutomaticKeepAliveClientMixin {
   late Future<List<PostDataModel>> posts;
 
   Future<void> _refreshPosts() async {
+    // Chỉ khi nào refresh mới fetch lại dữ liệu
     posts = ref.read(newsfeedControllerProvider).getJoinedCommunitiesPosts();
+    setState(() {});
   }
 
   void _navigateToCreatePostScreen() {
@@ -38,13 +43,17 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void initState() {
+    super.initState();
     posts = ref.read(newsfeedControllerProvider).getJoinedCommunitiesPosts();
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     final currentUser = ref.read(userProvider);
     return Scaffold(
       body: Container(
@@ -53,9 +62,9 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF000000), // Màu đen ở trên
-              Color(0xFF0D47A1), // Màu xanh ở giữa
-              Color(0xFF1976D2), // Màu xanh đậm ở dưới
+              Color(0xFF000000),
+              Color(0xFF0D47A1),
+              Color(0xFF1976D2),
             ],
           ),
         ),
@@ -73,17 +82,39 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
                 ),
                 SliverToBoxAdapter(
                   child: FutureBuilder<List<PostDataModel>?>(
-                    future: posts,
+                    future:
+                        posts, // Sử dụng Future đã được khởi tạo trong initState
                     builder: (context, snapshot) {
-                      if (snapshot.hasError) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Loading',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            const Loading(),
+                          ].animate().fadeIn(duration: 600.ms).moveY(
+                                begin: 30,
+                                end: 0,
+                                duration: 600.ms,
+                                curve: Curves.easeOutBack,
+                              ),
+                        );
+                      } else if (snapshot.hasError) {
                         return ErrorText(error: snapshot.error.toString());
                       } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                         return const Center(
                           child: SizedBox.shrink(),
                         );
-                      } else {
+                      } else if (snapshot.connectionState ==
+                          ConnectionState.done) {
                         final posts = snapshot.data!;
-
                         return ListView.builder(
                           physics: const NeverScrollableScrollPhysics(),
                           shrinkWrap: true,
@@ -91,11 +122,14 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
                           itemBuilder: (context, index) {
                             final postData = posts[index];
                             return PostContainer(
-                                author: postData.author,
-                                post: postData.post,
-                                community: postData.community);
+                              author: postData.author,
+                              post: postData.post,
+                              community: postData.community,
+                            ).animate().fadeIn(duration: 800.ms);
                           },
                         );
+                      } else {
+                        return const SizedBox.shrink();
                       }
                     },
                   ),
@@ -115,6 +149,7 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
         color: Pallete.greyColor,
         height: 125,
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Row(
               children: [
@@ -148,59 +183,42 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen> {
               height: 10,
               thickness: 0.5,
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        onPressed: () {},
-                        icon: const Icon(Icons.videocam),
-                      ),
-                      const SizedBox(width: 4),
-                      const Text(
-                        'Live',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    onPressed: () {},
+                    icon: const Icon(Icons.videocam),
                   ),
-                ),
-                Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        color: Pallete.redColor,
-                        onPressed: () {},
-                        icon: const Icon(BoxIcons.bx_git_branch),
-                      ),
-                      const SizedBox(width: 4),
-                      const Text(
-                        'Room',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
+                  const SizedBox(width: 4),
+                  const Text(
+                    'Live',
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                ),
-                Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        onPressed: () {},
-                        icon: const Icon(Icons.gamepad),
-                      ),
-                      const SizedBox(width: 4),
-                      const Text(
-                        'Game',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
+                  const Spacer(),
+                  IconButton(
+                    color: Pallete.redColor,
+                    onPressed: () {},
+                    icon: const Icon(BoxIcons.bx_git_branch),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 4),
+                  const Text(
+                    'Room',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () {},
+                    icon: const Icon(Icons.gamepad),
+                  ),
+                  const SizedBox(width: 4),
+                  const Text(
+                    'Game',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

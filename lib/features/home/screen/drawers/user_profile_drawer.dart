@@ -157,93 +157,105 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
     final user = ref.watch(userProvider);
 
     return Drawer(
-      child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            InkWell(
-              onTap: () {
-                Timer(const Duration(milliseconds: 200), () {
-                  navigateToProfileScreen(user);
-                });
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundImage:
-                          CachedNetworkImageProvider(user!.profileImage),
-                      radius: 50,
-                    ),
-                    const SizedBox(width: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '#${user.name}',
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                            fontStyle: FontStyle.italic,
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF001F3F),
+              Color(0xFF0074D9),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              InkWell(
+                onTap: () {
+                  Timer(const Duration(milliseconds: 200), () {
+                    navigateToProfileScreen(user);
+                  });
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundImage:
+                            CachedNetworkImageProvider(user!.profileImage),
+                        radius: 50,
+                      ),
+                      const SizedBox(width: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '#${user.name}',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
-                        ),
-                        Text(
-                          user.email,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontStyle: FontStyle.italic,
+                          Text(
+                            user.email,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const Divider(),
-            ListTile(
-              title: const Text(
-                'Profile Management',
-                style: TextStyle(
-                  color: Pallete.whiteColor,
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
+              const Divider(),
+              ListTile(
+                title: const Text(
+                  'Profile Management',
+                  style: TextStyle(
+                    color: Pallete.whiteColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                leading: const Icon(Icons.manage_accounts),
+                onTap: () {},
+              ),
+              ListTile(
+                title: const Text(
+                  'Change Privacy Settings',
+                  style: TextStyle(
+                    color: Pallete.whiteColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                leading: const Icon(Icons.privacy_tip),
+                onTap: () => showChangePrivacyModal(
+                  context,
+                  widget._homeScreenContext,
+                  ref,
                 ),
               ),
-              leading: const Icon(Icons.manage_accounts),
-              onTap: () {},
-            ),
-            ListTile(
-              title: const Text(
-                'Change Privacy Settings',
-                style: TextStyle(
-                  color: Pallete.whiteColor,
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
+              Expanded(child: Container()),
+              ListTile(
+                title: const Text(
+                  'Setting',
+                  style: TextStyle(
+                    color: Pallete.whiteColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
+                leading: const Icon(Icons.settings),
+                onTap: () => navigateToSettingScreen(),
               ),
-              leading: const Icon(Icons.privacy_tip),
-              onTap: () => showChangePrivacyModal(
-                context,
-                widget._homeScreenContext,
-                ref,
-              ),
-            ),
-            Expanded(child: Container()),
-            ListTile(
-              title: const Text(
-                'Setting',
-                style: TextStyle(
-                  color: Pallete.whiteColor,
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              leading: const Icon(Icons.settings),
-              onTap: () => navigateToSettingScreen(),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

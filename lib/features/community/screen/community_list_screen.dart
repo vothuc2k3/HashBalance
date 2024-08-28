@@ -9,7 +9,10 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
 import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 class CommunityListScreen extends ConsumerStatefulWidget {
   const CommunityListScreen({super.key});
@@ -19,7 +22,11 @@ class CommunityListScreen extends ConsumerStatefulWidget {
       _CommunityListScreenState();
 }
 
-class _CommunityListScreenState extends ConsumerState<CommunityListScreen> {
+class _CommunityListScreenState extends ConsumerState<CommunityListScreen>
+    with AutomaticKeepAliveClientMixin {
+  UserModel? currentUser;
+  late Stream<List<Community>?> communitiesStream;
+
   void _navigateToCommunityScreen(
     Community community,
     String uid,
@@ -54,82 +61,108 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen> {
     );
   }
 
+  Future<void> _onRefresh() async {
+    setState(() {
+      communitiesStream = ref
+          .read(communityControllerProvider.notifier)
+          .getTopCommunitiesList();
+    });
+  }
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    currentUser = ref.read(userProvider)!;
+    communitiesStream =
+        ref.watch(communityControllerProvider.notifier).getTopCommunitiesList();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final currentUser = ref.watch(userProvider)!;
-    final communityList = ref.watch(getTopCommunityListProvider);
+    super.build(context);
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF000000), // Màu đen ở trên
-              Color(0xFF0D47A1), // Màu xanh ở giữa
-              Color(0xFF1976D2), // Màu xanh đậm ở dưới
-            ],
+      body: RefreshIndicator.adaptive(
+        onRefresh: _onRefresh,
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF000000), // Màu đen ở trên
+                Color(0xFF0D47A1), // Màu xanh ở giữa
+                Color(0xFF1976D2), // Màu xanh đậm ở dưới
+              ],
+            ),
           ),
-        ),
-        child: communityList.when(
-          data: (communities) {
-            if (communities == null || communities.isEmpty) {
-              return const Center(
-                  child: Text('You have not joined any communities'));
-            } else {
-              return ListView.builder(
-                padding: const EdgeInsets.all(10),
-                itemCount: communities.length,
-                itemBuilder: (context, index) {
-                  final community = communities[index];
-                  return Card(
-                    color: Colors.black,
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundImage: CachedNetworkImageProvider(
-                          community.profileImage,
-                        ),
-                        radius: 30,
+          child: StreamBuilder<List<Community>?>(
+            stream: communitiesStream,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: Loading());
+              } else if (snapshot.hasError) {
+                return ErrorText(error: snapshot.error.toString());
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Center(
+                        child: Text('There\'s no any communities :('))
+                    .animate()
+                    .fadeIn(duration: 800.ms);
+              } else {
+                final communities = snapshot.data!;
+                return ListView.builder(
+                  padding: const EdgeInsets.all(10),
+                  itemCount: communities.length,
+                  itemBuilder: (context, index) {
+                    final community = communities[index];
+                    return Card(
+                      color: Colors.black,
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
                       ),
-                      title: Text(
-                        community.name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      subtitle: const Text(
-                        'THIS IS A COMMUNITY',
-                        style: TextStyle(color: Colors.white70),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      trailing: const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.people, color: Colors.white70),
-                          SizedBox(height: 4),
-                          Text(
-                            // '${community.members.length} members',
-                            '82964',
-                            style: TextStyle(color: Colors.white70),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage: CachedNetworkImageProvider(
+                            community.profileImage,
                           ),
-                        ],
+                          radius: 30,
+                        ),
+                        title: Text(
+                          community.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        subtitle: const Text(
+                          'THIS IS A COMMUNITY',
+                          style: TextStyle(color: Colors.white70),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.people, color: Colors.white70),
+                            SizedBox(height: 4),
+                            Text(
+                              '82964',
+                              style: TextStyle(color: Colors.white70),
+                            ),
+                          ],
+                        ),
+                        onTap: () => _navigateToCommunityScreen(
+                            community, currentUser!.uid),
                       ),
-                      onTap: () => _navigateToCommunityScreen(
-                          community, currentUser.uid),
-                    ),
-                  );
-                },
-              );
-            }
-          },
-          error: (error, stackTrace) => ErrorText(error: error.toString()),
-          loading: () => const Loading(),
+                    ).animate().fadeIn(duration: 800.ms);
+                  },
+                );
+              }
+            },
+          ),
         ),
       ),
     );
