@@ -58,9 +58,11 @@ class Constants {
   static const String friendRequestTitle = 'New Friend Request';
   static const String acceptRequestTitle = 'Friend Request Accepted';
   static const String incomingMessageTitle = 'New Message!';
-
+  static const String moderatorInvitationTitle =
+      'You are invited as a moderator!';
   static const String friendRequestType = 'friend_request';
   static const String acceptRequestType = 'accept_request';
+  static const String moderatorInvitationType = 'moderator_invitation';
 
   static String getFriendRequestContent(String name) {
     return '$name has sent you a friend request!';
@@ -72,6 +74,11 @@ class Constants {
 
   static String getIncomingMessageContent(String name) {
     return '$name has sent you a message!';
+  }
+
+  static String getModeratorInvitationContent(
+      String name, String communityName) {
+    return '$name has invited you as a moderator of $communityName!';
   }
 
   static String agoraAppId = 'a9942d0368fc4cdf9e59df9df19899c9';

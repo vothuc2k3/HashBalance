@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
@@ -33,13 +34,17 @@ class PendingPostScreenState extends ConsumerState<PendingPostScreen> {
       (l) => showToast(false, l.message),
       (r) {
         showToast(true, 'Approved post!');
-        setState(() {
-          pendingPosts = ref
-              .read(postControllerProvider.notifier)
-              .getPendingPosts(widget._community);
-        });
+        _onRefresh(); // Refresh the list after approval
       },
     );
+  }
+
+  Future<void> _onRefresh() async {
+    setState(() {
+      pendingPosts = ref
+          .read(postControllerProvider.notifier)
+          .getPendingPosts(widget._community);
+    });
   }
 
   @override
@@ -56,32 +61,59 @@ class PendingPostScreenState extends ConsumerState<PendingPostScreen> {
       appBar: AppBar(
         title: const Text('Pending Posts'),
       ),
-      body: FutureBuilder<List<PostDataModel>>(
-        future: pendingPosts,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Loading();
-          } else if (snapshot.hasError) {
-            return ErrorText(error: snapshot.error.toString());
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
-              child: Text('There\'s no pending posts...'),
-            );
-          } else {
-            final posts = snapshot.data!;
-            return ListView.builder(
-              itemCount: posts.length,
-              itemBuilder: (context, index) {
-                final post = posts[index];
-                return PendingPostContainer(
-                  author: post.author,
-                  post: post.post,
-                  handlePostApproval: _handlePostApproval,
-                );
-              },
-            );
-          }
-        },
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF000000),
+              Color(0xFF0D47A1),
+              Color(0xFF1976D2),
+            ],
+          ),
+        ),
+        child: FutureBuilder<List<PostDataModel>>(
+          future: pendingPosts,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Loading();
+            } else if (snapshot.hasError) {
+              return ErrorText(error: snapshot.error.toString());
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(
+                child: const Text(
+                  'There\'s no any pending posts.....',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white70,
+                  ),
+                ).animate().fadeIn(duration: 600.ms).moveY(
+                      begin: 30,
+                      end: 0,
+                      duration: 600.ms,
+                      curve: Curves.easeOutBack,
+                    ),
+              );
+            } else {
+              final posts = snapshot.data!;
+              return RefreshIndicator(
+                onRefresh: _onRefresh,
+                child: ListView.builder(
+                  itemCount: posts.length,
+                  itemBuilder: (context, index) {
+                    final post = posts[index];
+                    return PendingPostContainer(
+                      author: post.author,
+                      post: post.post,
+                      handlePostApproval: _handlePostApproval,
+                    );
+                  },
+                ),
+              );
+            }
+          },
+        ),
       ),
     );
   }

@@ -121,7 +121,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
       builder: (context) {
         return SafeArea(
           child: Wrap(
-            children: <Widget>[
+            children: [
               ListTile(
                 leading: const Icon(Icons.person_remove),
                 title: Text('Unfollow $postUsername'),

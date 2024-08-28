@@ -137,9 +137,9 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen>
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        subtitle: const Text(
-                          'THIS IS A COMMUNITY',
-                          style: TextStyle(color: Colors.white70),
+                        subtitle: Text(
+                          community.description,
+                          style: const TextStyle(color: Colors.white70),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),

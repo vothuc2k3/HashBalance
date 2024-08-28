@@ -82,8 +82,7 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
                 ),
                 SliverToBoxAdapter(
                   child: FutureBuilder<List<PostDataModel>?>(
-                    future:
-                        posts, // Sử dụng Future đã được khởi tạo trong initState
+                    future: posts,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return Row(

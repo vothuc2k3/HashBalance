@@ -15,6 +15,9 @@ import 'package:hash_balance/models/community_membership_model.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/post_data_model.dart';
 
+final fetchCommunitiesProvider = StreamProvider(
+    (ref) => ref.read(communityControllerProvider.notifier).fetchCommunities());
+
 final fetchCommunityByIdProvider =
     FutureProviderFamily((ref, String communityId) {
   return ref
@@ -86,25 +89,33 @@ class CommunityController extends StateNotifier<bool> {
     BuildContext context,
     String name,
     String type,
+    String description,
     bool containsExposureContents,
   ) async {
-    final currentUser = _ref.watch(userProvider);
-
-    final Community community = Community(
-      id: await generateRandomId(),
-      name: name,
-      profileImage: Constants
-          .avatarDefault[Random().nextInt(Constants.avatarDefault.length)],
-      bannerImage: Constants.bannerDefault,
-      type: type,
-      containsExposureContents: containsExposureContents,
-      createdAt: Timestamp.now(),
-    );
-    final result = await _communityRepository.createCommunity(community);
-
-    await joinCommunityAsModerator(currentUser!.uid, community.id);
-
-    return result;
+    state = true;
+    try {
+      final currentUser = _ref.read(userProvider);
+      final community = Community(
+        id: await generateRandomId(),
+        name: name,
+        profileImage: Constants
+            .avatarDefault[Random().nextInt(Constants.avatarDefault.length)],
+        bannerImage: Constants.bannerDefault,
+        type: type,
+        description: description,
+        containsExposureContents: containsExposureContents,
+        createdAt: Timestamp.now(),
+      );
+      final result = await _communityRepository.createCommunity(community);
+      await joinCommunityAsModerator(currentUser!.uid, community.id);
+      return result;
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    } finally {
+      state = false;
+    }
   }
 
   //GET THE COMMUNITIES BY CURRENT USER
@@ -230,5 +241,9 @@ class CommunityController extends StateNotifier<bool> {
   Future<List<PostDataModel>> getCommunityPosts(String communityId) async {
     final list = await _communityRepository.getCommunityPosts(communityId);
     return list;
+  }
+
+  Stream<List<Community>> fetchCommunities() {
+    return _communityRepository.fetchCommunities();
   }
 }

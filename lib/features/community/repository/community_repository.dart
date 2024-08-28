@@ -217,4 +217,17 @@ class CommunityRepository {
       throw e.toString();
     }
   }
+
+  Stream<List<Community>> fetchCommunities() {
+    return _communities.snapshots().map(
+      (event) {
+        List<Community> communities = event.docs.map(
+          (doc) {
+            return Community.fromMap(doc.data() as Map<String, dynamic>);
+          },
+        ).toList();
+        return communities;
+      },
+    );
+  }
 }

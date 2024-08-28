@@ -127,4 +127,16 @@ class ModerationRepository {
       return left(Failures(e.toString()));
     }
   }
+
+  //ADD MODERATOR
+  FutureVoid inviteAsModerator(String uid) async {
+    try {
+      
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
 }

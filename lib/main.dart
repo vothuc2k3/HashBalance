@@ -144,6 +144,14 @@ class MyAppState extends ConsumerState<MyApp> {
               ),
             );
             break;
+          case 'moderator_invitation':
+            navigatorKey.currentState?.push(
+              MaterialPageRoute(
+                builder: (context) => const SplashScreen(),
+              ),
+            );
+            
+            break;
           default:
             print('Unknown action');
             break;

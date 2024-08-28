@@ -100,11 +100,11 @@ class CommunityListDrawer extends ConsumerWidget {
                 },
               ).animate().fadeIn(duration: 800.ms),
               const Divider(),
-              ref.watch(userCommunitiesProvider).when(
-                    data: (communities) {
-                      return Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: DropdownSearch<Community>(
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: ref.read(fetchCommunitiesProvider).when(
+                      data: (communities) {
+                        return DropdownSearch<Community>(
                           items: communities,
                           itemAsString: (Community community) =>
                               "#${community.name}",
@@ -149,18 +149,18 @@ class CommunityListDrawer extends ConsumerWidget {
                                     item.profileImage,
                                   ),
                                 ),
-                              );
+                              ).animate().fadeIn(duration: 800.ms);
                             },
                           ),
-                        ),
-                      ).animate().fadeIn(duration: 800.ms);
-                    },
-                    error: (e, s) => ErrorText(
-                      error: e.toString(),
-                    ).animate().fadeIn(duration: 800.ms),
-                    loading: () =>
-                        const Loading().animate().fadeIn(duration: 800.ms),
-                  ),
+                        ).animate().fadeIn(duration: 800.ms);
+                      },
+                      error: (e, s) => ErrorText(error: e.toString())
+                          .animate()
+                          .fadeIn(duration: 800.ms),
+                      loading: () =>
+                          const Loading().animate().fadeIn(duration: 800.ms),
+                    ),
+              ).animate().fadeIn(duration: 800.ms),
               const Divider(),
               const ListTile(
                 title: Text(
