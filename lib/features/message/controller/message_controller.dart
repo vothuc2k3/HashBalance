@@ -9,6 +9,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/message/repository/message_repository.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
+import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conversation_model.dart';
 import 'package:hash_balance/models/message_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
@@ -19,8 +20,18 @@ final getCurrentUserConversationProvider = StreamProvider.autoDispose((ref) {
       .getCurrentUserConversation();
 });
 
-final loadMessagesProvider = StreamProvider.family.autoDispose((ref, String targetUid) {
-  return ref.watch(messageControllerProvider.notifier).loadMessages(targetUid);
+final privateChatMessagesProvider =
+    StreamProvider.family.autoDispose((ref, String targetUid) {
+  return ref
+      .watch(messageControllerProvider.notifier)
+      .loadPrivateMessages(targetUid);
+});
+
+final communityMessagesProvider =
+    StreamProviderFamily((ref, Community community) {
+  return ref
+      .watch(messageControllerProvider.notifier)
+      .loadCommunityMessage(community.id);
 });
 
 final getLastMessageByConversationProvider =
@@ -60,10 +71,10 @@ class MessageController extends StateNotifier<bool> {
         _ref = ref,
         super(false);
 
-  Stream<List<Message>?> loadMessages(String targetUid) {
+  Stream<List<Message>?> loadPrivateMessages(String targetUid) {
     try {
       final uid = _ref.read(userProvider)!.uid;
-      return _messageRepository.loadMessages(getUids(uid, targetUid));
+      return _messageRepository.loadPrivateMessages(getUids(uid, targetUid));
     } on FirebaseException catch (e) {
       throw Failures(e.message!);
     } catch (e) {
@@ -71,16 +82,20 @@ class MessageController extends StateNotifier<bool> {
     }
   }
 
-  FutureVoid sendMessage(String text, String targetUid) async {
+  Stream<List<Message>> loadCommunityMessage(String communityId) {
+    return _messageRepository.loadCommunityMessage(communityId);
+  }
+
+  FutureVoid sendPrivateMessage(String text, String targetUid) async {
     try {
       final currentUser = _ref.watch(userProvider)!;
-      _messageRepository.sendMessage(
+      await _messageRepository.sendPrivateMessage(
         Message(
           id: await generateRandomId(),
           text: text,
           uid: currentUser.uid,
           createdAt: Timestamp.now(),
-          seenBy: ['empty'],
+          seenBy: [''],
         ),
         Conversation(
           id: getUids(currentUser.uid, targetUid),
@@ -113,7 +128,31 @@ class MessageController extends StateNotifier<bool> {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
-    } finally {}
+    }
+  }
+
+  FutureVoid sendCommunityMessage(String text, String communityId) async {
+    try {
+      final currentUser = _ref.watch(userProvider)!;
+      await _messageRepository.sendCommunityMessage(
+        Message(
+          id: await generateRandomId(),
+          text: text,
+          uid: currentUser.uid,
+          createdAt: Timestamp.now(),
+          seenBy: [''],
+        ),
+        Conversation(
+          id: communityId,
+          participantUids: [currentUser.uid],
+        ),
+      );
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
   }
 
   Stream<List<Conversation>?> getCurrentUserConversation() {

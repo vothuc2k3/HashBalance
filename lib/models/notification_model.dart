@@ -11,6 +11,9 @@ class NotificationModel {
   final String targetUid;
   final String senderUid;
   final String? postId;
+  final String? communityId;
+  final String? commentId;
+  final String? conversationId;
   final Timestamp createdAt;
   final bool isRead;
   NotificationModel({
@@ -21,11 +24,12 @@ class NotificationModel {
     required this.targetUid,
     required this.senderUid,
     this.postId,
+    this.communityId,
+    this.commentId,
+    this.conversationId,
     required this.createdAt,
     required this.isRead,
   });
-
-
 
   NotificationModel copyWith({
     String? id,
@@ -35,6 +39,9 @@ class NotificationModel {
     String? targetUid,
     String? senderUid,
     String? postId,
+    String? communityId,
+    String? commentId,
+    String? conversationId,
     Timestamp? createdAt,
     bool? isRead,
   }) {
@@ -46,6 +53,9 @@ class NotificationModel {
       targetUid: targetUid ?? this.targetUid,
       senderUid: senderUid ?? this.senderUid,
       postId: postId ?? this.postId,
+      communityId: communityId ?? this.communityId,
+      commentId: commentId ?? this.commentId,
+      conversationId: conversationId ?? this.conversationId,
       createdAt: createdAt ?? this.createdAt,
       isRead: isRead ?? this.isRead,
     );
@@ -60,6 +70,9 @@ class NotificationModel {
       'targetUid': targetUid,
       'senderUid': senderUid,
       'postId': postId,
+      'communityId': communityId,
+      'commentId': commentId,
+      'conversationId': conversationId,
       'createdAt': createdAt,
       'isRead': isRead,
     };
@@ -74,6 +87,11 @@ class NotificationModel {
       targetUid: map['targetUid'] as String,
       senderUid: map['senderUid'] as String,
       postId: map['postId'] != null ? map['postId'] as String : '',
+      communityId:
+          map['communityId'] != null ? map['communityId'] as String : '',
+      commentId: map['commentId'] != null ? map['commentId'] as String : '',
+      conversationId:
+          map['conversationId'] != null ? map['conversationId'] as String : '',
       createdAt: map['createdAt'] as Timestamp,
       isRead: map['isRead'] as bool,
     );
@@ -86,7 +104,7 @@ class NotificationModel {
 
   @override
   String toString() {
-    return 'NotificationModel(id: $id, title: $title, message: $message, type: $type, targetUid: $targetUid, senderUid: $senderUid, postId: $postId, createdAt: $createdAt, isRead: $isRead)';
+    return 'NotificationModel(id: $id, title: $title, message: $message, type: $type, targetUid: $targetUid, senderUid: $senderUid, postId: $postId, communityId: $communityId, commentId: $commentId, conversationId: $conversationId, createdAt: $createdAt, isRead: $isRead)';
   }
 
   @override
@@ -100,6 +118,9 @@ class NotificationModel {
         other.targetUid == targetUid &&
         other.senderUid == senderUid &&
         other.postId == postId &&
+        other.communityId == communityId &&
+        other.commentId == commentId &&
+        other.conversationId == conversationId &&
         other.createdAt == createdAt &&
         other.isRead == isRead;
   }
@@ -113,6 +134,9 @@ class NotificationModel {
         targetUid.hashCode ^
         senderUid.hashCode ^
         postId.hashCode ^
+        communityId.hashCode ^
+        commentId.hashCode ^
+        conversationId.hashCode ^
         createdAt.hashCode ^
         isRead.hashCode;
   }

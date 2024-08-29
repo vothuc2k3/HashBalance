@@ -10,6 +10,7 @@ import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
+import 'package:hash_balance/features/community/screen/community_conversation_screen.dart';
 import 'package:hash_balance/features/community/screen/post_container/post_container.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/mod_tools_screen.dart';
@@ -82,7 +83,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     });
   }
 
-  void handlePinPost(Post post) async {
+  void _handlePinPost(Post post) async {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -110,7 +111,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     }
   }
 
-  void handleUnPinPost(Post post) async {
+  void _handleUnPinPost(Post post) async {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -222,6 +223,84 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     );
   }
 
+  void _showMoreOptions() {
+    showMenu<int>(
+      context: context,
+      position: const RelativeRect.fromLTRB(100, 40, 0, 0),
+      items: [
+        const PopupMenuItem<int>(
+          value: 0,
+          child: ListTile(
+            leading: Icon(Icons.group),
+            title: Text('Go to Community Conversations'),
+          ),
+        ),
+        const PopupMenuItem<int>(
+          value: 1,
+          child: ListTile(
+            leading: Icon(Icons.person_add),
+            title: Text('Invite Friends to Community'),
+          ),
+        ),
+        const PopupMenuItem<int>(
+          value: 2,
+          child: ListTile(
+            leading: Icon(Icons.report),
+            title: Text('Report Community'),
+          ),
+        ),
+        const PopupMenuItem<int>(
+          value: 3,
+          child: ListTile(
+            leading: Icon(Icons.block),
+            title: Text('Block Community'),
+          ),
+        ),
+        const PopupMenuItem<int>(
+          value: 4,
+          child: ListTile(
+            leading: Icon(Icons.block),
+            title: Text('Block Community'),
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value != null) {
+        switch (value) {
+          case 0:
+            _navigateToCommunityConversations();
+            break;
+          case 1:
+            _inviteFriendsToCommunity();
+            break;
+          case 2:
+            _reportCommunity();
+            break;
+          case 3:
+            _blockCommunity();
+            break;
+        }
+      }
+    });
+  }
+
+  void _navigateToCommunityConversations() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CommunityConversationScreen(
+          community: widget._community,
+        ),
+      ),
+    );
+  }
+
+  void _inviteFriendsToCommunity() {}
+
+  void _reportCommunity() {}
+
+  void _blockCommunity() {}
+
   Future<void> _onRefresh() async {
     posts = ref
         .read(communityControllerProvider.notifier)
@@ -274,45 +353,17 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
               SliverAppBar(
                 actions: [
                   if (tempMemberStatus == 'moderator')
-                    TextButton(
+                    IconButton(
                       onPressed: _navigateToModToolsScreen,
-                      child: const Text(
-                        'Mod Tools',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: Colors.white,
-                        ),
+                      icon: const Icon(
+                        Icons.arrow_circle_right_outlined,
+                        size: 30,
                       ),
                     ),
                   if (tempMemberStatus == 'member')
-                    ElevatedButton(
-                      onPressed: isLoading
-                          ? () {}
-                          : () {
-                              _leaveCommunity(
-                                currentUser.uid,
-                                widget._community.id,
-                              );
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: isLoading
-                          ? const Loading()
-                          : const Text(
-                              'Leave Community',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: Colors.white,
-                              ),
-                            ),
+                    IconButton(
+                      icon: const Icon(Icons.more_vert),
+                      onPressed: _showMoreOptions,
                     ),
                   if (tempMemberStatus == '')
                     ElevatedButton(
@@ -438,7 +489,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                       author: post.author,
                       post: post.post,
                       community: post.community,
-                      onUnPinPost: handleUnPinPost,
+                      onUnPinPost: _handleUnPinPost,
                     ).animate().fadeIn(duration: 800.ms);
                   },
                 ),
@@ -488,7 +539,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                             author: postData.author,
                             post: postData.post,
                             community: postData.community,
-                            onPinPost: handlePinPost,
+                            onPinPost: _handlePinPost,
                           ).animate().fadeIn(duration: 800.ms);
                         },
                       );

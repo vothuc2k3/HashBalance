@@ -66,7 +66,7 @@ class ModToolsScreen extends ConsumerWidget {
             ),
             ListTile(
               leading: const Icon(Icons.add_moderator),
-              title: const Text('Add Moderators'),
+              title: const Text('Invite Moderators'),
               onTap: () {},
             ),
             ListTile(

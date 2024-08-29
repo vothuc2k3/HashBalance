@@ -11,7 +11,6 @@ import 'package:hash_balance/models/comment_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:flutter/foundation.dart' as foundation;
 
-// Define the providers
 final currentCommentProvider = Provider<CommentModel>((ref) {
   throw UnimplementedError('currentCommentProvider not overridden');
 });
@@ -114,14 +113,27 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
             ),
           ],
         ),
-        body: Column(
-          children: [
-            Expanded(
-              child: _buildCommentsList(commentsAsyncValue),
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF000000),
+                Color(0xFF0D47A1),
+                Color(0xFF1976D2),
+              ],
             ),
-            loading ? const Loading() : _buildInputArea(),
-            if (_isEmojiVisible) _buildEmojiPicker(),
-          ],
+          ),
+          child: Column(
+            children: [
+              Expanded(
+                child: _buildCommentsList(commentsAsyncValue),
+              ),
+              loading ? const Loading() : _buildInputArea(),
+              if (_isEmojiVisible) _buildEmojiPicker(),
+            ],
+          ),
         ),
       ),
     );

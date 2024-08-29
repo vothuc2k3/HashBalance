@@ -8,16 +8,16 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/hive_models/community/hive_community_model.dart';
-import 'package:hash_balance/core/services/device_token_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:toastification/toastification.dart';
 
+import 'package:hash_balance/core/constants/constants.dart';
+import 'package:hash_balance/core/hive_models/community/hive_community_model.dart';
 import 'package:hash_balance/core/hive_models/user_model/hive_user_model.dart';
+import 'package:hash_balance/core/services/device_token_service.dart';
 import 'package:hash_balance/core/services/joined_communities_service.dart';
 import 'package:hash_balance/core/splash/splash_screen.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
-import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
@@ -95,7 +95,7 @@ class MyAppState extends ConsumerState<MyApp> {
         final payloadData = jsonDecode(response.payload!);
 
         switch (payloadData['type']) {
-          case 'accept_request':
+          case Constants.acceptRequestType:
             navigatorKey.currentState?.push(
               MaterialPageRoute(
                 builder: (context) => const SplashScreen(),
@@ -112,7 +112,7 @@ class MyAppState extends ConsumerState<MyApp> {
             );
             break;
 
-          case 'friend_request':
+          case Constants.friendRequestType:
             navigatorKey.currentState?.push(
               MaterialPageRoute(
                 builder: (context) => const SplashScreen(),
@@ -128,7 +128,7 @@ class MyAppState extends ConsumerState<MyApp> {
               ),
             );
             break;
-          case 'incoming_message':
+          case Constants.incomingMessageType:
             navigatorKey.currentState?.push(
               MaterialPageRoute(
                 builder: (context) => const SplashScreen(),
@@ -144,16 +144,14 @@ class MyAppState extends ConsumerState<MyApp> {
               ),
             );
             break;
-          case 'moderator_invitation':
+          case Constants.moderatorInvitationType:
             navigatorKey.currentState?.push(
               MaterialPageRoute(
                 builder: (context) => const SplashScreen(),
               ),
             );
-            
             break;
           default:
-            print('Unknown action');
             break;
         }
       } catch (e) {
@@ -231,7 +229,9 @@ class MyAppState extends ConsumerState<MyApp> {
                 debugShowCheckedModeBanner: false,
                 title: 'Hash Balance',
                 theme: Pallete.darkModeAppTheme,
-                home: userData != null ? const HomeScreen() : const Loading(),
+                home: userData != null
+                    ? const HomeScreen()
+                    : const SplashScreen(),
               );
             } else {
               return MaterialApp(
@@ -251,7 +251,7 @@ class MyAppState extends ConsumerState<MyApp> {
           loading: () => const MaterialApp(
             debugShowCheckedModeBanner: false,
             title: 'Hash Balance',
-            home: Loading(),
+            home: SplashScreen(),
           ),
         );
   }

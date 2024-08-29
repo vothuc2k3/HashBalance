@@ -60,9 +60,13 @@ class Constants {
   static const String incomingMessageTitle = 'New Message!';
   static const String moderatorInvitationTitle =
       'You are invited as a moderator!';
+
+
   static const String friendRequestType = 'friend_request';
   static const String acceptRequestType = 'accept_request';
   static const String moderatorInvitationType = 'moderator_invitation';
+  static const String incomingMessageType = 'incoming_message';
+  static const String conversationInvitationType = 'conversation_invitation';
 
   static String getFriendRequestContent(String name) {
     return '$name has sent you a friend request!';

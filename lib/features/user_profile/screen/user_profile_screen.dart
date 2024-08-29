@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
@@ -70,158 +71,172 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
           ),
         ),
       ),
-      body: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          Container(
-            margin: EdgeInsets.only(bottom: bottom),
-            child: Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.center,
-              children: [
-                Container(
-                  color: Colors.black,
-                  child: CachedNetworkImage(
-                    imageUrl: widget.user.bannerImage,
-                    width: double.infinity,
-                    height: coverHeight,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                Positioned(
-                  top: top,
-                  left: 10,
-                  child: CircleAvatar(
-                    radius: (profileHeight / 2) - 10,
-                    backgroundColor: Colors.grey.shade800,
-                    backgroundImage:
-                        CachedNetworkImageProvider(widget.user.profileImage),
-                  ),
-                ),
-              ],
-            ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF000000),
+              Color(0xFF0D47A1),
+              Color(0xFF1976D2),
+            ],
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 10),
-                child: Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        '#${widget.user.name}',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white.withOpacity(0.9),
-                          shadows: const [
-                            Shadow(
-                              offset: Offset(1.5, 1.5),
-                              blurRadius: 3.0,
-                              color: Colors.black26,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.only(left: 10),
-                child: Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        widget.user.bio ?? 'You haven\'t said anything yet...',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          fontStyle: FontStyle.italic,
-                          color: Colors.white.withOpacity(0.8),
-                          shadows: const [
-                            Shadow(
-                              offset: Offset(1, 1),
-                              blurRadius: 2.0,
-                              color: Colors.black12,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.only(left: 10),
-                child: Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        widget.user.description ??
-                            'You haven\'t describe about yourself yet...',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.white70,
-                          letterSpacing: 0.5,
-                          height: 1.4,
-                          shadows: [
-                            Shadow(
-                              offset: Offset(0.5, 0.5),
-                              blurRadius: 1.0,
-                              color: Colors.black12,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.only(left: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    _buildSocialIcon(FontAwesomeIcons.slack),
-                    const SizedBox(width: 12),
-                    _buildSocialIcon(FontAwesomeIcons.github),
-                    const SizedBox(width: 12),
-                    _buildSocialIcon(FontAwesomeIcons.twitter),
-                    const SizedBox(width: 12),
-                    _buildSocialIcon(FontAwesomeIcons.linkedin),
-                    const SizedBox(width: 12),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Divider(),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+        ),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            Container(
+              margin: EdgeInsets.only(bottom: bottom),
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
                 children: [
-                  _buildVerticalDivider(),
-                  _buildButton(text: 'Followers', value: 0),
-                  _buildVerticalDivider(),
-                  _buildButton(
-                      text: 'Activity Points',
-                      value: widget.user.activityPoint),
-                  _buildVerticalDivider(),
-                  _buildButton(text: 'Achievements', value: 0),
+                  Container(
+                    color: Colors.black,
+                    child: CachedNetworkImage(
+                      imageUrl: widget.user.bannerImage,
+                      width: double.infinity,
+                      height: coverHeight,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  Positioned(
+                    top: top,
+                    left: 10,
+                    child: CircleAvatar(
+                      radius: (profileHeight / 2) - 10,
+                      backgroundColor: Colors.grey.shade800,
+                      backgroundImage:
+                          CachedNetworkImageProvider(widget.user.profileImage),
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 16),
-              const Divider(),
-              const SizedBox(height: 16),
-              _buildFriendsWidget(widget.user.uid),
-            ],
-          )
-        ],
-      ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 10),
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          '#${widget.user.name}',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white.withOpacity(0.9),
+                            shadows: const [
+                              Shadow(
+                                offset: Offset(1.5, 1.5),
+                                blurRadius: 3.0,
+                                color: Colors.black26,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.only(left: 10),
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          widget.user.bio ??
+                              'You haven\'t said anything yet...',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.white.withOpacity(0.8),
+                            shadows: const [
+                              Shadow(
+                                offset: Offset(1, 1),
+                                blurRadius: 2.0,
+                                color: Colors.black12,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.only(left: 10),
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          widget.user.description ??
+                              'You haven\'t describe about yourself yet...',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.white70,
+                            letterSpacing: 0.5,
+                            height: 1.4,
+                            shadows: [
+                              Shadow(
+                                offset: Offset(0.5, 0.5),
+                                blurRadius: 1.0,
+                                color: Colors.black12,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.only(left: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      _buildSocialIcon(FontAwesomeIcons.slack),
+                      const SizedBox(width: 12),
+                      _buildSocialIcon(FontAwesomeIcons.github),
+                      const SizedBox(width: 12),
+                      _buildSocialIcon(FontAwesomeIcons.twitter),
+                      const SizedBox(width: 12),
+                      _buildSocialIcon(FontAwesomeIcons.linkedin),
+                      const SizedBox(width: 12),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildVerticalDivider(),
+                    _buildButton(text: 'Followers', value: 0),
+                    _buildVerticalDivider(),
+                    _buildButton(
+                        text: 'Activity Points',
+                        value: widget.user.activityPoint),
+                    _buildVerticalDivider(),
+                    _buildButton(text: 'Achievements', value: 0),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 16),
+                _buildFriendsWidget(widget.user.uid),
+              ],
+            )
+          ],
+        ),
+      ).animate().fadeIn(duration: 800.ms),
     );
   }
 

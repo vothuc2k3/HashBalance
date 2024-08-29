@@ -1,10 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
-import 'package:hash_balance/features/call/controller/call_controller.dart';
-import 'package:hash_balance/features/call/screen/call_screen.dart';
 
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
@@ -12,22 +11,24 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/message/controller/message_controller.dart';
 import 'package:hash_balance/features/message/screen/widget/message_bubble.dart';
-import 'package:hash_balance/models/user_model.dart';
+import 'package:hash_balance/models/community_model.dart';
 import 'package:flutter/foundation.dart' as foundation;
 
-class MessageScreen extends ConsumerStatefulWidget {
-  final UserModel _targetUser;
+class CommunityConversationScreen extends ConsumerStatefulWidget {
+  final Community _community;
 
-  const MessageScreen({
+  const CommunityConversationScreen({
     super.key,
-    required UserModel targetUser,
-  }) : _targetUser = targetUser;
+    required Community community,
+  }) : _community = community;
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _MessageScreenState();
+  ConsumerState<ConsumerStatefulWidget> createState() =>
+      _CommunityConversationScreenState();
 }
 
-class _MessageScreenState extends ConsumerState<MessageScreen> {
+class _CommunityConversationScreenState
+    extends ConsumerState<CommunityConversationScreen> {
   final TextEditingController _messageController = TextEditingController();
 
   bool _isEmojiVisible = false;
@@ -38,10 +39,10 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
     });
   }
 
-  void onSendMessage(String targetUid) async {
+  void onSendMessage() async {
     final result = await ref
         .watch(messageControllerProvider.notifier)
-        .sendPrivateMessage(_messageController.text, targetUid);
+        .sendCommunityMessage(_messageController.text, widget._community.id);
     result.fold(
       (l) {
         showToast(false, l.message);
@@ -50,36 +51,9 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
     );
   }
 
-  void markAsRead() {
-    ref
-        .read(messageControllerProvider.notifier)
-        .markAsRead(widget._targetUser.uid);
-  }
-
-  void onStartVoiceCall(String currentUid) async {
-    final result = await ref
-        .watch(callControllerProvider.notifier)
-        .fetchAgoraToken(getUids(currentUid, widget._targetUser.uid));
-    result.fold((l) => showToast(false, l.message), (r) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CallScreen(
-            caller: ref.watch(userProvider)!,
-            receiver: widget._targetUser,
-            token: r,
-          ),
-        ),
-      );
-    });
-  }
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      markAsRead();
-    });
   }
 
   @override
@@ -91,11 +65,11 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
           children: [
             CircleAvatar(
               backgroundImage:
-                  CachedNetworkImageProvider(widget._targetUser.profileImage),
+                  CachedNetworkImageProvider(widget._community.profileImage),
             ),
             const SizedBox(width: 10),
             Text(
-              widget._targetUser.name,
+              widget._community.name,
               style: const TextStyle(fontSize: 14),
             ),
           ],
@@ -103,14 +77,6 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
         centerTitle: true,
         backgroundColor: Colors.black87,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.call),
-            onPressed: () => onStartVoiceCall(currentUser.uid),
-          ),
-          IconButton(
-            icon: const Icon(Icons.videocam),
-            onPressed: () {},
-          ),
           IconButton(
             icon: const Icon(Icons.more_vert),
             onPressed: () {
@@ -122,11 +88,9 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
       body: Column(
         children: [
           Expanded(
-            child: ref
-                .watch(privateChatMessagesProvider(widget._targetUser.uid))
-                .when(
+            child: ref.watch(communityMessagesProvider(widget._community)).when(
                   data: (messages) {
-                    if (messages == null || messages.isEmpty) {
+                    if (messages.isEmpty) {
                       return const Center(
                         child: Text(
                           'Text your first message!',
@@ -135,7 +99,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                             color: Colors.grey,
                           ),
                         ),
-                      );
+                      ).animate().fadeIn(duration: 800.ms);
                     }
                     return ListView.builder(
                       padding: const EdgeInsets.symmetric(
@@ -282,7 +246,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                 const SizedBox(width: 10),
                 GestureDetector(
                   onTap: () {
-                    onSendMessage(widget._targetUser.uid);
+                    onSendMessage();
                     _messageController.clear();
                     FocusManager.instance.primaryFocus?.unfocus();
                   },

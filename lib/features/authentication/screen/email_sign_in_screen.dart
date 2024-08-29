@@ -55,7 +55,9 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
   void navigateToSignUpScreen(BuildContext context) {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const EmailSignUpScreen()),
+      MaterialPageRoute(
+        builder: (context) => const EmailSignUpScreen(),
+      ),
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
@@ -19,10 +20,10 @@ class MessageRepository {
     required FirebaseFirestore firestore,
   }) : _firestore = firestore;
 
-  Stream<List<Message>?> loadMessages(String conversationId) {
+  Stream<List<Message>?> loadPrivateMessages(String conversationId) {
     return _conversation
         .doc(conversationId)
-        .collection('message')
+        .collection(FirebaseConstants.messagesCollection)
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map(
@@ -30,37 +31,98 @@ class MessageRepository {
         if (event.docs.isEmpty) {
           return null;
         } else {
-          final loadedMessages = event.docs;
-          List<Message>? messages = [];
-          for (var doc in loadedMessages) {
-            final docData = doc.data();
-            messages.add(
-              Message(
-                id: docData['id'] as String,
-                text: docData['text'] as String,
-                uid: docData['uid'] as String,
-                createdAt: docData['createdAt'] as Timestamp,
-                seenBy: List<String>.from(docData['seenBy']),
-              ),
-            );
-          }
+          List<Message> messages = event.docs.map(
+            (doc) {
+              return Message.fromMap(doc.data());
+            },
+          ).toList();
           return messages;
         }
       },
     );
   }
 
-  FutureVoid sendMessage(
+  Stream<List<Message>> loadCommunityMessage(String communityId) {
+    return _conversation
+        .doc(communityId)
+        .collection(FirebaseConstants.messagesCollection)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+      (event) {
+        List<Message> messages = event.docs.map(
+          (doc) {
+            return Message.fromMap(doc.data());
+          },
+        ).toList();
+        return messages;
+      },
+    );
+  }
+
+  FutureVoid sendPrivateMessage(
+      Message message, Conversation conversation) async {
+    try {
+      final conversationDoc = await _conversation.doc(conversation.id).get();
+      if (conversationDoc.exists) {
+        await _conversation
+            .doc(conversation.id)
+            .collection(FirebaseConstants.messagesCollection)
+            .doc(message.id)
+            .set(message.toMap());
+      } else {
+        await _conversation.doc(conversation.id).set(conversation.toMap());
+        await _conversation
+            .doc(conversation.id)
+            .collection(FirebaseConstants.messagesCollection)
+            .doc(message.id)
+            .set(message.toMap());
+      }
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  FutureVoid sendCommunityMessage(
     Message message,
     Conversation conversation,
   ) async {
     try {
-      await _conversation.doc(conversation.id).set(conversation.toMap());
-      await _conversation
-          .doc(conversation.id)
-          .collection('message')
-          .doc()
-          .set(message.toMap());
+      final conversationDoc = await _conversation.doc(conversation.id).get();
+
+      if (conversationDoc.exists) {
+        final existingConversation = Conversation.fromMap(
+            conversationDoc.data() as Map<String, dynamic>);
+        final participantUids = existingConversation.participantUids;
+
+        // Thêm uid của người gửi vào danh sách nếu chưa tồn tại
+        if (!participantUids.contains(message.uid)) {
+          await _conversation.doc(conversation.id).update({
+            'participantUids': FieldValue.arrayUnion([message.uid]),
+          });
+        }
+
+        // Lưu tin nhắn vào collection messages
+        await _conversation
+            .doc(conversation.id)
+            .collection(FirebaseConstants.messagesCollection)
+            .doc(message.id)
+            .set(message.toMap());
+      } else {
+        // Tạo cuộc trò chuyện mới nếu chưa tồn tại
+        await _conversation.doc(conversation.id).set(conversation.toMap());
+
+        // Lưu tin nhắn vào collection messages
+        await _conversation
+            .doc(conversation.id)
+            .collection(FirebaseConstants.messagesCollection)
+            .doc(message.id)
+            .set(message.toMap());
+      }
+
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
