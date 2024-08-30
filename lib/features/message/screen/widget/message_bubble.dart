@@ -12,7 +12,7 @@ class MessageBubble extends StatelessWidget {
     required this.isMe,
   }) : isFirstInSequence = true;
 
-  // Create a amessage bubble that continues the sequence.
+  // Create a message bubble that continues the sequence.
   const MessageBubble.next({
     super.key,
     required this.message,
@@ -29,7 +29,7 @@ class MessageBubble extends StatelessWidget {
   final bool isFirstInSequence;
 
   // Image of the user to be displayed next to the bubble.
-  // Not required if the message is not the fir st in a sequence.
+  // Not required if the message is not the first in a sequence.
   final String? userImage;
 
   // Username of the user.
@@ -85,8 +85,7 @@ class MessageBubble extends StatelessWidget {
                         username!,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors
-                              .white, // Changed from Colors.black87 for better visibility on dark themes
+                          color: Colors.white, // Giữ lại đoạn code hint của bạn
                         ),
                       ),
                     ),
@@ -111,6 +110,13 @@ class MessageBubble extends StatelessWidget {
                         bottomLeft: const Radius.circular(12),
                         bottomRight: const Radius.circular(12),
                       ),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          offset: Offset(0, 1),
+                          blurRadius: 5,
+                        ),
+                      ],
                     ),
                     // Set some reasonable constraints on the width of the
                     // message bubble so it can adjust to the amount of text

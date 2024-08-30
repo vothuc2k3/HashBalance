@@ -47,7 +47,11 @@ class _CommunityConversationScreenState
       (l) {
         showToast(false, l.message);
       },
-      (_) {},
+      (_) {
+        _messageController.clear();
+        FocusManager.instance.primaryFocus?.unfocus();
+        setState(() {});
+      },
     );
   }
 
@@ -79,9 +83,7 @@ class _CommunityConversationScreenState
         actions: [
           IconButton(
             icon: const Icon(Icons.more_vert),
-            onPressed: () {
-              // Implement more actions if needed
-            },
+            onPressed: () {},
           ),
         ],
       ),
@@ -124,6 +126,7 @@ class _CommunityConversationScreenState
                         itemCount: messages.length,
                         itemBuilder: (ctx, index) {
                           final chatMessage = messages[index];
+                          if (messages.isEmpty) return Container();
                           final nextChatMessage = index + 1 < messages.length
                               ? messages[index + 1]
                               : null;

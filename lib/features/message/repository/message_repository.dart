@@ -64,7 +64,12 @@ class MessageRepository {
       (event) {
         List<Message> messages = event.docs.map(
           (doc) {
-            return Message.fromMap(doc.data());
+            return Message(
+              id: doc['id'] as String,
+              text: doc['text'] as String,
+              uid: doc['uid'] as String,
+              createdAt: doc['createdAt'] as Timestamp,
+            );
           },
         ).toList();
         return messages;
@@ -114,29 +119,34 @@ class MessageRepository {
         );
         final participantUids = existingConversation.participantUids;
 
-        // Thêm uid của người gửi vào danh sách nếu chưa tồn tại
         if (!participantUids.contains(message.uid)) {
           await _conversation.doc(conversation.id).update({
             'participantUids': FieldValue.arrayUnion([message.uid]),
           });
         }
 
-        // Lưu tin nhắn vào collection messages
+        // Lưu tin nhắn vào collection messages với server timestamp
         await _conversation
             .doc(conversation.id)
             .collection(FirebaseConstants.messagesCollection)
             .doc(message.id)
-            .set(message.toMap());
+            .set({
+          ...message.toMap(),
+          'createdAt': FieldValue.serverTimestamp(),
+        });
       } else {
         // Tạo cuộc trò chuyện mới nếu chưa tồn tại
         await _conversation.doc(conversation.id).set(conversation.toMap());
 
-        // Lưu tin nhắn vào collection messages
+        // Lưu tin nhắn vào collection messages với server timestamp
         await _conversation
             .doc(conversation.id)
             .collection(FirebaseConstants.messagesCollection)
             .doc(message.id)
-            .set(message.toMap());
+            .set({
+          ...message.toMap(),
+          'createdAt': FieldValue.serverTimestamp(),
+        });
       }
 
       return right(null);
