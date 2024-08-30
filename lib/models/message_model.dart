@@ -1,21 +1,17 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 
 class Message {
   final String id;
   final String text;
   final String uid;
   final Timestamp createdAt;
-  final List<String>? seenBy;
   Message({
     required this.id,
     required this.text,
     required this.uid,
     required this.createdAt,
-    required this.seenBy,
   });
 
   Message copyWith({
@@ -23,14 +19,12 @@ class Message {
     String? text,
     String? uid,
     Timestamp? createdAt,
-    List<String>? seenBy,
   }) {
     return Message(
       id: id ?? this.id,
       text: text ?? this.text,
       uid: uid ?? this.uid,
       createdAt: createdAt ?? this.createdAt,
-      seenBy: seenBy ?? this.seenBy,
     );
   }
 
@@ -40,7 +34,6 @@ class Message {
       'text': text,
       'uid': uid,
       'createdAt': createdAt,
-      'seenBy': seenBy,
     };
   }
 
@@ -50,14 +43,11 @@ class Message {
       text: map['text'] as String,
       uid: map['uid'] as String,
       createdAt: map['createdAt'] as Timestamp,
-      seenBy: map['seenBy'] != null
-          ? List<String>.from((map['seenBy'] as List<String>))
-          : [''],
     );
   }
   @override
   String toString() {
-    return 'Message(id: $id, text: $text, uid: $uid, createdAt: $createdAt, seenBy: $seenBy)';
+    return 'Message(id: $id, text: $text, uid: $uid, createdAt: $createdAt)';
   }
 
   @override
@@ -67,17 +57,12 @@ class Message {
     return other.id == id &&
         other.text == text &&
         other.uid == uid &&
-        other.createdAt == createdAt &&
-        listEquals(other.seenBy, seenBy);
+        other.createdAt == createdAt;
   }
 
   @override
   int get hashCode {
-    return id.hashCode ^
-        text.hashCode ^
-        uid.hashCode ^
-        createdAt.hashCode ^
-        seenBy.hashCode;
+    return id.hashCode ^ text.hashCode ^ uid.hashCode ^ createdAt.hashCode;
   }
 
   String toJson() => json.encode(toMap());

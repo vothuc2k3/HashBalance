@@ -11,6 +11,7 @@ import 'package:hash_balance/features/push_notification/controller/push_notifica
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conversation_model.dart';
+import 'package:hash_balance/models/message_data_model.dart';
 import 'package:hash_balance/models/message_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 
@@ -35,7 +36,7 @@ final communityMessagesProvider =
 });
 
 final getLastMessageByConversationProvider =
-    StreamProvider.family.autoDispose((ref, String id) {
+    StreamProvider.family((ref, String id) {
   return ref
       .watch(messageControllerProvider.notifier)
       .getLastMessageByConversation(id);
@@ -95,10 +96,10 @@ class MessageController extends StateNotifier<bool> {
           text: text,
           uid: currentUser.uid,
           createdAt: Timestamp.now(),
-          seenBy: [''],
         ),
         Conversation(
           id: getUids(currentUser.uid, targetUid),
+          type: 'Private',
           participantUids: [targetUid, currentUser.uid],
         ),
       );
@@ -140,10 +141,10 @@ class MessageController extends StateNotifier<bool> {
           text: text,
           uid: currentUser.uid,
           createdAt: Timestamp.now(),
-          seenBy: [''],
         ),
         Conversation(
           id: communityId,
+          type: 'Community',
           participantUids: [currentUser.uid],
         ),
       );
@@ -160,7 +161,7 @@ class MessageController extends StateNotifier<bool> {
     return _messageRepository.getCurrentUserConversation(uid);
   }
 
-  Stream<Message> getLastMessageByConversation(String id) {
+  Stream<MessageDataModel> getLastMessageByConversation(String id) {
     return _messageRepository.getLastMessageByConversation(id);
   }
 

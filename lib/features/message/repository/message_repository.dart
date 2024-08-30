@@ -1,13 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
+import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conversation_model.dart';
+import 'package:hash_balance/models/message_data_model.dart';
 import 'package:hash_balance/models/message_model.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 final messageRepositoryProvider = Provider((ref) {
   return MessageRepository(firestore: ref.read(firebaseFirestoreProvider));
@@ -19,6 +21,16 @@ class MessageRepository {
   MessageRepository({
     required FirebaseFirestore firestore,
   }) : _firestore = firestore;
+
+  //REFERENCES ALL THE CONVERSATIONS
+  CollectionReference get _conversation =>
+      _firestore.collection(FirebaseConstants.conversationCollection);
+  //REFERENCES ALL THE USERS
+  CollectionReference get _users =>
+      _firestore.collection(FirebaseConstants.usersCollection);
+  //REFERENCES ALL THE COMMUNITIES
+  CollectionReference get _communities =>
+      _firestore.collection(FirebaseConstants.communitiesCollection);
 
   Stream<List<Message>?> loadPrivateMessages(String conversationId) {
     return _conversation
@@ -94,8 +106,12 @@ class MessageRepository {
       final conversationDoc = await _conversation.doc(conversation.id).get();
 
       if (conversationDoc.exists) {
-        final existingConversation = Conversation.fromMap(
-            conversationDoc.data() as Map<String, dynamic>);
+        final data = conversationDoc.data() as Map<String, dynamic>;
+        final existingConversation = Conversation(
+          id: data['id'] as String,
+          type: data['type'] as String,
+          participantUids: List<String>.from(data['participantUids']),
+        );
         final participantUids = existingConversation.participantUids;
 
         // Thêm uid của người gửi vào danh sách nếu chưa tồn tại
@@ -146,6 +162,7 @@ class MessageRepository {
             conversations.add(
               Conversation(
                 id: data['id'] as String,
+                type: data['type'] as String,
                 participantUids: List<String>.from(data['participantUids']),
               ),
             );
@@ -156,29 +173,49 @@ class MessageRepository {
     );
   }
 
-  Stream<Message> getLastMessageByConversation(String id) {
-    return _conversation
-        .doc(id)
-        .collection('message')
+  Stream<MessageDataModel> getLastMessageByConversation(String conversationId) {
+    final conversationDocRef = _conversation.doc(conversationId);
+    return conversationDocRef
+        .collection(FirebaseConstants.messagesCollection)
         .orderBy('createdAt', descending: true)
         .limit(1)
         .snapshots()
-        .map(
-      (event) {
-        final List<Message> message = [];
-        for (var doc in event.docs) {
-          final data = doc.data();
-          message.add(
-            Message(
-              id: data['id'] as String,
-              text: data['text'] as String,
-              uid: data['uid'] as String,
-              createdAt: data['createdAt'] as Timestamp,
-              seenBy: List<String>.from(data['seenBy']),
-            ),
+        .asyncMap(
+      (event) async {
+        final messageDoc = event.docs.first.data();
+        final conversationDoc = await conversationDocRef.get();
+        final conversationData = conversationDoc.data() as Map<String, dynamic>;
+        final conversation = Conversation(
+          id: conversationId,
+          type: conversationData['type'] as String,
+          participantUids: List<String>.from(
+            conversationData['participantUids'],
+          ),
+        );
+        final message = Message(
+          id: messageDoc['id'] as String,
+          text: messageDoc['text'] as String,
+          uid: messageDoc['uid'] as String,
+          createdAt: messageDoc['createdAt'] as Timestamp,
+        );
+        if (conversation.type == 'Community') {
+          final communityDoc = await _communities.doc(conversationId).get();
+          final community =
+              Community.fromMap(communityDoc.data() as Map<String, dynamic>);
+          return MessageDataModel(
+              conversation: conversation,
+              message: message,
+              community: community);
+        } else {
+          final authorDoc = await _users.doc(message.uid).get();
+          final author =
+              UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
+          return MessageDataModel(
+            conversation: conversation,
+            message: message,
+            author: author,
           );
         }
-        return message.first;
       },
     );
   }
@@ -198,8 +235,4 @@ class MessageRepository {
       }
     }
   }
-
-  //REFERENCES ALL THE CONVERSATIONS
-  CollectionReference get _conversation =>
-      _firestore.collection(FirebaseConstants.conversationCollection);
 }

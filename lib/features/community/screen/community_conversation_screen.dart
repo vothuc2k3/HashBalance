@@ -85,187 +85,204 @@ class _CommunityConversationScreenState
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ref.watch(communityMessagesProvider(widget._community)).when(
-                  data: (messages) {
-                    if (messages.isEmpty) {
-                      return const Center(
-                        child: Text(
-                          'Text your first message!',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ).animate().fadeIn(duration: 800.ms);
-                    }
-                    return ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 15,
-                      ),
-                      reverse: true,
-                      itemCount: messages.length,
-                      itemBuilder: (ctx, index) {
-                        final chatMessage = messages[index];
-                        final nextChatMessage = index + 1 < messages.length
-                            ? messages[index + 1]
-                            : null;
-
-                        final currentMessageUserId = chatMessage.uid;
-                        final nextMessageUserId = nextChatMessage?.uid;
-                        final nextUserIsSame =
-                            nextMessageUserId == currentMessageUserId;
-
-                        return ref
-                            .watch(getUserDataProvider(chatMessage.uid))
-                            .whenOrNull(
-                          data: (user) {
-                            if (nextUserIsSame) {
-                              return MessageBubble.next(
-                                message: chatMessage.text,
-                                isMe: currentUser.uid == currentMessageUserId,
-                              );
-                            } else {
-                              return MessageBubble.first(
-                                userImage: user.profileImage,
-                                username: user.name,
-                                message: chatMessage.text,
-                                isMe: currentUser.uid == currentMessageUserId,
-                              );
-                            }
-                          },
-                        );
-                      },
-                    );
-                  },
-                  loading: () => const Loading(),
-                  error: (Object error, StackTrace stackTrace) => ErrorText(
-                    error: error.toString(),
-                  ),
-                ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF000000),
+              Color(0xFF0D47A1),
+              Color(0xFF1976D2),
+            ],
           ),
-          if (_isEmojiVisible)
-            SizedBox(
-              height: 250,
-              child: EmojiPicker(
-                onEmojiSelected: (category, emoji) {
-                  _onEmojiSelected(emoji);
-                },
-                config: Config(
-                  height: 256,
-                  checkPlatformCompatibility: true,
-                  emojiViewConfig: EmojiViewConfig(
-                    emojiSizeMax: 28 *
-                        (foundation.defaultTargetPlatform == TargetPlatform.iOS
-                            ? 1.20
-                            : 1.0),
-                  ),
-                  swapCategoryAndBottomBar: false,
-                  skinToneConfig: const SkinToneConfig(),
-                  categoryViewConfig: const CategoryViewConfig(),
-                  bottomActionBarConfig: const BottomActionBarConfig(),
-                  searchViewConfig: const SearchViewConfig(),
-                ),
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: 10,
-              horizontal: 15,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey[800],
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      children: [
-                        if (_messageController.text.isEmpty)
-                          Row(
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.image,
-                                    color: Colors.white),
-                                onPressed: () {
-                                  // Implement image picker
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.videocam,
-                                    color: Colors.white),
-                                onPressed: () {
-                                  // Implement video picker
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.insert_emoticon,
-                                    color: Colors.white),
-                                onPressed: () {
-                                  setState(() {
-                                    _isEmojiVisible = !_isEmojiVisible;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        Expanded(
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 15.0),
-                            child: TextField(
-                              controller: _messageController,
-                              textCapitalization: TextCapitalization.sentences,
-                              autocorrect: true,
-                              enableSuggestions: true,
-                              style: const TextStyle(color: Colors.white),
-                              decoration: const InputDecoration(
-                                hintText: 'Send a message...',
-                                hintStyle: TextStyle(color: Colors.grey),
-                                border: InputBorder.none,
-                              ),
-                              onTap: () {
-                                if (_isEmojiVisible) {
-                                  setState(() {
-                                    _isEmojiVisible = false;
-                                  });
-                                }
-                              },
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: ref
+                  .watch(communityMessagesProvider(widget._community))
+                  .when(
+                    data: (messages) {
+                      if (messages.isEmpty) {
+                        return const Center(
+                          child: Text(
+                            'Text your first message!',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.grey,
                             ),
                           ),
+                        ).animate().fadeIn(duration: 800.ms);
+                      }
+                      return ListView.builder(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                          horizontal: 15,
                         ),
-                      ],
+                        reverse: true,
+                        itemCount: messages.length,
+                        itemBuilder: (ctx, index) {
+                          final chatMessage = messages[index];
+                          final nextChatMessage = index + 1 < messages.length
+                              ? messages[index + 1]
+                              : null;
+
+                          final currentMessageUserId = chatMessage.uid;
+                          final nextMessageUserId = nextChatMessage?.uid;
+                          final nextUserIsSame =
+                              nextMessageUserId == currentMessageUserId;
+
+                          return ref
+                              .watch(getUserDataProvider(chatMessage.uid))
+                              .whenOrNull(
+                            data: (user) {
+                              if (nextUserIsSame) {
+                                return MessageBubble.next(
+                                  message: chatMessage.text,
+                                  isMe: currentUser.uid == currentMessageUserId,
+                                );
+                              } else {
+                                return MessageBubble.first(
+                                  userImage: user.profileImage,
+                                  username: user.name,
+                                  message: chatMessage.text,
+                                  isMe: currentUser.uid == currentMessageUserId,
+                                );
+                              }
+                            },
+                          );
+                        },
+                      );
+                    },
+                    loading: () => const Loading(),
+                    error: (Object error, StackTrace stackTrace) => ErrorText(
+                      error: error.toString(),
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                GestureDetector(
-                  onTap: () {
-                    onSendMessage();
-                    _messageController.clear();
-                    FocusManager.instance.primaryFocus?.unfocus();
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: const BoxDecoration(
-                      color: Colors.teal,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.send,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
             ),
-          ),
-        ],
+            if (_isEmojiVisible)
+              SizedBox(
+                height: 250,
+                child: EmojiPicker(
+                  onEmojiSelected: (category, emoji) {
+                    _onEmojiSelected(emoji);
+                  },
+                  config: Config(
+                    height: 256,
+                    checkPlatformCompatibility: true,
+                    emojiViewConfig: EmojiViewConfig(
+                      emojiSizeMax: 28 *
+                          (foundation.defaultTargetPlatform ==
+                                  TargetPlatform.iOS
+                              ? 1.20
+                              : 1.0),
+                    ),
+                    swapCategoryAndBottomBar: false,
+                    skinToneConfig: const SkinToneConfig(),
+                    categoryViewConfig: const CategoryViewConfig(),
+                    bottomActionBarConfig: const BottomActionBarConfig(),
+                    searchViewConfig: const SearchViewConfig(),
+                  ),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 10,
+                horizontal: 15,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[800],
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          if (_messageController.text.isEmpty)
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.image,
+                                      color: Colors.white),
+                                  onPressed: () {
+                                    // Implement image picker
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.videocam,
+                                      color: Colors.white),
+                                  onPressed: () {
+                                    // Implement video picker
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.insert_emoticon,
+                                      color: Colors.white),
+                                  onPressed: () {
+                                    setState(() {
+                                      _isEmojiVisible = !_isEmojiVisible;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          Expanded(
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 15.0),
+                              child: TextField(
+                                controller: _messageController,
+                                textCapitalization:
+                                    TextCapitalization.sentences,
+                                autocorrect: true,
+                                enableSuggestions: true,
+                                style: const TextStyle(color: Colors.white),
+                                decoration: const InputDecoration(
+                                  hintText: 'Send a message...',
+                                  hintStyle: TextStyle(color: Colors.grey),
+                                  border: InputBorder.none,
+                                ),
+                                onTap: () {
+                                  if (_isEmojiVisible) {
+                                    setState(() {
+                                      _isEmojiVisible = false;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: () {
+                      onSendMessage();
+                      _messageController.clear();
+                      FocusManager.instance.primaryFocus?.unfocus();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: const BoxDecoration(
+                        color: Colors.teal,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.send,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
