@@ -28,9 +28,9 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
   late Future<List<PostDataModel>> posts;
 
   Future<void> _refreshPosts() async {
-    // Chỉ khi nào refresh mới fetch lại dữ liệu
-    posts = ref.read(newsfeedControllerProvider).getJoinedCommunitiesPosts();
-    setState(() {});
+    setState(() {
+      posts = ref.read(newsfeedControllerProvider).getJoinedCommunitiesPosts();
+    });
   }
 
   void _navigateToCreatePostScreen() {

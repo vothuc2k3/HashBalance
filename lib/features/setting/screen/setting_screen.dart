@@ -23,7 +23,7 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
       isTrySigningOut = true;
     });
     Timer(const Duration(seconds: 1), () {
-      ref.watch(authControllerProvider.notifier).signOut(ref);
+      ref.watch(authControllerProvider.notifier).signOut(ref, context);
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const AuthScreen()),
         (Route<dynamic> route) => false,

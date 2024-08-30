@@ -16,10 +16,19 @@ import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
-class CommunityListDrawer extends ConsumerWidget {
+class CommunityListDrawer extends ConsumerStatefulWidget {
   const CommunityListDrawer({super.key});
 
-  void navigateToCreateCommunityScreen(BuildContext context) {
+  @override
+  CommunityListDrawerState createState() => CommunityListDrawerState();
+}
+
+class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
+    with AutomaticKeepAliveClientMixin {
+  late Stream<List<Community>> _myCommunities;
+  late Stream<List<Community>> _joinedCommunities;
+
+  void _navigateToCreateCommunityScreen() {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -29,8 +38,6 @@ class CommunityListDrawer extends ConsumerWidget {
   }
 
   void _navigateToCommunityScreen(
-    BuildContext context,
-    WidgetRef ref,
     Community community,
     String uid,
   ) async {
@@ -65,9 +72,21 @@ class CommunityListDrawer extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final currentUser = ref.watch(userProvider)!;
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _myCommunities =
+        ref.watch(communityControllerProvider.notifier).getMyCommunities();
+    _joinedCommunities =
+        ref.watch(communityControllerProvider.notifier).getUserCommunities();
+  }
 
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    final currentUser = ref.watch(userProvider)!;
+    super.build(context);
     return Drawer(
       child: Container(
         decoration: const BoxDecoration(
@@ -96,7 +115,7 @@ class CommunityListDrawer extends ConsumerWidget {
                   Icons.add,
                 ),
                 onTap: () {
-                  navigateToCreateCommunityScreen(context);
+                  _navigateToCreateCommunityScreen();
                 },
               ).animate().fadeIn(duration: 800.ms),
               const Divider(),
@@ -111,8 +130,6 @@ class CommunityListDrawer extends ConsumerWidget {
                           onChanged: (Community? selectedCommunity) {
                             if (selectedCommunity != null) {
                               _navigateToCommunityScreen(
-                                context,
-                                ref,
                                 selectedCommunity,
                                 currentUser.uid,
                               );
@@ -176,77 +193,95 @@ class CommunityListDrawer extends ConsumerWidget {
                 ),
               ),
               Expanded(
-                child: ref.watch(myCommunitiesProvider).when(
-                  data: (communities) {
-                    return communities.isNotEmpty
-                        ? ListView.separated(
-                            itemCount: communities.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              final community = communities[index];
-                              return ListTile(
-                                leading: CircleAvatar(
-                                  backgroundImage: CachedNetworkImageProvider(
-                                      community.profileImage),
-                                ),
-                                title: Row(
-                                  children: [
-                                    Text(
-                                      '#${community.name}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 5),
-                                    community.type == 'Public'
-                                        ? const Icon(Icons.public)
-                                        : community.type == 'Private'
-                                            ? const Icon(
-                                                Icons.private_connectivity)
-                                            : const Icon(
-                                                (Icons.lock),
-                                              )
-                                  ],
-                                ),
-                                onTap: () {
-                                  _navigateToCommunityScreen(
-                                    context,
-                                    ref,
-                                    community,
-                                    currentUser.uid,
-                                  );
-                                },
-                              );
-                            },
-                            separatorBuilder: (context, index) {
-                              return const SizedBox(height: 3);
-                            },
-                          ).animate().fadeIn(duration: 800.ms)
-                        : Center(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Text('WOW! SUCH EMPTY...'),
-                                AnimateIcon(
-                                  height: 30,
-                                  width: 30,
-                                  onTap: () {},
-                                  iconType: IconType.continueAnimation,
-                                  animateIcon: AnimateIcons.bell,
-                                  color: Pallete.whiteColor,
-                                ),
-                              ],
+                child: StreamBuilder(
+                    stream: _myCommunities,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Loading',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ).animate().fadeIn(duration: 800.ms);
-                  },
-                  error: (error, stackTrace) {
-                    return ErrorText(
-                      error: error.toString(),
-                    ).animate().fadeIn(duration: 800.ms);
-                  },
-                  loading: () {
-                    return const Loading().animate().fadeIn(duration: 800.ms);
-                  },
-                ),
+                            const SizedBox(width: 10),
+                            const Loading(),
+                          ].animate().fadeIn(duration: 600.ms).moveY(
+                                begin: 30,
+                                end: 0,
+                                duration: 600.ms,
+                                curve: Curves.easeOutBack,
+                              ),
+                        );
+                      } else if (snapshot.hasError) {
+                        return ErrorText(error: snapshot.error.toString())
+                            .animate()
+                            .fadeIn(duration: 800.ms);
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text('WOW! SUCH EMPTY...'),
+                              AnimateIcon(
+                                height: 30,
+                                width: 30,
+                                onTap: () {},
+                                iconType: IconType.continueAnimation,
+                                animateIcon: AnimateIcons.bell,
+                                color: Pallete.whiteColor,
+                              ),
+                            ],
+                          ),
+                        ).animate().fadeIn(duration: 800.ms);
+                      } else {
+                        return ListView.separated(
+                          itemCount: snapshot.data!.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final community = snapshot.data![index];
+                            return ListTile(
+                              leading: CircleAvatar(
+                                backgroundImage: CachedNetworkImageProvider(
+                                  community.profileImage,
+                                ),
+                              ),
+                              title: Row(
+                                children: [
+                                  Text(
+                                    '#${community.name}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  community.type == 'Public'
+                                      ? const Icon(Icons.public)
+                                      : community.type == 'Private'
+                                          ? const Icon(
+                                              Icons.private_connectivity)
+                                          : const Icon(
+                                              (Icons.lock),
+                                            )
+                                ],
+                              ),
+                              onTap: () {
+                                _navigateToCommunityScreen(
+                                  community,
+                                  currentUser.uid,
+                                );
+                              },
+                            );
+                          },
+                          separatorBuilder: (context, index) {
+                            return const SizedBox(height: 3);
+                          },
+                        ).animate().fadeIn(duration: 800.ms);
+                      }
+                    }),
               ),
               const Divider(),
               const ListTile(
@@ -263,77 +298,95 @@ class CommunityListDrawer extends ConsumerWidget {
                 ),
               ).animate().fadeIn(duration: 800.ms),
               Expanded(
-                child: ref.watch(userCommunitiesProvider).when(
-                  data: (communities) {
-                    return communities.isNotEmpty
-                        ? ListView.separated(
-                            itemCount: communities.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              final community = communities[index];
-                              return ListTile(
-                                leading: CircleAvatar(
-                                  backgroundImage: CachedNetworkImageProvider(
-                                      community.profileImage),
-                                ),
-                                title: Row(
-                                  children: [
-                                    Text(
-                                      '#${community.name}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 5),
-                                    community.type == 'Public'
-                                        ? const Icon(Icons.public)
-                                        : community.type == 'Private'
-                                            ? const Icon(
-                                                Icons.private_connectivity)
-                                            : const Icon(
-                                                (Icons.lock),
-                                              )
-                                  ],
-                                ),
-                                onTap: () {
-                                  _navigateToCommunityScreen(
-                                    context,
-                                    ref,
-                                    community,
-                                    currentUser.uid,
-                                  );
-                                },
-                              );
-                            },
-                            separatorBuilder: (context, index) {
-                              return const SizedBox(height: 3);
-                            },
-                          )
-                        : Center(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Text('WOW! SUCH EMPTY...'),
-                                AnimateIcon(
-                                  height: 30,
-                                  width: 30,
-                                  onTap: () {},
-                                  iconType: IconType.continueAnimation,
-                                  animateIcon: AnimateIcons.bell,
-                                  color: Pallete.whiteColor,
-                                ),
-                              ],
+                child: StreamBuilder(
+                    stream: _joinedCommunities,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Loading',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          );
-                  },
-                  error: ((error, stackTrace) {
-                    return ErrorText(
-                      error: error.toString(),
-                    );
-                  }),
-                  loading: () {
-                    return const Loading();
-                  },
-                ),
+                            const SizedBox(width: 10),
+                            const Loading(),
+                          ].animate().fadeIn(duration: 600.ms).moveY(
+                                begin: 30,
+                                end: 0,
+                                duration: 600.ms,
+                                curve: Curves.easeOutBack,
+                              ),
+                        );
+                      } else if (snapshot.hasError) {
+                        return ErrorText(error: snapshot.error.toString())
+                            .animate()
+                            .fadeIn(duration: 800.ms);
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text('WOW! SUCH EMPTY...'),
+                              AnimateIcon(
+                                height: 30,
+                                width: 30,
+                                onTap: () {},
+                                iconType: IconType.continueAnimation,
+                                animateIcon: AnimateIcons.bell,
+                                color: Pallete.whiteColor,
+                              ),
+                            ],
+                          ),
+                        ).animate().fadeIn(duration: 800.ms);
+                      } else {
+                        return ListView.separated(
+                          itemCount: snapshot.data!.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final community = snapshot.data![index];
+                            return ListTile(
+                              leading: CircleAvatar(
+                                backgroundImage: CachedNetworkImageProvider(
+                                  community.profileImage,
+                                ),
+                              ),
+                              title: Row(
+                                children: [
+                                  Text(
+                                    '#${community.name}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  community.type == 'Public'
+                                      ? const Icon(Icons.public)
+                                      : community.type == 'Private'
+                                          ? const Icon(
+                                              Icons.private_connectivity)
+                                          : const Icon(
+                                              (Icons.lock),
+                                            )
+                                ],
+                              ),
+                              onTap: () {
+                                _navigateToCommunityScreen(
+                                  community,
+                                  currentUser.uid,
+                                );
+                              },
+                            );
+                          },
+                          separatorBuilder: (context, index) {
+                            return const SizedBox(height: 3);
+                          },
+                        ).animate().fadeIn(duration: 800.ms);
+                      }
+                    }),
               ).animate().fadeIn(duration: 800.ms),
             ],
           ),

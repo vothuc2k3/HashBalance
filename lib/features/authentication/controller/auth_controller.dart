@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -10,6 +11,7 @@ import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 final fetchUserDataProvider = FutureProviderFamily((ref, String uid) {
@@ -132,7 +134,13 @@ class AuthController extends StateNotifier<bool> {
     }
   }
 
-  void signOut(WidgetRef ref) {
+  void signOut(WidgetRef ref, BuildContext context) {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) {
+        return const AuthScreen();
+      }),
+      (Route<dynamic> route) => false,
+    );
     ref.watch(userProvider.notifier).update((state) => null);
   }
 
