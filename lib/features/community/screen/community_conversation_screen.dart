@@ -1,18 +1,30 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
-
-import 'package:hash_balance/core/widgets/error_text.dart';
-import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
+import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/message/controller/message_controller.dart';
 import 'package:hash_balance/features/message/screen/widget/message_bubble.dart';
 import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/message_model.dart';
 import 'package:flutter/foundation.dart' as foundation;
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+final communityMessagesProvider =
+    StreamProvider.autoDispose.family((ref, Community community) {
+  return FirebaseFirestore.instance
+      .collection('conversation')
+      .doc(community.id)
+      .collection('message')
+      .orderBy('createdAt', descending: true)
+      .limit(20)
+      .snapshots()
+      .map((snapshot) =>
+          snapshot.docs.map((doc) => Message.fromMap(doc.data())).toList());
+});
 
 class CommunityConversationScreen extends ConsumerStatefulWidget {
   final Community _community;
@@ -30,8 +42,28 @@ class CommunityConversationScreen extends ConsumerStatefulWidget {
 class _CommunityConversationScreenState
     extends ConsumerState<CommunityConversationScreen> {
   final TextEditingController _messageController = TextEditingController();
-
+  final ScrollController _scrollController = ScrollController();
   bool _isEmojiVisible = false;
+  bool _isLoadingMore = false;
+  List<Message> _messages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(() {
+      if (_scrollController.position.atEdge &&
+          _scrollController.position.pixels == 0) {
+        _loadMoreMessages();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _messageController.dispose();
+    super.dispose();
+  }
 
   void _onEmojiSelected(Emoji emoji) {
     setState(() {
@@ -50,14 +82,34 @@ class _CommunityConversationScreenState
       (_) {
         _messageController.clear();
         FocusManager.instance.primaryFocus?.unfocus();
-        setState(() {});
       },
     );
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  Future<void> _loadMoreMessages() async {
+    if (_isLoadingMore) return;
+    _isLoadingMore = true;
+
+    final lastMessage = _messages.isNotEmpty ? _messages.last : null;
+
+    final moreMessagesSnapshot = await FirebaseFirestore.instance
+        .collection('conversation')
+        .doc(widget._community.id)
+        .collection('message')
+        .orderBy('createdAt', descending: true)
+        .startAfter([lastMessage?.createdAt])
+        .limit(20)
+        .get();
+
+    final moreMessages = moreMessagesSnapshot.docs
+        .map((doc) => Message.fromMap(doc.data()))
+        .toList();
+
+    setState(() {
+      _messages.addAll(moreMessages);
+    });
+
+    _isLoadingMore = false;
   }
 
   @override
@@ -106,7 +158,7 @@ class _CommunityConversationScreenState
                   .watch(communityMessagesProvider(widget._community))
                   .when(
                     data: (messages) {
-                      if (messages.isEmpty) {
+                      if (messages.isEmpty && _messages.isEmpty) {
                         return const Center(
                           child: Text(
                             'Text your first message!',
@@ -115,20 +167,23 @@ class _CommunityConversationScreenState
                               color: Colors.grey,
                             ),
                           ),
-                        ).animate().fadeIn(duration: 800.ms);
+                        );
                       }
+
+                      _messages = messages;
+
                       return ListView.builder(
+                        controller: _scrollController,
                         padding: const EdgeInsets.symmetric(
                           vertical: 10,
                           horizontal: 15,
                         ),
                         reverse: true,
-                        itemCount: messages.length,
+                        itemCount: _messages.length,
                         itemBuilder: (ctx, index) {
-                          final chatMessage = messages[index];
-                          if (messages.isEmpty) return Container();
-                          final nextChatMessage = index + 1 < messages.length
-                              ? messages[index + 1]
+                          final chatMessage = _messages[index];
+                          final nextChatMessage = index + 1 < _messages.length
+                              ? _messages[index + 1]
                               : null;
 
                           final currentMessageUserId = chatMessage.uid;
@@ -158,7 +213,51 @@ class _CommunityConversationScreenState
                         },
                       );
                     },
-                    loading: () => const Loading(),
+                    loading: () => _messages.isEmpty
+                        ? const Center(child: CircularProgressIndicator())
+                        : ListView.builder(
+                            controller: _scrollController,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 10,
+                              horizontal: 15,
+                            ),
+                            reverse: true,
+                            itemCount: _messages.length,
+                            itemBuilder: (ctx, index) {
+                              final chatMessage = _messages[index];
+                              final nextChatMessage =
+                                  index + 1 < _messages.length
+                                      ? _messages[index + 1]
+                                      : null;
+
+                              final currentMessageUserId = chatMessage.uid;
+                              final nextMessageUserId = nextChatMessage?.uid;
+                              final nextUserIsSame =
+                                  nextMessageUserId == currentMessageUserId;
+
+                              return ref
+                                  .watch(getUserDataProvider(chatMessage.uid))
+                                  .whenOrNull(
+                                data: (user) {
+                                  if (nextUserIsSame) {
+                                    return MessageBubble.next(
+                                      message: chatMessage.text,
+                                      isMe: currentUser.uid ==
+                                          currentMessageUserId,
+                                    );
+                                  } else {
+                                    return MessageBubble.first(
+                                      userImage: user.profileImage,
+                                      username: user.name,
+                                      message: chatMessage.text,
+                                      isMe: currentUser.uid ==
+                                          currentMessageUserId,
+                                    );
+                                  }
+                                },
+                              );
+                            },
+                          ),
                     error: (Object error, StackTrace stackTrace) => ErrorText(
                       error: error.toString(),
                     ),

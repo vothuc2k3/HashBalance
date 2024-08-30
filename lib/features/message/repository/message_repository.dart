@@ -64,12 +64,7 @@ class MessageRepository {
       (event) {
         List<Message> messages = event.docs.map(
           (doc) {
-            return Message(
-              id: doc['id'] as String,
-              text: doc['text'] as String,
-              uid: doc['uid'] as String,
-              createdAt: doc['createdAt'] as Timestamp,
-            );
+            return Message.fromMap(doc.data());
           },
         ).toList();
         return messages;
@@ -125,28 +120,22 @@ class MessageRepository {
           });
         }
 
-        // Lưu tin nhắn vào collection messages với server timestamp
+        // Lưu tin nhắn vào collection messages
         await _conversation
             .doc(conversation.id)
             .collection(FirebaseConstants.messagesCollection)
             .doc(message.id)
-            .set({
-          ...message.toMap(),
-          'createdAt': FieldValue.serverTimestamp(),
-        });
+            .set(message.toMap());
       } else {
         // Tạo cuộc trò chuyện mới nếu chưa tồn tại
         await _conversation.doc(conversation.id).set(conversation.toMap());
 
-        // Lưu tin nhắn vào collection messages với server timestamp
+        // Lưu tin nhắn vào collection messages
         await _conversation
             .doc(conversation.id)
             .collection(FirebaseConstants.messagesCollection)
             .doc(message.id)
-            .set({
-          ...message.toMap(),
-          'createdAt': FieldValue.serverTimestamp(),
-        });
+            .set(message.toMap());
       }
 
       return right(null);
