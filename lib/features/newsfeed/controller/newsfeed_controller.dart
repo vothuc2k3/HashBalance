@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/newsfeed/repository/newsfeed_repository.dart';
-import 'package:hash_balance/models/post_data_model.dart';
+import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 
 final newsfeedControllerProvider = Provider(
   (ref) {

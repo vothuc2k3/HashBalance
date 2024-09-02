@@ -11,7 +11,7 @@ import 'package:hash_balance/features/push_notification/controller/push_notifica
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conversation_model.dart';
-import 'package:hash_balance/models/message_data_model.dart';
+import 'package:hash_balance/models/conbined_models/last_message_data_model.dart';
 import 'package:hash_balance/models/message_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 
@@ -161,7 +161,7 @@ class MessageController extends StateNotifier<bool> {
     return _messageRepository.getCurrentUserConversation(uid);
   }
 
-  Stream<MessageDataModel> getLastMessageByConversation(String id) {
+  Stream<LastMessageDataModel> getLastMessageByConversation(String id) {
     return _messageRepository.getLastMessageByConversation(id);
   }
 

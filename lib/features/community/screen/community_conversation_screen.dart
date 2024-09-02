@@ -1,7 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
@@ -16,10 +18,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 final communityMessagesProvider =
     StreamProvider.autoDispose.family((ref, Community community) {
   return FirebaseFirestore.instance
-      .collection('conversation')
+      .collection(FirebaseConstants.conversationCollection)
       .doc(community.id)
-      .collection('message')
-      .orderBy('createdAt', descending: true)
+      .collection(FirebaseConstants.messageCollection)
+      .orderBy('createdAt',
+          descending: false) // Load messages in ascending order
       .limit(20)
       .snapshots()
       .map((snapshot) =>
@@ -43,16 +46,27 @@ class _CommunityConversationScreenState
     extends ConsumerState<CommunityConversationScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
+  final List<Message> _messages = [];
   bool _isEmojiVisible = false;
   bool _isLoadingMore = false;
-  List<Message> _messages = [];
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
+
+    _focusNode.addListener(() {
+      if (_focusNode.hasFocus) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollToBottom();
+        });
+      }
+    });
+
     _scrollController.addListener(() {
-      if (_scrollController.position.atEdge &&
-          _scrollController.position.pixels == 0) {
+      if (_scrollController.position.pixels == 0 &&
+          !_scrollController.position.atEdge) {
         _loadMoreMessages();
       }
     });
@@ -62,7 +76,18 @@ class _CommunityConversationScreenState
   void dispose() {
     _scrollController.dispose();
     _messageController.dispose();
+    _focusNode.dispose();
     super.dispose();
+  }
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   void _onEmojiSelected(Emoji emoji) {
@@ -82,6 +107,7 @@ class _CommunityConversationScreenState
       (_) {
         _messageController.clear();
         FocusManager.instance.primaryFocus?.unfocus();
+        _scrollToBottom(); // Scroll to bottom after sending message
       },
     );
   }
@@ -90,15 +116,15 @@ class _CommunityConversationScreenState
     if (_isLoadingMore) return;
     _isLoadingMore = true;
 
-    final lastMessage = _messages.isNotEmpty ? _messages.last : null;
+    final lastMessage = _messages.isNotEmpty ? _messages.first : null;
 
     final moreMessagesSnapshot = await FirebaseFirestore.instance
-        .collection('conversation')
+        .collection(FirebaseConstants.conversationCollection)
         .doc(widget._community.id)
-        .collection('message')
-        .orderBy('createdAt', descending: true)
-        .startAfter([lastMessage?.createdAt])
-        .limit(20)
+        .collection(FirebaseConstants.messageCollection)
+        .orderBy('createdAt', descending: false)
+        .endBefore([lastMessage?.createdAt])
+        .limitToLast(20)
         .get();
 
     final moreMessages = moreMessagesSnapshot.docs
@@ -106,7 +132,10 @@ class _CommunityConversationScreenState
         .toList();
 
     setState(() {
-      _messages.addAll(moreMessages);
+      _messages.insertAll(0, moreMessages);
+      for (var i = 0; i < moreMessages.length; i++) {
+        _listKey.currentState?.insertItem(0);
+      }
     });
 
     _isLoadingMore = false;
@@ -159,106 +188,113 @@ class _CommunityConversationScreenState
                   .when(
                     data: (messages) {
                       if (messages.isEmpty && _messages.isEmpty) {
-                        return const Center(
-                          child: Text(
+                        return Center(
+                          child: const Text(
                             'Text your first message!',
                             style: TextStyle(
                               fontSize: 18,
                               color: Colors.grey,
                             ),
-                          ),
+                          ).animate().fadeIn(duration: 800.ms),
                         );
                       }
 
-                      _messages = messages;
+                      final newMessages = messages
+                          .where((message) =>
+                              !_messages.any((m) => m.id == message.id))
+                          .toList();
 
-                      return ListView.builder(
+                      for (var i = 0; i < newMessages.length; i++) {
+                        _messages.add(newMessages[i]);
+                        _listKey.currentState?.insertItem(_messages.length - 1);
+                      }
+
+                      return AnimatedList(
+                        key: _listKey,
                         controller: _scrollController,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 10,
-                          horizontal: 15,
-                        ),
-                        reverse: true,
-                        itemCount: _messages.length,
-                        itemBuilder: (ctx, index) {
+                        reverse: false,
+                        initialItemCount: _messages.length,
+                        itemBuilder: (ctx, index, animation) {
                           final chatMessage = _messages[index];
-                          final nextChatMessage = index + 1 < _messages.length
-                              ? _messages[index + 1]
-                              : null;
+                          final prevChatMessage =
+                              index > 0 ? _messages[index - 1] : null;
 
                           final currentMessageUserId = chatMessage.uid;
-                          final nextMessageUserId = nextChatMessage?.uid;
-                          final nextUserIsSame =
-                              nextMessageUserId == currentMessageUserId;
+                          final prevMessageUserId = prevChatMessage?.uid;
+                          final prevUserIsSame =
+                              prevMessageUserId == currentMessageUserId;
 
-                          return ref
-                              .watch(getUserDataProvider(chatMessage.uid))
-                              .whenOrNull(
-                            data: (user) {
-                              if (nextUserIsSame) {
-                                return MessageBubble.next(
-                                  message: chatMessage.text,
-                                  isMe: currentUser.uid == currentMessageUserId,
-                                );
-                              } else {
-                                return MessageBubble.first(
-                                  userImage: user.profileImage,
-                                  username: user.name,
-                                  message: chatMessage.text,
-                                  isMe: currentUser.uid == currentMessageUserId,
-                                );
-                              }
-                            },
+                          return SizeTransition(
+                            sizeFactor: animation,
+                            child: ref
+                                .watch(getUserDataProvider(chatMessage.uid))
+                                .whenOrNull(
+                              data: (user) {
+                                if (prevUserIsSame) {
+                                  return MessageBubble.next(
+                                    message: chatMessage.text,
+                                    isMe:
+                                        currentUser.uid == currentMessageUserId,
+                                  );
+                                } else {
+                                  return MessageBubble.first(
+                                    userImage: user.profileImage,
+                                    username: user.name,
+                                    message: chatMessage.text,
+                                    isMe:
+                                        currentUser.uid == currentMessageUserId,
+                                  );
+                                }
+                              },
+                            ),
                           );
                         },
                       );
                     },
                     loading: () => _messages.isEmpty
                         ? const Center(child: CircularProgressIndicator())
-                        : ListView.builder(
+                        : AnimatedList(
+                            key: _listKey,
                             controller: _scrollController,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 10,
-                              horizontal: 15,
-                            ),
-                            reverse: true,
-                            itemCount: _messages.length,
-                            itemBuilder: (ctx, index) {
+                            reverse: false,
+                            initialItemCount: _messages.length,
+                            itemBuilder: (ctx, index, animation) {
                               final chatMessage = _messages[index];
-                              final nextChatMessage =
-                                  index + 1 < _messages.length
-                                      ? _messages[index + 1]
-                                      : null;
+                              final prevChatMessage =
+                                  index > 0 ? _messages[index - 1] : null;
 
                               final currentMessageUserId = chatMessage.uid;
-                              final nextMessageUserId = nextChatMessage?.uid;
-                              final nextUserIsSame =
-                                  nextMessageUserId == currentMessageUserId;
+                              final prevMessageUserId = prevChatMessage?.uid;
+                              final prevUserIsSame =
+                                  prevMessageUserId == currentMessageUserId;
 
-                              return ref
-                                  .watch(getUserDataProvider(chatMessage.uid))
-                                  .whenOrNull(
-                                data: (user) {
-                                  if (nextUserIsSame) {
-                                    return MessageBubble.next(
-                                      message: chatMessage.text,
-                                      isMe: currentUser.uid ==
-                                          currentMessageUserId,
-                                    );
-                                  } else {
-                                    return MessageBubble.first(
-                                      userImage: user.profileImage,
-                                      username: user.name,
-                                      message: chatMessage.text,
-                                      isMe: currentUser.uid ==
-                                          currentMessageUserId,
-                                    );
-                                  }
-                                },
+                              return SizeTransition(
+                                sizeFactor: animation,
+                                child: ref
+                                    .watch(getUserDataProvider(chatMessage.uid))
+                                    .whenOrNull(
+                                  data: (user) {
+                                    if (prevUserIsSame) {
+                                      return MessageBubble.next(
+                                        message: chatMessage.text,
+                                        isMe: currentUser.uid ==
+                                            currentMessageUserId,
+                                      );
+                                    } else {
+                                      return MessageBubble.first(
+                                        userImage: user.profileImage,
+                                        username: user.name,
+                                        message: chatMessage.text,
+                                        isMe: currentUser.uid ==
+                                            currentMessageUserId,
+                                      );
+                                    }
+                                  },
+                                ),
                               );
                             },
                           ),
-                    error: (Object error, StackTrace stackTrace) => ErrorText(
+                    error: (error, stackTrace) => ErrorText(
                       error: error.toString(),
                     ),
                   ),
@@ -337,6 +373,7 @@ class _CommunityConversationScreenState
                                   const EdgeInsets.symmetric(horizontal: 15.0),
                               child: TextField(
                                 controller: _messageController,
+                                focusNode: _focusNode,
                                 textCapitalization:
                                     TextCapitalization.sentences,
                                 autocorrect: true,

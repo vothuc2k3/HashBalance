@@ -14,7 +14,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/post/repository/post_repository.dart';
 import 'package:hash_balance/models/community_model.dart';
-import 'package:hash_balance/models/post_data_model.dart';
+import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
 
@@ -64,6 +64,7 @@ class PostController extends StateNotifier<bool> {
     File? video,
     String content,
   ) async {
+    state = true;
     try {
       if (content.isEmpty && image == null && video == null) {
         return left(Failures('Post cannot be empty'));
@@ -105,7 +106,9 @@ class PostController extends StateNotifier<bool> {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
-    } finally {}
+    } finally {
+      state = false;
+    }
   }
 
   Stream<Map<String, dynamic>> getPostVoteCountAndStatus(Post post) {

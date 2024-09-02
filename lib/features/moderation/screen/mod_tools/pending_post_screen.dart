@@ -7,7 +7,7 @@ import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
-import 'package:hash_balance/models/post_data_model.dart';
+import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/features/moderation/screen/post_container/pending_post_container.dart';
 import 'package:hash_balance/models/post_model.dart';
 

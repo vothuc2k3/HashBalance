@@ -2,7 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
-import 'package:hash_balance/models/post_data_model.dart';
+import 'package:hash_balance/features/home/screen/home_screen.dart';
+import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -10,7 +11,6 @@ import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
 import 'package:hash_balance/features/newsfeed/screen/post_container/post_container.dart';
-import 'package:hash_balance/features/post/screen/create_post_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
@@ -34,12 +34,7 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
   }
 
   void _navigateToCreatePostScreen() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const CreatePostScreen(),
-      ),
-    );
+    context.findAncestorStateOfType<HomeScreenState>()?.onTabTapped(2);
   }
 
   @override

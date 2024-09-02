@@ -7,7 +7,7 @@ import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conversation_model.dart';
-import 'package:hash_balance/models/message_data_model.dart';
+import 'package:hash_balance/models/conbined_models/last_message_data_model.dart';
 import 'package:hash_balance/models/message_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
@@ -35,7 +35,7 @@ class MessageRepository {
   Stream<List<Message>?> loadPrivateMessages(String conversationId) {
     return _conversation
         .doc(conversationId)
-        .collection(FirebaseConstants.messagesCollection)
+        .collection(FirebaseConstants.messageCollection)
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map(
@@ -57,7 +57,7 @@ class MessageRepository {
   Stream<List<Message>> loadCommunityMessage(String communityId) {
     return _conversation
         .doc(communityId)
-        .collection(FirebaseConstants.messagesCollection)
+        .collection(FirebaseConstants.messageCollection)
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map(
@@ -79,14 +79,14 @@ class MessageRepository {
       if (conversationDoc.exists) {
         await _conversation
             .doc(conversation.id)
-            .collection(FirebaseConstants.messagesCollection)
+              .collection(FirebaseConstants.messageCollection)
             .doc(message.id)
             .set(message.toMap());
       } else {
         await _conversation.doc(conversation.id).set(conversation.toMap());
         await _conversation
             .doc(conversation.id)
-            .collection(FirebaseConstants.messagesCollection)
+            .collection(FirebaseConstants.messageCollection)
             .doc(message.id)
             .set(message.toMap());
       }
@@ -123,7 +123,7 @@ class MessageRepository {
         // Lưu tin nhắn vào collection messages
         await _conversation
             .doc(conversation.id)
-            .collection(FirebaseConstants.messagesCollection)
+            .collection(FirebaseConstants.messageCollection)
             .doc(message.id)
             .set(message.toMap());
       } else {
@@ -133,7 +133,7 @@ class MessageRepository {
         // Lưu tin nhắn vào collection messages
         await _conversation
             .doc(conversation.id)
-            .collection(FirebaseConstants.messagesCollection)
+            .collection(FirebaseConstants.messageCollection)
             .doc(message.id)
             .set(message.toMap());
       }
@@ -172,10 +172,10 @@ class MessageRepository {
     );
   }
 
-  Stream<MessageDataModel> getLastMessageByConversation(String conversationId) {
+  Stream<LastMessageDataModel> getLastMessageByConversation(String conversationId) {
     final conversationDocRef = _conversation.doc(conversationId);
     return conversationDocRef
-        .collection(FirebaseConstants.messagesCollection)
+        .collection(FirebaseConstants.messageCollection)
         .orderBy('createdAt', descending: true)
         .limit(1)
         .snapshots()
@@ -201,7 +201,7 @@ class MessageRepository {
           final communityDoc = await _communities.doc(conversationId).get();
           final community =
               Community.fromMap(communityDoc.data() as Map<String, dynamic>);
-          return MessageDataModel(
+          return LastMessageDataModel(
               conversation: conversation,
               message: message,
               community: community);
@@ -209,7 +209,7 @@ class MessageRepository {
           final authorDoc = await _users.doc(message.uid).get();
           final author =
               UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
-          return MessageDataModel(
+          return LastMessageDataModel(
             conversation: conversation,
             message: message,
             author: author,

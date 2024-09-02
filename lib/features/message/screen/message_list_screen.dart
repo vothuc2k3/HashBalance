@@ -8,7 +8,7 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/screen/community_conversation_screen.dart';
 import 'package:hash_balance/features/message/controller/message_controller.dart';
-import 'package:hash_balance/features/message/screen/message_screen.dart';
+import 'package:hash_balance/features/message/screen/private_message_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 

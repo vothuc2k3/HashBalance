@@ -17,7 +17,7 @@ import 'package:hash_balance/features/moderation/screen/mod_tools/mod_tools_scre
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/features/post/screen/create_post_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
-import 'package:hash_balance/models/post_data_model.dart';
+import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 
 final currentCommunityProvider = Provider<Community>((ref) {

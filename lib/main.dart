@@ -22,7 +22,7 @@ import 'package:hash_balance/features/authentication/controller/auth_controller.
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
 import 'package:hash_balance/features/home/screen/home_screen.dart';
-import 'package:hash_balance/features/message/screen/message_screen.dart';
+import 'package:hash_balance/features/message/screen/private_message_screen.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/firebase_options.dart';

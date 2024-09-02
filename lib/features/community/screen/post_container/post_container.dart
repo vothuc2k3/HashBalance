@@ -681,9 +681,11 @@ class VoteButtonState extends State<VoteButton>
   }
 
   void _handleTap() {
-    _controller.forward().then((_) {
-      _controller.reverse();
-    });
+    if (mounted) {
+      _controller.forward().then((_) {
+        _controller.reverse();
+      });
+    }
     widget.onTap(widget.isUpvote);
   }
 

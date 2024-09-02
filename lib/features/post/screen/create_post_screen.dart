@@ -112,7 +112,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen>
     }
   }
 
-  Future<void> _createPost() async {
+  void _createPost() async {
     if (selectedCommunity == null) {
       showToast(false, 'Please select a community to post in.');
       return;
@@ -131,7 +131,6 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen>
           showToast(false, l.toString());
         },
         (r) {
-          showToast(true, 'Your post is successfully created!');
           contentController.clear();
           switch (widget._isFromCommunityScreen) {
             case true:
@@ -581,9 +580,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen>
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: Colors.grey,
                                         ),
-                                        onPressed: () async {
-                                          await _createPost();
-                                        },
+                                        onPressed: _createPost,
                                         child: const Center(
                                           child: Text(
                                             'Post',

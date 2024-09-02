@@ -13,7 +13,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/community/repository/community_repository.dart';
 import 'package:hash_balance/models/community_membership_model.dart';
 import 'package:hash_balance/models/community_model.dart';
-import 'package:hash_balance/models/post_data_model.dart';
+import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 
 final fetchCommunitiesProvider = StreamProvider(
     (ref) => ref.read(communityControllerProvider.notifier).fetchCommunities());

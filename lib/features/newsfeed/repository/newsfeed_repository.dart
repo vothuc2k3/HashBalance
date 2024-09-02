@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/models/community_model.dart';
-import 'package:hash_balance/models/post_data_model.dart';
+import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 

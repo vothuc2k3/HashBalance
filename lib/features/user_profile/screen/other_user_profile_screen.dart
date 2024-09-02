@@ -8,7 +8,7 @@ import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
-import 'package:hash_balance/features/message/screen/message_screen.dart';
+import 'package:hash_balance/features/message/screen/private_message_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 class OtherUserProfileScreen extends ConsumerStatefulWidget {

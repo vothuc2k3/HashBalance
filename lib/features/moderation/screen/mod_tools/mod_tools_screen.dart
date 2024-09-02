@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/edit_community_screen.dart';
+import 'package:hash_balance/features/moderation/screen/mod_tools/invite_moderators_screen.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/pending_post_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
 
@@ -11,7 +12,18 @@ class ModToolsScreen extends ConsumerWidget {
     required this.community,
   });
 
-  void navigateToEditCommunityScreen(BuildContext context) {
+  void _navigateToInviteModeratorsScreen(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => InviteModeratorsScreen(
+          community: community,
+        ),
+      ),
+    );
+  }
+
+  void _navigateToEditCommunityScreen(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -22,7 +34,7 @@ class ModToolsScreen extends ConsumerWidget {
     );
   }
 
-  void navigateToPendingPostScreen(BuildContext context) {
+  void _navigateToPendingPostScreen(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -62,17 +74,17 @@ class ModToolsScreen extends ConsumerWidget {
             ListTile(
               leading: const Icon(Icons.access_time),
               title: const Text('Pending Posts'),
-              onTap: () => navigateToPendingPostScreen(context),
+              onTap: () => _navigateToPendingPostScreen(context),
             ),
             ListTile(
               leading: const Icon(Icons.add_moderator),
               title: const Text('Invite Moderators'),
-              onTap: () {},
+              onTap: () => _navigateToInviteModeratorsScreen(context),
             ),
             ListTile(
               leading: const Icon(Icons.edit),
               title: const Text('Edit Community Visual'),
-              onTap: () => navigateToEditCommunityScreen(context),
+              onTap: () => _navigateToEditCommunityScreen(context),
             ),
             ListTile(
               leading: const Icon(Icons.edit_document),
