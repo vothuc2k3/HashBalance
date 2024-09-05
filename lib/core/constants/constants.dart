@@ -61,7 +61,6 @@ class Constants {
   static const String moderatorInvitationTitle =
       'You are invited as a moderator!';
 
-
   static const String friendRequestType = 'friend_request';
   static const String acceptRequestType = 'accept_request';
   static const String moderatorInvitationType = 'moderator_invitation';

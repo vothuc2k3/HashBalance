@@ -259,7 +259,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             textInputAction: TextInputAction.done,
                             inputFormatters: [
                               FilteringTextInputFormatter.allow(
-                                RegExp(r'[a-zA-Z]'),
+                                RegExp(r'[a-zA-Z0-9]'),
                               ),
                             ],
                           ),
@@ -316,20 +316,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             keyboardType: TextInputType.text,
                             autocorrect: false,
                             maxLength: 100,
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
                               labelText: 'Enter your description',
-                              labelStyle: const TextStyle(
+                              labelStyle: TextStyle(
                                 color: Color(0xFF38464E),
                               ),
                               hintText:
                                   'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam risus justo, auctor non libero eget, pharetra suscipit leo. Nam posuere, nisl nec faucibus mattis, lacus quam tincidunt lacus....',
-                              enabledBorder: const OutlineInputBorder(
+                              enabledBorder: OutlineInputBorder(
                                 borderSide: BorderSide(color: Colors.grey),
                               ),
-                              border: const OutlineInputBorder(
+                              border: OutlineInputBorder(
                                 borderSide: BorderSide(color: Colors.grey),
                               ),
-                              errorText: isNameValid ? null : 'Invalid name',
                             ),
                             textInputAction: TextInputAction.done,
                           ),

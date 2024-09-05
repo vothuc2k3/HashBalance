@@ -13,6 +13,8 @@ class ModToolsScreen extends ConsumerWidget {
   });
 
   void _navigateToInviteModeratorsScreen(BuildContext context) {
+    print('Navigating to InviteModeratorsScreen');
+    print('Community ID: ${community.id}');
     Navigator.push(
       context,
       MaterialPageRoute(

@@ -8,6 +8,10 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/features/community/controller/comunity_controller.dart';
+import 'package:hash_balance/features/community/screen/community_screen.dart';
+import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:toastification/toastification.dart';
 
@@ -145,10 +149,47 @@ class MyAppState extends ConsumerState<MyApp> {
             );
             break;
           case Constants.moderatorInvitationType:
-            navigatorKey.currentState?.push(
+            final communityId = payloadData['communityId'];
+
+            Navigator.push(
+              context,
               MaterialPageRoute(
                 builder: (context) => const SplashScreen(),
               ),
+            );
+            String? membershipStatus;
+            final currentUser = ref.read(userProvider)!;
+            final result = await ref
+                .watch(moderationControllerProvider.notifier)
+                .fetchMembershipStatus(
+                  getMembershipId(
+                    currentUser.uid,
+                    communityId,
+                  ),
+                );
+
+            result.fold(
+              (l) {
+                showToast(false, 'Unexpected error happened...');
+                Navigator.pop(context);
+              },
+              (r) async {
+                membershipStatus = r;
+                final community = await ref
+                    .read(communityControllerProvider.notifier)
+                    .fetchCommunityById(communityId);
+                if (mounted) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CommunityScreen(
+                        memberStatus: membershipStatus!,
+                        community: community,
+                      ),
+                    ),
+                  );
+                }
+              },
             );
             break;
           default:

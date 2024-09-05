@@ -7,7 +7,7 @@ class Loading extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: LoadingAnimationWidget.staggeredDotsWave(
-        color: Colors.orange,
+        color: Colors.white,
         size: 20,
       ),
     );

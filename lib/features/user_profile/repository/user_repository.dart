@@ -113,15 +113,15 @@ class UserRepository {
     });
   }
 
-  Future<List<String>> getUserDeviceTokens(String uid) async {
+  Future<String> getUserDeviceTokens(String uid) async {
     final userDeviceDocs =
         await _userDevices.where('uid', isEqualTo: uid).get();
-    var deviceTokens = <String>[];
+    String? deviceToken;
     for (var doc in userDeviceDocs.docs) {
       final docData = doc.data() as Map<String, dynamic>;
-      deviceTokens.add(docData['deviceToken']);
+      deviceToken = docData['deviceToken'];
     }
-    return deviceTokens;
+    return deviceToken ?? '';
   }
 
   Future<UserModel> fetchUserByUidProvider(String uid) async {

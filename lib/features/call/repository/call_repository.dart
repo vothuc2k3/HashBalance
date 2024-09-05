@@ -33,7 +33,7 @@ class CallRepository {
   }
 
   Future<void> notifyIncomingCall(
-      List<String> tokens, String message, String callerName) async {
+      String token, String message, String callerName) async {
     final url = Uri.parse('${Constants.domain}/sendPushNotification');
     final response = await http.post(
       url,
@@ -41,7 +41,7 @@ class CallRepository {
         'Content-Type': 'application/json',
       },
       body: json.encode({
-        'tokens': tokens,
+        'token': token,
         'message': message,
         'title': 'Incoming Call',
       }),

@@ -13,6 +13,7 @@ import 'package:hash_balance/features/community/controller/comunity_controller.d
 import 'package:hash_balance/features/community/screen/community_conversation_screen.dart';
 import 'package:hash_balance/features/community/screen/post_container/post_container.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
+import 'package:hash_balance/features/moderation/screen/mod_tools/invite_moderators_screen.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/mod_tools_screen.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/features/post/screen/create_post_screen.dart';
@@ -247,13 +248,14 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
               title: Text('Go to Moderator Screen'),
             ),
           ),
-        const PopupMenuItem<int>(
-          value: 2,
-          child: ListTile(
-            leading: Icon(Icons.person_add),
-            title: Text('Invite Friends to Community'),
+        if (tempMemberStatus == 'moderator')
+          const PopupMenuItem<int>(
+            value: 2,
+            child: ListTile(
+              leading: Icon(Icons.person_add),
+              title: Text('Invite Friends to Community'),
+            ),
           ),
-        ),
         const PopupMenuItem<int>(
           value: 3,
           child: ListTile(
@@ -287,7 +289,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
               _navigateToModToolsScreen();
               break;
             case 2:
-              _inviteFriendsToCommunity();
+              _navigateToInviteModeratorsScreen();
               break;
             case 3:
               _reportCommunity();
@@ -317,7 +319,16 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     );
   }
 
-  void _inviteFriendsToCommunity() {}
+  void _navigateToInviteModeratorsScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => InviteModeratorsScreen(
+          community: widget._community,
+        ),
+      ),
+    );
+  }
 
   void _reportCommunity() {}
 
