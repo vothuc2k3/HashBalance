@@ -52,7 +52,7 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
         membershipStatus = r;
         community = await _fetchCommunityById(communityId);
         if (mounted && community != null) {
-          await Navigator.pushReplacement(
+          Navigator.pushReplacement(
             context,
             MaterialPageRoute(
               builder: (context) => CommunityScreen(

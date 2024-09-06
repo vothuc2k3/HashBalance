@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hash_balance/core/widgets/loading.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({
@@ -75,9 +76,7 @@ class SplashScreen extends StatelessWidget {
                 builder: (context, value, child) {
                   return Opacity(
                     opacity: value,
-                    child: const CircularProgressIndicator(
-                      color: Colors.white,
-                    ),
+                    child: const Loading(),
                   );
                 },
               ),

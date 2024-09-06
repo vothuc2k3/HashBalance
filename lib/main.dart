@@ -19,7 +19,6 @@ import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/hive_models/community/hive_community_model.dart';
 import 'package:hash_balance/core/hive_models/user_model/hive_user_model.dart';
 import 'package:hash_balance/core/services/device_token_service.dart';
-import 'package:hash_balance/core/services/joined_communities_service.dart';
 import 'package:hash_balance/core/splash/splash_screen.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
@@ -65,7 +64,6 @@ class MyApp extends ConsumerStatefulWidget {
 class MyAppState extends ConsumerState<MyApp> {
   UserModel? userData;
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-  late final JoinedCommunitiesService _joinedCommunitiesService;
   late final DeviceTokenService _deviceTokenService;
 
   void _getUserData(User data) async {
@@ -74,7 +72,6 @@ class MyAppState extends ConsumerState<MyApp> {
         .getUserData(data.uid)
         .first;
     ref.watch(userProvider.notifier).update((state) => userData);
-    _joinedCommunitiesService.fetchJoinedCommunities(userData);
     _deviceTokenService.updateUserDeviceToken(userData);
   }
 
@@ -252,7 +249,6 @@ class MyAppState extends ConsumerState<MyApp> {
         }
       },
     );
-    _joinedCommunitiesService = JoinedCommunitiesService();
     _deviceTokenService = DeviceTokenService();
     super.initState();
   }

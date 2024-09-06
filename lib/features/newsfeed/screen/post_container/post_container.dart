@@ -194,7 +194,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
       },
       (r) async {
         membershipStatus = r;
-        await Navigator.pushReplacement(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => CommunityScreen(

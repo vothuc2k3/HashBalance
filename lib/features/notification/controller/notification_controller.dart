@@ -7,7 +7,8 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/notification/repository/notification_repository.dart';
 import 'package:hash_balance/models/notification_model.dart';
 
-final deleteNotifProvider = FutureProvider.family.autoDispose((ref, String notifId) {
+final deleteNotifProvider =
+    FutureProvider.family.autoDispose((ref, String notifId) {
   return ref
       .watch(notificationControllerProvider.notifier)
       .deleteNotif(notifId);

@@ -4,8 +4,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
-import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -26,7 +24,6 @@ class InviteModeratorsScreen extends ConsumerStatefulWidget {
 class _InviteModeratorsScreenState
     extends ConsumerState<InviteModeratorsScreen> {
   late Future<List<UserModel>> _friends;
-  late UserModel _currentUser;
 
   void _sendInvite(UserModel friend) async {
     final result = await ref
@@ -34,17 +31,15 @@ class _InviteModeratorsScreenState
         .inviteAsModerator(friend.uid, widget._community);
     result.fold((l) => showToast(false, l.message), (r) {
       showToast(true, 'Invite sent to ${friend.name}');
-      
     });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _currentUser = ref.read(userProvider)!;
     _friends = ref
-        .read(friendControllerProvider.notifier)
-        .fetchFriendsByUser(_currentUser.uid);
+        .read(moderationControllerProvider.notifier)
+        .fetchModeratorCandidates(widget._community.id);
   }
 
   @override
@@ -95,9 +90,9 @@ class _InviteModeratorsScreenState
                   } else if (snapshot.hasError) {
                     return Center(child: Text('Error: ${snapshot.error}'));
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text('No friends found'))
+                    return const Center(child: Text('No any candidates....'))
                         .animate()
-                        .fadeIn(duration: 800.ms);
+                        .fadeIn();
                   } else {
                     final friends = snapshot.data!;
                     return ListView.builder(

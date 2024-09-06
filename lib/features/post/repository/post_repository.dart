@@ -33,9 +33,6 @@ class PostRepository {
   //REFERENCE ALL THE POSTS
   CollectionReference get _posts =>
       _firestore.collection(FirebaseConstants.postsCollection);
-  //REFERENCE ALL THE COMMUNITIES
-  CollectionReference get _communities =>
-      _firestore.collection(FirebaseConstants.communitiesCollection);
   //REFERENCE ALL THE COMMENTS
   CollectionReference get _comments =>
       _firestore.collection(FirebaseConstants.commentsCollection);

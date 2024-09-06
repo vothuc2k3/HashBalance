@@ -93,7 +93,14 @@ class CommunityRepository {
   //LET USER JOIN COMMUNITY
   FutureVoid joinCommunity(CommunityMembership membership) async {
     try {
-      await _communityMembership.doc(membership.id).set(membership.toMap());
+      final membershipDoc = await _communityMembership.doc(membership.id).get();
+      if (membershipDoc.exists) {
+        await _communityMembership
+            .doc(membership.id)
+            .update(membership.toMap());
+      } else {
+        await _communityMembership.doc(membership.id).set(membership.toMap());
+      }
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));

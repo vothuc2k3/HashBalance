@@ -163,7 +163,7 @@ class CommunityController extends StateNotifier<bool> {
   FutureString joinCommunityAsModerator(
     String uid,
     String communityId,
-  ) async {
+  ) async {   
     try {
       final newMembership = CommunityMembership(
         id: getMembershipId(uid, communityId),

@@ -8,6 +8,7 @@ import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/post_model.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 final moderationRepositoryProvider = Provider((ref) {
   return ModerationRepository(firestore: ref.watch(firebaseFirestoreProvider));
@@ -26,6 +27,12 @@ class ModerationRepository {
       _firestore.collection(FirebaseConstants.communitiesCollection);
   CollectionReference get _posts =>
       _firestore.collection(FirebaseConstants.postsCollection);
+  CollectionReference get _friendship =>
+      _firestore.collection(FirebaseConstants.friendshipCollection);
+  CollectionReference get _users =>
+      _firestore.collection(FirebaseConstants.usersCollection);
+  CollectionReference get _membership =>
+      _firestore.collection(FirebaseConstants.communityMembershipCollection);
 
   //GET MODERATOR STATUS
   Stream<String> getMembershipStatus(String membershipId) {
@@ -128,15 +135,59 @@ class ModerationRepository {
     }
   }
 
-  //ADD MODERATOR
-  FutureVoid inviteAsModerator(String uid) async {
+  //FETCH CANDIDATES FOR MODERATION
+  Future<List<UserModel>> fetchModeratorCandidates(
+      String currentModeratorUid, String communityId) async {
     try {
-      
-      return right(null);
+      // Fetch friends of the current moderator, considering both uid1 and uid2
+      final friendSnapshot1 =
+          await _friendship.where('uid1', isEqualTo: currentModeratorUid).get();
+
+      final friendSnapshot2 =
+          await _friendship.where('uid2', isEqualTo: currentModeratorUid).get();
+
+      // Combine both queries (uid1 or uid2)
+      final friendsUids = friendSnapshot1.docs
+          .map((doc) => (doc.data() as Map<String, dynamic>)['uid2'] as String)
+          .toList();
+
+      friendsUids.addAll(friendSnapshot2.docs
+          .map((doc) => (doc.data() as Map<String, dynamic>)['uid1'] as String)
+          .toList());
+
+      if (friendsUids.isEmpty) {
+        return [];
+      }
+
+      // Fetch current moderators in the community from membershipCollection
+      final moderatorSnapshot = await _membership
+          .where('communityId', isEqualTo: communityId)
+          .where('role',
+              isEqualTo:
+                  'moderator') // Assuming role field is used to identify moderators
+          .get();
+
+      final currentModerators =
+          moderatorSnapshot.docs.map((doc) => doc['uid'] as String).toList();
+
+      // Fetch user data for all friends
+      final friendDataSnapshot =
+          await _users.where(FieldPath.documentId, whereIn: friendsUids).get();
+
+      final friends = friendDataSnapshot.docs
+          .map((doc) => UserModel.fromMap(doc.data() as Map<String, dynamic>))
+          .toList();
+
+      // Filter out friends who are already moderators
+      final moderatorCandidates = friends.where((friend) {
+        return !currentModerators.contains(friend.uid);
+      }).toList();
+
+      return moderatorCandidates;
     } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
+      throw Failures(e.message!);
     } catch (e) {
-      return left(Failures(e.toString()));
+      throw Failures(e.toString());
     }
   }
 }

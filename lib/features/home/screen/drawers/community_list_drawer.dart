@@ -58,7 +58,7 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
       },
       (r) async {
         membershipStatus = r;
-        await Navigator.pushReplacement(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => CommunityScreen(

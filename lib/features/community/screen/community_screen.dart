@@ -8,10 +8,12 @@ import 'package:hash_balance/core/splash/splash_screen.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/community/screen/community_conversation_screen.dart';
 import 'package:hash_balance/features/community/screen/post_container/post_container.dart';
+import 'package:hash_balance/features/invitation/controller/invitation_controller.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/invite_moderators_screen.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/mod_tools_screen.dart';
@@ -19,6 +21,7 @@ import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/features/post/screen/create_post_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
+import 'package:hash_balance/models/invitation_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 
 final currentCommunityProvider = Provider<Community>((ref) {
@@ -116,7 +119,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     }
   }
 
-  void _handleUnPinPost(Post post) async {
+  void _handleUnpinPost(Post post) async {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -140,6 +143,30 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     );
     if (mounted) {
       Navigator.pop(context);
+    }
+  }
+
+  void _handleInvitation(
+      bool option, String? uid, Invitation invitation) async {
+    switch (option) {
+      case true:
+        final result = await ref
+            .read(communityControllerProvider.notifier)
+            .joinCommunityAsModerator(uid!, widget._community.id);
+        result.fold((l) => showToast(false, l.message), (r) async {
+          showToast(true, 'Successfully become a Moderator!');
+          final result = await ref
+              .read(invitationControllerProvider)
+              .deleteInvitation(invitation.id);
+          result.fold((l) => showToast(false, l.message), (_) {});
+        });
+        break;
+      case false:
+        final result = await ref
+            .read(invitationControllerProvider)
+            .deleteInvitation(invitation.id);
+        result.fold((l) => showToast(false, l.message), (_) {});
+        break;
     }
   }
 
@@ -167,7 +194,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
   _showImage(String imageUrl) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (context) {
         return Dialog(
           backgroundColor: Colors.transparent,
           insetPadding: const EdgeInsets.all(10),
@@ -253,7 +280,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
             value: 2,
             child: ListTile(
               leading: Icon(Icons.person_add),
-              title: Text('Invite Friends to Community'),
+              title: Text('Invite Friends to Join Moderation'),
             ),
           ),
         const PopupMenuItem<int>(
@@ -308,6 +335,58 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     );
   }
 
+  void _showInvitationDetails(String uid, Invitation invitation) {
+    ref.read(getUserDataProvider(invitation.senderUid)).when(
+          data: (sender) {
+            return showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: const Text('Invitation Details'),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(invitation.type),
+                      Text('From: ${sender.name}'),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          ElevatedButton(
+                            onPressed: () {
+                              _handleInvitation(false, null, invitation);
+
+                              Navigator.of(context).pop();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red, // Refuse colord
+                            ),
+                            child: const Text('Refuse'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              _handleInvitation(true, uid, invitation);
+                              Navigator.of(context).pop();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green, // Confirm color
+                            ),
+                            child: const Text('Confirm'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ).animate().fadeIn();
+              },
+            );
+          },
+          error: (e, s) =>
+              ErrorText(error: e.toString()).animate().fadeIn(duration: 800.ms),
+          loading: () => const Loading().animate().fadeIn(duration: 800.ms),
+        );
+  }
+
   void _navigateToCommunityConversations() {
     Navigator.pushReplacement(
       context,
@@ -346,17 +425,15 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
   @override
   void initState() {
     super.initState();
-    SchedulerBinding.instance.addPostFrameCallback(
-      (_) {
-        tempMemberStatus = widget._memberStatus;
-        posts = ref
-            .read(communityControllerProvider.notifier)
-            .getCommunityPosts(widget._community.id);
-        pinnedPost = ref
-            .read(postControllerProvider.notifier)
-            .getCommunityPinnedPost(widget._community);
-      },
-    );
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      tempMemberStatus = widget._memberStatus;
+      posts = ref
+          .read(communityControllerProvider.notifier)
+          .getCommunityPosts(widget._community.id);
+      pinnedPost = ref
+          .read(postControllerProvider.notifier)
+          .getCommunityPinnedPost(widget._community);
+    });
   }
 
   @override
@@ -364,6 +441,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     final currentUser = ref.watch(userProvider)!;
     final memberCount =
         ref.watch(getCommunityMemberCountProvider(widget._community.id));
+    final invitaion = ref.watch(invitationProvider(widget._community.id));
     bool isLoading = ref.watch(communityControllerProvider);
 
     return ProviderScope(
@@ -503,6 +581,52 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                               ErrorText(error: error.toString()),
                           loading: () => const Loading(),
                         ),
+
+                        //RENDER INVITATION
+                        invitaion.when(
+                          data: (invitation) {
+                            if (invitation == null) {
+                              return const SizedBox.shrink();
+                            } else {
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 10),
+                                child: ElevatedButton(
+                                  onPressed: () => _showInvitationDetails(
+                                    currentUser.uid,
+                                    invitation,
+                                  ),
+                                  style: ButtonStyle(
+                                    backgroundColor:
+                                        WidgetStateProperty.all(Colors.blue),
+                                    foregroundColor:
+                                        WidgetStateProperty.all(Colors.white),
+                                    overlayColor:
+                                        WidgetStateProperty.resolveWith(
+                                      (states) {
+                                        if (states
+                                            .contains(WidgetState.pressed)) {
+                                          return Colors.green.withOpacity(0.2);
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Pending Invitation',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ).animate().fadeIn();
+                            }
+                          },
+                          error: (e, s) =>
+                              ErrorText(error: e.toString()).animate().fadeIn(),
+                          loading: () => const Loading().animate().fadeIn(),
+                        ),
                       ],
                     ),
                   ),
@@ -523,7 +647,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                         author: post.author,
                         post: post.post,
                         community: post.community,
-                        onUnPinPost: _handleUnPinPost,
+                        onUnPinPost: _handleUnpinPost,
                       ).animate().fadeIn(duration: 800.ms);
                     },
                   ),

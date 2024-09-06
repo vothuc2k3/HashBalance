@@ -215,14 +215,13 @@ class SearchCommunityDelegate extends SearchDelegate {
         .watch(moderationControllerProvider.notifier)
         .fetchMembershipStatus(getMembershipId(uid, community.id));
 
-
     result.fold(
       (l) {
         showToast(false, 'Unexpected error happened...');
       },
-      (r) async {
+      (r) {
         membershipStatus = r;
-        await Navigator.pushReplacement(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => CommunityScreen(

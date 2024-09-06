@@ -10,6 +10,7 @@ import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/invitation/controller/invitation_controller.dart';
 import 'package:hash_balance/features/moderation/repository/moderation_repository.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
@@ -17,6 +18,7 @@ import 'package:hash_balance/features/user_profile/controller/user_controller.da
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 import 'package:hash_balance/models/post_model.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 final getMembershipStatusProvider =
     StreamProvider.family.autoDispose((ref, String communityId) {
@@ -31,6 +33,7 @@ final moderationControllerProvider =
     return ModerationController(
       moderationRepository: ref.read(moderationRepositoryProvider),
       storageRepository: ref.read(storageRepositoryProvider),
+      invitationController: ref.read(invitationControllerProvider),
       notificationController: ref.read(notificationControllerProvider.notifier),
       pushNotificationController:
           ref.read(pushNotificationControllerProvider.notifier),
@@ -43,6 +46,7 @@ final moderationControllerProvider =
 class ModerationController extends StateNotifier<bool> {
   final ModerationRepository _moderationRepository;
   final StorageRepository _storageRepository;
+  final InvitationController _invitationController;
   final NotificationController _notificationController;
   final PushNotificationController _pushNotificationController;
   final UserController _userController;
@@ -51,12 +55,14 @@ class ModerationController extends StateNotifier<bool> {
   ModerationController({
     required ModerationRepository moderationRepository,
     required StorageRepository storageRepository,
+    required InvitationController invitationController,
     required NotificationController notificationController,
     required PushNotificationController pushNotificationController,
     required UserController userController,
     required Ref ref,
   })  : _moderationRepository = moderationRepository,
         _storageRepository = storageRepository,
+        _invitationController = invitationController,
         _notificationController = notificationController,
         _pushNotificationController = pushNotificationController,
         _userController = userController,
@@ -173,9 +179,19 @@ class ModerationController extends StateNotifier<bool> {
     }
   }
 
+  //INVITE A FRIEND TO JOIN MODERATION
   FutureVoid inviteAsModerator(String uid, Community community) async {
     try {
       final currentUser = _ref.watch(userProvider)!;
+
+      //SEND INVITATION
+      await _invitationController.addInvitation(
+        uid,
+        Constants.moderatorInvitationTitle,
+        community.id,
+      );
+
+      //ADD NOTIFICATION TO THE INVITEE
       final notif = NotificationModel(
         id: await generateRandomId(),
         title: Constants.moderatorInvitationTitle,
@@ -209,6 +225,18 @@ class ModerationController extends StateNotifier<bool> {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
+    }
+  }
+
+  Future<List<UserModel>> fetchModeratorCandidates(String communityId) async {
+    try {
+      final currentUser = _ref.read(userProvider)!;
+      return await _moderationRepository.fetchModeratorCandidates(
+          currentUser.uid, communityId);
+    } on FirebaseException catch (e) {
+      throw Failures(e.message!);
+    } catch (e) {
+      throw Failures(e.toString());
     }
   }
 }
