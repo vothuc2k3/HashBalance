@@ -1,9 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/post_share/post_share_controller/post_share_controller.dart';
+import 'package:hash_balance/features/report/controller/report_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 import 'package:hash_balance/features/vote_post/controller/vote_post_controller.dart';
@@ -177,6 +179,67 @@ class _PostContainerState extends ConsumerState<PostContainer> {
 
   void _handleUnfriend() {}
 
+  void _handleReportPost() {
+    TextEditingController reasonController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Report Post'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Please enter the reason for reporting this post:'),
+              const SizedBox(height: 10),
+              TextField(
+                controller: reasonController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  hintText: 'Enter your reason here',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final reason = reasonController.text;
+                if (reason.isNotEmpty) {
+                  _submitReportPost(reason);
+                  Navigator.of(context).pop();
+                } else {
+                  showToast(false, 'Please provide a reason for reporting.');
+                }
+              },
+              child: const Text('Submit'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _submitReportPost(String reason) async {
+    final result = await ref.read(reportControllerProvider).addReport(
+          widget.post.id,
+          null,
+          null,
+          Constants.postReportType,
+          widget.community.id,
+          reason,
+        );
+    result.fold((l) => showToast(false, l.message), (r) {
+      showToast(true, 'Your report has been recorded!');
+    });
+  }
+
   void _showBottomSheet(String currentUid, String postUsername) {
     showModalBottomSheet(
       context: context,
@@ -239,6 +302,14 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                     _handleDelete();
                   },
                 ),
+              ListTile(
+                leading: const Icon(Icons.warning),
+                title: const Text('Report this post'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _handleReportPost();
+                },
+              ),
             ],
           ),
         );

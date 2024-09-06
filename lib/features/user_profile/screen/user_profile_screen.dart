@@ -25,7 +25,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
   final double coverHeight = 250;
   final double profileHeight = 120;
 
-  void navigateToEditUserProfile() {
+  void _navigateToEditUserProfile() {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -34,7 +34,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
     );
   }
 
-  void navigateToFriendProfile(UserModel friend) {
+  void _navigateToFriendProfile(UserModel friend) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -54,7 +54,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
         elevation: 0,
         actions: [
           TextButton(
-            onPressed: () => navigateToEditUserProfile(),
+            onPressed: () => _navigateToEditUserProfile(),
             child: const Text(
               'Edit',
               style: TextStyle(
@@ -337,7 +337,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
                   return Column(
                     children: [
                       InkWell(
-                        onTap: () => navigateToFriendProfile(friend),
+                        onTap: () => _navigateToFriendProfile(friend),
                         child: Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,

@@ -6,21 +6,21 @@ class Report {
   final String id;
   final String type;
   final String reporterUid;
-  final String? postId;
-  final String? communityId;
-  final String? commentId;
-  final String? userId;
-  final String reportMessage;
+  final String communityId;
+  final String? reportedPostId;
+  final String? reportedCommentId;
+  final String? reportedUid;
+  final String message;
   final Timestamp createdAt;
   Report({
     required this.id,
     required this.type,
     required this.reporterUid,
-    this.postId,
-    this.communityId,
-    this.commentId,
-    this.userId,
-    required this.reportMessage,
+    required this.communityId,
+    this.reportedPostId,
+    this.reportedCommentId,
+    this.reportedUid,
+    required this.message,
     required this.createdAt,
   });
 
@@ -28,22 +28,22 @@ class Report {
     String? id,
     String? type,
     String? reporterUid,
-    String? postId,
     String? communityId,
-    String? commentId,
-    String? userId,
-    String? reportMessage,
+    String? reportedPostId,
+    String? reportedCommentId,
+    String? reportedUid,
+    String? message,
     Timestamp? createdAt,
   }) {
     return Report(
       id: id ?? this.id,
       type: type ?? this.type,
       reporterUid: reporterUid ?? this.reporterUid,
-      postId: postId ?? this.postId,
       communityId: communityId ?? this.communityId,
-      commentId: commentId ?? this.commentId,
-      userId: userId ?? this.userId,
-      reportMessage: reportMessage ?? this.reportMessage,
+      reportedPostId: reportedPostId ?? this.reportedPostId,
+      reportedCommentId: reportedCommentId ?? this.reportedCommentId,
+      reportedUid: reportedUid ?? this.reportedUid,
+      message: message ?? this.message,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -53,11 +53,11 @@ class Report {
       'id': id,
       'type': type,
       'reporterUid': reporterUid,
-      'postId': postId,
       'communityId': communityId,
-      'commentId': commentId,
-      'userId': userId,
-      'reportMessage': reportMessage,
+      'reportedPostId': reportedPostId,
+      'reportedCommentId': reportedCommentId,
+      'reportedUid': reportedUid,
+      'message': message,
       'createdAt': createdAt,
     };
   }
@@ -67,12 +67,16 @@ class Report {
       id: map['id'] as String,
       type: map['type'] as String,
       reporterUid: map['reporterUid'] as String,
-      postId: map['postId'] != null ? map['postId'] as String : null,
-      communityId:
-          map['communityId'] != null ? map['communityId'] as String : null,
-      commentId: map['commentId'] != null ? map['commentId'] as String : null,
-      userId: map['userId'] != null ? map['userId'] as String : null,
-      reportMessage: map['reportMessage'] as String,
+      communityId: map['communityId'] as String,
+      reportedPostId: map['reportedPostId'] != null
+          ? map['reportedPostId'] as String
+          : null,
+      reportedCommentId: map['reportedCommentId'] != null
+          ? map['reportedCommentId'] as String
+          : null,
+      reportedUid:
+          map['reportedUid'] != null ? map['reportedUid'] as String : null,
+      message: map['message'] as String,
       createdAt: map['createdAt'] as Timestamp,
     );
   }
@@ -84,7 +88,7 @@ class Report {
 
   @override
   String toString() {
-    return 'Report(id: $id, type: $type, reporterUid: $reporterUid, postId: $postId, communityId: $communityId, commentId: $commentId, userId: $userId, reportMessage: $reportMessage, createdAt: $createdAt)';
+    return 'Report(id: $id, type: $type, reporterUid: $reporterUid, communityId: $communityId, reportedPostId: $reportedPostId, reportedCommentId: $reportedCommentId, reportedUid: $reportedUid, message: $message, createdAt: $createdAt)';
   }
 
   @override
@@ -94,11 +98,11 @@ class Report {
     return other.id == id &&
         other.type == type &&
         other.reporterUid == reporterUid &&
-        other.postId == postId &&
         other.communityId == communityId &&
-        other.commentId == commentId &&
-        other.userId == userId &&
-        other.reportMessage == reportMessage &&
+        other.reportedPostId == reportedPostId &&
+        other.reportedCommentId == reportedCommentId &&
+        other.reportedUid == reportedUid &&
+        other.message == message &&
         other.createdAt == createdAt;
   }
 
@@ -107,11 +111,11 @@ class Report {
     return id.hashCode ^
         type.hashCode ^
         reporterUid.hashCode ^
-        postId.hashCode ^
         communityId.hashCode ^
-        commentId.hashCode ^
-        userId.hashCode ^
-        reportMessage.hashCode ^
+        reportedPostId.hashCode ^
+        reportedCommentId.hashCode ^
+        reportedUid.hashCode ^
+        message.hashCode ^
         createdAt.hashCode;
   }
 }

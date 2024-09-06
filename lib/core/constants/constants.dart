@@ -67,6 +67,10 @@ class Constants {
   static const String incomingMessageType = 'incoming_message';
   static const String conversationInvitationType = 'conversation_invitation';
 
+  static const String userReportType = 'user_report';
+  static const String postReportType = 'post_report';
+  static const String commentReportType = 'comment_report';
+
   static String getFriendRequestContent(String name) {
     return '$name has sent you a friend request!';
   }

@@ -24,7 +24,7 @@ class PostRepository {
   final FirebaseFirestore _firestore;
   final StorageRepository _storageRepository;
 
-  PostRepository({
+  const PostRepository({
     required FirebaseFirestore firestore,
     required StorageRepository storageRepository,
   })  : _firestore = firestore,

@@ -271,7 +271,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
           const PopupMenuItem<int>(
             value: 1,
             child: ListTile(
-              leading: Icon(Icons.group),
+              leading: Icon(Icons.add_moderator_sharp),
               title: Text('Go to Moderator Screen'),
             ),
           ),

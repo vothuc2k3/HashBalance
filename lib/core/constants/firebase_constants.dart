@@ -15,4 +15,5 @@ class FirebaseConstants {
   static const postShareCollection = 'post_shares';
   static const messageCollection = 'messages';
   static const invitationCollection = 'invitations';
+  static const reportCollection = 'reports';
 }
