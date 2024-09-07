@@ -28,7 +28,7 @@ class ReportDetailScreenState extends ConsumerState<ReportDetailScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => UserProfileScreen(user: currentUser),
+          builder: (context) => const UserProfileScreen(),
         ),
       );
     } else {

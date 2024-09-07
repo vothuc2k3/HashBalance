@@ -195,7 +195,7 @@ class _CommunityConversationScreenState
                               fontSize: 18,
                               color: Colors.grey,
                             ),
-                          ).animate().fadeIn(duration: 800.ms),
+                          ).animate().fadeIn(),
                         );
                       }
 

@@ -138,7 +138,7 @@ class _MessageListScreenState extends ConsumerState<MessageListScreen> {
                             }
                           },
                         ),
-                      ).animate().fadeIn(duration: 800.ms);
+                      ).animate().fadeIn();
                     },
                     error: (error, stackTrace) => ErrorText(
                       error: error.toString(),

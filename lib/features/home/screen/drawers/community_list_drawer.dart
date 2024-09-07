@@ -117,7 +117,7 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
                 onTap: () {
                   _navigateToCreateCommunityScreen();
                 },
-              ).animate().fadeIn(duration: 800.ms),
+              ).animate().fadeIn(),
               const Divider(),
               Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -166,18 +166,18 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
                                     item.profileImage,
                                   ),
                                 ),
-                              ).animate().fadeIn(duration: 800.ms);
+                              ).animate().fadeIn();
                             },
                           ),
-                        ).animate().fadeIn(duration: 800.ms);
+                        ).animate().fadeIn();
                       },
                       error: (e, s) => ErrorText(error: e.toString())
                           .animate()
-                          .fadeIn(duration: 800.ms),
+                          .fadeIn(),
                       loading: () =>
-                          const Loading().animate().fadeIn(duration: 800.ms),
+                          const Loading().animate().fadeIn(),
                     ),
-              ).animate().fadeIn(duration: 800.ms),
+              ).animate().fadeIn(),
               const Divider(),
               const ListTile(
                 title: Text(
@@ -220,7 +220,7 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
                       } else if (snapshot.hasError) {
                         return ErrorText(error: snapshot.error.toString())
                             .animate()
-                            .fadeIn(duration: 800.ms);
+                            .fadeIn();
                       } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                         return Center(
                           child: Row(
@@ -237,7 +237,7 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
                               ),
                             ],
                           ),
-                        ).animate().fadeIn(duration: 800.ms);
+                        ).animate().fadeIn();
                       } else {
                         return ListView.separated(
                           itemCount: snapshot.data!.length,
@@ -279,7 +279,7 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
                           separatorBuilder: (context, index) {
                             return const SizedBox(height: 3);
                           },
-                        ).animate().fadeIn(duration: 800.ms);
+                        ).animate().fadeIn();
                       }
                     }),
               ),
@@ -296,7 +296,7 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
                 leading: Icon(
                   Icons.people,
                 ),
-              ).animate().fadeIn(duration: 800.ms),
+              ).animate().fadeIn(),
               Expanded(
                 child: StreamBuilder(
                     stream: _joinedCommunities,
@@ -325,7 +325,7 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
                       } else if (snapshot.hasError) {
                         return ErrorText(error: snapshot.error.toString())
                             .animate()
-                            .fadeIn(duration: 800.ms);
+                            .fadeIn();
                       } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                         return Center(
                           child: Row(
@@ -342,7 +342,7 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
                               ),
                             ],
                           ),
-                        ).animate().fadeIn(duration: 800.ms);
+                        ).animate().fadeIn();
                       } else {
                         return ListView.separated(
                           itemCount: snapshot.data!.length,
@@ -384,10 +384,10 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
                           separatorBuilder: (context, index) {
                             return const SizedBox(height: 3);
                           },
-                        ).animate().fadeIn(duration: 800.ms);
+                        ).animate().fadeIn();
                       }
                     }),
-              ).animate().fadeIn(duration: 800.ms),
+              ).animate().fadeIn(),
             ],
           ),
         ),

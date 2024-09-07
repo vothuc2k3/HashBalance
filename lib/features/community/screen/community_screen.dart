@@ -263,8 +263,8 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
         const PopupMenuItem<int>(
           value: 0,
           child: ListTile(
-            leading: Icon(Icons.group),
-            title: Text('Go to Community Conversations'),
+            leading: Icon(Icons.message),
+            title: Text('Community Conversations'),
           ),
         ),
         if (tempMemberStatus == 'moderator')
@@ -272,7 +272,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
             value: 1,
             child: ListTile(
               leading: Icon(Icons.add_moderator_sharp),
-              title: Text('Go to Moderator Screen'),
+              title: Text('Moderator Tools'),
             ),
           ),
         if (tempMemberStatus == 'moderator')
@@ -280,7 +280,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
             value: 2,
             child: ListTile(
               leading: Icon(Icons.person_add),
-              title: Text('Invite Friends to Join Moderation'),
+              title: Text('Invite Moderators'),
             ),
           ),
         const PopupMenuItem<int>(
@@ -382,13 +382,13 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
             );
           },
           error: (e, s) =>
-              ErrorText(error: e.toString()).animate().fadeIn(duration: 800.ms),
-          loading: () => const Loading().animate().fadeIn(duration: 800.ms),
+              ErrorText(error: e.toString()).animate().fadeIn(),
+          loading: () => const Loading().animate().fadeIn(),
         );
   }
 
   void _navigateToCommunityConversations() {
-    Navigator.pushReplacement(
+    Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => CommunityConversationScreen(
@@ -648,7 +648,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                         post: post.post,
                         community: post.community,
                         onUnPinPost: _handleUnpinPost,
-                      ).animate().fadeIn(duration: 800.ms);
+                      ).animate().fadeIn();
                     },
                   ),
                 ),
@@ -698,7 +698,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                               post: postData.post,
                               community: postData.community,
                               onPinPost: _handlePinPost,
-                            ).animate().fadeIn(duration: 800.ms);
+                            ).animate().fadeIn();
                           },
                         );
                       } else {

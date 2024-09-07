@@ -43,7 +43,7 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => UserProfileScreen(user: widget.author),
+          builder: (context) => const UserProfileScreen(),
         ),
       );
     } else {

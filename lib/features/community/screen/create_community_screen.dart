@@ -97,7 +97,7 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
               },
             ),
           ],
-        ).animate().fadeIn(duration: 800.ms);
+        ).animate().fadeIn();
       },
     );
   }
@@ -182,7 +182,7 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
                         ),
-                      ).animate().fadeIn(duration: 800.ms),
+                      ).animate().fadeIn(),
                       InkWell(
                         onTap: _showCommunityTypeModal,
                         child: Padding(
@@ -277,7 +277,7 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
                     ],
                   ),
                 ),
-              ).animate().fadeIn(duration: 800.ms),
+              ).animate().fadeIn(),
               Padding(
                 padding: const EdgeInsets.all(10),
                 child: ElevatedButton(
@@ -290,16 +290,16 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
                     backgroundColor: Pallete.blueColor,
                   ),
                   child: isLoading
-                      ? const Loading().animate().fadeIn(duration: 800.ms)
+                      ? const Loading().animate().fadeIn()
                       : const Text(
                           'Create community',
                           style: TextStyle(
                             fontSize: 17,
                             color: Colors.white,
                           ),
-                        ).animate().fadeIn(duration: 800.ms),
+                        ).animate().fadeIn(),
                 ),
-              ).animate().fadeIn(duration: 800.ms),
+              ).animate().fadeIn(),
             ],
           ),
         ),

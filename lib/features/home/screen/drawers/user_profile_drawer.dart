@@ -28,9 +28,7 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => UserProfileScreen(
-          user: user,
-        ),
+        builder: (context) => const UserProfileScreen(),
       ),
     );
   }

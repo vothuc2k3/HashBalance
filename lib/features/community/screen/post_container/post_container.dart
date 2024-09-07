@@ -119,9 +119,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => UserProfileScreen(
-              user: widget.author,
-            ),
+            builder: (context) => const UserProfileScreen(),
           ),
         );
         break;

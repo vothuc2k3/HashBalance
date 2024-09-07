@@ -240,7 +240,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen>
                       ),
                     ],
                   ),
-                ).animate().fadeIn(duration: 800.ms);
+                ).animate().fadeIn();
               } else {
                 return GestureDetector(
                   onTap: () {
@@ -326,7 +326,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen>
                               ],
                             ),
                           ],
-                        ).animate().fadeIn(duration: 800.ms),
+                        ).animate().fadeIn(),
                       ),
                       Expanded(
                         child: SingleChildScrollView(
@@ -597,7 +597,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen>
                         ),
                       ),
                     ],
-                  ).animate().fadeIn(duration: 800.ms),
+                  ).animate().fadeIn(),
                 );
               }
             },

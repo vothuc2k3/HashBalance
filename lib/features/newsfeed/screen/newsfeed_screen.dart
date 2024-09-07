@@ -119,7 +119,7 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
                               author: postData.author,
                               post: postData.post,
                               community: postData.community,
-                            ).animate().fadeIn(duration: 800.ms);
+                            ).animate().fadeIn();
                           },
                         );
                       } else {

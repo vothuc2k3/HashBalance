@@ -109,7 +109,7 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen>
                 return const Center(
                         child: Text('There\'s no any communities :('))
                     .animate()
-                    .fadeIn(duration: 800.ms);
+                    .fadeIn();
               } else {
                 final communities = snapshot.data!;
                 return ListView.builder(
@@ -157,7 +157,7 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen>
                         onTap: () => _navigateToCommunityScreen(
                             community, currentUser!.uid),
                       ),
-                    ).animate().fadeIn(duration: 800.ms);
+                    ).animate().fadeIn();
                   },
                 );
               }

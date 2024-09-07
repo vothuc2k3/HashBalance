@@ -76,4 +76,30 @@ class UserController extends StateNotifier<bool> {
       return left(Failures(e.toString()));
     }
   }
+
+  Future<Either<Failures, void>> uploadBannerImage(
+    UserModel user,
+    File bannerImage,
+  ) async {
+    try {
+      return await _userRepository.uploadBannerImage(user, bannerImage);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  Future<Either<Failures, void>> editName(
+    UserModel user,
+    String name,
+  ) async {
+    try {
+      return await _userRepository.editName(user, name);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
 }

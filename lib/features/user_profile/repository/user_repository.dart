@@ -144,16 +144,68 @@ class UserRepository {
         id: user.uid,
         file: profileImage,
       );
-      await result.fold((l) => throw FirebaseException(
-            plugin: 'Firebase Exception',
-            message: l.message,
-          ), (r) async {
+      await result.fold(
+          (l) => throw FirebaseException(
+                plugin: 'Firebase Exception',
+                message: l.message,
+              ), (r) async {
         final profileImageUrl = await FirebaseStorage.instance
             .ref('users/profile/${user.uid}')
             .getDownloadURL();
         await _user.doc(user.uid).update({
           'profileImage': profileImageUrl,
         });
+      });
+      return right(null);
+    } on FirebaseException catch (e, stackTrace) {
+      await Sentry.captureException(e, stackTrace: stackTrace);
+      throw e.message ?? 'Unknown FirebaseException error';
+    } catch (e, stackTrace) {
+      await Sentry.captureException(
+        e,
+        stackTrace: stackTrace,
+      );
+      throw e.toString();
+    }
+  }
+
+  Future<Either<Failures, void>> uploadBannerImage(
+      UserModel user, File bannerImage) async {
+    try {
+      final result = await _storageRepository.storeFile(
+        path: 'users/banner',
+        id: user.uid,
+        file: bannerImage,
+      );
+      await result.fold(
+          (l) => throw FirebaseException(
+                plugin: 'Firebase Exception',
+                message: l.message,
+              ), (r) async {
+        final bannerImageUrl = await FirebaseStorage.instance
+            .ref('users/banner/${user.uid}')
+            .getDownloadURL();
+        await _user.doc(user.uid).update({
+          'bannerImage': bannerImageUrl,
+        });
+      });
+      return right(null);
+    } on FirebaseException catch (e, stackTrace) {
+      await Sentry.captureException(e, stackTrace: stackTrace);
+      throw e.message ?? 'Unknown FirebaseException error';
+    } catch (e, stackTrace) {
+      await Sentry.captureException(
+        e,
+        stackTrace: stackTrace,
+      );
+      throw e.toString();
+    }
+  }
+
+  Future<Either<Failures, void>> editName(UserModel user, String name) async {
+    try {
+      await _user.doc(user.uid).update({
+        'name': name,
       });
       return right(null);
     } on FirebaseException catch (e, stackTrace) {
