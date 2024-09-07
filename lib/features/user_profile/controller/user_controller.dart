@@ -102,4 +102,28 @@ class UserController extends StateNotifier<bool> {
       return left(Failures(e.toString()));
     }
   }
+
+  Future<Either<Failures, void>> editBio(
+    UserModel user,
+    String bio,
+  ) async {
+    try {
+      return await _userRepository.editBio(user, bio);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  Future<Either<Failures, void>> editDescription(
+    UserModel user,
+    String description,
+  ) async {
+    try {
+      return await _userRepository.editDescription(user, description);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    }
+  }
 }

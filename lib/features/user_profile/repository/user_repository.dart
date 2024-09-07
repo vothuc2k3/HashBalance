@@ -220,6 +220,43 @@ class UserRepository {
     }
   }
 
+  Future<Either<Failures, void>> editBio(UserModel user, String bio) async {
+    try {
+      await _user.doc(user.uid).update({
+        'bio': bio,
+      });
+      return right(null);
+    } on FirebaseException catch (e, stackTrace) {
+      await Sentry.captureException(e, stackTrace: stackTrace);
+      throw e.message ?? 'Unknown FirebaseException error';
+    } catch (e, stackTrace) {
+      await Sentry.captureException(
+        e,
+        stackTrace: stackTrace,
+      );
+      throw e.toString();
+    }
+  }
+
+  Future<Either<Failures, void>> editDescription(
+      UserModel user, String description) async {
+    try {
+      await _user.doc(user.uid).update({
+        'description': description,
+      });
+      return right(null);
+    } on FirebaseException catch (e, stackTrace) {
+      await Sentry.captureException(e, stackTrace: stackTrace);
+      throw e.message ?? 'Unknown FirebaseException error';
+    } catch (e, stackTrace) {
+      await Sentry.captureException(
+        e,
+        stackTrace: stackTrace,
+      );
+      throw e.toString();
+    }
+  }
+
   //REFERENCE ALL THE USERS
   CollectionReference get _user =>
       _firestore.collection(FirebaseConstants.usersCollection);

@@ -68,13 +68,54 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
   void _editName(UserModel currentUser, String name) async {
     if (name.isEmpty || name.length < 3) {
       showToast(false, 'Name must be at least 3 characters');
+    } else if (name.length > 15) {
+      showToast(false, 'Name must be less than 15 characters');
     } else {
       final result = await ref
           .read(userControllerProvider.notifier)
           .editName(currentUser, name);
-      result.fold((l) => showToast(false, l.message), (r) {
-        showToast(true, 'Edit name successfully');
-      });
+      result.fold(
+        (l) => showToast(false, l.message),
+        (r) {
+          showToast(true, 'Edit name successfully');
+        },
+      );
+    }
+  }
+
+  void _editBio(UserModel currentUser, String bio) async {
+    if (bio.isEmpty) {
+      showToast(false, 'Bio must be at least 1 characters');
+    } else if (bio.length > 100) {
+      showToast(false, 'Bio must be less than 100 characters');
+    } else {
+      final result = await ref
+          .read(userControllerProvider.notifier)
+          .editBio(currentUser, bio);
+      result.fold(
+        (l) => showToast(false, l.message),
+        (r) {
+          showToast(true, 'Edit bio successfully');
+        },
+      );
+    }
+  }
+
+  void _editDescription(UserModel currentUser, String description) async {
+    if (description.isEmpty) {
+      showToast(false, 'Description must be at least 1 characters');
+    } else if (description.length > 100) {
+      showToast(false, 'Description must be less than 100 characters');
+    } else {
+      final result = await ref
+          .read(userControllerProvider.notifier)
+          .editDescription(currentUser, description);
+      result.fold(
+        (l) => showToast(false, l.message),
+        (r) {
+          showToast(true, 'Edit description successfully');
+        },
+      );
     }
   }
 
@@ -108,7 +149,166 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
                       actions: [
                         TextButton(
                           onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () {
                             _editName(currentUser, nameController.text);
+                            Navigator.pop(context);
+                          },
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            backgroundColor: Colors.blue,
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 8.0, horizontal: 16.0),
+                            minimumSize: const Size(80, 40),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text(
+                            'Save',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.cancel),
+              title: const Text('Cancel'),
+              onTap: () {
+                Navigator.pop(context); // Đóng modal
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showEditBioModal(UserModel currentUser) async {
+    final bioController = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
+      ),
+      builder: (context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit),
+              title: const Text('Edit Bio'),
+              onTap: () {
+                Navigator.pop(context); // Đóng modal
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text('Edit Name'),
+                      content: TextField(
+                        controller: bioController,
+                        decoration: const InputDecoration(
+                          hintText: 'Enter your new bio',
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            _editBio(currentUser, bioController.text);
+                            Navigator.pop(context);
+                          },
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            backgroundColor: Colors.blue,
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 8.0, horizontal: 16.0),
+                            minimumSize: const Size(80, 40),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text(
+                            'Save',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.cancel),
+              title: const Text('Cancel'),
+              onTap: () {
+                Navigator.pop(context); // Đóng modal
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showEditDescriptionModal(UserModel currentUser) async {
+    final descriptionController = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
+      ),
+      builder: (context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit),
+              title: const Text('Edit Bio'),
+              onTap: () {
+                Navigator.pop(context); // Đóng modal
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text('Edit Description'),
+                      content: TextField(
+                        controller: descriptionController,
+                        decoration: const InputDecoration(
+                          hintText: 'Enter your new description',
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            _editDescription(
+                                currentUser, descriptionController.text);
                             Navigator.pop(context);
                           },
                           style: TextButton.styleFrom(
@@ -510,22 +710,30 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
                   child: Row(
                     children: [
                       Flexible(
-                        child: Text(
-                          currentUser.bio ??
-                              'You haven\'t said anything yet...',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            fontStyle: FontStyle.italic,
-                            color: Colors.white.withOpacity(0.8),
-                            shadows: const [
-                              Shadow(
-                                offset: Offset(1, 1),
-                                blurRadius: 2.0,
-                                color: Colors.black12,
+                        child: Row(
+                          children: [
+                            Text(
+                              currentUser.bio ??
+                                  'You haven\'t said anything yet...',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white.withOpacity(0.8),
+                                shadows: const [
+                                  Shadow(
+                                    offset: Offset(1, 1),
+                                    blurRadius: 2.0,
+                                    color: Colors.black12,
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(width: 8),
+                            InkWell(
+                              onTap: () => _showEditBioModal(currentUser),
+                              child: const Icon(Icons.edit),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -537,22 +745,32 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
                   child: Row(
                     children: [
                       Flexible(
-                        child: Text(
-                          currentUser.description ??
-                              'You haven\'t describe about yourself yet...',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.white70,
-                            letterSpacing: 0.5,
-                            height: 1.4,
-                            shadows: [
-                              Shadow(
-                                offset: Offset(0.5, 0.5),
-                                blurRadius: 1.0,
-                                color: Colors.black12,
+                        child: Row(
+                          children: [
+                            Text(
+                              currentUser.description ??
+                                  'You haven\'t describe about yourself yet...',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white70,
+                                letterSpacing: 0.5,
+                                height: 1.4,
+                                shadows: [
+                                  Shadow(
+                                    offset: Offset(0.5, 0.5),
+                                    blurRadius: 1.0,
+                                    color: Colors.black12,
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(width: 8),
+                            InkWell(
+                              onTap: () =>
+                                  _showEditDescriptionModal(currentUser),
+                              child: const Icon(Icons.edit),
+                            ),
+                          ],
                         ),
                       ),
                     ],
