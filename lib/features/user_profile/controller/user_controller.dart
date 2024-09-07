@@ -63,4 +63,17 @@ class UserController extends StateNotifier<bool> {
       throw e.toString();
     }
   }
+
+  Future<Either<Failures, void>> uploadProfileImage(
+    UserModel user,
+    File profileImage,
+  ) async {
+    try {
+      return await _userRepository.uploadProfileImage(user, profileImage);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
 }

@@ -41,162 +41,167 @@ class SearchCommunityDelegate extends SearchDelegate {
   @override
   Widget buildSuggestions(BuildContext context) {
     final currentUser = ref.watch(userProvider)!;
-    if (query.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Suggestions:',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.white,
-              ),
-            ),
-            InkWell(
-              onTap: () {
-                query = '#';
-                showSuggestions(context);
-              },
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8.0),
-                child: Row(
-                  children: [
-                    Icon(Icons.tag, color: Colors.white),
-                    SizedBox(width: 10),
-                    Text(
-                      '#',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            InkWell(
-              onTap: () {
-                query = '#=';
-                showSuggestions(context);
-              },
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8.0),
-                child: Row(
-                  children: [
-                    Icon(Icons.people, color: Colors.white),
-                    SizedBox(width: 10),
-                    Text('#=', style: TextStyle(color: Colors.white)),
-                  ],
-                ),
-              ),
-            ),
-            InkWell(
-              onTap: () {
-                query = '=';
-                showSuggestions(context);
-              },
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8.0),
-                child: Row(
-                  children: [
-                    Icon(Icons.article, color: Colors.white),
-                    SizedBox(width: 10),
-                    Text(
-                      '=',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+
+    // Tái sử dụng BoxDecoration với gradient
+    const BoxDecoration gradientBackground = BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Color(0xFF000000),
+          Color(0xFF0D47A1),
+          Color(0xFF1976D2),
+        ],
+      ),
+    );
+
+    // Hàm tái sử dụng cho Card với ListTile
+    Widget buildListItem(
+        {required String title,
+        required String imageUrl,
+        required VoidCallback onTap}) {
+      return Card(
+        color: Colors.black87,
+        margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        child: ListTile(
+          leading: CircleAvatar(
+            backgroundImage: CachedNetworkImageProvider(imageUrl),
+          ),
+          title: Text(title, style: const TextStyle(color: Colors.white)),
+          onTap: onTap,
         ),
       );
     }
 
-    return ref.watch(searchProvider(query)).when(
-          data: (data) {
-            if (query.startsWith('#=')) {
-              return ListView.separated(
-                itemCount: data.length,
-                itemBuilder: (BuildContext context, int index) {
-                  final community = data[index];
-                  return Card(
-                    color: Colors.black87,
-                    margin: const EdgeInsets.symmetric(
-                        vertical: 4.0, horizontal: 8.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundImage:
-                            CachedNetworkImageProvider(community.profileImage),
-                      ),
-                      title: Text(
-                        '#=${community.name}',
-                        style: const TextStyle(color: Colors.white),
-                      ),
+    return Scaffold(
+      body: Container(
+        decoration: gradientBackground,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (query.isEmpty)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    InkWell(
                       onTap: () {
-                        _navigateToCommunityScreen(
-                          context,
-                          community,
-                          currentUser.uid,
-                        );
+                        query = '#';
+                        showSuggestions(context);
                       },
-                    ),
-                  );
-                },
-                separatorBuilder: (BuildContext context, int index) {
-                  return const Divider(color: Colors.grey);
-                },
-              );
-            } else if (query.startsWith('#')) {
-              final currentUser = ref.watch(userProvider);
-              return ListView.separated(
-                itemCount: data.length,
-                itemBuilder: (BuildContext context, int index) {
-                  UserModel user = data[index];
-                  if (user.uid == currentUser!.uid) {
-                    return const SizedBox.shrink();
-                  }
-                  return Card(
-                    color: Colors.black87,
-                    margin: const EdgeInsets.symmetric(
-                        vertical: 4.0, horizontal: 8.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundImage:
-                            CachedNetworkImageProvider(user.profileImage),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8.0),
+                        child: Row(
+                          children: [
+                            Icon(Icons.person_4, color: Colors.white),
+                            SizedBox(width: 10),
+                            Text('#', style: TextStyle(color: Colors.white)),
+                          ],
+                        ),
                       ),
-                      title: Text(
-                        '#${user.name}',
-                        style: const TextStyle(color: Colors.white),
-                      ),
+                    ),
+                    InkWell(
                       onTap: () {
-                        navigateToProfileScreen(context, user);
+                        query = '#=';
+                        showSuggestions(context);
                       },
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8.0),
+                        child: Row(
+                          children: [
+                            Icon(Icons.people, color: Colors.white),
+                            SizedBox(width: 10),
+                            Text('#=', style: TextStyle(color: Colors.white)),
+                          ],
+                        ),
+                      ),
                     ),
-                  );
-                },
-                separatorBuilder: (BuildContext context, int index) {
-                  final user = data[index];
-                  if (user.uid == currentUser!.uid) {
-                    return const SizedBox.shrink();
-                  }
-                  return const Divider(color: Colors.grey);
-                },
-              );
-            } else {
-              // TODO: if query.startsWith('='), return posts
-              return const SizedBox();
-            }
-          },
-          error: (error, stackTrace) => ErrorText(error: error.toString()),
-          loading: () => const Loading(),
-        );
+                    InkWell(
+                      onTap: () {
+                        query = '=';
+                        showSuggestions(context);
+                      },
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8.0),
+                        child: Row(
+                          children: [
+                            Icon(Icons.article, color: Colors.white),
+                            SizedBox(width: 10),
+                            Text('=', style: TextStyle(color: Colors.white)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              else
+                Expanded(
+                  child: ref.watch(searchProvider(query)).when(
+                        data: (data) {
+                          if (query.startsWith('#=')) {
+                            return ListView.separated(
+                              itemCount: data.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                final community = data[index];
+                                return buildListItem(
+                                  title: community.name,
+                                  imageUrl: community.profileImage,
+                                  onTap: () {
+                                    _navigateToCommunityScreen(
+                                      context,
+                                      community,
+                                      currentUser.uid,
+                                    );
+                                  },
+                                );
+                              },
+                              separatorBuilder:
+                                  (BuildContext context, int index) =>
+                                      const Divider(color: Colors.grey),
+                            );
+                          } else if (query.startsWith('#')) {
+                            return ListView.separated(
+                              itemCount: data.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                final user = data[index];
+                                if (user.uid == currentUser.uid) {
+                                  return const SizedBox.shrink();
+                                }
+                                return buildListItem(
+                                  title: '#${user.name}',
+                                  imageUrl: user.profileImage,
+                                  onTap: () {
+                                    navigateToProfileScreen(context, user);
+                                  },
+                                );
+                              },
+                              separatorBuilder:
+                                  (BuildContext context, int index) {
+                                final user = data[index];
+                                if (user.uid == currentUser.uid) {
+                                  return const SizedBox.shrink();
+                                }
+                                return const Divider(color: Colors.grey);
+                              },
+                            );
+                          } else {
+                            return const SizedBox();
+                          }
+                        },
+                        error: (error, stackTrace) =>
+                            ErrorText(error: error.toString()),
+                        loading: () => const Loading(),
+                      ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _navigateToCommunityScreen(

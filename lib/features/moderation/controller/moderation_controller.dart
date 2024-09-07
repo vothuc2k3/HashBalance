@@ -10,6 +10,7 @@ import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/invitation/controller/invitation_controller.dart';
 import 'package:hash_balance/features/moderation/repository/moderation_repository.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
@@ -37,6 +38,7 @@ final moderationControllerProvider =
       notificationController: ref.read(notificationControllerProvider.notifier),
       pushNotificationController:
           ref.read(pushNotificationControllerProvider.notifier),
+      commentController: ref.read(commentControllerProvider.notifier),
       userController: ref.read(userControllerProvider.notifier),
       ref: ref,
     );
@@ -49,6 +51,7 @@ class ModerationController extends StateNotifier<bool> {
   final InvitationController _invitationController;
   final NotificationController _notificationController;
   final PushNotificationController _pushNotificationController;
+  final CommentController _commentController;
   final UserController _userController;
   final Ref _ref;
 
@@ -58,6 +61,7 @@ class ModerationController extends StateNotifier<bool> {
     required InvitationController invitationController,
     required NotificationController notificationController,
     required PushNotificationController pushNotificationController,
+    required CommentController commentController,
     required UserController userController,
     required Ref ref,
   })  : _moderationRepository = moderationRepository,
@@ -65,6 +69,7 @@ class ModerationController extends StateNotifier<bool> {
         _invitationController = invitationController,
         _notificationController = notificationController,
         _pushNotificationController = pushNotificationController,
+        _commentController = commentController,
         _userController = userController,
         _ref = ref,
         super(false);
@@ -238,5 +243,30 @@ class ModerationController extends StateNotifier<bool> {
     } catch (e) {
       throw Failures(e.toString());
     }
+  }
+
+  FutureVoid deletePost(Post post) async {
+    try {
+      final user = _ref.watch(userProvider)!;
+      final result = await _moderationRepository.deletePost(post, user.uid);
+      result.fold((l) => left(l), (r) async {
+        if (post.image != '') {
+          _storageRepository.deleteFile(
+            path: 'posts/images/${post.id}',
+          );
+        }
+        if (post.video != '') {
+          _storageRepository.deleteFile(
+            path: 'posts/videos/${post.id}',
+          );
+        }
+        await _commentController.clearPostComments(post.id);
+      });
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    } 
   }
 }

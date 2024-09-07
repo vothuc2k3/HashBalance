@@ -42,6 +42,9 @@ class AuthScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isLoading = ref.watch(authControllerProvider);
+    final screenHeight =
+        MediaQuery.of(context).size.height; // Lấy chiều cao màn hình
+
     return Scaffold(
       appBar: AppBar(
         title: Image.asset(
@@ -63,114 +66,156 @@ class AuthScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: isLoading
-          ? const Loading()
-          : SingleChildScrollView(
-              physics: const NeverScrollableScrollPhysics(),
-              child: Column(
-                children: [
-                  const SizedBox(height: 30),
-                  const Text(
-                    'Let\'s join the communities!',
-                    style: TextStyle(
-                      fontSize: 24,
-                      letterSpacing: 0.5,
-                    ),
+      body: Container(
+        height: screenHeight, // Đặt chiều cao toàn màn hình
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF000000),
+              Color(0xFF0D47A1),
+              Color(0xFF1976D2),
+            ],
+          ),
+        ),
+        child: isLoading
+            ? const Loading()
+            : SingleChildScrollView(
+                physics: const NeverScrollableScrollPhysics(),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: screenHeight, // Đảm bảo chiều cao tối thiểu
                   ),
-                  const SizedBox(height: 30),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Image.asset(
-                      Constants.signinEmotePath,
-                      height: 400,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 30),
-                    child: GoogleSignInButton(),
-                  ),
-                  const SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 30),
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        navigateToEmailSignUpScreen(context);
-                      },
-                      icon: Image.asset(
-                        Constants.emailLogoPath,
-                        width: 35,
-                      ),
-                      label: const Text(
-                        'Join with Email',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.white,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Pallete.greyColor,
-                        minimumSize: const Size(
-                          double.infinity,
-                          50,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 40),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text(
-                                'Already have an account? ',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  navigateToEmailSignInScreen(context);
-                                },
-                                child: const Text(
-                                  'Sign In',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.blue,
-                                  ),
-                                ),
-                              ),
-                            ],
+                  child: IntrinsicHeight(
+                    // Sử dụng IntrinsicHeight để phù hợp với các widget bên trong
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment:
+                          MainAxisAlignment.spaceBetween, // Căn giữa nội dung
+                      children: [
+                        const SizedBox(height: 30),
+                        const Text(
+                          'Let\'s join the communities!',
+                          style: TextStyle(
+                            fontSize: 24,
+                            letterSpacing: 0.5,
                           ),
-                          TextButton(
+                        ),
+                        const SizedBox(height: 30),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Image.asset(
+                            Constants.signinEmotePath,
+                            height: 400,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 30),
+                          child: GoogleSignInButton(),
+                        ),
+                        const SizedBox(height: 10),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 30),
+                          child: ElevatedButton.icon(
                             onPressed: () {
-                              navigateToForgotPasswordScreen(context);
+                              navigateToEmailSignUpScreen(context);
                             },
-                            child: const Text(
-                              'Forgot Password?',
+                            icon: Image.asset(
+                              Constants.emailLogoPath,
+                              width: 35,
+                            ),
+                            label: const Text(
+                              'Join with Email',
                               style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue,
+                                fontSize: 18,
+                                color: Colors.white,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Pallete.greyColor,
+                              minimumSize: const Size(double.infinity, 50),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                        const Spacer(), // Thêm khoảng trống để đẩy các thành phần cuối xuống đáy màn hình
+                        Align(
+                          alignment: Alignment.bottomCenter,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 40),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Text(
+                                      'Already have an account? ',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontStyle: FontStyle.italic,
+                                        color: Colors
+                                            .white, // Giữ màu chữ của câu hỏi là trắng
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        navigateToEmailSignInScreen(context);
+                                      },
+                                      child: const Text(
+                                        'Sign In',
+                                        style: TextStyle(
+                                          fontSize: 16, // Giữ kích thước chữ
+                                          fontWeight: FontWeight
+                                              .bold, // Đặt chữ in đậm để nổi bật hơn
+                                          color: Colors
+                                              .white, // Thay đổi màu chữ thành trắng để phù hợp với nền
+                                          shadows: [
+                                            Shadow(
+                                              offset: Offset(0, 1),
+                                              blurRadius: 2.0,
+                                              color: Colors
+                                                  .black45, // Thêm bóng nhẹ để nổi bật hơn
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    navigateToEmailSignInScreen(context);
+                                  },
+                                  child: const Text(
+                                    'Sign In',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      shadows: [
+                                        Shadow(
+                                          offset: Offset(0, 1),
+                                          blurRadius: 2.0,
+                                          color: Colors.black45,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
+      ),
     );
   }
 }

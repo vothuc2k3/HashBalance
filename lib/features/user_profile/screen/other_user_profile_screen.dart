@@ -101,7 +101,8 @@ class _OtherUserProfileScreenState
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Restricted Profile'),
-          content: const Text('This user currently does not allow their profile to be viewed.'),
+          content: const Text(
+              'This user currently does not allow their profile to be viewed.'),
           actions: <Widget>[
             TextButton(
               child: const Text('Close'),
@@ -141,181 +142,215 @@ class _OtherUserProfileScreenState
           ),
         ),
       ),
-      body: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          Container(
-            margin: EdgeInsets.only(bottom: bottom),
-            child: Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.center,
-              children: [
-                Container(
-                  color: Colors.grey,
-                  child: CachedNetworkImage(
-                    imageUrl: widget._targetUser.bannerImage,
-                    width: double.infinity,
-                    height: coverHeight,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF000000),
+              Color(0xFF0D47A1),
+              Color(0xFF1976D2),
+            ],
+          ),
+        ),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            Container(
+              margin: EdgeInsets.only(bottom: bottom),
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    color: Colors.grey,
+                    child: CachedNetworkImage(
+                      imageUrl: widget._targetUser.bannerImage,
                       width: double.infinity,
                       height: coverHeight,
-                      color: Colors.black,
-                      child: const Center(
-                        child: CircularProgressIndicator(),
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        width: double.infinity,
+                        height: coverHeight,
+                        color: Colors.black,
+                        child: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Positioned(
-                  top: top,
-                  child: CircleAvatar(
-                    radius: profileHeight / 2,
-                    backgroundColor: Colors.grey.shade800,
-                    backgroundImage: CachedNetworkImageProvider(
-                      widget._targetUser.profileImage,
+                  Positioned(
+                    top: top,
+                    child: CircleAvatar(
+                      radius: profileHeight / 2,
+                      backgroundColor: Colors.grey.shade800,
+                      backgroundImage: CachedNetworkImageProvider(
+                        widget._targetUser.profileImage,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Column(
-              children: [
-                const SizedBox(height: 8),
-                const Text(
-                  'Short description',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                children: [
+                  const SizedBox(height: 8),
+                  Text(
+                    widget._targetUser.name,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Long description',
-                  style: TextStyle(
-                    fontSize: 16,
+                  const SizedBox(height: 8),
+                  Text(
+                    widget._targetUser.bio ?? '',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildSocialIcon(FontAwesomeIcons.slack),
-                    const SizedBox(width: 12),
-                    _buildSocialIcon(FontAwesomeIcons.github),
-                    const SizedBox(width: 12),
-                    _buildSocialIcon(FontAwesomeIcons.twitter),
-                    const SizedBox(width: 12),
-                    _buildSocialIcon(FontAwesomeIcons.linkedin),
-                  ],
-                ),
-                //BUILD FOLLOWING WIDGET
-                const SizedBox(height: 8),
-                isFollowing.when(
-                  data: (isFollowing) {
-                    return _buildFollowButton(
-                      isFollowing,
-                      followUser,
-                      widget._targetUser,
-                    );
-                  },
-                  error: (error, stackTrace) =>
-                      ErrorText(error: error.toString()),
-                  loading: () => const Loading(),
-                ),
-                //BUILD FRIEND WIDGET
-                const SizedBox(height: 8),
-                isFriend.when(
-                    data: (isFriend) {
-                      return isFriend == true
-                          ? _buildFriendsWidget(
-                              context,
-                              widget._targetUser,
-                              unfriend,
-                            )
-                          : ref
-                              .watch(getFriendRequestStatusProvider(requestId))
-                              .when(
-                                data: (request) {
-                                  if (request == null) {
-                                    return Column(
-                                      children: [
-                                        _buildAddFriendButton(
-                                          sendAddFriendRequest,
-                                          widget._targetUser,
-                                        ),
-                                      ],
+                  const SizedBox(height: 8),
+                  Text(
+                    widget._targetUser.description ?? '',
+                    style: const TextStyle(
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildSocialIcon(FontAwesomeIcons.slack),
+                      const SizedBox(width: 12),
+                      _buildSocialIcon(FontAwesomeIcons.github),
+                      const SizedBox(width: 12),
+                      _buildSocialIcon(FontAwesomeIcons.twitter),
+                      const SizedBox(width: 12),
+                      _buildSocialIcon(FontAwesomeIcons.linkedin),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const SizedBox(height: 8),
+                      //BUILD FOLLOWING WIDGET
+                      isFollowing.when(
+                        data: (isFollowing) {
+                          return _buildFollowButton(
+                            isFollowing,
+                            followUser,
+                            widget._targetUser,
+                          );
+                        },
+                        error: (error, stackTrace) =>
+                            ErrorText(error: error.toString()),
+                        loading: () => const Loading(),
+                      ),
+                      //BUILD FRIEND WIDGET
+                      const SizedBox(height: 8),
+                      isFriend.when(
+                          data: (isFriend) {
+                            return isFriend == true
+                                ? _buildFriendsWidget(
+                                    context,
+                                    widget._targetUser,
+                                    unfriend,
+                                  ).animate()
+                                : ref
+                                    .watch(getFriendRequestStatusProvider(
+                                        requestId))
+                                    .when(
+                                      data: (request) {
+                                        if (request == null) {
+                                          return Column(
+                                            children: [
+                                              _buildAddFriendButton(
+                                                sendAddFriendRequest,
+                                                widget._targetUser,
+                                              ).animate(),
+                                            ],
+                                          );
+                                        } else if (request.requestUid ==
+                                            currentUser.uid) {
+                                          return _buildFriendRequestSent(
+                                                  cancelFriendRequest,
+                                                  requestId)
+                                              .animate();
+                                        } else {
+                                          return _buildAcceptFriendRequestButton(
+                                                  acceptFriendRequest,
+                                                  widget._targetUser)
+                                              .animate();
+                                        }
+                                      },
+                                      error: (error, stackTrace) =>
+                                          ErrorText(error: error.toString())
+                                              .animate(),
+                                      loading: () => const Loading().animate(),
                                     );
-                                  } else if (request.requestUid ==
-                                      currentUser.uid) {
-                                    return _buildFriendRequestSent(
-                                        cancelFriendRequest, requestId);
-                                  } else {
-                                    return _buildAcceptFriendRequestButton(
-                                        acceptFriendRequest,
-                                        widget._targetUser);
-                                  }
-                                },
-                                error: (error, stackTrace) =>
-                                    ErrorText(error: error.toString()),
-                                loading: () => const Loading(),
-                              );
-                    },
-                    error: (error, stackTrace) =>
-                        ErrorText(error: error.toString()),
-                    loading: () => const Loading()),
-                //BUILD MESSAGE USER
-                const SizedBox(height: 8),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    messageUser(widget._targetUser);
-                  },
-                  icon: const Icon(Icons.message, color: Colors.white),
-                  label: const Text('Message'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    textStyle: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    elevation: 5,
+                          },
+                          error: (error, stackTrace) =>
+                              ErrorText(error: error.toString()),
+                          loading: () => const Loading()),
+                      //BUILD MESSAGE USER
+                      const SizedBox(height: 8),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          messageUser(widget._targetUser);
+                        },
+                        icon: const Icon(Icons.message, color: Colors.white),
+                        label: const Text('Message'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          textStyle: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 5,
+                        ),
+                      ).animate().fadeIn(duration: 600.ms).moveY(
+                            begin: 30,
+                            end: 0,
+                            duration: 600.ms,
+                            curve: Curves.easeOutBack,
+                          ),
+                    ],
                   ),
-                ).animate().fadeIn(duration: 600.ms).moveY(
-                    begin: 30,
-                    end: 0,
-                    duration: 600.ms,
-                    curve: Curves.easeOutBack),
-                const SizedBox(height: 16),
-                const Divider(),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildButton(text: 'Friends', value: 52),
-                    _buildVerticalDivider(),
-                    _buildButton(
-                      text: 'Points',
-                      value: widget._targetUser.activityPoint,
-                    ),
-                    _buildVerticalDivider(),
-                    _buildButton(text: 'Achievements', value: 0),
-                    _buildVerticalDivider(),
-                    _buildButton(text: 'Followers', value: 5834),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                const Divider(),
-                const SizedBox(height: 16),
-              ],
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                  
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildButton(text: 'Friends', value: 52),
+                      _buildVerticalDivider(),
+                      _buildButton(
+                        text: 'Points',
+                        value: widget._targetUser.activityPoint,
+                      ),
+                      _buildVerticalDivider(),
+                      _buildButton(text: 'Achievements', value: 0),
+                      _buildVerticalDivider(),
+                      _buildButton(text: 'Followers', value: 5834),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -488,7 +523,7 @@ class _OtherUserProfileScreenState
     return Expanded(
       child: MaterialButton(
         padding: const EdgeInsets.symmetric(vertical: 4),
-        onPressed: (){},
+        onPressed: () {},
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -578,4 +613,3 @@ class _OtherUserProfileScreenState
     );
   }
 }
-

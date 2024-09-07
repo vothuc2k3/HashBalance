@@ -64,7 +64,6 @@ class PostController extends StateNotifier<bool> {
     File? video,
     String content,
   ) async {
-    state = true;
     try {
       if (content.isEmpty && image == null && video == null) {
         return left(Failures('Post cannot be empty'));
@@ -106,8 +105,6 @@ class PostController extends StateNotifier<bool> {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
-    } finally {
-      state = false;
     }
   }
 

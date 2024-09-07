@@ -1,12 +1,17 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
+import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/edit_profile/edit_user_profile.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:image_picker/image_picker.dart';
 
 class UserProfileScreen extends ConsumerStatefulWidget {
   const UserProfileScreen({
@@ -40,6 +45,169 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
       MaterialPageRoute(
         builder: (context) => OtherUserProfileScreen(targetUser: friend),
       ),
+    );
+  }
+
+  void _uploadProfileImage(XFile profileImageFile) async {
+    final result = await ref
+        .read(userControllerProvider.notifier)
+        .uploadProfileImage(widget.user, File(profileImageFile.path));
+    result.fold((l) => showToast(false, l.message), (r) {
+      showToast(true, 'Upload profile image successfully');
+    });
+  }
+
+  void _changeProfileImage() async {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
+      ),
+      builder: (context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Take a photo'),
+              onTap: () async {
+                Navigator.pop(context); // Đóng modal
+                final XFile? image = await ImagePicker().pickImage(
+                  source: ImageSource.camera,
+                  imageQuality: 100,
+                );
+                if (image != null) {
+                  _uploadProfileImage(image);
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Choose from gallery'),
+              onTap: () async {
+                Navigator.pop(context); // Đóng modal
+                final XFile? image = await ImagePicker().pickImage(
+                  source: ImageSource.gallery, // Chọn từ bộ nhớ
+                  imageQuality: 50, // Giảm chất lượng ảnh để giảm dung lượng
+                );
+                if (image != null) {
+                  _uploadProfileImage(image); // Xử lý ảnh
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.cancel),
+              title: const Text('Cancel'),
+              onTap: () {
+                Navigator.pop(context); // Đóng modal
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showImage(String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.all(10),
+          child: GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: Center(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.9,
+                  maxHeight: MediaQuery.of(context).size.height * 0.9,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.5),
+                      spreadRadius: 5,
+                      blurRadius: 7,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.contain,
+                          placeholder: (context, url) => Container(
+                            color: Colors.black,
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) =>
+                              const Icon(Icons.error),
+                        ),
+                      ),
+                    ),
+                    const Positioned(
+                      top: 16,
+                      right: 16,
+                      child: Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 30,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _handleProfileImageAction() async {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
+      ),
+      builder: (BuildContext context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('View Profile Image'),
+              onTap: () {
+                Navigator.pop(context);
+                _showImage(widget.user.profileImage);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.edit),
+              title: const Text('Change Profile Image'),
+              onTap: () {
+                Navigator.pop(context);
+                _changeProfileImage();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.cancel),
+              title: const Text('Cancel'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -104,11 +272,15 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
                   Positioned(
                     top: top,
                     left: 10,
-                    child: CircleAvatar(
-                      radius: (profileHeight / 2) - 10,
-                      backgroundColor: Colors.grey.shade800,
-                      backgroundImage:
-                          CachedNetworkImageProvider(widget.user.profileImage),
+                    child: InkWell(
+                      onTap: () => _handleProfileImageAction(),
+                      child: CircleAvatar(
+                        radius: (profileHeight / 2) - 10,
+                        backgroundColor: Colors.grey.shade800,
+                        backgroundImage: CachedNetworkImageProvider(
+                          widget.user.profileImage,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -218,14 +390,25 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _buildVerticalDivider(),
-                    _buildButton(text: 'Followers', value: 0),
+                    _buildButton(
+                      text: 'Friends',
+                      value: 0,
+                    ),
                     _buildVerticalDivider(),
                     _buildButton(
-                        text: 'Activity Points',
-                        value: widget.user.activityPoint),
+                      text: 'Followers',
+                      value: 0,
+                    ),
                     _buildVerticalDivider(),
-                    _buildButton(text: 'Achievements', value: 0),
+                    _buildButton(
+                      text: 'Activity Points',
+                      value: widget.user.activityPoint,
+                    ),
+                    _buildVerticalDivider(),
+                    _buildButton(
+                      text: 'Achievements',
+                      value: 0,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 16),

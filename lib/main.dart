@@ -31,8 +31,20 @@ import 'package:hash_balance/features/user_profile/screen/other_user_profile_scr
 import 'package:hash_balance/firebase_options.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
+import 'package:logging/logging.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+void setupLogging() {
+  // Thiết lập mức độ log cho ứng dụng
+  Logger.root.level = Level.INFO; // Chỉ log từ mức INFO trở lên
+
+  // Nghe sự kiện log và xử lý
+  Logger.root.onRecord.listen((LogRecord rec) {
+    print('${rec.level.name}: ${rec.time}: ${rec.message}');
+  });
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,10 +55,19 @@ void main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(HiveUserModelAdapter());
   Hive.registerAdapter(HiveCommunityModelAdapter());
-  runApp(
-    const ProviderScope(
-      child: ToastificationWrapper(
-        child: MyApp(),
+  setupLogging();
+  await SentryFlutter.init(
+    (options) {
+      options.dsn =
+          'https://d6ba9f416ada27f226f00ff8d11700eb@o4507910984040448.ingest.de.sentry.io/4507910985875536';
+      options.tracesSampleRate = 1.0;
+      options.profilesSampleRate = 1.0;
+    },
+    appRunner: () => runApp(
+      const ProviderScope(
+        child: ToastificationWrapper(
+          child: MyApp(),
+        ),
       ),
     ),
   );

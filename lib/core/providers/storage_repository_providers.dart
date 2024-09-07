@@ -7,9 +7,11 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 
-final storageRepositoryProvider = Provider((ref) => StorageRepository(
-      firebaseStorage: ref.watch(firebaseStorageProvider),
-    ));
+final storageRepositoryProvider = Provider(
+  (ref) => StorageRepository(
+    firebaseStorage: ref.watch(firebaseStorageProvider),
+  ),
+);
 
 class StorageRepository {
   final FirebaseStorage _firebaseStorage;

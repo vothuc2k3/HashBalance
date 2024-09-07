@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/edit_community_screen.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/invite_moderators_screen.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/pending_post_screen.dart';
-import 'package:hash_balance/features/moderation/screen/mod_tools/report_screen.dart';
+import 'package:hash_balance/features/moderation/screen/mod_tools/reports_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
 
 class ModToolsScreen extends ConsumerWidget {
@@ -17,7 +17,7 @@ class ModToolsScreen extends ConsumerWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ReportScreen(community: community),
+        builder: (context) => ReportsScreen(community: community),
       ),
     );
   }

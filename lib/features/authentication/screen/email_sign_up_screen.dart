@@ -117,28 +117,39 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        body: Scaffold(
-          appBar: AppBar(
-            title: Image.asset(
-              Constants.logoPath,
-              height: 45,
-            ),
-            centerTitle: true,
-            actions: [
-              TextButton(
-                onPressed: () => navigateToSignInScreen(context),
-                child: const Text(
-                  'Sign In',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: Colors.white,
-                  ),
+        appBar: AppBar(
+          title: Image.asset(
+            Constants.logoPath,
+            height: 45,
+          ),
+          centerTitle: true,
+          actions: [
+            TextButton(
+              onPressed: () => navigateToSignInScreen(context),
+              child: const Text(
+                'Sign In',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Colors.white,
                 ),
               ),
-            ],
+            ),
+          ],
+        ),
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF000000),
+                Color(0xFF0D47A1),
+                Color(0xFF1976D2),
+              ],
+            ),
           ),
-          body: Column(
+          child: Column(
             children: [
               const SizedBox(
                 height: 30,

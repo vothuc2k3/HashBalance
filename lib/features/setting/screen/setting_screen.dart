@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
 import 'package:hash_balance/theme/pallette.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 class SettingScreen extends ConsumerStatefulWidget {
   const SettingScreen({super.key});
@@ -31,7 +32,17 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
     });
   }
 
-  void _testButton() async {}
+  void _testButton() async {
+    try {
+      int result = 10 ~/ 0;
+      print(result);
+    } catch (exception, stackTrace) {
+      await Sentry.captureException(
+        exception,
+        stackTrace: stackTrace,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,37 +56,50 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
           ),
         ),
       ),
-      body: Column(
-        children: [
-          ListTile(
-            leading: isTrySigningOut
-                ? const CircularProgressIndicator()
-                : Icon(
-                    Icons.logout,
-                    color: Pallete.redColor,
-                  ),
-            title: const Text(
-              'Sign Out',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            onTap: _signOut,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF000000),
+              Color(0xFF0D47A1),
+              Color(0xFF1976D2),
+            ],
           ),
-          ListTile(
-            leading: Icon(
-              Icons.logout,
-              color: Pallete.redColor,
-            ),
-            title: const Text(
-              'TEST BUTTON',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
+        ),
+        child: Column(
+          children: [
+            ListTile(
+              leading: isTrySigningOut
+                  ? const CircularProgressIndicator()
+                  : Icon(
+                      Icons.logout,
+                      color: Pallete.redColor,
+                    ),
+              title: const Text(
+                'Sign Out',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
+              onTap: _signOut,
             ),
-            onTap: _testButton,
-          ),
-        ],
+            ListTile(
+              leading: Icon(
+                Icons.logout,
+                color: Pallete.redColor,
+              ),
+              title: const Text(
+                'TEST BUTTON',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onTap: _testButton,
+            ),
+          ],
+        ),
       ),
     );
   }

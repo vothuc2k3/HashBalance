@@ -5,21 +5,27 @@ import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
+import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 final moderationRepositoryProvider = Provider((ref) {
-  return ModerationRepository(firestore: ref.watch(firebaseFirestoreProvider));
+  return ModerationRepository(
+      firestore: ref.watch(firebaseFirestoreProvider),
+      storageRepository: ref.watch(storageRepositoryProvider));
 });
 
 class ModerationRepository {
   final FirebaseFirestore _firestore;
+  final StorageRepository _storageRepository;
 
   ModerationRepository({
     required FirebaseFirestore firestore,
-  }) : _firestore = firestore;
+    required StorageRepository storageRepository,
+  })  : _firestore = firestore,
+        _storageRepository = storageRepository;
 
   CollectionReference get _communityMembership =>
       _firestore.collection(FirebaseConstants.communityMembershipCollection);
@@ -188,6 +194,34 @@ class ModerationRepository {
       throw Failures(e.message!);
     } catch (e) {
       throw Failures(e.toString());
+    }
+  }
+
+  //DELETE THE POST
+  FutureVoid deletePost(Post post, String uid) async {
+    final batch = _firestore.batch();
+    try {
+      final postVotes = await _posts
+          .doc(post.id)
+          .collection(FirebaseConstants.postVoteCollection)
+          .get();
+      for (final postVote in postVotes.docs) {
+        await postVote.reference.delete();
+      }
+      await _posts.doc(post.id).delete();
+
+      await _storageRepository.deleteFile(
+        path: 'posts/images/${post.id}',
+      );
+      await _storageRepository.deleteFile(
+        path: 'posts/videos/${post.id}',
+      );
+      await batch.commit();
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
     }
   }
 }

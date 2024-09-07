@@ -88,6 +88,17 @@ class ReportController {
     }
   }
 
+  Future<Either<Failures, void>> deleteReport(String reportId) async {
+    try {
+      await _reportRepository.deleteReport(reportId);
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
   Stream<List<Report>> fetchCommunityReports(String communityId) {
     return _reportRepository.fetchCommunityReports(communityId);
   }

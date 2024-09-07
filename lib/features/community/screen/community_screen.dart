@@ -564,7 +564,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              '#${widget._community.name}',
+                              '#=${widget._community.name}',
                               style: const TextStyle(
                                   fontSize: 20, fontWeight: FontWeight.bold),
                             ),

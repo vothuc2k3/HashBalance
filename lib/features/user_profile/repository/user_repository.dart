@@ -11,6 +11,7 @@ import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 final userRepositoryProvider = Provider((ref) {
   return UserRepository(
@@ -131,6 +132,38 @@ class UserRepository {
     } on FirebaseException catch (e) {
       throw e.message!;
     } catch (e) {
+      throw e.toString();
+    }
+  }
+
+  Future<Either<Failures, void>> uploadProfileImage(
+      UserModel user, File profileImage) async {
+    try {
+      final result = await _storageRepository.storeFile(
+        path: 'users/profile',
+        id: user.uid,
+        file: profileImage,
+      );
+      await result.fold((l) => throw FirebaseException(
+            plugin: 'Firebase Exception',
+            message: l.message,
+          ), (r) async {
+        final profileImageUrl = await FirebaseStorage.instance
+            .ref('users/profile/${user.uid}')
+            .getDownloadURL();
+        await _user.doc(user.uid).update({
+          'profileImage': profileImageUrl,
+        });
+      });
+      return right(null);
+    } on FirebaseException catch (e, stackTrace) {
+      await Sentry.captureException(e, stackTrace: stackTrace);
+      throw e.message ?? 'Unknown FirebaseException error';
+    } catch (e, stackTrace) {
+      await Sentry.captureException(
+        e,
+        stackTrace: stackTrace,
+      );
       throw e.toString();
     }
   }

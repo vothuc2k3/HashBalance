@@ -140,6 +140,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen>
               final homeScreenState =
                   context.findAncestorStateOfType<HomeScreenState>();
               homeScreenState?.onTabTapped(0);
+              super.dispose();
               break;
           }
         },
