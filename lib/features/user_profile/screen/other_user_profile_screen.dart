@@ -283,9 +283,11 @@ class _OtherUserProfileScreenState
                                               .animate();
                                         } else {
                                           return _buildAcceptFriendRequestButton(
-                                                  acceptFriendRequest,
-                                                  widget._targetUser)
-                                              .animate();
+                                            acceptFriendRequest,
+                                            cancelFriendRequest,
+                                            widget._targetUser,
+                                            requestId,
+                                          ).animate();
                                         }
                                       },
                                       error: (error, stackTrace) =>
@@ -310,7 +312,9 @@ class _OtherUserProfileScreenState
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 8),
                           textStyle: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -327,7 +331,6 @@ class _OtherUserProfileScreenState
                   const SizedBox(height: 16),
                   const Divider(),
                   const SizedBox(height: 16),
-                  
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -421,26 +424,67 @@ class _OtherUserProfileScreenState
     );
   }
 
-  Widget _buildAcceptFriendRequestButton(dynamic accept, UserModel targetUser) {
-    return ElevatedButton.icon(
-      onPressed: () {
-        accept(targetUser);
+  Widget _buildAcceptFriendRequestButton(
+    dynamic accept,
+    dynamic cancel,
+    UserModel targetUser,
+    String uids,
+  ) {
+    return PopupMenuButton<int>(
+      onSelected: (value) {
+        if (value == 1) {
+          accept(targetUser);
+        } else if (value == 2) {
+          cancel(uids);
+        }
       },
-      icon: const Icon(Icons.check, color: Colors.white),
-      label: const Text('Accept Friend Request'),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.green,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: 1,
+          child: ListTile(
+            leading: Icon(Icons.check, color: Colors.green),
+            title: Text('Accept'),
+          ),
         ),
-        elevation: 5,
-      ),
-    )
-        .animate()
-        .fadeIn(duration: 600.ms)
-        .moveY(begin: 30, end: 0, duration: 600.ms, curve: Curves.easeOutBack);
+        const PopupMenuItem(
+          value: 2,
+          child: ListTile(
+            leading: Icon(Icons.delete, color: Colors.red),
+            title: Text('Delete'),
+          ),
+        ),
+      ],
+      child: InkWell(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.green,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                offset: const Offset(0, 4),
+                blurRadius: 5,
+              ),
+            ],
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.check, color: Colors.white),
+              SizedBox(width: 8),
+              Text(
+                'Friend Request',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ).animate().fadeIn(),
+    );
   }
 
   Widget _buildFriendRequestSent(dynamic cancel, String requestUid) {

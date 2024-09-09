@@ -42,7 +42,6 @@ class NotificationController extends StateNotifier<bool> {
     String targetUid,
     NotificationModel notification,
   ) async {
-    state = true;
     try {
       await _notificationRepository.addNotification(targetUid, notification);
       return right(null);
@@ -50,8 +49,6 @@ class NotificationController extends StateNotifier<bool> {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
-    } finally {
-      state = false;
     }
   }
 
@@ -60,12 +57,12 @@ class NotificationController extends StateNotifier<bool> {
     return _notificationRepository.getNotificationByUid(uid);
   }
 
-  void markAsRead(String notifId) async {
+  Future<void> markAsRead(String notifId) async {
     final uid = _ref.watch(userProvider)!.uid;
     await _notificationRepository.markAsRead(uid, notifId);
   }
 
-  void deleteNotif(String notifId) async {
+  Future<void> deleteNotif(String notifId) async {
     final uid = _ref.watch(userProvider)!.uid;
     await _notificationRepository.deleteNotification(uid, notifId);
   }

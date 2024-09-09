@@ -6,7 +6,14 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/features/user_profile/repository/user_repository.dart';
+import 'package:hash_balance/models/conbined_models/user_profile_data_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+
+final userProfileDataProvider =
+    StreamProvider.family<UserProfileDataModel, String>(
+  (ref, String uid) =>
+      ref.watch(userControllerProvider.notifier).getUserProfileData(uid),
+);
 
 final userControllerProvider = StateNotifierProvider<UserController, bool>(
   (ref) => UserController(
@@ -125,5 +132,9 @@ class UserController extends StateNotifier<bool> {
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     }
+  }
+
+  Stream<UserProfileDataModel> getUserProfileData(String uid) {
+    return _userRepository.getUserProfileData(uid);
   }
 }

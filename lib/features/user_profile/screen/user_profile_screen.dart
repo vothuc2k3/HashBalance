@@ -5,14 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:image_picker/image_picker.dart';
+
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/core/widgets/error_text.dart';
+import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
-import 'package:hash_balance/features/user_profile/screen/edit_profile/edit_user_profile.dart';
+import 'package:hash_balance/features/user_profile/screen/friends/friend_requests_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
-import 'package:image_picker/image_picker.dart';
 
 class UserProfileScreen extends ConsumerStatefulWidget {
   const UserProfileScreen({
@@ -28,11 +31,11 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
   final double coverHeight = 250;
   final double profileHeight = 120;
 
-  void _navigateToEditUserProfile(UserModel currentUser) {
+  void _navigateToFriendRequestsScreen(String uid) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => EditProfileScreen(currentUser: currentUser),
+        builder: (context) => FriendRequestsScreen(uid: uid),
       ),
     );
   }
@@ -597,21 +600,47 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
     final double top = coverHeight - profileHeight / 2;
     final double bottom = profileHeight / 2;
     final currentUser = ref.watch(userProvider)!;
+    final userProfileData = ref.watch(userProfileDataProvider(currentUser.uid));
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          TextButton(
-            onPressed: () => _navigateToEditUserProfile(currentUser),
-            child: const Text(
-              'Edit',
-              style: TextStyle(
-                fontSize: 15,
-                color: Colors.white,
+          Stack(
+            children: [
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(
+                  Icons.notifications,
+                  color: Colors.white,
+                ),
               ),
-            ),
+              Positioned(
+                right: 11,
+                top: 11,
+                child: Container(
+                  padding: const EdgeInsets.all(1),
+                  decoration: BoxDecoration(
+                    color: Colors.red, // Màu nền đỏ cho số lượng thông báo
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: const Text(
+                    '6', // Số lượng thông báo
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
         title: const Text(
@@ -796,29 +825,46 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
                 const SizedBox(height: 16),
                 const Divider(),
                 const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildButton(
-                      text: 'Friends',
-                      value: 0,
-                    ),
-                    _buildVerticalDivider(),
-                    _buildButton(
-                      text: 'Followers',
-                      value: 0,
-                    ),
-                    _buildVerticalDivider(),
-                    _buildButton(
-                      text: 'Activity Points',
-                      value: currentUser.activityPoint,
-                    ),
-                    _buildVerticalDivider(),
-                    _buildButton(
-                      text: 'Achievements',
-                      value: 0,
-                    ),
-                  ],
+                userProfileData.when(
+                  data: (data) {
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildButton(
+                          text: 'Friends',
+                          value: data.friends.length,
+                          onPressed: () =>
+                              _navigateToFriendRequestsScreen(currentUser.uid),
+                        ),
+                        _buildVerticalDivider(),
+                        _buildButton(
+                          text: 'Followers',
+                          value: data.followers.length,
+                          onPressed: () {},
+                        ),
+                        _buildVerticalDivider(),
+                        _buildButton(
+                          text: 'Following',
+                          value: data.following.length,
+                          onPressed: () {},
+                        ),
+                        _buildVerticalDivider(),
+                        _buildButton(
+                          text: 'Activity Points',
+                          value: currentUser.activityPoint,
+                          onPressed: () {},
+                        ),
+                        _buildVerticalDivider(),
+                        _buildButton(
+                          text: 'Achievements',
+                          value: 0,
+                          onPressed: () {},
+                        ),
+                      ],
+                    );
+                  },
+                  error: (e, s) => ErrorText(error: e.toString()).animate(),
+                  loading: () => const Loading().animate(),
                 ),
                 const SizedBox(height: 16),
                 const Divider(),
@@ -852,11 +898,15 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
     );
   }
 
-  Widget _buildButton({required String text, required int value}) {
+  Widget _buildButton({
+    required Function() onPressed,
+    required String text,
+    required int value,
+  }) {
     return Expanded(
       child: MaterialButton(
         padding: const EdgeInsets.symmetric(vertical: 4),
-        onPressed: () {},
+        onPressed: onPressed,
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -893,26 +943,10 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
     return friendList.when(
       data: (friendList) {
         if (friendList.isEmpty) {
-          return const Column(
-            children: [
-              Text('This guy hasn\'t been friend to anyone'),
-              Divider(),
-              SizedBox(height: 16),
-            ],
-          );
+          return const SizedBox.shrink();
         }
         return Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  '${friendList.length} friends',
-                  style: const TextStyle(fontSize: 18),
-                ),
-              ),
-            ),
             SizedBox(
               height: 250,
               child: GridView.builder(
@@ -954,7 +988,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '#${friend.name}',
+                        friend.name,
                         style: const TextStyle(fontSize: 16),
                       ),
                     ],

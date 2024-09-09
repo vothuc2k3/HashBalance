@@ -4,14 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:hash_balance/core/constants/constants.dart';
-import 'package:hash_balance/core/widgets/error_text.dart';
-import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/home/delegates/search_delegate.dart';
 import 'package:hash_balance/features/home/screen/drawers/community_list_drawer.dart';
 import 'package:hash_balance/features/home/screen/drawers/user_profile_drawer.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
+import 'package:hash_balance/models/notification_model.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({
@@ -112,12 +111,24 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
                   Icons.search,
                 ),
               ),
+              ref.watch(getNotifsProvider(user!.uid)).whenOrNull(
+                    data: (notifs) {
+                      if (notifs == null || notifs.isEmpty) {
+                        return const SizedBox.shrink();
+                      } else {
+                        return _buildNotificationMenu(notifs);
+                      }
+                    },
+                  ) ??
+                  _buildNotificationMenu([]),
+
+              //MARK: - PROFILE
               Builder(
                 builder: (context) {
                   return IconButton(
                     icon: CircleAvatar(
                       backgroundImage:
-                          CachedNetworkImageProvider(user!.profileImage),
+                          CachedNetworkImageProvider(user.profileImage),
                     ),
                     onPressed: () => displayUserProfileDrawer(context),
                   );
@@ -155,32 +166,32 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
                 label: 'Chat',
               ),
               BottomNavigationBarItem(
-                icon: ref.watch(getNotifsProvider(user!.uid)).when(
-                    data: (notifs) {
-                      if (notifs == null || notifs.isEmpty) {
-                        return const Icon(Icons.notification_add_outlined);
-                      }
-                      int unreadCount = 0;
-                      for (var notif in notifs) {
-                        if (notif.isRead == false) {
-                          unreadCount++;
+                icon: ref.watch(getNotifsProvider(user.uid)).whenOrNull(
+                      data: (notifs) {
+                        if (notifs == null || notifs.isEmpty) {
+                          return const Icon(Icons.notification_add_outlined);
                         }
-                      }
-                      return unreadCount == 0
-                          ? const Icon(Icons.notification_add_outlined)
-                          : Badge(
-                              label: Text(
-                                '$unreadCount',
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 10),
-                              ),
-                              isLabelVisible: true,
-                              child: const Icon(Icons.notification_add_outlined),
-                            );
-                    },
-                    error: (Object error, StackTrace stackTrace) =>
-                        ErrorText(error: error.toString()),
-                    loading: () => const Loading()),
+                        int unreadCount = 0;
+                        for (var notif in notifs) {
+                          if (notif.isRead == false) {
+                            unreadCount++;
+                          }
+                        }
+                        return unreadCount == 0
+                            ? const Icon(Icons.notification_add_outlined)
+                            : Badge(
+                                label: Text(
+                                  '$unreadCount',
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 10),
+                                ),
+                                isLabelVisible: true,
+                                child:
+                                    const Icon(Icons.notification_add_outlined),
+                              );
+                      },
+                    ) ??
+                    const Icon(Icons.notification_add_outlined),
                 label: 'Inbox',
               ),
             ],
@@ -189,6 +200,69 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildNotificationMenu(List<NotificationModel> notifs) {
+    return Stack(
+      children: [
+        PopupMenuButton<String>(
+          icon: const Icon(
+            Icons.notifications,
+            color: Colors.white,
+          ),
+          onSelected: (value) {},
+          itemBuilder: (BuildContext context) {
+            if (notifs.isEmpty) {
+              return [
+                const PopupMenuItem<String>(
+                  value: '',
+                  child: ListTile(
+                    leading: Icon(Icons.notifications),
+                    title: Text('No notifications'),
+                  ),
+                )
+              ];
+            }
+            return notifs.map((NotificationModel notification) {
+              return PopupMenuItem<String>(
+                value: notification.title,
+                child: ListTile(
+                  leading: const Icon(Icons.notifications),
+                  title: Text(notification.message),
+                ),
+              );
+            }).toList();
+          },
+        ),
+        Positioned(
+          right: 11,
+          top: 11,
+          child: IgnorePointer(
+            child: Container(
+              padding: const EdgeInsets.all(1),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              constraints: const BoxConstraints(
+                minWidth: 16,
+                minHeight: 16,
+              ),
+              child: Text(
+                notifs.isNotEmpty
+                    ? notifs.length.toString()
+                    : '', // Hiển thị số lượng thông báo
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

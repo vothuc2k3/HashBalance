@@ -86,9 +86,10 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
     }
   }
 
-  void _markAsRead(String notifId, UserModel user) {
-    ref.watch(notificationControllerProvider.notifier).markAsRead(notifId);
-    setState(() {});
+  void _markAsRead(String notifId, UserModel user) async {
+    await ref
+        .watch(notificationControllerProvider.notifier)
+        .markAsRead(notifId);
   }
 
   void _deleteNotification(String notifId) async {
@@ -219,7 +220,7 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
                                   ? null
                                   : const Icon(Icons.new_releases,
                                       color: Colors.red),
-                              onTap: () async {
+                              onTap: () {
                                 _markAsRead(notif.id, user);
                                 switch (notif.type) {
                                   case Constants.friendRequestType:

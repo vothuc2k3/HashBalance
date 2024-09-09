@@ -10,16 +10,21 @@ import 'package:hash_balance/features/friend/repository/friend_repository.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
+import 'package:hash_balance/models/conbined_models/friend_requester_data_model.dart';
 import 'package:hash_balance/models/follower_model.dart';
 import 'package:hash_balance/models/friendship_model.dart';
 import 'package:hash_balance/models/friendship_request_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
-final fetchFriendsProvider = FutureProvider.family((ref, String uid) async {
-  return await ref
+final fetchFriendRequestsProvider = StreamProvider.family((ref, String uid) {
+  return ref
       .watch(friendControllerProvider.notifier)
-      .fetchFriendsByUser(uid);
+      .fetchFriendRequestsByUser(uid);
+});
+
+final fetchFriendsProvider = StreamProvider.family((ref, String uid) {
+  return ref.watch(friendControllerProvider.notifier).fetchFriendsByUser(uid);
 });
 
 final getFollowingStatusProvider =
@@ -218,8 +223,8 @@ class FriendController extends StateNotifier<bool> {
     }
   }
 
-  Future<List<UserModel>> fetchFriendsByUser(String uid) async {
-    return await _friendRepository.fetchFriendsByUser(uid);
+  Stream<List<UserModel>> fetchFriendsByUser(String uid) {
+    return _friendRepository.fetchFriendsByUser(uid);
   }
 
   FutureVoid followUser(String targetUid) async {
@@ -242,5 +247,9 @@ class FriendController extends StateNotifier<bool> {
   Stream<bool> getFollowingStatus(UserModel targetUser) {
     final uid = _ref.read(userProvider)!.uid;
     return _friendRepository.getFollowingStatus(getUids(targetUser.uid, uid));
+  }
+
+  Stream<List<FriendRequesterDataModel>> fetchFriendRequestsByUser(String uid) {
+    return _friendRepository.fetchFriendRequestsByUser(uid);
   }
 }

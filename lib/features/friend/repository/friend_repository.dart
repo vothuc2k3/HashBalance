@@ -6,6 +6,7 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/models/conbined_models/friend_requester_data_model.dart';
 import 'package:hash_balance/models/follower_model.dart';
 import 'package:hash_balance/models/friendship_model.dart';
 import 'package:hash_balance/models/friendship_request_model.dart';
@@ -21,6 +22,19 @@ class FriendRepository {
   FriendRepository({
     required FirebaseFirestore firestore,
   }) : _firestore = firestore;
+
+  //REFERENCE ALL THE FRIENDSHIPS
+  CollectionReference get _users =>
+      _firestore.collection(FirebaseConstants.usersCollection);
+  //REFERENCE ALL THE FRIENDSHIPS
+  CollectionReference get _friendship =>
+      _firestore.collection(FirebaseConstants.friendshipCollection);
+  //REFERENCE ALL THE FRIEND REQUESTS
+  CollectionReference get _friendRequest =>
+      _firestore.collection(FirebaseConstants.friendRequestCollection);
+  //REFERENCE ALL THE FOLLOWER
+  CollectionReference get _follower =>
+      _firestore.collection(FirebaseConstants.followerCollection);
 
   //SEND FRIEND REQUEST
   FutureVoid sendFriendRequest(FriendRequest request) async {
@@ -100,13 +114,13 @@ class FriendRepository {
     });
   }
 
-  Future<List<UserModel>> fetchFriendsByUser(String uid) async {
-    try {
-      final query1 = _friendship.where('uid1', isEqualTo: uid).get();
-      final query2 = _friendship.where('uid2', isEqualTo: uid).get();
-
-      final results = await Future.wait([query1, query2]);
-
+  Stream<List<UserModel>> fetchFriendsByUser(String uid) {
+    return Stream.fromFuture(
+      Future.wait([
+        _friendship.where('uid1', isEqualTo: uid).get(),
+        _friendship.where('uid2', isEqualTo: uid).get(),
+      ]),
+    ).asyncMap((results) async {
       final documents = results.expand((result) => result.docs).toList();
 
       final friendUids = documents.map((doc) {
@@ -125,9 +139,7 @@ class FriendRepository {
         final data = doc.data() as Map<String, dynamic>;
         return UserModel.fromMap(data);
       }).toList();
-    } catch (e) {
-      return [];
-    }
+    });
   }
 
   FutureVoid followUser(Follower followerModel) async {
@@ -147,16 +159,33 @@ class FriendRepository {
     });
   }
 
-  //REFERENCE ALL THE FRIENDSHIPS
-  CollectionReference get _users =>
-      _firestore.collection(FirebaseConstants.usersCollection);
-  //REFERENCE ALL THE FRIENDSHIPS
-  CollectionReference get _friendship =>
-      _firestore.collection(FirebaseConstants.friendshipCollection);
-  //REFERENCE ALL THE FRIEND REQUESTS
-  CollectionReference get _friendRequest =>
-      _firestore.collection(FirebaseConstants.friendRequestCollection);
-  //REFERENCE ALL THE FOLLOWER
-  CollectionReference get _follower =>
-      _firestore.collection(FirebaseConstants.followerCollection);
+  Stream<List<FriendRequesterDataModel>> fetchFriendRequestsByUser(String uid) {
+    return _friendRequest
+        .where('targetUid', isEqualTo: uid)
+        .snapshots()
+        .asyncMap((snapshot) async {
+      List<FriendRequesterDataModel> friendRequestDataModels = [];
+
+      final friendRequests = snapshot.docs.map((doc) {
+        return FriendRequest.fromMap(doc.data() as Map<String, dynamic>);
+      }).toList();
+
+      for (var request in friendRequests) {
+        final userDoc = await _users.doc(request.requestUid).get();
+        if (userDoc.exists) {
+          final userData = userDoc.data() as Map<String, dynamic>;
+          final userModel = UserModel.fromMap(userData);
+
+          final friendRequesterDataModel = FriendRequesterDataModel(
+            friendRequest: request,
+            requester: userModel,
+          );
+
+          friendRequestDataModels.add(friendRequesterDataModel);
+        }
+      }
+
+      return friendRequestDataModels;
+    });
+  }
 }
