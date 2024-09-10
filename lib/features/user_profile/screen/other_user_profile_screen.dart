@@ -163,7 +163,7 @@ class _OtherUserProfileScreenState
                 child: Container(
                   padding: const EdgeInsets.all(1),
                   decoration: BoxDecoration(
-                    color: Colors.red, // Notification badge background color
+                    color: Colors.red,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   constraints: const BoxConstraints(
@@ -171,7 +171,7 @@ class _OtherUserProfileScreenState
                     minHeight: 16,
                   ),
                   child: const Text(
-                    '6', // Number of notifications
+                    '6',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 12,

@@ -2,14 +2,13 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hash_balance/features/user_profile/screen/widget/user_timeline_widget.dart';
+import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:hash_balance/core/utils.dart';
-import 'package:hash_balance/core/widgets/error_text.dart';
-import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
@@ -32,6 +31,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
   final double coverHeight = 250;
   final double profileHeight = 120;
   late TabController _tabController;
+  late Future<List<PostDataModel>> _userPosts;
 
   void _navigateToFriendRequestsScreen(String uid) {
     Navigator.push(
@@ -604,11 +604,19 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final currentUser = ref.read(userProvider)!;
+    _userPosts =
+        ref.read(userControllerProvider.notifier).getUserPosts(currentUser);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final double top = coverHeight - profileHeight / 2;
     final double bottom = profileHeight / 2;
     final currentUser = ref.watch(userProvider)!;
-    final userProfileData = ref.watch(userProfileDataProvider(currentUser.uid));
+    var userProfileData = ref.watch(userProfileDataProvider(currentUser.uid));
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -656,257 +664,289 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
         controller: _tabController, // Quản lý TabBarView
         children: [
           // Tab đầu tiên hiển thị profile
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF000000),
-                  Color(0xFF0D47A1),
-                  Color(0xFF1976D2),
-                ],
-              ),
-            ),
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                Container(
-                  margin: EdgeInsets.only(bottom: bottom),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    alignment: Alignment.center,
-                    children: [
-                      InkWell(
-                        onTap: () => _handleBannerImageAction(currentUser),
-                        child: CachedNetworkImage(
-                          imageUrl: currentUser.bannerImage,
-                          width: double.infinity,
-                          height: coverHeight,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Positioned(
-                        top: top,
-                        left: 10,
-                        child: InkWell(
-                          onTap: () => _handleProfileImageAction(currentUser),
-                          child: CircleAvatar(
-                            radius: (profileHeight / 2) - 10,
-                            backgroundColor: Colors.grey.shade800,
-                            backgroundImage: CachedNetworkImageProvider(
-                              currentUser.profileImage,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+          RefreshIndicator(
+            onRefresh: () async {
+              userProfileData =
+                  ref.refresh(userProfileDataProvider(currentUser.uid));
+            }, // Hàm làm mới
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFF000000),
+                    Color(0xFF0D47A1),
+                    Color(0xFF1976D2),
+                  ],
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 10),
-                      child: Row(
-                        children: [
-                          Flexible(
-                            child: Row(
-                              children: [
-                                Text(
-                                  '#${currentUser.name}',
-                                  style: TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white.withOpacity(0.9),
-                                    shadows: const [
-                                      Shadow(
-                                        offset: Offset(1.5, 1.5),
-                                        blurRadius: 3.0,
-                                        color: Colors.black26,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                InkWell(
-                                  onTap: () => _showEditNameModal(currentUser),
-                                  child: const Icon(Icons.edit),
-                                ),
-                              ],
+              ),
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  Container(
+                    margin: EdgeInsets.only(bottom: bottom),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      alignment: Alignment.center,
+                      children: [
+                        InkWell(
+                          onTap: () => _handleBannerImageAction(currentUser),
+                          child: CachedNetworkImage(
+                            imageUrl: currentUser.bannerImage,
+                            width: double.infinity,
+                            height: coverHeight,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Positioned(
+                          top: top,
+                          left: 10,
+                          child: InkWell(
+                            onTap: () => _handleProfileImageAction(currentUser),
+                            child: CircleAvatar(
+                              radius: (profileHeight / 2) - 10,
+                              backgroundColor: Colors.grey.shade800,
+                              backgroundImage: CachedNetworkImageProvider(
+                                currentUser.profileImage,
+                              ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 10),
-                      child: Row(
-                        children: [
-                          Flexible(
-                            child: Row(
-                              children: [
-                                Text(
-                                  currentUser.bio ??
-                                      'You haven\'t said anything yet...',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white.withOpacity(0.8),
-                                    shadows: const [
-                                      Shadow(
-                                        offset: Offset(1, 1),
-                                        blurRadius: 2.0,
-                                        color: Colors.black12,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                InkWell(
-                                  onTap: () => _showEditBioModal(currentUser),
-                                  child: const Icon(Icons.edit),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 10),
-                      child: Row(
-                        children: [
-                          Flexible(
-                            child: Row(
-                              children: [
-                                Text(
-                                  currentUser.description ??
-                                      'You haven\'t describe about yourself yet...',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white70,
-                                    letterSpacing: 0.5,
-                                    height: 1.4,
-                                    shadows: [
-                                      Shadow(
-                                        offset: Offset(0.5, 0.5),
-                                        blurRadius: 1.0,
-                                        color: Colors.black12,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                InkWell(
-                                  onTap: () =>
-                                      _showEditDescriptionModal(currentUser),
-                                  child: const Icon(Icons.edit),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          _buildSocialIcon(FontAwesomeIcons.slack),
-                          const SizedBox(width: 12),
-                          _buildSocialIcon(FontAwesomeIcons.github),
-                          const SizedBox(width: 12),
-                          _buildSocialIcon(FontAwesomeIcons.twitter),
-                          const SizedBox(width: 12),
-                          _buildSocialIcon(FontAwesomeIcons.linkedin),
-                          const SizedBox(width: 12),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Divider(),
-                    const SizedBox(height: 16),
-                    userProfileData.when(
-                      data: (data) {
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(left: 10),
+                        child: Row(
                           children: [
-                            _buildButton(
-                              text: 'Friends',
-                              value: data.friends.length,
-                              onPressed: () => _navigateToFriendRequestsScreen(
-                                  currentUser.uid),
-                            ),
-                            _buildVerticalDivider(),
-                            _buildButton(
-                              text: 'Followers',
-                              value: data.followers.length,
-                              onPressed: () {},
-                            ),
-                            _buildVerticalDivider(),
-                            _buildButton(
-                              text: 'Following',
-                              value: data.following.length,
-                              onPressed: () {},
-                            ),
-                            _buildVerticalDivider(),
-                            _buildButton(
-                              text: 'Activity Points',
-                              value: currentUser.activityPoint,
-                              onPressed: () {},
-                            ),
-                            _buildVerticalDivider(),
-                            _buildButton(
-                              text: 'Achievements',
-                              value: 0,
-                              onPressed: () {},
+                            Flexible(
+                              child: Row(
+                                children: [
+                                  Text(
+                                    '#${currentUser.name}',
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white.withOpacity(0.9),
+                                      shadows: const [
+                                        Shadow(
+                                          offset: Offset(1.5, 1.5),
+                                          blurRadius: 3.0,
+                                          color: Colors.black26,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  InkWell(
+                                    onTap: () =>
+                                        _showEditNameModal(currentUser),
+                                    child: const Icon(Icons.edit),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
-                        );
-                      },
-                      error: (e, s) => ErrorText(error: e.toString()).animate(),
-                      loading: () => const Loading().animate(),
-                    ),
-                    const SizedBox(height: 16),
-                    const Divider(),
-                    const SizedBox(height: 16),
-                    _buildFriendsWidget(currentUser.uid),
-                  ],
-                )
-              ],
-            ),
-          ),
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF000000),
-                  Color(0xFF0D47A1),
-                  Color(0xFF1976D2),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 10),
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Row(
+                                children: [
+                                  Text(
+                                    currentUser.bio ??
+                                        'You haven\'t said anything yet...',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white.withOpacity(0.8),
+                                      shadows: const [
+                                        Shadow(
+                                          offset: Offset(1, 1),
+                                          blurRadius: 2.0,
+                                          color: Colors.black12,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  InkWell(
+                                    onTap: () => _showEditBioModal(currentUser),
+                                    child: const Icon(Icons.edit),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 10),
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Row(
+                                children: [
+                                  Text(
+                                    currentUser.description ??
+                                        'You haven\'t described yourself yet...',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white70,
+                                      letterSpacing: 0.5,
+                                      height: 1.4,
+                                      shadows: [
+                                        Shadow(
+                                          offset: Offset(0.5, 0.5),
+                                          blurRadius: 1.0,
+                                          color: Colors.black12,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  InkWell(
+                                    onTap: () =>
+                                        _showEditDescriptionModal(currentUser),
+                                    child: const Icon(Icons.edit),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            _buildSocialIcon(FontAwesomeIcons.slack),
+                            const SizedBox(width: 12),
+                            _buildSocialIcon(FontAwesomeIcons.github),
+                            const SizedBox(width: 12),
+                            _buildSocialIcon(FontAwesomeIcons.twitter),
+                            const SizedBox(width: 12),
+                            _buildSocialIcon(FontAwesomeIcons.linkedin),
+                            const SizedBox(width: 12),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Divider(),
+                      const SizedBox(height: 16),
+                      userProfileData.when(
+                        data: (data) {
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _buildAnimatedButton(
+                                text: 'Friends',
+                                oldValue: 0,
+                                newValue: data.friends.length,
+                                onPressed: () =>
+                                    _navigateToFriendRequestsScreen(
+                                        currentUser.uid),
+                              ),
+                              _buildVerticalDivider(),
+                              _buildAnimatedButton(
+                                text: 'Followers',
+                                oldValue: 0,
+                                newValue: data.followers.length,
+                                onPressed: () {},
+                              ),
+                              _buildVerticalDivider(),
+                              _buildAnimatedButton(
+                                text: 'Following',
+                                oldValue: 0,
+                                newValue: data.following.length,
+                                onPressed: () {},
+                              ),
+                              _buildVerticalDivider(),
+                              _buildAnimatedButton(
+                                text: 'Activity Points',
+                                oldValue: 0,
+                                newValue: currentUser.activityPoint,
+                                onPressed: () {},
+                              ),
+                              _buildVerticalDivider(),
+                              _buildAnimatedButton(
+                                text: 'Achievements',
+                                oldValue: 0,
+                                newValue: 0,
+                                onPressed: () {},
+                              ),
+                            ],
+                          );
+                        },
+                        loading: () {
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _buildButton(
+                                text: 'Friends',
+                                value: 0,
+                                onPressed: () =>
+                                    _navigateToFriendRequestsScreen(
+                                        currentUser.uid),
+                              ),
+                              _buildVerticalDivider(),
+                              _buildButton(
+                                text: 'Followers',
+                                value: 0,
+                                onPressed: () {},
+                              ),
+                              _buildVerticalDivider(),
+                              _buildButton(
+                                text: 'Following',
+                                value: 0,
+                                onPressed: () {},
+                              ),
+                              _buildVerticalDivider(),
+                              _buildButton(
+                                text: 'Activity Points',
+                                value: 0,
+                                onPressed: () {},
+                              ),
+                              _buildVerticalDivider(),
+                              _buildButton(
+                                text: 'Achievements',
+                                value: 0,
+                                onPressed: () {},
+                              ),
+                            ],
+                          );
+                        },
+                        error: (error, stackTrace) => Text('Error: $error'),
+                      ),
+                      const SizedBox(height: 16),
+                      const Divider(),
+                      const SizedBox(height: 16),
+                      _buildFriendsWidget(currentUser.uid),
+                    ],
+                  )
                 ],
               ),
             ),
-            child: const Center(
-              child: Text(
-                'lmao',
-                style: TextStyle(fontSize: 24, color: Colors.black),
-              ),
-            ),
           ),
+          UserTimelineWidget(userPostsFuture: _userPosts),
         ],
       ),
       bottomNavigationBar: TabBar(
         controller: _tabController,
         tabs: const [
           Tab(icon: Icon(Icons.person), text: 'Profile'),
-          Tab(icon: Icon(Icons.sentiment_very_satisfied), text: 'LMAO'),
+          Tab(icon: Icon(Icons.dynamic_feed), text: 'Timeline'),
         ],
         labelColor: Colors.blue,
         unselectedLabelColor: Colors.grey,
@@ -931,6 +971,46 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
               size: 32,
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnimatedButton({
+    required Function() onPressed,
+    required String text,
+    required int oldValue,
+    required int newValue,
+  }) {
+    return Expanded(
+      child: MaterialButton(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        onPressed: onPressed,
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 500),
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return ScaleTransition(scale: animation, child: child);
+              },
+              child: Text(
+                '$newValue',
+                key: ValueKey<int>(newValue),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 10,
+                ),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              text,
+              style: const TextStyle(fontSize: 12),
+            ),
+          ],
         ),
       ),
     );

@@ -4,12 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
-import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/comment/screen/comment_container/comment_container.dart';
 import 'package:hash_balance/models/comment_model.dart';
+import 'package:hash_balance/models/conbined_models/comment_data_model.dart';
 import 'package:hash_balance/models/post_model.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/foundation.dart' as foundation;
+import 'package:hash_balance/models/user_model.dart';
 
 final currentCommentProvider = Provider<CommentModel>((ref) {
   throw UnimplementedError('currentCommentProvider not overridden');
@@ -140,20 +142,21 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
   }
 
   Widget _buildCommentsList(
-      AsyncValue<List<CommentModel>?> commentsAsyncValue) {
+      AsyncValue<List<CommentDataModel>?> commentsAsyncValue) {
     return commentsAsyncValue.when(
       data: (comments) {
         if (comments == null || comments.isEmpty) {
-          return const Center(
-            child: Text(
-              'No comments available.',
+          return Center(
+            child: const Text(
+              'Be the first one to comment!',
               style: TextStyle(color: Colors.white),
-            ),
+            ).animate(),
           );
         }
         return ListView.builder(
           itemCount: comments.length,
-          itemBuilder: (context, index) => _buildCommentItem(comments[index]),
+          itemBuilder: (context, index) =>
+              _buildCommentItem(comments[index], comments[index].author),
         );
       },
       error: (error, stackTrace) => ErrorText(
@@ -163,12 +166,12 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
     );
   }
 
-  Widget _buildCommentItem(CommentModel comment) {
+  Widget _buildCommentItem(CommentDataModel comment, UserModel author) {
     return ProviderScope(
       overrides: [
-        currentCommentProvider.overrideWithValue(comment),
+        currentCommentProvider.overrideWithValue(comment.comment),
       ],
-      child: const CommentItemWidget(),
+      child: CommentItemWidget(author: author),
     );
   }
 
@@ -232,22 +235,22 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
 }
 
 class CommentItemWidget extends ConsumerWidget {
-  const CommentItemWidget({super.key});
+  const CommentItemWidget({
+    super.key,
+    required UserModel author,
+  }) : _author = author;
+
+  final UserModel _author;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final comment = ref.watch(currentCommentProvider);
     final post = ref.watch(currentPostProvider);
-    final authorAsyncValue = ref.watch(getUserDataProvider(comment.uid));
 
-    return authorAsyncValue.when(
-      data: (author) => CommentContainer(
-        author: author,
-        comment: comment,
-        post: post,
-      ),
-      error: (error, stackTrace) => ErrorText(error: error.toString()),
-      loading: () => const Loading(),
+    return CommentContainer(
+      author: _author,
+      comment: comment,
+      post: post,
     );
   }
 }

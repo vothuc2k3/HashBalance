@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
 import 'package:hash_balance/theme/pallette.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 
 class SettingScreen extends ConsumerStatefulWidget {
   const SettingScreen({super.key});
@@ -33,15 +32,7 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
   }
 
   void _testButton() async {
-    try {
-      int result = 10 ~/ 0;
-      print(result);
-    } catch (exception, stackTrace) {
-      await Sentry.captureException(
-        exception,
-        stackTrace: stackTrace,
-      );
-    }
+
   }
 
   @override

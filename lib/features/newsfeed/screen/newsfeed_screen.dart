@@ -116,7 +116,7 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
                           itemBuilder: (context, index) {
                             final postData = posts[index];
                             return PostContainer(
-                              author: postData.author,
+                              author: postData.author!,
                               post: postData.post,
                               community: postData.community,
                             ).animate().fadeIn();

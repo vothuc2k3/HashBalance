@@ -8,7 +8,7 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/comment/repository/comment_repository.dart';
 import 'package:hash_balance/models/comment_model.dart';
-import 'package:hash_balance/models/comment_vote.dart';
+import 'package:hash_balance/models/conbined_models/comment_data_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 
 final getCommentVoteStatusProvider =
@@ -56,11 +56,11 @@ class CommentController extends StateNotifier<bool> {
     try {
       final user = _ref.watch(userProvider)!;
       final comment = CommentModel(
+        id: await generateRandomId(),
         uid: user.uid,
         postId: post.id,
         createdAt: Timestamp.now(),
         content: content,
-        id: await generateRandomId(),
         parentCommentId: '',
       );
       final result = await _commentRepository.comment(comment);
@@ -76,31 +76,13 @@ class CommentController extends StateNotifier<bool> {
   }
 
   //FETCH ALL COMMENTS OF A POST
-  Stream<List<CommentModel>?> getPostComments(String postId) {
+  Stream<List<CommentDataModel>?> getPostComments(String postId) {
     return _commentRepository.getPostComments(postId);
   }
 
   //DELETE A COMMENT
   FutureVoid clearPostComments(String postId) async {
     return await _commentRepository.clearPostComments(postId);
-  }
-
-  //VOTE THE COMMENT
-  FutureVoid voteComment(String commentId, bool isUpvoted) async {
-    try {
-      final currentUser = _ref.watch(userProvider)!;
-      final commentVote = CommentVote(
-        uid: currentUser.uid,
-        commentId: commentId,
-        isUpvoted: isUpvoted,
-        createdAt: Timestamp.now(),
-      );
-      return await _commentRepository.voteComment(commentVote);
-    } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
-    } catch (e) {
-      return left(Failures(e.toString()));
-    }
   }
 
   Stream<bool?> getCommentVoteStatus(String commentId) {

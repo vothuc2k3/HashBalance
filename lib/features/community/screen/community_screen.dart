@@ -381,8 +381,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
               },
             );
           },
-          error: (e, s) =>
-              ErrorText(error: e.toString()).animate().fadeIn(),
+          error: (e, s) => ErrorText(error: e.toString()).animate().fadeIn(),
           loading: () => const Loading().animate().fadeIn(),
         );
   }
@@ -644,7 +643,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                       return PostContainer(
                         isMod: tempMemberStatus == 'moderator',
                         isPinnedPost: true,
-                        author: post.author,
+                        author: post.author!,
                         post: post.post,
                         community: post.community,
                         onUnPinPost: _handleUnpinPost,
@@ -694,7 +693,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                             return PostContainer(
                               isMod: tempMemberStatus == 'moderator',
                               isPinnedPost: false,
-                              author: postData.author,
+                              author: postData.author!,
                               post: postData.post,
                               community: postData.community,
                               onPinPost: _handlePinPost,

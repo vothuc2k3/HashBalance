@@ -10,6 +10,7 @@ import 'package:hash_balance/features/comment/controller/comment_controller.dart
 import 'package:hash_balance/features/reply_comment/controller/reply_comment_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
+import 'package:hash_balance/features/vote_comment/controller/vote_comment_controller.dart';
 import 'package:hash_balance/models/comment_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -48,11 +49,12 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
       );
     } else {
       Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                OtherUserProfileScreen(targetUser: widget.author),
-          ));
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              OtherUserProfileScreen(targetUser: widget.author),
+        ),
+      );
     }
   }
 
@@ -63,11 +65,25 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
     result.fold((l) => showToast(false, l.message), (_) {});
   }
 
-  void _voteComment(String commentId, bool isUpvoted) async {
-    final result = await ref
-        .watch(commentControllerProvider.notifier)
-        .voteComment(commentId, isUpvoted);
-    result.fold((l) => showToast(false, l.message), (r) {});
+  void _voteComment(String commentId, bool userVote) async {
+    switch (userVote) {
+      case true:
+        final result = await ref
+            .read(upvoteCommentControllerProvider.notifier)
+            .voteComment(commentId);
+        result.fold((l) {
+          showToast(false, l.toString());
+        }, (_) {});
+        break;
+      case false:
+        final result = await ref
+            .read(downvoteCommentControllerProvider.notifier)
+            .voteComment(commentId);
+        result.fold((l) {
+          showToast(false, l.toString());
+        }, (_) {});
+        break;
+    }
   }
 
   @override
@@ -90,6 +106,7 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
 
   @override
   Widget build(BuildContext context) {
+    int repliesCount = 0;
     return Container(
       margin: const EdgeInsets.symmetric(
         vertical: 8,
@@ -111,14 +128,14 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
         widget.comment,
         ref.watch(getCommentRepliesProvider(widget.comment.id)).when(
               data: (replies) {
+                repliesCount = replies == null ? 0 : replies.length;
                 return replies ?? [];
               },
               error: (e, s) => [],
               loading: () => [],
             ),
-        treeThemeData: const TreeThemeData(
-          lineColor: Colors.green,
-          lineWidth: 2,
+        treeThemeData: TreeThemeData(
+          lineWidth: (repliesCount > 0) ? 2 : 0,
         ),
         avatarRoot: (context, data) => PreferredSize(
           preferredSize: const Size.fromRadius(18),
@@ -226,8 +243,7 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
                     loading: () => const CircularProgressIndicator(),
                   ),
               const SizedBox(width: 10),
-              // Downvote button
-              ref.read(getCommentVoteStatusProvider(comment.id)).when(
+              ref.watch(getCommentVoteStatusProvider(comment.id)).when(
                     data: (isUpvoted) {
                       return IconButton(
                         icon: Icon(
@@ -248,7 +264,7 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
                     loading: () => const CircularProgressIndicator(),
                   ),
               // Downvote count
-              ref.read(getCommentVoteCountProvider(comment.id)).when(
+              ref.watch(getCommentVoteCountProvider(comment.id)).when(
                     data: (voteCounts) {
                       return Text(
                         voteCounts['downvotes'].toString(),

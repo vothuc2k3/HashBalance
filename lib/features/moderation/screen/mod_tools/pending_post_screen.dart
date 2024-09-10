@@ -104,7 +104,7 @@ class PendingPostScreenState extends ConsumerState<PendingPostScreen> {
                   itemBuilder: (context, index) {
                     final post = posts[index];
                     return PendingPostContainer(
-                      author: post.author,
+                      author: post.author!,
                       post: post.post,
                       handlePostApproval: _handlePostApproval,
                     );

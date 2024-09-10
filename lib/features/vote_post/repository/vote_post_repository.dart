@@ -23,26 +23,23 @@ class VotePostRepository {
   Future<void> votePost(PostVote postVoteModel, Post post) async {
     final batch = _firestore.batch();
     try {
+      final ids = postVoteModel.id;
       final postVoteCollection =
           _posts.doc(post.id).collection(FirebaseConstants.postVoteCollection);
-      final querySnapshot = await postVoteCollection
-          .where('uid', isEqualTo: postVoteModel.uid)
-          .get();
+      final querySnapshot = await postVoteCollection.doc(ids).get();
 
-      if (querySnapshot.docs.isEmpty) {
-        final postVoteRef = postVoteCollection.doc(postVoteModel.id);
+      if (!querySnapshot.exists) {
+        final postVoteRef = postVoteCollection.doc(ids);
         batch.set(postVoteRef, postVoteModel.toMap());
       } else {
-        final data = querySnapshot.docs.first.data();
-        final postVoteModelId = querySnapshot.docs.first.id;
+        final data = querySnapshot.data() as Map<String, dynamic>;
         final isAlreadyUpvoted = data['isUpvoted'] as bool;
         final doWantToUpvote = postVoteModel.isUpvoted;
 
         if (doWantToUpvote == isAlreadyUpvoted) {
-          batch.delete(postVoteCollection.doc(postVoteModelId));
+          batch.delete(postVoteCollection.doc(ids));
         } else {
-          batch.update(
-              postVoteCollection.doc(postVoteModelId), postVoteModel.toMap());
+          batch.update(postVoteCollection.doc(ids), postVoteModel.toMap());
         }
       }
       await batch.commit();

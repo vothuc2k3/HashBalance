@@ -32,9 +32,9 @@ class UpvotePostController extends StateNotifier<bool> {
 
   FutureVoid votePost(Post post) async {
     try {
-      final user = _ref.read(userProvider)!;
+      final user = _ref.watch(userProvider)!;
       final postVoteModel = PostVote(
-        id: await generateRandomId(),
+        id: getUids(post.id, user.uid),
         uid: user.uid,
         postId: post.id,
         isUpvoted: true,
@@ -46,7 +46,7 @@ class UpvotePostController extends StateNotifier<bool> {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
-    } 
+    }
   }
 }
 
@@ -64,7 +64,7 @@ class DownvotePostController extends StateNotifier<bool> {
     try {
       final user = _ref.read(userProvider)!;
       final postVoteModel = PostVote(
-        id: await generateRandomId(),
+        id: getUids(post.id, user.uid),
         uid: user.uid,
         postId: post.id,
         isUpvoted: false,

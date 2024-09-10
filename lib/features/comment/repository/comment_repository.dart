@@ -6,7 +6,8 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/comment_model.dart';
-import 'package:hash_balance/models/comment_vote.dart';
+import 'package:hash_balance/models/conbined_models/comment_data_model.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 final commentRepositoryProvider = Provider((ref) {
   return CommentRepository(firestore: ref.watch(firebaseFirestoreProvider));
@@ -51,58 +52,40 @@ class CommentRepository {
   }
 
   //FETCH ALL COMMENTS OF A POST
-  Stream<List<CommentModel>?> getPostComments(String postId) {
+  Stream<List<CommentDataModel>?> getPostComments(String postId) {
     return _comments
         .where('postId', isEqualTo: postId)
         .where('parentCommentId', isEqualTo: '')
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map(
-      (event) {
+        .asyncMap(
+      (event) async {
         if (event.docs.isEmpty) {
           return null;
         } else {
-          List<CommentModel> comments = <CommentModel>[];
+          List<CommentDataModel> commentDataList = <CommentDataModel>[];
+
           for (var doc in event.docs) {
             final data = doc.data() as Map<String, dynamic>;
-            comments.add(CommentModel.fromMap(data));
+            final comment = CommentModel.fromMap(data);
+            final authorDoc = await _firestore
+                .collection(FirebaseConstants.usersCollection)
+                .doc(comment.uid)
+                .get();
+            final authorData = authorDoc.data() as Map<String, dynamic>;
+            final author = UserModel.fromMap(authorData);
+            commentDataList.add(
+              CommentDataModel(
+                comment: comment,
+                author: author,
+              ),
+            );
           }
-          return comments;
+
+          return commentDataList;
         }
       },
     );
-  }
-
-// VOTE THE COMMENT
-  FutureVoid voteComment(CommentVote commentVote) async {
-    final batch = _firestore.batch();
-    try {
-      final commentVoteRef = _comments
-          .doc(commentVote.commentId)
-          .collection(FirebaseConstants.commentVoteCollection)
-          .doc(commentVote.uid);
-
-      final commentVoteDoc = await commentVoteRef.get();
-
-      if (!commentVoteDoc.exists) {
-        batch.set(commentVoteRef, commentVote.toMap());
-      } else {
-        final currentVote = CommentVote.fromMap(commentVoteDoc.data()!);
-
-        if (currentVote.isUpvoted == commentVote.isUpvoted) {
-          batch.delete(commentVoteRef);
-        } else {
-          batch.update(commentVoteRef, commentVote.toMap());
-        }
-      }
-
-      await batch.commit();
-      return right(null);
-    } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
-    } catch (e) {
-      return left(Failures(e.toString()));
-    }
   }
 
   Stream<bool?> getCommentVoteStatus(String commentId, String uid) {

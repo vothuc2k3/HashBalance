@@ -354,7 +354,6 @@ class UserRepository {
         postDataModels.add(
           PostDataModel(
             post: postData,
-            author: user,
             community: communityData,
           ),
         );

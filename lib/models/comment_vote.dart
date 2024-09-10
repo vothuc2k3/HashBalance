@@ -4,11 +4,13 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CommentVote {
+  final String id;
   final String uid;
   final String commentId;
   final bool isUpvoted;
   final Timestamp createdAt;
   CommentVote({
+    required this.id,
     required this.uid,
     required this.commentId,
     required this.isUpvoted,
@@ -16,12 +18,14 @@ class CommentVote {
   });
 
   CommentVote copyWith({
+    String? id,
     String? uid,
     String? commentId,
     bool? isUpvoted,
     Timestamp? createdAt,
   }) {
     return CommentVote(
+      id: id ?? this.id,
       uid: uid ?? this.uid,
       commentId: commentId ?? this.commentId,
       isUpvoted: isUpvoted ?? this.isUpvoted,
@@ -31,6 +35,7 @@ class CommentVote {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
+      'id': id,
       'uid': uid,
       'commentId': commentId,
       'isUpvoted': isUpvoted,
@@ -40,6 +45,7 @@ class CommentVote {
 
   factory CommentVote.fromMap(Map<String, dynamic> map) {
     return CommentVote(
+      id: map['id'] as String,
       uid: map['uid'] as String,
       commentId: map['commentId'] as String,
       isUpvoted: map['isUpvoted'] as bool,
@@ -54,14 +60,15 @@ class CommentVote {
 
   @override
   String toString() {
-    return 'CommentVote(uid: $uid, commentId: $commentId, isUpvoted: $isUpvoted, createdAt: $createdAt)';
+    return 'CommentVote(id: $id, uid: $uid, commentId: $commentId, isUpvoted: $isUpvoted, createdAt: $createdAt)';
   }
 
   @override
   bool operator ==(covariant CommentVote other) {
     if (identical(this, other)) return true;
 
-    return other.uid == uid &&
+    return other.id == id &&
+        other.uid == uid &&
         other.commentId == commentId &&
         other.isUpvoted == isUpvoted &&
         other.createdAt == createdAt;
@@ -69,7 +76,8 @@ class CommentVote {
 
   @override
   int get hashCode {
-    return uid.hashCode ^
+    return id.hashCode ^
+        uid.hashCode ^
         commentId.hashCode ^
         isUpvoted.hashCode ^
         createdAt.hashCode;
