@@ -38,6 +38,15 @@ class _OtherUserProfileScreenState
     }, (_) {});
   }
 
+  void _unfollowUser(UserModel targetUser) async {
+    final result = await ref
+        .watch(friendControllerProvider.notifier)
+        .unfollowUser(targetUser.uid);
+    result.fold((l) {
+      showToast(false, l.message);
+    }, (_) {});
+  }
+
   void sendAddFriendRequest(UserModel targetUser) async {
     final result = await ref
         .watch(friendControllerProvider.notifier)
@@ -128,19 +137,52 @@ class _OtherUserProfileScreenState
     final double top = coverHeight - profileHeight / 2;
     final double bottom = profileHeight / 2;
     return Scaffold(
+      extendBodyBehindAppBar: true, // Extend the body behind the AppBar
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.of(context).pop();
           },
         ),
-        title: Text(
-          widget._targetUser.name,
-          style: const TextStyle(
-            color: Colors.white,
+        actions: [
+          Stack(
+            children: [
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(
+                  Icons.notifications,
+                  color: Colors.white,
+                ),
+              ),
+              Positioned(
+                right: 11,
+                top: 11,
+                child: Container(
+                  padding: const EdgeInsets.all(1),
+                  decoration: BoxDecoration(
+                    color: Colors.red, // Notification badge background color
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: const Text(
+                    '6', // Number of notifications
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
+        ],
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -163,20 +205,17 @@ class _OtherUserProfileScreenState
                 clipBehavior: Clip.none,
                 alignment: Alignment.center,
                 children: [
-                  Container(
-                    color: Colors.grey,
-                    child: CachedNetworkImage(
-                      imageUrl: widget._targetUser.bannerImage,
+                  CachedNetworkImage(
+                    imageUrl: widget._targetUser.bannerImage,
+                    width: double.infinity,
+                    height: coverHeight,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
                       width: double.infinity,
                       height: coverHeight,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(
-                        width: double.infinity,
-                        height: coverHeight,
-                        color: Colors.black,
-                        child: const Center(
-                          child: CircularProgressIndicator(),
-                        ),
+                      color: Colors.black,
+                      child: const Center(
+                        child: CircularProgressIndicator(),
                       ),
                     ),
                   ),
@@ -201,23 +240,36 @@ class _OtherUserProfileScreenState
                   Text(
                     widget._targetUser.name,
                     style: const TextStyle(
-                      fontSize: 20,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      shadows: [
+                        Shadow(
+                          offset: Offset(1.5, 1.5),
+                          blurRadius: 3.0,
+                          color: Colors.black26,
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    widget._targetUser.bio ?? '',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    widget._targetUser.description ?? '',
+                    widget._targetUser.bio ?? 'No bio available...',
                     style: const TextStyle(
                       fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    widget._targetUser.description ??
+                        'No description available...',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.white70,
+                      letterSpacing: 0.5,
+                      height: 1.4,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -244,6 +296,7 @@ class _OtherUserProfileScreenState
                           return _buildFollowButton(
                             isFollowing,
                             followUser,
+                            _unfollowUser,
                             widget._targetUser,
                           );
                         },
@@ -254,51 +307,51 @@ class _OtherUserProfileScreenState
                       //BUILD FRIEND WIDGET
                       const SizedBox(height: 8),
                       isFriend.when(
-                          data: (isFriend) {
-                            return isFriend == true
-                                ? _buildFriendsWidget(
-                                    context,
-                                    widget._targetUser,
-                                    unfriend,
-                                  ).animate()
-                                : ref
-                                    .watch(getFriendRequestStatusProvider(
-                                        requestId))
-                                    .when(
-                                      data: (request) {
-                                        if (request == null) {
-                                          return Column(
-                                            children: [
-                                              _buildAddFriendButton(
-                                                sendAddFriendRequest,
-                                                widget._targetUser,
-                                              ).animate(),
-                                            ],
-                                          );
-                                        } else if (request.requestUid ==
-                                            currentUser.uid) {
-                                          return _buildFriendRequestSent(
-                                                  cancelFriendRequest,
-                                                  requestId)
-                                              .animate();
-                                        } else {
-                                          return _buildAcceptFriendRequestButton(
-                                            acceptFriendRequest,
-                                            cancelFriendRequest,
-                                            widget._targetUser,
-                                            requestId,
-                                          ).animate();
-                                        }
-                                      },
-                                      error: (error, stackTrace) =>
-                                          ErrorText(error: error.toString())
-                                              .animate(),
-                                      loading: () => const Loading().animate(),
-                                    );
-                          },
-                          error: (error, stackTrace) =>
-                              ErrorText(error: error.toString()),
-                          loading: () => const Loading()),
+                        data: (isFriend) {
+                          return isFriend == true
+                              ? _buildFriendsWidget(
+                                  context,
+                                  widget._targetUser,
+                                  unfriend,
+                                ).animate()
+                              : ref
+                                  .watch(
+                                      getFriendRequestStatusProvider(requestId))
+                                  .when(
+                                    data: (request) {
+                                      if (request == null) {
+                                        return Column(
+                                          children: [
+                                            _buildAddFriendButton(
+                                              sendAddFriendRequest,
+                                              widget._targetUser,
+                                            ).animate(),
+                                          ],
+                                        );
+                                      } else if (request.requestUid ==
+                                          currentUser.uid) {
+                                        return _buildFriendRequestSent(
+                                                cancelFriendRequest, requestId)
+                                            .animate();
+                                      } else {
+                                        return _buildAcceptFriendRequestButton(
+                                          acceptFriendRequest,
+                                          cancelFriendRequest,
+                                          widget._targetUser,
+                                          requestId,
+                                        ).animate();
+                                      }
+                                    },
+                                    error: (error, stackTrace) =>
+                                        ErrorText(error: error.toString())
+                                            .animate(),
+                                    loading: () => const Loading().animate(),
+                                  );
+                        },
+                        error: (error, stackTrace) =>
+                            ErrorText(error: error.toString()),
+                        loading: () => const Loading(),
+                      ),
                       //BUILD MESSAGE USER
                       const SizedBox(height: 8),
                       ElevatedButton.icon(
@@ -361,12 +414,13 @@ class _OtherUserProfileScreenState
   Widget _buildFollowButton(
     bool isFollowing,
     dynamic followUser,
+    dynamic unfollowUser,
     UserModel targetUser,
   ) {
     return isFollowing
         ? ElevatedButton.icon(
             onPressed: () {
-              followUser(targetUser);
+              unfollowUser(targetUser);
             },
             icon: const Icon(Icons.check, color: Colors.white),
             label: const Text('Following'),

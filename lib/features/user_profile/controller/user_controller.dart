@@ -6,6 +6,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/features/user_profile/repository/user_repository.dart';
+import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/conbined_models/user_profile_data_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
@@ -136,5 +137,9 @@ class UserController extends StateNotifier<bool> {
 
   Stream<UserProfileDataModel> getUserProfileData(String uid) {
     return _userRepository.getUserProfileData(uid);
+  }
+
+  Future<List<PostDataModel>> getUserPosts(UserModel user) async {
+    return await _userRepository.getUserPosts(user);
   }
 }

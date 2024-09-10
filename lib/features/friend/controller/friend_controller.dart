@@ -180,7 +180,7 @@ class FriendController extends StateNotifier<bool> {
         notif.message,
         notif.title,
         {
-          'type': 'accept_request',
+          'type': Constants.acceptRequestType,
           'uid': currentUser.uid,
         },
       );
@@ -229,13 +229,41 @@ class FriendController extends StateNotifier<bool> {
 
   FutureVoid followUser(String targetUid) async {
     try {
-      final uid = _ref.read(userProvider)!.uid;
+      final currentUser = _ref.read(userProvider)!;
       final followerModel = Follower(
-          id: getUids(targetUid, uid),
-          followerUid: uid,
+          id: await generateRandomId(),
+          followerUid: currentUser.uid,
           targetUid: targetUid,
           createdAt: Timestamp.now());
       await _friendRepository.followUser(followerModel);
+
+      final notif = NotificationModel(
+        id: await generateRandomId(),
+        title: Constants.newFollowerTitle,
+        message: Constants.getNewFollowerContent(currentUser.name),
+        targetUid: targetUid,
+        senderUid: currentUser.uid,
+        type: Constants.newFollowerType,
+        createdAt: Timestamp.now(),
+        isRead: false,
+      );
+
+      //SEND A NOTIFICATION TO THE TARGET USER
+      await _notificationController.addNotification(targetUid, notif);
+
+      //SEND NEW FOLLOWER PUSH NOTIFICATION
+      final targetUserDeviceIds =
+          await _userController.getUserDeviceTokens(targetUid);
+      await _pushNotificationController.sendPushNotification(
+        targetUserDeviceIds,
+        notif.message,
+        notif.title,
+        {
+          'type': Constants.newFollowerType,
+          'uid': currentUser.uid,
+        },
+      );
+
       return right(null);
     } on FirebaseException catch (e) {
       throw Failures(e.message!);
@@ -244,9 +272,19 @@ class FriendController extends StateNotifier<bool> {
     }
   }
 
+  FutureVoid unfollowUser(String targetUid) async {
+    try {
+      final uid = _ref.read(userProvider)!.uid;
+      await _friendRepository.unfollowUser(uid, targetUid);
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    }
+  }
+
   Stream<bool> getFollowingStatus(UserModel targetUser) {
     final uid = _ref.read(userProvider)!.uid;
-    return _friendRepository.getFollowingStatus(getUids(targetUser.uid, uid));
+    return _friendRepository.getFollowingStatus(uid, targetUser.uid);
   }
 
   Stream<List<FriendRequesterDataModel>> fetchFriendRequestsByUser(String uid) {

@@ -153,9 +153,30 @@ class FriendRepository {
     }
   }
 
-  Stream<bool> getFollowingStatus(String uids) {
-    return _follower.doc(uids).snapshots().map((event) {
-      return event.exists;
+  FutureVoid unfollowUser(String currentUid, String targetUid) async {
+    try {
+      final docs = await _follower
+          .where('followerUid', isEqualTo: currentUid)
+          .where('targetUid', isEqualTo: targetUid)
+          .get();
+      for (var doc in docs.docs) {
+        await doc.reference.delete();
+      }
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  Stream<bool> getFollowingStatus(String currentUid, String targetUid) {
+    return _follower
+        .where('followerUid', isEqualTo: currentUid)
+        .where('targetUid', isEqualTo: targetUid)
+        .snapshots()
+        .map((event) {
+      return event.docs.isNotEmpty;
     });
   }
 

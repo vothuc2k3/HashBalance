@@ -10,7 +10,10 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
+import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/user_profile_data_model.dart';
+import 'package:hash_balance/models/conbined_models/post_data_model.dart';
+import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -45,9 +48,12 @@ class UserRepository {
   //REFERENCE ALL THE FOLLOWERS
   CollectionReference get _follower =>
       _firestore.collection(FirebaseConstants.followerCollection);
-  //REFERENCE ALL THE FRIEND REQUESTS
-  CollectionReference get _friendRequests =>
-      _firestore.collection(FirebaseConstants.friendRequestCollection);
+  //REFERENCE ALL THE POSTS
+  CollectionReference get _posts =>
+      _firestore.collection(FirebaseConstants.postsCollection);
+  //REFERENCE ALL THE COMMUNITIES
+  CollectionReference get _communities =>
+      _firestore.collection(FirebaseConstants.communitiesCollection);
 
   //EDIT USER PROFLE
   FutureVoid editUserProfile(
@@ -277,72 +283,6 @@ class UserRepository {
     }
   }
 
-  // Stream<UserProfileDataModel> getUserProfileData(String uid) {
-  //   return _user.doc(uid).snapshots().asyncMap((event) async {
-  //     final friends = <UserModel>[];
-  //     final followers = <UserModel>[];
-  //     final followings = <UserModel>[];
-  //     final pendingFriendRequesters = <UserModel>[];
-
-  //     final query1 = _friendship.where('uid1', isEqualTo: uid).get();
-  //     final query2 = _friendship.where('uid2', isEqualTo: uid).get();
-  //     final results = await Future.wait([query1, query2]);
-  //     final documents = results.expand((result) => result.docs).toList();
-
-  //     final friendUids = documents.map((doc) {
-  //       final data = doc.data() as Map<String, dynamic>;
-  //       return data['uid1'] == uid ? data['uid2'] : data['uid1'];
-  //     }).toList();
-
-  //     final friendQuery =
-  //         await _users.where(FieldPath.documentId, whereIn: friendUids).get();
-  //     friendQuery.docs.map((doc) async {
-  //       final friendUser =
-  //           await fetchUserByUidProvider(doc.data()['uid'] as String);
-  //       friends.add(friendUser);
-  //     }).toList();
-
-  //     final followerQuery =
-  //         await _follower.where('targetUid', isEqualTo: uid).get();
-  //     followerQuery.docs.map((doc) async {
-  //       final followerModel =
-  //           Follower.fromMap(doc.data() as Map<String, dynamic>);
-  //       final followerUser =
-  //           await fetchUserByUidProvider(followerModel.followerUid);
-  //       followers.add(followerUser);
-  //     }).toList();
-
-  //     final followingQuery =
-  //         await _follower.where('followerUid', isEqualTo: uid).get();
-  //     followingQuery.docs.map((doc) async {
-  //       final followingModel =
-  //           Follower.fromMap(doc.data() as Map<String, dynamic>);
-  //       final followingUser =
-  //           await fetchUserByUidProvider(followingModel.targetUid);
-  //       followings.add(followingUser);
-  //     }).toList();
-
-  //     final pendingFriendRequestersQuery =
-  //         await _follower.where('targetUid', isEqualTo: uid).get();
-  //     pendingFriendRequestersQuery.docs.map((doc) async {
-  //       final friendRequestQuery =
-  //           await _friendRequests.where('targetUid', isEqualTo: uid).get();
-  //       final friendRequestModel = FriendRequest.fromMap(friendRequestQuery.data() as Map<String,dynamic>);
-  //       final requester =
-  //           await fetchUserByUidProvider(doc.data() as Map<String,dynamic>['uid'] as String);
-  //       pendingFriendRequesters
-  //           .add(UserModel.fromMap(doc.data() as Map<String, dynamic>));
-  //     }).toList();
-
-  //     return UserProfileDataModel(
-  //       friends: friends,
-  //       followers: followers,
-  //       following: followings,
-  //       pendingFriendRequests: pendingFriendRequesters,
-  //     );
-  //   });
-  // }
-
   Stream<UserProfileDataModel> getUserProfileData(String uid) {
     return _user.doc(uid).snapshots().asyncMap((event) async {
       final friends = <UserModel>[];
@@ -354,20 +294,16 @@ class UserRepository {
       final query2 = _friendship.where('uid2', isEqualTo: uid).get();
       final results = await Future.wait([query1, query2]);
 
-      // Tổng hợp các tài liệu từ cả hai truy vấn
       final documents = results.expand((result) => result.docs).toList();
 
-      // Lấy danh sách UID của bạn bè
       final friendUids = documents.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         return data['uid1'] == uid ? data['uid2'] : data['uid1'];
       }).toList();
 
-      // Truy vấn thông tin của các bạn bè từ collection 'users'
       final friendQuery =
           await _users.where(FieldPath.documentId, whereIn: friendUids).get();
 
-      // Dùng vòng lặp for và await để đảm bảo tất cả truy vấn được xử lý tuần tự
       for (var doc in friendQuery.docs) {
         final friendUid = doc.id;
         final friendUser = await fetchUserByUidProvider(friendUid);
@@ -386,18 +322,48 @@ class UserRepository {
       final followingQuery =
           await _follower.where('followerUid', isEqualTo: uid).get();
       for (var doc in followingQuery.docs) {
-        final followingData = doc.data() as Map<String,dynamic>;
+        final followingData = doc.data() as Map<String, dynamic>;
         final followingUid = followingData['targetUid'];
         final followingUser = await fetchUserByUidProvider(followingUid);
         following.add(followingUser);
       }
 
-      // Trả về kết quả UserProfileDataModel
       return UserProfileDataModel(
         friends: friends,
         followers: followers,
         following: following,
       );
     });
+  }
+
+  Future<List<PostDataModel>> getUserPosts(UserModel user) async {
+    try {
+      final userPosts = await _posts
+          .where('uid', isEqualTo: user.uid)
+          .where('status', isEqualTo: 'Approved')
+          .get();
+
+      final List<PostDataModel> postDataModels = [];
+
+      for (final postDoc in userPosts.docs) {
+        final postData = Post.fromMap(postDoc.data() as Map<String, dynamic>);
+
+        final communityDoc = await _communities.doc(postData.communityId).get();
+        final communityData =
+            Community.fromMap(communityDoc.data() as Map<String, dynamic>);
+        postDataModels.add(
+          PostDataModel(
+            post: postData,
+            author: user,
+            community: communityData,
+          ),
+        );
+      }
+      postDataModels
+          .sort((a, b) => b.post.createdAt.compareTo(a.post.createdAt));
+      return postDataModels;
+    } on FirebaseException catch (e) {
+      throw e.toString();
+    }
   }
 }

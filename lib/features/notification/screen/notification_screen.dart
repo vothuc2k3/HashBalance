@@ -233,6 +233,9 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
                                     _navigateToCommunityScreen(
                                         notif.communityId!, user.uid);
                                     break;
+                                  case Constants.newFollowerType:
+                                    _navigateToProfileScreen(notif.senderUid);
+                                    break;
                                   default:
                                     break;
                                 }

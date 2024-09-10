@@ -210,6 +210,22 @@ class MyAppState extends ConsumerState<MyApp> {
               },
             );
             break;
+          case Constants.newFollowerType:
+            navigatorKey.currentState?.push(
+              MaterialPageRoute(
+                builder: (context) => const SplashScreen(),
+              ),
+            );
+            final targetUser = await _fetchUserByUid(payloadData['uid']);
+            navigatorKey.currentState?.pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => OtherUserProfileScreen(
+                  targetUser: targetUser,
+                ),
+              ),
+            );
+
+            break;
           default:
             break;
         }
