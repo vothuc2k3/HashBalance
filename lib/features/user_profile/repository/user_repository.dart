@@ -301,13 +301,15 @@ class UserRepository {
         return data['uid1'] == uid ? data['uid2'] : data['uid1'];
       }).toList();
 
-      final friendQuery =
-          await _users.where(FieldPath.documentId, whereIn: friendUids).get();
+      if (friendUids.isNotEmpty) {
+        final friendQuery =
+            await _users.where(FieldPath.documentId, whereIn: friendUids).get();
 
-      for (var doc in friendQuery.docs) {
-        final friendUid = doc.id;
-        final friendUser = await fetchUserByUidProvider(friendUid);
-        friends.add(friendUser);
+        for (var doc in friendQuery.docs) {
+          final friendUid = doc.id;
+          final friendUser = await fetchUserByUidProvider(friendUid);
+          friends.add(friendUser);
+        }
       }
 
       final followerQuery =

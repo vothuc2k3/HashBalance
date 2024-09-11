@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
+import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 
 final notificationRepositoryProvider = Provider((ref) {
@@ -18,14 +20,21 @@ class NotificationRepository {
     required FirebaseFirestore firestore,
   }) : _firestore = firestore;
 
+  //REFERENCE ALL THE USERS
+  CollectionReference get _users =>
+      _firestore.collection(FirebaseConstants.usersCollection);
+  //REFERENCE ALL THE USERS
+  CollectionReference get _calls =>
+      _firestore.collection(FirebaseConstants.callCollection);
+
   FutureVoid addNotification(
     String targetUid,
     NotificationModel notification,
   ) async {
     try {
-      await _user
+      await _users
           .doc(targetUid)
-          .collection('notification')
+          .collection(FirebaseConstants.notificationCollection)
           .doc(notification.id)
           .set(notification.toMap());
       return right(null);
@@ -38,7 +47,11 @@ class NotificationRepository {
 
   //GET ALL THE NOTIFICATION
   Stream<List<NotificationModel>?> getNotificationByUid(String uid) {
-    return _user.doc(uid).collection('notification').snapshots().map(
+    return _users
+        .doc(uid)
+        .collection(FirebaseConstants.notificationCollection)
+        .snapshots()
+        .map(
       (event) {
         List<NotificationModel> notifs = [];
         for (var notif in event.docs) {
@@ -54,9 +67,9 @@ class NotificationRepository {
 
   //MARK AS READ THE NOTIFICATION
   Future<void> markAsRead(String uid, String notifId) async {
-    final query = await _user
+    final query = await _users
         .doc(uid)
-        .collection('notification')
+        .collection(FirebaseConstants.notificationCollection)
         .where('id', isEqualTo: notifId)
         .get();
     for (var doc in query.docs) {
@@ -70,10 +83,29 @@ class NotificationRepository {
   }
 
   Future<void> deleteNotification(String uid, String notifId) async {
-    await _user.doc(uid).collection('notification').doc(notifId).delete();
+    await _users
+        .doc(uid)
+        .collection(FirebaseConstants.notificationCollection)
+        .doc(notifId)
+        .delete();
   }
 
-  //REFERENCE ALL THE USERS
-  CollectionReference get _user =>
-      _firestore.collection(FirebaseConstants.usersCollection);
+  Stream<Call?> listenToIncomingCalls(String userId) {
+    return _calls
+        .where('receiverUid', isEqualTo: userId)
+        .where('status', isEqualTo: Constants.callStatusDialling)
+        .snapshots()
+        .map(
+      (snapshot) {
+        if (snapshot.docs.isNotEmpty) {
+          final callData = snapshot.docs.firstOrNull;
+          return callData != null
+              ? Call.fromMap(callData.data() as Map<String, dynamic>)
+              : null;
+        } else {
+          return null;
+        }
+      },
+    );
+  }
 }

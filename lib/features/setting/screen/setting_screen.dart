@@ -39,7 +39,7 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
           UserModel(
             email: 'email',
             name: 'name',
-            uid: 'zLCLFE9UBEPR50L9ArHQogJKV5U2',
+            uid: 'Fs220CRiTIQoK6KbFEe5JJF3KZB3',
             createdAt: Timestamp.now(),
             profileImage: 'profileImage',
             bannerImage: 'bannerImage',

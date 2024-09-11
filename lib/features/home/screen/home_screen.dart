@@ -1,12 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:hash_balance/core/constants/constants.dart';
-import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
+import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/home/delegates/search_delegate.dart';
 import 'package:hash_balance/features/home/screen/drawers/community_list_drawer.dart';
@@ -14,6 +13,7 @@ import 'package:hash_balance/features/home/screen/drawers/user_profile_drawer.da
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
 import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
+import 'package:logger/logger.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({
@@ -27,17 +27,9 @@ class HomeScreen extends ConsumerStatefulWidget {
 class HomeScreenState extends ConsumerState<HomeScreen> {
   int _page = 0;
   late PageController _pageController;
+  final logger = Logger();
 
-  @override
-  void initState() {
-    _pageController = PageController();
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await requestPushPermissions();
-    });
-  }
-
-  Future<void> requestPushPermissions() async {
+  Future<void> _requestPushPermissions() async {
     await ref.watch(firebaseMessagingProvider).requestPermission();
   }
 
@@ -63,21 +55,16 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Stream<Call?> listenToIncomingCalls(String userId) {
-    return FirebaseFirestore.instance
-        .collection(FirebaseConstants.callCollection)
-        .where('receiverUid', isEqualTo: userId)
-        .snapshots()
-        .map((snapshot) {
-      if (snapshot.docs.isEmpty) {
-        return null;
-      } else {
-        return Call.fromMap(snapshot.docs.first.data());
-      }
+  void _handleIncomingCall(Call call) {}
+
+  @override
+  void initState() {
+    _pageController = PageController();
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _requestPushPermissions();
     });
   }
-
-  void _handleIncomingCall(Call call) {}
 
   @override
   void dispose() {
@@ -103,7 +90,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
         child: Scaffold(
-          backgroundColor: Colors.transparent, // Để không ghi đè gradient
+          backgroundColor: Colors.transparent,
           appBar: AppBar(
             title: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
@@ -120,22 +107,27 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
               );
             }),
             actions: [
-              StreamBuilder<Call?>(
-                stream: listenToIncomingCalls(user!.uid),
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return const Icon(Icons.error, color: Colors.red);
-                  } else if (snapshot.hasData && snapshot.data != null) {
-                    final call = snapshot.data!;
+              //MARK: - CALL
+              ref.watch(listenToIncomingCallsProvider).when(
+                data: (call) {
+                  if (call == null) {
+                    logger.d('NULL CALL');
+                    return const SizedBox.shrink();
+                  } else {
+                    logger.d('HAS CALL DATA');
                     return IconButton(
                       icon: const Icon(Icons.call, color: Colors.green),
                       onPressed: () {
                         _handleIncomingCall(call);
                       },
                     );
-                  } else {
-                    return const SizedBox.shrink();
                   }
+                },
+                error: (error, stack) {
+                  return const SizedBox.shrink();
+                },
+                loading: () {
+                  return const Loading();
                 },
               ),
 
@@ -152,7 +144,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
 
-              ref.watch(getNotifsProvider(user.uid)).whenOrNull(
+              ref.watch(getNotifsProvider(user!.uid)).whenOrNull(
                     data: (notifs) {
                       if (notifs == null || notifs.isEmpty) {
                         return const SizedBox.shrink();
@@ -291,9 +283,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
                 minHeight: 16,
               ),
               child: Text(
-                notifs.isNotEmpty
-                    ? notifs.length.toString()
-                    : '', // Hiển thị số lượng thông báo
+                notifs.isNotEmpty ? notifs.length.toString() : '',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 12,

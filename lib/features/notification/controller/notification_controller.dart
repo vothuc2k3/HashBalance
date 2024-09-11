@@ -5,7 +5,13 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/notification/repository/notification_repository.dart';
+import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
+
+final listenToIncomingCallsProvider = StreamProvider<Call?>((ref) {
+  final notificationController = ref.watch(notificationControllerProvider.notifier);
+  return notificationController.listenToIncomingCalls(ref.read(userProvider)!.uid);
+});
 
 final deleteNotifProvider =
     FutureProvider.family.autoDispose((ref, String notifId) {
@@ -65,5 +71,9 @@ class NotificationController extends StateNotifier<bool> {
   Future<void> deleteNotif(String notifId) async {
     final uid = _ref.watch(userProvider)!.uid;
     await _notificationRepository.deleteNotification(uid, notifId);
+  }
+
+  Stream<Call?> listenToIncomingCalls(String userId) {
+    return _notificationRepository.listenToIncomingCalls(userId);
   }
 }
