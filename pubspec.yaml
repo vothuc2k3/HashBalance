@@ -75,9 +75,9 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   dropdown_search: ^5.0.6
-  logging: ^1.2.0
   sentry_flutter: ^8.8.0
   image_picker: ^1.1.2
+  logger: ^2.4.0
 
 dependency_overrides:
   lints: ^3.0.0

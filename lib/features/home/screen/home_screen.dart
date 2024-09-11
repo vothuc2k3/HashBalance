@@ -1,15 +1,18 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:hash_balance/core/constants/constants.dart';
+import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/home/delegates/search_delegate.dart';
 import 'package:hash_balance/features/home/screen/drawers/community_list_drawer.dart';
 import 'package:hash_balance/features/home/screen/drawers/user_profile_drawer.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
+import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -38,12 +41,6 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
     await ref.watch(firebaseMessagingProvider).requestPermission();
   }
 
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
   void displayCommunityListDrawer(BuildContext context) {
     Scaffold.of(context).openDrawer();
   }
@@ -66,9 +63,32 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  Stream<Call?> listenToIncomingCalls(String userId) {
+    return FirebaseFirestore.instance
+        .collection(FirebaseConstants.callCollection)
+        .where('receiverUid', isEqualTo: userId)
+        .snapshots()
+        .map((snapshot) {
+      if (snapshot.docs.isEmpty) {
+        return null;
+      } else {
+        return Call.fromMap(snapshot.docs.first.data());
+      }
+    });
+  }
+
+  void _handleIncomingCall(Call call) {}
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -100,6 +120,26 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
               );
             }),
             actions: [
+              StreamBuilder<Call?>(
+                stream: listenToIncomingCalls(user!.uid),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return const Icon(Icons.error, color: Colors.red);
+                  } else if (snapshot.hasData && snapshot.data != null) {
+                    final call = snapshot.data!;
+                    return IconButton(
+                      icon: const Icon(Icons.call, color: Colors.green),
+                      onPressed: () {
+                        _handleIncomingCall(call);
+                      },
+                    );
+                  } else {
+                    return const SizedBox.shrink();
+                  }
+                },
+              ),
+
+              // Other actions
               IconButton(
                 onPressed: () {
                   showSearch(
@@ -111,7 +151,8 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
                   Icons.search,
                 ),
               ),
-              ref.watch(getNotifsProvider(user!.uid)).whenOrNull(
+
+              ref.watch(getNotifsProvider(user.uid)).whenOrNull(
                     data: (notifs) {
                       if (notifs == null || notifs.isEmpty) {
                         return const SizedBox.shrink();

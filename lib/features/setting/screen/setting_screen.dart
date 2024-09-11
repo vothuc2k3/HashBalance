@@ -1,9 +1,12 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
+import 'package:hash_balance/features/call/controller/call_controller.dart';
+import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
 class SettingScreen extends ConsumerStatefulWidget {
@@ -32,7 +35,20 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
   }
 
   void _testButton() async {
-
+    await ref.read(callControllerProvider.notifier).initCall(
+          UserModel(
+            email: 'email',
+            name: 'name',
+            uid: 'zLCLFE9UBEPR50L9ArHQogJKV5U2',
+            createdAt: Timestamp.now(),
+            profileImage: 'profileImage',
+            bannerImage: 'bannerImage',
+            isAuthenticated: true,
+            isRestricted: false,
+            activityPoint: 1,
+          ),
+        );
+    
   }
 
   @override

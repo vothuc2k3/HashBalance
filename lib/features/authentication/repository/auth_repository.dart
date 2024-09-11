@@ -31,6 +31,10 @@ class AuthRepository {
   final FirebaseAuth _firebaseAuth;
   final GoogleSignIn _googleSignIn;
 
+  //REFERENCE ALL THE USERS
+  CollectionReference get _users =>
+      _firestore.collection(FirebaseConstants.usersCollection);
+
   AuthRepository({
     required FirebaseFirestore firestore,
     required FirebaseAuth firebaseAuth,
@@ -171,8 +175,4 @@ class AuthRepository {
       return left(Failures(e.toString()));
     }
   }
-
-  //REFERENCE ALL THE USERS
-  CollectionReference get _users =>
-      _firestore.collection(FirebaseConstants.usersCollection);
 }

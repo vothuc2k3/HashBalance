@@ -73,6 +73,10 @@ class Constants {
   static const String postReportType = 'post_report';
   static const String commentReportType = 'comment_report';
 
+  static const String callStatusDialling = 'dialling';
+  static const String callStatusOngoing = 'on_going';
+  static const String callStatusEnded = 'ended';
+
   static String getFriendRequestContent(String name) {
     return '$name has sent you a friend request!';
   }
@@ -97,6 +101,4 @@ class Constants {
   static String agoraAppId = 'a9942d0368fc4cdf9e59df9df19899c9';
 
   static String domain = 'https://web-production-f331.up.railway.app';
-
-  static List<String> communityIds = <String>[];
 }

@@ -16,4 +16,5 @@ class FirebaseConstants {
   static const messageCollection = 'messages';
   static const invitationCollection = 'invitations';
   static const reportCollection = 'reports';
+  static const callCollection = 'calls';
 }
