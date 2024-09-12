@@ -1,12 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
-import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 
 final notificationRepositoryProvider = Provider((ref) {
@@ -88,24 +86,5 @@ class NotificationRepository {
         .collection(FirebaseConstants.notificationCollection)
         .doc(notifId)
         .delete();
-  }
-
-  Stream<Call?> listenToIncomingCalls(String userId) {
-    return _calls
-        .where('receiverUid', isEqualTo: userId)
-        .where('status', isEqualTo: Constants.callStatusDialling)
-        .snapshots()
-        .map(
-      (snapshot) {
-        if (snapshot.docs.isNotEmpty) {
-          final callData = snapshot.docs.firstOrNull;
-          return callData != null
-              ? Call.fromMap(callData.data() as Map<String, dynamic>)
-              : null;
-        } else {
-          return null;
-        }
-      },
-    );
   }
 }

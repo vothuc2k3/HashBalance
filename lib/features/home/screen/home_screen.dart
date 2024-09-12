@@ -5,9 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
-import 'package:hash_balance/core/splash/splash_screen.dart';
-import 'package:hash_balance/core/utils.dart';
-import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/call/controller/call_controller.dart';
 import 'package:hash_balance/features/call/screen/incoming_call_screen.dart';
@@ -15,7 +12,7 @@ import 'package:hash_balance/features/home/delegates/search_delegate.dart';
 import 'package:hash_balance/features/home/screen/drawers/community_list_drawer.dart';
 import 'package:hash_balance/features/home/screen/drawers/user_profile_drawer.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
-import 'package:hash_balance/models/call_model.dart';
+import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 import 'package:logger/logger.dart';
 
@@ -31,35 +28,12 @@ class HomeScreen extends ConsumerStatefulWidget {
 class HomeScreenState extends ConsumerState<HomeScreen> {
   int _page = 0;
   late PageController _pageController;
+  bool _isIncomingCallScreenOpen = false;
   final logger = Logger();
-
-  Future<void> _navigateToIncomingCallScreen(Call call) async {
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const SplashScreen(),
-        ));
-    final result =
-        await ref.read(callControllerProvider.notifier).fetchCallData(call);
-    result.fold(
-      (l) {
-        showToast(false, l.message);
-        Navigator.pop(context);
-      },
-      (r) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => IncomingCallScreen(callData: r),
-          ),
-        );
-      },
-    );
-  }
 
   Future<void> _requestPushPermissions() async {
     await ref.watch(firebaseMessagingProvider).requestPermission();
-}
+  }
 
   void _displayCommunityListDrawer(BuildContext context) {
     Scaffold.of(context).openDrawer();
@@ -80,8 +54,18 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
         duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
   }
 
-  void _handleIncomingCall(Call call) async {
-    await _navigateToIncomingCallScreen(call);
+  void _navigateToIncomingCallScreen(CallDataModel callData) {
+    if (!_isIncomingCallScreenOpen) {
+      _isIncomingCallScreenOpen = true;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => IncomingCallScreen(callData: callData),
+        ),
+      ).then((_) {
+        _isIncomingCallScreenOpen = false;
+      });
+    }
   }
 
   @override
@@ -140,23 +124,19 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
             actions: [
               //MARK: - CALL
               ref.watch(listenToIncomingCallsProvider).when(
-                data: (call) {
-                  if (call == null) {
-                    return const SizedBox.shrink();
-                  } else {
-                    return IconButton(
-                      icon: const Icon(Icons.call, color: Colors.green),
-                      onPressed: () {
-                        _handleIncomingCall(call);
-                      },
-                    );
+                data: (callDataModel) {
+                  if (callDataModel != null) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _navigateToIncomingCallScreen(callDataModel);
+                    });
                   }
+                  return const SizedBox.shrink();
                 },
                 error: (error, stack) {
                   return const SizedBox.shrink();
                 },
                 loading: () {
-                  return const Loading();
+                  return const SizedBox.shrink();
                 },
               ),
 

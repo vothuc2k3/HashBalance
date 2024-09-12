@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/call/controller/call_controller.dart';
 import 'package:hash_balance/features/call/screen/call_screen.dart';
@@ -81,25 +80,6 @@ class _OutgoingCallScreenState extends ConsumerState<OutgoingCallScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Lắng nghe sự thay đổi của cuộc gọi
-    ref.listen<AsyncValue<CallDataModel>>(callControllerProvider,
-        (previous, next) {
-      next.when(
-        data: (callData) {
-          if (callData.call.status == Constants.callStatusOngoing) {
-            _navigateToCallScreen(callData.call.agoraToken!);
-          }
-        },
-        error: (err, stack) {
-          // Xử lý lỗi nếu có
-          showToast(false, 'Error: $err');
-        },
-        loading: () {
-          // Hiển thị loading nếu cần
-        },
-      );
-    });
-
     return Scaffold(
       backgroundColor: Colors.black,
       body: Container(
@@ -134,6 +114,7 @@ class _OutgoingCallScreenState extends ConsumerState<OutgoingCallScreen> {
               ),
             ),
             const Spacer(),
+            
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [

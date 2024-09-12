@@ -14,15 +14,26 @@ import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
-final callControllerProvider =
-    StateNotifierProvider<CallController, AsyncValue<CallDataModel>>((ref) {
+final listenToCallProvider = StreamProvider.family((ref, String callId) {
+  final callController = ref.read(callControllerProvider.notifier);
+  return callController.listenToCall(callId);
+});
+
+final listenToIncomingCallsProvider = StreamProvider<CallDataModel?>(
+  (ref) {
+    final callController = ref.read(callControllerProvider.notifier);
+    return callController.listenToIncomingCalls();
+  },
+);
+
+final callControllerProvider = StateNotifierProvider((ref) {
   return CallController(
-    callRepository: ref.watch(callRepositoryProvider),
+    callRepository: ref.read(callRepositoryProvider),
     ref: ref,
   );
 });
 
-class CallController extends StateNotifier<AsyncValue<CallDataModel>> {
+class CallController extends StateNotifier<CallDataModel?> {
   final CallRepository _callRepository;
 
   final Ref _ref;
@@ -32,7 +43,7 @@ class CallController extends StateNotifier<AsyncValue<CallDataModel>> {
     required Ref ref,
   })  : _callRepository = callRepository,
         _ref = ref,
-        super(const AsyncValue.loading());
+        super(null);
 
   FutureString _fetchAgoraToken(String channelName) async {
     try {
@@ -42,9 +53,9 @@ class CallController extends StateNotifier<AsyncValue<CallDataModel>> {
     }
   }
 
-  FutureVoid notifyIncomingCall(UserModel targetUser) async {
+  FutureVoid _notifyIncomingCall(UserModel targetUser) async {
     try {
-      final userController = _ref.watch(userControllerProvider.notifier);
+      final userController = _ref.read(userControllerProvider.notifier);
       final targetUserDeviceToken =
           await userController.getUserDeviceTokens(targetUser.uid);
       await _callRepository.notifyIncomingCall(targetUserDeviceToken,
@@ -57,7 +68,7 @@ class CallController extends StateNotifier<AsyncValue<CallDataModel>> {
 
   Future<Either<Failures, Call>> initCall(UserModel targetUser) async {
     try {
-      final currentUser = _ref.watch(userProvider)!;
+      final currentUser = _ref.read(userProvider)!;
       final callModel = Call(
         id: await generateRandomId(),
         callerUid: currentUser.uid,
@@ -101,11 +112,28 @@ class CallController extends StateNotifier<AsyncValue<CallDataModel>> {
     }
   }
 
+  FutureVoid declineCall(Call call) async {
+    try {
+      return await _callRepository.declineCall(call);
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
   Future<Either<Failures, CallDataModel>> fetchCallData(Call call) async {
     try {
       return await _callRepository.fetchCallData(call);
     } catch (e) {
       return left(Failures(e.toString()));
     }
+  }
+
+  Stream<CallDataModel?> listenToIncomingCalls() {
+    final currentUser = _ref.read(userProvider)!;
+    return _callRepository.listenToIncomingCalls(currentUser);
+  }
+
+  Stream<Call?> listenToCall(String callId) {
+    return _callRepository.listenToCall(callId);
   }
 }

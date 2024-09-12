@@ -1,9 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/call/controller/call_controller.dart';
 import 'package:hash_balance/features/call/screen/call_screen.dart';
+import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 
 class IncomingCallScreen extends ConsumerStatefulWidget {
@@ -20,9 +22,11 @@ class IncomingCallScreen extends ConsumerStatefulWidget {
 }
 
 class _IncomingCallScreenState extends ConsumerState<IncomingCallScreen> {
+  bool _isScreenPopped = false;
+
   void _onStartCall() async {
     final result = await ref
-        .watch(callControllerProvider.notifier)
+        .read(callControllerProvider.notifier)
         .joinCall(widget._callData.call);
     result.fold(
       (l) {
@@ -44,8 +48,49 @@ class _IncomingCallScreenState extends ConsumerState<IncomingCallScreen> {
     );
   }
 
+  void _onDeclineCall() async {
+    final result = await ref
+        .watch(callControllerProvider.notifier)
+        .declineCall(widget._callData.call);
+    result.fold(
+      (l) {
+        showToast(false, l.message);
+        Navigator.pop(context);
+      },
+      (r) {
+        Navigator.pop(context);
+      },
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<Call?>>(
+      listenToCallProvider(widget._callData.call.id),
+      (previous, next) {
+        next.when(
+          data: (call) {
+            if (call == null || call.status != Constants.callStatusDialling) {
+              if (!_isScreenPopped) {
+                _isScreenPopped = true;
+                Navigator.pop(context);
+              }
+            }
+          },
+          error: (error, stack) {
+            return const SizedBox.shrink();
+          },
+          loading: () {
+            return const SizedBox.shrink();
+          },
+        );
+      },
+    );
     return Scaffold(
       backgroundColor: Colors.black,
       body: Container(
@@ -87,7 +132,7 @@ class _IncomingCallScreenState extends ConsumerState<IncomingCallScreen> {
                   heroTag: 'decline_call',
                   backgroundColor: Colors.red,
                   onPressed: () {
-                    Navigator.pop(context);
+                    _onDeclineCall();
                   },
                   child: const Icon(Icons.call_end, color: Colors.white),
                 ),

@@ -113,6 +113,17 @@ class CallRepository {
     }
   }
 
+  FutureVoid declineCall(Call call) async {
+    try {
+      await _calls
+          .doc(call.id)
+          .update({'status': Constants.callStatusDeclined});
+      return right(null);
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
   Future<Either<Failures, CallDataModel>> fetchCallData(Call call) async {
     try {
       final callerDoc = await _users.doc(call.callerUid).get();
@@ -128,5 +139,41 @@ class CallRepository {
     } catch (e) {
       return left(Failures(e.toString()));
     }
+  }
+
+  Stream<CallDataModel?> listenToIncomingCalls(UserModel currentUser) {
+    return _calls
+        .where('receiverUid', isEqualTo: currentUser.uid)
+        .where('status', isEqualTo: Constants.callStatusDialling)
+        .snapshots()
+        .asyncMap(
+      (snapshot) async {
+        if (snapshot.docs.isNotEmpty) {
+          final callDoc = snapshot.docs.firstOrNull;
+          if (callDoc != null) {
+            final call = Call.fromMap(callDoc.data() as Map<String, dynamic>);
+            final callerDoc = await _users.doc(call.callerUid).get();
+            final caller =
+                UserModel.fromMap(callerDoc.data() as Map<String, dynamic>);
+            final callData = CallDataModel(
+              call: call,
+              caller: caller,
+              receiver: currentUser,
+            );
+            return callData;
+          } else {
+            return null;
+          }
+        } else {
+          return null;
+        }
+      },
+    );
+  }
+
+  Stream<Call?> listenToCall(String callId) {
+    return _calls.doc(callId).snapshots().map((snapshot) {
+      return Call.fromMap(snapshot.data() as Map<String, dynamic>);
+    });
   }
 }
