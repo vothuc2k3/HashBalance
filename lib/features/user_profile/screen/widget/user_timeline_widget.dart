@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/preferred_theme.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
@@ -11,7 +12,6 @@ class UserTimelineWidget extends ConsumerStatefulWidget {
   const UserTimelineWidget({
     super.key,
     required Future<List<PostDataModel>> userPostsFuture,
-    
   }) : _userPostsFuture = userPostsFuture;
 
   final Future<List<PostDataModel>> _userPostsFuture;
@@ -32,15 +32,7 @@ class _UserTimelineWidgetState extends ConsumerState<UserTimelineWidget>
     final currentUser = ref.watch(userProvider)!;
     return Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF000000),
-            Color(0xFF0D47A1),
-            Color(0xFF1976D2),
-          ],
-        ),
+        color: PreferredTheme.firstTheme,
       ),
       child: RefreshIndicator(
         child: CustomScrollView(
@@ -73,8 +65,22 @@ class _UserTimelineWidgetState extends ConsumerState<UserTimelineWidget>
                   } else if (snapshot.hasError) {
                     return ErrorText(error: snapshot.error.toString());
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(
-                      child: SizedBox.shrink(),
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 200.0), // Adjust the value as needed
+                        child: const Text(
+                          'You have no posts yet',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.white70,
+                          ),
+                        ).animate().fadeIn(duration: 600.ms).moveY(
+                              begin: 30,
+                              end: 0,
+                              duration: 600.ms,
+                              curve: Curves.easeOutBack,
+                            ),
+                      ),
                     );
                   } else if (snapshot.connectionState == ConnectionState.done) {
                     final posts = snapshot.data!;

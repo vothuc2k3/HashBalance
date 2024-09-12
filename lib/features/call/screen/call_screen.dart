@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:agora_uikit/agora_uikit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -31,6 +32,11 @@ class CallScreenState extends ConsumerState<CallScreen> {
   late String channelName;
   AgoraClient? agoraClient;
 
+  void _onEndCall() {
+    agoraClient?.engine.leaveChannel();
+    Navigator.pop(context);
+  }
+
   @override
   void dispose() {
     agoraClient?.engine.release();
@@ -61,6 +67,22 @@ class CallScreenState extends ConsumerState<CallScreen> {
 
   void initAgora() async {
     await agoraClient!.initialize();
+    agoraClient!.engine.registerEventHandler(
+      RtcEngineEventHandler(
+        onLeaveChannel: (connection, stats) {
+          showToast(false, 'Leave call');
+          _onEndCall();
+        },
+        onUserOffline: (connection, uid, reason) {
+          showToast(false, 'User offline');
+          _onEndCall();
+        },
+        onConnectionLost: (connection) {
+          showToast(false, 'Connection lost');
+          _onEndCall();
+        },
+      ),
+    );
   }
 
   @override

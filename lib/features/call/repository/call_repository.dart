@@ -83,7 +83,7 @@ class CallRepository {
     }
   }
 
-  FutureVoid joinCall(Call call) async {
+  FutureVoid acceptCall(Call call) async {
     try {
       await _calls.doc(call.id).update({
         'status': Constants.callStatusOngoing,

@@ -90,13 +90,13 @@ class CallController extends StateNotifier<CallDataModel?> {
     }
   }
 
-  FutureVoid joinCall(Call call) async {
+  FutureVoid acceptCall(Call call) async {
     try {
       final uids = getUids(call.callerUid, call.receiverUid);
       final result = await _fetchAgoraToken(uids);
       return result.fold((l) => left(l), (agoraToken) async {
         final callCopy = call.copyWith(agoraToken: agoraToken);
-        await _callRepository.joinCall(callCopy);
+        await _callRepository.acceptCall(callCopy);
         return right(null);
       });
     } catch (e) {

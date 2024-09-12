@@ -286,10 +286,10 @@ class _OtherUserProfileScreenState
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  Wrap(
+                    alignment: WrapAlignment.center,
                     children: [
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 8, width: 8),
                       //BUILD FOLLOWING WIDGET
                       isFollowing.when(
                         data: (isFollowing) {
@@ -305,7 +305,7 @@ class _OtherUserProfileScreenState
                         loading: () => const Loading(),
                       ),
                       //BUILD FRIEND WIDGET
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 8, width: 8),
                       isFriend.when(
                         data: (isFriend) {
                           return isFriend == true
@@ -353,7 +353,7 @@ class _OtherUserProfileScreenState
                         loading: () => const Loading(),
                       ),
                       //BUILD MESSAGE USER
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 8, width: 8),
                       ElevatedButton.icon(
                         onPressed: () {
                           messageUser(widget._targetUser);

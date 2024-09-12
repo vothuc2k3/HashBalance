@@ -14,22 +14,19 @@ import 'package:hash_balance/features/home/screen/drawers/user_profile_drawer.da
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
 import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
-import 'package:logger/logger.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({
-    super.key,
-  });
+  const HomeScreen({super.key});
 
   @override
   HomeScreenState createState() => HomeScreenState();
 }
 
-class HomeScreenState extends ConsumerState<HomeScreen> {
+class HomeScreenState extends ConsumerState<HomeScreen>
+    with AutomaticKeepAliveClientMixin {
   int _page = 0;
   late PageController _pageController;
   bool _isIncomingCallScreenOpen = false;
-  final logger = Logger();
 
   Future<void> _requestPushPermissions() async {
     await ref.watch(firebaseMessagingProvider).requestPermission();
@@ -86,7 +83,24 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
+
+    ref.listen<AsyncValue<CallDataModel?>>(
+      listenToIncomingCallsProvider,
+      (previous, next) {
+        next.whenOrNull(
+          data: (callDataModel) {
+            if (callDataModel != null) {
+              _navigateToIncomingCallScreen(callDataModel);
+            }
+          },
+        );
+      },
+    );
     final user = ref.watch(userProvider);
 
     return Scaffold(
@@ -122,24 +136,6 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
               },
             ),
             actions: [
-              //MARK: - CALL
-              ref.watch(listenToIncomingCallsProvider).when(
-                data: (callDataModel) {
-                  if (callDataModel != null) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      _navigateToIncomingCallScreen(callDataModel);
-                    });
-                  }
-                  return const SizedBox.shrink();
-                },
-                error: (error, stack) {
-                  return const SizedBox.shrink();
-                },
-                loading: () {
-                  return const SizedBox.shrink();
-                },
-              ),
-
               //MARK: - SEARCH
               IconButton(
                 onPressed: () {

@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hash_balance/core/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/widget/user_timeline_widget.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:image_picker/image_picker.dart';
@@ -30,7 +31,8 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
     with SingleTickerProviderStateMixin {
   final double coverHeight = 250;
   final double profileHeight = 120;
-  late TabController _tabController;
+  late PageController _pageController;
+  int _currentIndex = 0;
   late Future<List<PostDataModel>> _userPosts;
 
   void _navigateToFriendRequestsScreen(String uid) {
@@ -139,7 +141,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
               leading: const Icon(Icons.edit),
               title: const Text('Edit Name'),
               onTap: () {
-                Navigator.pop(context); // Đóng modal
+                Navigator.pop(context);
                 showDialog(
                   context: context,
                   builder: (context) {
@@ -151,37 +153,6 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
                           hintText: 'Enter your new name',
                         ),
                       ),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            _editName(currentUser, nameController.text);
-                            Navigator.pop(context);
-                          },
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.white,
-                            backgroundColor: Colors.blue,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 8.0, horizontal: 16.0),
-                            minimumSize: const Size(80, 40),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: const Text(
-                            'Save',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
                     );
                   },
                 );
@@ -597,10 +568,24 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
     );
   }
 
+  void _onPageChanged(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  void _onBottomNavTap(int index) {
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _pageController = PageController(initialPage: 0);
   }
 
   @override
@@ -609,6 +594,12 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
     final currentUser = ref.read(userProvider)!;
     _userPosts =
         ref.read(userControllerProvider.notifier).getUserPosts(currentUser);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   @override
@@ -660,10 +651,11 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
           ),
         ],
       ),
-      body: TabBarView(
-        controller: _tabController, // Quản lý TabBarView
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: _onPageChanged,
         children: [
-          // Tab đầu tiên hiển thị profile
+          //MARK: - User Profile Widget
           RefreshIndicator(
             onRefresh: () async {
               userProfileData =
@@ -671,15 +663,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
             }, // Hàm làm mới
             child: Container(
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Color(0xFF000000),
-                    Color(0xFF0D47A1),
-                    Color(0xFF1976D2),
-                  ],
-                ),
+                color: PreferredTheme.firstTheme,
               ),
               child: ListView(
                 padding: EdgeInsets.zero,
@@ -741,11 +725,14 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
                                       ],
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  InkWell(
-                                    onTap: () =>
-                                        _showEditNameModal(currentUser),
-                                    child: const Icon(Icons.edit),
+                                  const Spacer(),
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 10),
+                                    child: InkWell(
+                                      onTap: () =>
+                                          _showEditNameModal(currentUser),
+                                      child: const Icon(Icons.edit),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -777,10 +764,14 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
                                       ],
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  InkWell(
-                                    onTap: () => _showEditBioModal(currentUser),
-                                    child: const Icon(Icons.edit),
+                                  const Spacer(),
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 10),
+                                    child: InkWell(
+                                      onTap: () =>
+                                          _showEditBioModal(currentUser),
+                                      child: const Icon(Icons.edit),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -813,11 +804,14 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
                                       ],
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  InkWell(
-                                    onTap: () =>
+                                  const Spacer(),
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 10),
+                                    child: InkWell(
+                                      onTap: () =>
                                         _showEditDescriptionModal(currentUser),
-                                    child: const Icon(Icons.edit),
+                                      child: const Icon(Icons.edit),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -874,16 +868,9 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
                               ),
                               _buildVerticalDivider(),
                               _buildAnimatedButton(
-                                text: 'Activity Points',
+                                text: 'Points',
                                 oldValue: 0,
                                 newValue: currentUser.activityPoint,
-                                onPressed: () {},
-                              ),
-                              _buildVerticalDivider(),
-                              _buildAnimatedButton(
-                                text: 'Achievements',
-                                oldValue: 0,
-                                newValue: 0,
                                 onPressed: () {},
                               ),
                             ],
@@ -918,12 +905,6 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
                                 value: 0,
                                 onPressed: () {},
                               ),
-                              _buildVerticalDivider(),
-                              _buildButton(
-                                text: 'Achievements',
-                                value: 0,
-                                onPressed: () {},
-                              ),
                             ],
                           );
                         },
@@ -939,19 +920,25 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
               ),
             ),
           ),
+          //MARK: - User Timeline Widget
           UserTimelineWidget(userPostsFuture: _userPosts),
         ],
       ),
-      bottomNavigationBar: TabBar(
-        controller: _tabController,
-        tabs: const [
-          Tab(icon: Icon(Icons.person), text: 'Profile'),
-          Tab(icon: Icon(Icons.dynamic_feed), text: 'Timeline'),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: _onBottomNavTap,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dynamic_feed),
+            label: 'Timeline',
+          ),
         ],
-        labelColor: Colors.blue,
-        unselectedLabelColor: Colors.grey,
-        indicatorColor: Colors.blue,
-        labelPadding: const EdgeInsets.symmetric(vertical: 4.0),
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey,
       ),
     );
   }
@@ -1069,6 +1056,8 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
               height: 250,
               child: GridView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                physics:
+                    const NeverScrollableScrollPhysics(), // Vô hiệu hóa scroll
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
                   crossAxisSpacing: 8,
@@ -1082,32 +1071,20 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
                     children: [
                       InkWell(
                         onTap: () => _navigateToFriendProfile(friend),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.blue,
-                              width: 2.0,
-                            ),
+                        child: CircleAvatar(
+                          radius: 30,
+                          backgroundImage: CachedNetworkImageProvider(
+                            friend.profileImage,
                           ),
-                          child: ClipOval(
-                            child: CachedNetworkImage(
-                              imageUrl: friend.profileImage,
-                              width: 60,
-                              height: 60,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) =>
-                                  const CircularProgressIndicator(),
-                              errorWidget: (context, url, error) =>
-                                  const Icon(Icons.error),
-                            ),
-                          ),
+                          child: friend.profileImage.isEmpty
+                              ? const Icon(Icons.error)
+                              : null,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         friend.name,
-                        style: const TextStyle(fontSize: 16),
+                        style: const TextStyle(fontSize: 14),
                       ),
                     ],
                   );
@@ -1118,41 +1095,22 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
               padding: const EdgeInsets.all(16.0),
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 14.0, horizontal: 24.0),
-                  backgroundColor: Colors.transparent,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 14.0),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
-                  side: BorderSide(
-                      color: Colors.white.withOpacity(0.3), width: 2),
+                  elevation: 5, // Tạo hiệu ứng nổi cho nút
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.black
+                      .withOpacity(0.25), // Hiệu ứng shadow mượt hơn
                 ).copyWith(
-                  side: WidgetStateProperty.all(
-                    BorderSide(color: Colors.white.withOpacity(0.3), width: 2),
-                  ),
-                  padding: WidgetStateProperty.all(
-                    const EdgeInsets.symmetric(
-                        vertical: 14.0, horizontal: 24.0),
-                  ),
-                  shape: WidgetStateProperty.all(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  elevation: WidgetStateProperty.all(0),
+                  foregroundColor: WidgetStateProperty.all(Colors.white),
                 ),
-                onPressed: () {
-                  // Handle see all friends action
-                },
+                onPressed: () {},
                 child: Ink(
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Colors.blueAccent, Colors.purpleAccent],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: Colors
+                        .blueAccent, // Thay đổi từ gradient sang màu duy nhất
                     borderRadius: BorderRadius.circular(30),
                   ),
                   child: Container(
@@ -1176,9 +1134,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
                   ),
                 ),
               ),
-            ),
-            const Divider(),
-            const SizedBox(height: 16),
+            )
           ],
         );
       },

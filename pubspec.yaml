@@ -78,6 +78,7 @@ dependencies:
   sentry_flutter: ^8.8.0
   image_picker: ^1.1.2
   logger: ^2.4.0
+  just_audio: ^0.9.40
 
 dependency_overrides:
   lints: ^3.0.0
@@ -113,7 +114,8 @@ flutter:
     - assets/images/facebookLogo.png
     - assets/images/user_profile_placeholder.png
     - assets/images/post_image_placeholder.png
-
+    - assets/audio/ringtone.mp3
+    
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 

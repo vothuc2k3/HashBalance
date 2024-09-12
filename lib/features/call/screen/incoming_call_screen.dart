@@ -2,11 +2,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/constants/constants.dart';
+import 'package:hash_balance/core/preferred_theme.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/call/controller/call_controller.dart';
 import 'package:hash_balance/features/call/screen/call_screen.dart';
 import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/conbined_models/call_data_model.dart';
+import 'package:just_audio/just_audio.dart';
 
 class IncomingCallScreen extends ConsumerStatefulWidget {
   const IncomingCallScreen({
@@ -23,28 +25,18 @@ class IncomingCallScreen extends ConsumerStatefulWidget {
 
 class _IncomingCallScreenState extends ConsumerState<IncomingCallScreen> {
   bool _isScreenPopped = false;
+  late AudioPlayer _audioPlayer;
 
-  void _onStartCall() async {
+  void _onAcceptCall() async {
     final result = await ref
         .read(callControllerProvider.notifier)
-        .joinCall(widget._callData.call);
+        .acceptCall(widget._callData.call);
     result.fold(
       (l) {
         showToast(false, l.message);
         Navigator.pop(context);
       },
-      (r) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CallScreen(
-              caller: widget._callData.caller,
-              receiver: widget._callData.receiver,
-              token: widget._callData.call.agoraToken!,
-            ),
-          ),
-        );
-      },
+      (_) {},
     );
   }
 
@@ -57,15 +49,32 @@ class _IncomingCallScreenState extends ConsumerState<IncomingCallScreen> {
         showToast(false, l.message);
         Navigator.pop(context);
       },
-      (r) {
-        Navigator.pop(context);
-      },
+      (_) {},
     );
+  }
+
+  Future<void> _playRingtone() async {
+    try {
+      await _audioPlayer.setAsset('assets/audio/ringtone.mp3');
+      await _audioPlayer.setLoopMode(LoopMode.one);
+      await _audioPlayer.play();
+    } catch (e) {
+      showToast(false, 'Error playing ringtone: $e');
+    }
   }
 
   @override
   void initState() {
     super.initState();
+    _audioPlayer = AudioPlayer();
+    _playRingtone();
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.stop();
+    _audioPlayer.dispose();
+    super.dispose();
   }
 
   @override
@@ -75,18 +84,40 @@ class _IncomingCallScreenState extends ConsumerState<IncomingCallScreen> {
       (previous, next) {
         next.when(
           data: (call) {
-            if (call == null || call.status != Constants.callStatusDialling) {
+            if (call == null) {
+              // Cuộc gọi đã kết thúc hoặc không còn cuộc gọi nào
               if (!_isScreenPopped) {
                 _isScreenPopped = true;
                 Navigator.pop(context);
               }
+            } else {
+              if (call.status == Constants.callStatusOngoing) {
+                // Cuộc gọi đang diễn ra
+                if (!_isScreenPopped) {
+                  _isScreenPopped = true;
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CallScreen(
+                        caller: widget._callData.caller,
+                        receiver: widget._callData.receiver,
+                        token: call.agoraToken!,
+                      ),
+                    ),
+                  );
+                }
+              } else if (call.status != Constants.callStatusDialling) {
+                // Cuộc gọi không ở trạng thái "dialling" (đang gọi)
+                if (!_isScreenPopped) {
+                  _isScreenPopped = true;
+                  Navigator.pop(context);
+                }
+              }
             }
           },
-          error: (error, stack) {
-            return const SizedBox.shrink();
+          error: (_, __) {
           },
           loading: () {
-            return const SizedBox.shrink();
           },
         );
       },
@@ -95,7 +126,7 @@ class _IncomingCallScreenState extends ConsumerState<IncomingCallScreen> {
       backgroundColor: Colors.black,
       body: Container(
         decoration: const BoxDecoration(
-          color: Color(0xFF232845),
+          color: PreferredTheme.firstTheme,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -140,7 +171,7 @@ class _IncomingCallScreenState extends ConsumerState<IncomingCallScreen> {
                   heroTag: 'accept_call',
                   backgroundColor: Colors.green,
                   onPressed: () {
-                    _onStartCall();
+                    _onAcceptCall();
                   },
                   child: const Icon(Icons.call, color: Colors.white),
                 ),

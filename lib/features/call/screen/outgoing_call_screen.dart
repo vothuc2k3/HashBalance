@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/call/controller/call_controller.dart';
 import 'package:hash_balance/features/call/screen/call_screen.dart';
+import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 
 class OutgoingCallScreen extends ConsumerStatefulWidget {
@@ -24,6 +26,7 @@ class OutgoingCallScreen extends ConsumerStatefulWidget {
 class _OutgoingCallScreenState extends ConsumerState<OutgoingCallScreen> {
   late final Timer _timer;
   late int _timeLeft;
+  bool _isScreenPopped = false;
 
   void _navigateToCallScreen(String token) {
     Navigator.pushReplacement(
@@ -80,6 +83,48 @@ class _OutgoingCallScreenState extends ConsumerState<OutgoingCallScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<Call?>>(
+      listenToCallProvider(widget._callData.call.id),
+      (previous, next) {
+        next.when(
+          data: (call) {
+            if (call == null) {
+              if (!_isScreenPopped) {
+                _isScreenPopped = true;
+                Navigator.pop(context);
+              }
+            } else if (call.status == Constants.callStatusOngoing &&
+                call.agoraToken != null) {
+              if (!_isScreenPopped) {
+                _isScreenPopped = true;
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CallScreen(
+                      caller: widget._callData.caller,
+                      receiver: widget._callData.receiver,
+                      token: call.agoraToken!,
+                    ),
+                  ),
+                );
+              }
+            } else if (call.status != Constants.callStatusDialling) {
+              if (!_isScreenPopped) {
+                _isScreenPopped = true;
+                Navigator.pop(context);
+              }
+            }
+          },
+          error: (_, __) {
+            return const SizedBox.shrink();
+          },
+          loading: () {
+            return const SizedBox.shrink();
+          },
+        );
+      },
+    );
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Container(
@@ -114,7 +159,6 @@ class _OutgoingCallScreenState extends ConsumerState<OutgoingCallScreen> {
               ),
             ),
             const Spacer(),
-            
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
