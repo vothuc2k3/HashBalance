@@ -10,3 +10,4 @@ final firebaseFirestoreProvider = Provider((ref) => FirebaseFirestore.instance);
 final firebaseStorageProvider = Provider((ref) => FirebaseStorage.instance);
 final firebaseMessagingProvider = Provider((ref) => FirebaseMessaging.instance);
 final googleSignInProvider = Provider((ref) => GoogleSignIn());
+

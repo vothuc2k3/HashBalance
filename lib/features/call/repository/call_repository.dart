@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'dart:async';
 import 'dart:convert';
 
@@ -12,7 +10,10 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/call_model.dart';
+import 'package:hash_balance/models/conbined_models/call_data_model.dart';
+import 'package:hash_balance/models/user_model.dart';
 import 'package:http/http.dart' as http;
+import 'package:logger/logger.dart';
 
 final callRepositoryProvider = Provider((ref) {
   return CallRepository(firestore: ref.read(firebaseFirestoreProvider));
@@ -24,10 +25,14 @@ class CallRepository {
   }) : _firestore = firestore;
 
   final FirebaseFirestore _firestore;
+  final Logger _logger = Logger();
 
   //REFERENCE ALL THE USERS
   CollectionReference get _calls =>
       _firestore.collection(FirebaseConstants.callCollection);
+  //REFERENCE ALL THE USERS
+  CollectionReference get _users =>
+      _firestore.collection(FirebaseConstants.usersCollection);
 
   //FETCH AGORA TOKEN
   FutureString fetchAgoraToken(String channelName) async {
@@ -61,11 +66,11 @@ class CallRepository {
       }),
     );
     if (response.statusCode == 200) {
-      print('Notification sent successfully');
+      ('Notification sent successfully');
     } else {
-      print('Failed to send notification');
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+      _logger.d('Failed to send notification');
+      _logger.d('Response status: ${response.statusCode}');
+      _logger.d('Response body: ${response.body}');
     }
   }
 
@@ -96,5 +101,20 @@ class CallRepository {
     }
   }
 
-
+  Future<Either<Failures, CallDataModel>> fetchCallData(Call call) async {
+    try {
+      final callerDoc = await _users.doc(call.callerUid).get();
+      final caller =
+          UserModel.fromMap(callerDoc.data() as Map<String, dynamic>);
+      final receiverDoc = await _users.doc(call.receiverUid).get();
+      final receiver =
+          UserModel.fromMap(receiverDoc.data() as Map<String, dynamic>);
+      final callDataModel =
+          CallDataModel(call: call, caller: caller, receiver: receiver);
+      _logger.d(callDataModel.toString());
+      return right(callDataModel);
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
 }

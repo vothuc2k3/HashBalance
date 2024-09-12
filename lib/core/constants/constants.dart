@@ -76,6 +76,7 @@ class Constants {
   static const String callStatusDialling = 'dialling';
   static const String callStatusOngoing = 'on_going';
   static const String callStatusEnded = 'ended';
+  static const String callStatusMissed = 'missed';
 
   static String getFriendRequestContent(String name) {
     return '$name has sent you a friend request!';

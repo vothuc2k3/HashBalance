@@ -78,6 +78,7 @@ dependencies:
   sentry_flutter: ^8.8.0
   image_picker: ^1.1.2
   logger: ^2.4.0
+  rive_animated_icon: ^2.0.0
 
 dependency_overrides:
   lints: ^3.0.0

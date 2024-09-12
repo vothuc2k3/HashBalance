@@ -2,13 +2,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/features/call/controller/call_controller.dart';
-import 'package:hash_balance/features/call/screen/call_screen.dart';
+import 'package:hash_balance/core/splash/splash_screen.dart';
 
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/call/controller/call_controller.dart';
+import 'package:hash_balance/features/call/screen/outgoing_call_screen.dart';
 import 'package:hash_balance/features/message/controller/message_controller.dart';
 import 'package:hash_balance/features/message/screen/widget/message_bubble.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -48,28 +49,42 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
     );
   }
 
-  void _markAsRead() {
-    ref
-        .read(messageControllerProvider.notifier)
-        .markAsRead(widget._targetUser.uid);
-  }
-
-  void _onStartVoiceCall(String currentUid) async {
+  void _onStartVoiceCall() async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SplashScreen(),
+      ),
+    );
     final result = await ref
-        .watch(callControllerProvider.notifier)
-        .fetchAgoraToken(getUids(currentUid, widget._targetUser.uid));
-    result.fold((l) => showToast(false, l.message), (r) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CallScreen(
-            caller: ref.watch(userProvider)!,
-            receiver: widget._targetUser,
-            token: r,
-          ),
-        ),
-      );
-    });
+        .read(callControllerProvider.notifier)
+        .initCall(widget._targetUser);
+    result.fold(
+      (l) {
+        showToast(
+          false,
+          l.message,
+        );
+        Navigator.pop(context);
+      },
+      (r) async {
+        final result =
+            await ref.read(callControllerProvider.notifier).fetchCallData(r);
+        result.fold(
+          (l) => showToast(false, l.message),
+          (r) {
+            if (mounted) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => OutgoingCallScreen(callData: r),
+                ),
+              );
+            }
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -95,7 +110,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.call),
-            onPressed: () => _onStartVoiceCall(currentUser.uid),
+            onPressed: () => _onStartVoiceCall(),
           ),
           IconButton(
             icon: const Icon(Icons.videocam),
@@ -103,9 +118,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.more_vert),
-            onPressed: () {
-              // Implement more actions if needed
-            },
+            onPressed: () {},
           ),
         ],
       ),

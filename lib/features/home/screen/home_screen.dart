@@ -5,8 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
+import 'package:hash_balance/core/splash/splash_screen.dart';
+import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/call/controller/call_controller.dart';
+import 'package:hash_balance/features/call/screen/incoming_call_screen.dart';
 import 'package:hash_balance/features/home/delegates/search_delegate.dart';
 import 'package:hash_balance/features/home/screen/drawers/community_list_drawer.dart';
 import 'package:hash_balance/features/home/screen/drawers/user_profile_drawer.dart';
@@ -29,41 +33,66 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
   late PageController _pageController;
   final logger = Logger();
 
-  Future<void> _requestPushPermissions() async {
-    await ref.watch(firebaseMessagingProvider).requestPermission();
+  Future<void> _navigateToIncomingCallScreen(Call call) async {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const SplashScreen(),
+        ));
+    final result =
+        await ref.read(callControllerProvider.notifier).fetchCallData(call);
+    result.fold(
+      (l) {
+        showToast(false, l.message);
+        Navigator.pop(context);
+      },
+      (r) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => IncomingCallScreen(callData: r),
+          ),
+        );
+      },
+    );
   }
 
-  void displayCommunityListDrawer(BuildContext context) {
+  Future<void> _requestPushPermissions() async {
+    await ref.watch(firebaseMessagingProvider).requestPermission();
+}
+
+  void _displayCommunityListDrawer(BuildContext context) {
     Scaffold.of(context).openDrawer();
   }
 
-  void displayUserProfileDrawer(BuildContext context) {
+  void _displayUserProfileDrawer(BuildContext context) {
     Scaffold.of(context).openEndDrawer();
   }
 
-  void onPageChanged(int page) {
+  void _onPageChanged(int page) {
     setState(() {
       _page = page;
     });
   }
 
   void onTabTapped(int index) {
-    _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
+    _pageController.animateToPage(index,
+        duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
   }
 
-  void _handleIncomingCall(Call call) {}
+  void _handleIncomingCall(Call call) async {
+    await _navigateToIncomingCallScreen(call);
+  }
 
   @override
   void initState() {
     _pageController = PageController();
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _requestPushPermissions();
-    });
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) async {
+        await _requestPushPermissions();
+      },
+    );
   }
 
   @override
@@ -83,9 +112,9 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF000000), // Màu đen ở trên
-              Color(0xFF0D47A1), // Màu xanh ở giữa
-              Color(0xFF1976D2), // Màu xanh đậm ở dưới
+              Color(0xFF000000),
+              Color(0xFF0D47A1),
+              Color(0xFF1976D2),
             ],
           ),
         ),
@@ -100,21 +129,21 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             centerTitle: false,
-            leading: Builder(builder: (context) {
-              return IconButton(
-                icon: const Icon(Icons.menu),
-                onPressed: () => displayCommunityListDrawer(context),
-              );
-            }),
+            leading: Builder(
+              builder: (context) {
+                return IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: () => _displayCommunityListDrawer(context),
+                );
+              },
+            ),
             actions: [
               //MARK: - CALL
               ref.watch(listenToIncomingCallsProvider).when(
                 data: (call) {
                   if (call == null) {
-                    logger.d('NULL CALL');
                     return const SizedBox.shrink();
                   } else {
-                    logger.d('HAS CALL DATA');
                     return IconButton(
                       icon: const Icon(Icons.call, color: Colors.green),
                       onPressed: () {
@@ -131,7 +160,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
                 },
               ),
 
-              // Other actions
+              //MARK: - SEARCH
               IconButton(
                 onPressed: () {
                   showSearch(
@@ -144,6 +173,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
 
+              //MARK: - NOTIFICATIONS
               ref.watch(getNotifsProvider(user!.uid)).whenOrNull(
                     data: (notifs) {
                       if (notifs == null || notifs.isEmpty) {
@@ -163,7 +193,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
                       backgroundImage:
                           CachedNetworkImageProvider(user.profileImage),
                     ),
-                    onPressed: () => displayUserProfileDrawer(context),
+                    onPressed: () => _displayUserProfileDrawer(context),
                   );
                 },
               ),
@@ -171,7 +201,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           body: PageView(
             controller: _pageController,
-            onPageChanged: onPageChanged,
+            onPageChanged: _onPageChanged,
             children: Constants.tabWidgets,
           ),
           drawer: const CommunityListDrawer(),

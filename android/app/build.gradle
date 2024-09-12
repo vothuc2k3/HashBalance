@@ -55,6 +55,8 @@ android {
         multiDexEnabled true
     }
 
+    ndkVersion "25.1.8937393"
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.

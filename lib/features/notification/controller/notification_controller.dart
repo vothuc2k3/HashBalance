@@ -8,10 +8,14 @@ import 'package:hash_balance/features/notification/repository/notification_repos
 import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 
-final listenToIncomingCallsProvider = StreamProvider<Call?>((ref) {
-  final notificationController = ref.watch(notificationControllerProvider.notifier);
-  return notificationController.listenToIncomingCalls(ref.read(userProvider)!.uid);
-});
+final listenToIncomingCallsProvider = StreamProvider<Call?>(
+  (ref) {
+    final notificationController =
+        ref.read(notificationControllerProvider.notifier);
+    final currentUser = ref.read(userProvider)!;
+    return notificationController.listenToIncomingCalls(currentUser.uid);
+  },
+);
 
 final deleteNotifProvider =
     FutureProvider.family.autoDispose((ref, String notifId) {

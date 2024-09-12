@@ -11,6 +11,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/features/call/repository/call_repository.dart';
 import 'package:hash_balance/models/call_model.dart';
+import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 final callControllerProvider =
@@ -54,7 +55,7 @@ class CallController extends StateNotifier<bool> {
     }
   }
 
-  FutureVoid initCall(UserModel targetUser) async {
+  Future<Either<Failures, Call>> initCall(UserModel targetUser) async {
     try {
       final currentUser = _ref.watch(userProvider)!;
       final callModel = Call(
@@ -64,12 +65,25 @@ class CallController extends StateNotifier<bool> {
         status: Constants.callStatusDialling,
         createdAt: Timestamp.now(),
       );
-      await _callRepository.initCall(callModel);
-      return right(null);
+      final result = await _callRepository.initCall(callModel);
+      return result.fold(
+        (l) {
+          return left(l);
+        },
+        (r) {
+          return right(callModel);
+        },
+      );
     } catch (e) {
       return left(Failures(e.toString()));
     }
   }
 
-
+  Future<Either<Failures, CallDataModel>> fetchCallData(Call call) async {
+    try {
+      return await _callRepository.fetchCallData(call);
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
 }

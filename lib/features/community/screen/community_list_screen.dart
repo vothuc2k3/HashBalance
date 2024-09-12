@@ -46,7 +46,7 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen>
       (l) {
         showToast(false, 'Unexpected error happened...');
       },
-      (r) async {
+      (r) {
         membershipStatus = r;
         Navigator.pushReplacement(
           context,
