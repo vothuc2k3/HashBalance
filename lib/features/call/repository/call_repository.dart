@@ -85,7 +85,10 @@ class CallRepository {
 
   FutureVoid joinCall(Call call) async {
     try {
-      await _calls.doc(call.id).update({'status': Constants.callStatusOngoing});
+      await _calls.doc(call.id).update({
+        'status': Constants.callStatusOngoing,
+        'agoraToken': call.agoraToken,
+      });
       return right(null);
     } catch (e) {
       return left(Failures(e.toString()));
@@ -95,6 +98,15 @@ class CallRepository {
   FutureVoid endCall(Call call) async {
     try {
       await _calls.doc(call.id).update({'status': Constants.callStatusEnded});
+      return right(null);
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  FutureVoid cancelCall(Call call) async {
+    try {
+      await _calls.doc(call.id).update({'status': Constants.callStatusMissed});
       return right(null);
     } catch (e) {
       return left(Failures(e.toString()));

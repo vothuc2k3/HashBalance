@@ -15,14 +15,14 @@ import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 final callControllerProvider =
-    StateNotifierProvider<CallController, bool>((ref) {
+    StateNotifierProvider<CallController, AsyncValue<CallDataModel>>((ref) {
   return CallController(
     callRepository: ref.watch(callRepositoryProvider),
     ref: ref,
   );
 });
 
-class CallController extends StateNotifier<bool> {
+class CallController extends StateNotifier<AsyncValue<CallDataModel>> {
   final CallRepository _callRepository;
 
   final Ref _ref;
@@ -32,9 +32,9 @@ class CallController extends StateNotifier<bool> {
     required Ref ref,
   })  : _callRepository = callRepository,
         _ref = ref,
-        super(false);
+        super(const AsyncValue.loading());
 
-  FutureString fetchAgoraToken(String channelName) async {
+  FutureString _fetchAgoraToken(String channelName) async {
     try {
       return await _callRepository.fetchAgoraToken(channelName);
     } catch (e) {
@@ -74,6 +74,28 @@ class CallController extends StateNotifier<bool> {
           return right(callModel);
         },
       );
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  FutureVoid joinCall(Call call) async {
+    try {
+      final uids = getUids(call.callerUid, call.receiverUid);
+      final result = await _fetchAgoraToken(uids);
+      return result.fold((l) => left(l), (agoraToken) async {
+        final callCopy = call.copyWith(agoraToken: agoraToken);
+        await _callRepository.joinCall(callCopy);
+        return right(null);
+      });
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  FutureVoid cancelCall(Call call) async {
+    try {
+      return await _callRepository.cancelCall(call);
     } catch (e) {
       return left(Failures(e.toString()));
     }

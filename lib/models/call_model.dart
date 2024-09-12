@@ -7,12 +7,14 @@ class Call {
   final String callerUid;
   final String receiverUid;
   final String status;
+  final String? agoraToken;
   final Timestamp createdAt;
   Call({
     required this.id,
     required this.callerUid,
     required this.receiverUid,
     required this.status,
+    this.agoraToken,
     required this.createdAt,
   });
 
@@ -21,6 +23,7 @@ class Call {
     String? callerUid,
     String? receiverUid,
     String? status,
+    String? agoraToken,
     Timestamp? createdAt,
   }) {
     return Call(
@@ -28,6 +31,7 @@ class Call {
       callerUid: callerUid ?? this.callerUid,
       receiverUid: receiverUid ?? this.receiverUid,
       status: status ?? this.status,
+      agoraToken: agoraToken ?? this.agoraToken,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -38,6 +42,7 @@ class Call {
       'callerUid': callerUid,
       'receiverUid': receiverUid,
       'status': status,
+      'agoraToken': agoraToken,
       'createdAt': createdAt,
     };
   }
@@ -48,6 +53,7 @@ class Call {
       callerUid: map['callerUid'] as String,
       receiverUid: map['receiverUid'] as String,
       status: map['status'] as String,
+      agoraToken: map['agoraToken'] as String?,
       createdAt: map['createdAt'] as Timestamp,
     );
   }
@@ -59,7 +65,7 @@ class Call {
 
   @override
   String toString() {
-    return 'Call(id: $id, callerUid: $callerUid, receiverUid: $receiverUid, status: $status, createdAt: $createdAt)';
+    return 'Call(id: $id, callerUid: $callerUid, receiverUid: $receiverUid, status: $status, agoraToken: $agoraToken, createdAt: $createdAt)';
   }
 
   @override
@@ -70,7 +76,8 @@ class Call {
         other.callerUid == callerUid &&
         other.receiverUid == receiverUid &&
         other.status == status &&
-        other.createdAt == createdAt;
+        other.createdAt == createdAt &&
+        other.agoraToken == agoraToken;
   }
 
   @override
@@ -79,6 +86,7 @@ class Call {
         callerUid.hashCode ^
         receiverUid.hashCode ^
         status.hashCode ^
-        createdAt.hashCode;
+        createdAt.hashCode ^
+        agoraToken.hashCode;
   }
 }

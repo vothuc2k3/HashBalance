@@ -20,26 +20,28 @@ class IncomingCallScreen extends ConsumerStatefulWidget {
 }
 
 class _IncomingCallScreenState extends ConsumerState<IncomingCallScreen> {
-  void _onStartVoiceCall() async {
-    final result =
-        await ref.watch(callControllerProvider.notifier).fetchAgoraToken(
-              getUids(
-                widget._callData.caller.uid,
-                widget._callData.receiver.uid,
-              ),
-            );
-    result.fold((l) => showToast(false, l.message), (r) async {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CallScreen(
-            caller: widget._callData.caller,
-            receiver: widget._callData.receiver,
-            token: r,
+  void _onStartCall() async {
+    final result = await ref
+        .watch(callControllerProvider.notifier)
+        .joinCall(widget._callData.call);
+    result.fold(
+      (l) {
+        showToast(false, l.message);
+        Navigator.pop(context);
+      },
+      (r) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CallScreen(
+              caller: widget._callData.caller,
+              receiver: widget._callData.receiver,
+              token: widget._callData.call.agoraToken!,
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 
   @override
@@ -93,7 +95,7 @@ class _IncomingCallScreenState extends ConsumerState<IncomingCallScreen> {
                   heroTag: 'accept_call',
                   backgroundColor: Colors.green,
                   onPressed: () {
-                    _onStartVoiceCall();
+                    _onStartCall();
                   },
                   child: const Icon(Icons.call, color: Colors.white),
                 ),
