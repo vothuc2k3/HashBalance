@@ -7,19 +7,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/features/call/controller/call_controller.dart';
+import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 class CallScreen extends ConsumerStatefulWidget {
+  final Call _call;
   final UserModel _caller;
   final UserModel _receiver;
   final String _token;
 
   const CallScreen({
     super.key,
+    required Call call,
     required UserModel caller,
     required UserModel receiver,
     required String token,
-  })  : _caller = caller,
+  })  : _call = call,
+        _caller = caller,
         _receiver = receiver,
         _token = token;
 
@@ -34,7 +39,7 @@ class CallScreenState extends ConsumerState<CallScreen> {
 
   void _onEndCall() {
     agoraClient?.engine.leaveChannel();
-    Navigator.pop(context);
+    ref.read(callControllerProvider.notifier).endCall(widget._call);
   }
 
   @override
@@ -56,6 +61,9 @@ class CallScreenState extends ConsumerState<CallScreen> {
         channelName: channelName,
         tempToken: widget._token,
       ),
+      agoraChannelData: AgoraChannelData(
+        muteAllRemoteAudioStreams: true,
+      ),
     );
   }
 
@@ -67,10 +75,11 @@ class CallScreenState extends ConsumerState<CallScreen> {
 
   void initAgora() async {
     await agoraClient!.initialize();
+
     agoraClient!.engine.registerEventHandler(
       RtcEngineEventHandler(
         onLeaveChannel: (connection, stats) {
-          showToast(false, 'Leave call');
+          showToast(true, 'Leave call');
           _onEndCall();
         },
         onUserOffline: (connection, uid, reason) {

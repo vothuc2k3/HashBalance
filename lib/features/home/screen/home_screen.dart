@@ -94,7 +94,8 @@ class HomeScreenState extends ConsumerState<HomeScreen>
       (previous, next) {
         next.whenOrNull(
           data: (callDataModel) {
-            if (callDataModel != null) {
+            if (callDataModel != null &&
+                callDataModel.call.status == Constants.callStatusDialling) {
               _navigateToIncomingCallScreen(callDataModel);
             }
           },

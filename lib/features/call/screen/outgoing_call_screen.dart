@@ -28,20 +28,6 @@ class _OutgoingCallScreenState extends ConsumerState<OutgoingCallScreen> {
   late int _timeLeft;
   bool _isScreenPopped = false;
 
-  void _navigateToCallScreen(String token) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CallScreen(
-          caller: widget._callData.caller,
-          receiver: widget._callData.receiver,
-          token: token,
-        ),
-      ),
-    );
-  }
-
-  // Huỷ cuộc gọi nếu người gọi bấm cancel
   void _onCancelCall() async {
     final result = await ref
         .read(callControllerProvider.notifier)
@@ -101,6 +87,7 @@ class _OutgoingCallScreenState extends ConsumerState<OutgoingCallScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => CallScreen(
+                      call: call,
                       caller: widget._callData.caller,
                       receiver: widget._callData.receiver,
                       token: call.agoraToken!,

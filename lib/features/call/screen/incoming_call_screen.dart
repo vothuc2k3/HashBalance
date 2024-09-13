@@ -99,6 +99,7 @@ class _IncomingCallScreenState extends ConsumerState<IncomingCallScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => CallScreen(
+                        call: call,
                         caller: widget._callData.caller,
                         receiver: widget._callData.receiver,
                         token: call.agoraToken!,

@@ -120,6 +120,14 @@ class CallController extends StateNotifier<CallDataModel?> {
     }
   }
 
+  FutureVoid endCall(Call call) async {
+    try {
+      return await _callRepository.endCall(call);
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
   Future<Either<Failures, CallDataModel>> fetchCallData(Call call) async {
     try {
       return await _callRepository.fetchCallData(call);
