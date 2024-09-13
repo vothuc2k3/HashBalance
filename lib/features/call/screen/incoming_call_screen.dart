@@ -2,10 +2,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/constants/constants.dart';
-import 'package:hash_balance/core/preferred_theme.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/call/controller/call_controller.dart';
 import 'package:hash_balance/features/call/screen/call_screen.dart';
+import 'package:hash_balance/features/home/screen/home_screen.dart';
+import 'package:hash_balance/features/theme/controller/theme_controller.dart';
 import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 import 'package:just_audio/just_audio.dart';
@@ -88,7 +89,16 @@ class _IncomingCallScreenState extends ConsumerState<IncomingCallScreen> {
               // Cuộc gọi đã kết thúc hoặc không còn cuộc gọi nào
               if (!_isScreenPopped) {
                 _isScreenPopped = true;
-                Navigator.pop(context);
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                } else {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const HomeScreen(),
+                    ),
+                  );
+                }
               }
             } else {
               if (call.status == Constants.callStatusOngoing) {
@@ -108,26 +118,32 @@ class _IncomingCallScreenState extends ConsumerState<IncomingCallScreen> {
                   );
                 }
               } else if (call.status != Constants.callStatusDialling) {
-                // Cuộc gọi không ở trạng thái "dialling" (đang gọi)
                 if (!_isScreenPopped) {
                   _isScreenPopped = true;
-                  Navigator.pop(context);
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  } else {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const HomeScreen(),
+                      ),
+                    );
+                  }
                 }
               }
             }
           },
-          error: (_, __) {
-          },
-          loading: () {
-          },
+          error: (_, __) {},
+          loading: () {},
         );
       },
     );
     return Scaffold(
       backgroundColor: Colors.black,
       body: Container(
-        decoration: const BoxDecoration(
-          color: PreferredTheme.firstTheme,
+        decoration: BoxDecoration(
+          color: ref.watch(preferredThemeProvider),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,

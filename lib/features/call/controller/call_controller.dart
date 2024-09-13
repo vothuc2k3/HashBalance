@@ -8,6 +8,7 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/features/call/repository/call_repository.dart';
 import 'package:hash_balance/models/call_model.dart';
@@ -29,19 +30,24 @@ final listenToIncomingCallsProvider = StreamProvider<CallDataModel?>(
 final callControllerProvider = StateNotifierProvider((ref) {
   return CallController(
     callRepository: ref.read(callRepositoryProvider),
+    pushNotificationController:
+        ref.read(pushNotificationControllerProvider.notifier),
     ref: ref,
   );
 });
 
 class CallController extends StateNotifier<CallDataModel?> {
   final CallRepository _callRepository;
+  final PushNotificationController _pushNotificationController;
 
   final Ref _ref;
 
   CallController({
     required CallRepository callRepository,
+    required PushNotificationController pushNotificationController,
     required Ref ref,
   })  : _callRepository = callRepository,
+        _pushNotificationController = pushNotificationController,
         _ref = ref,
         super(null);
 
@@ -53,17 +59,22 @@ class CallController extends StateNotifier<CallDataModel?> {
     }
   }
 
-  FutureVoid _notifyIncomingCall(UserModel targetUser) async {
-    try {
-      final userController = _ref.read(userControllerProvider.notifier);
-      final targetUserDeviceToken =
-          await userController.getUserDeviceTokens(targetUser.uid);
-      await _callRepository.notifyIncomingCall(targetUserDeviceToken,
-          '${targetUser.name} is calling....', targetUser.name);
-      return right(null);
-    } catch (e) {
-      return left(Failures(e.toString()));
-    }
+  Future<void> _notifyIncomingCall(UserModel targetUser, Call call) async {
+    final currentUser = _ref.read(userProvider)!;
+    final userController = _ref.read(userControllerProvider.notifier);
+    final targetUserDeviceToken =
+        await userController.getUserDeviceTokens(targetUser.uid);
+    await _pushNotificationController.sendPushNotification(
+      targetUserDeviceToken,
+      '${currentUser.name} is calling....',
+      'Incoming Call',
+      {
+        'type': Constants.incomingCallType.toString(),
+        'callId': call.id.toString(),
+        'callerUid': call.callerUid.toString(),
+      },
+      Constants.incomingCallType,
+    );
   }
 
   Future<Either<Failures, Call>> initCall(UserModel targetUser) async {
@@ -76,6 +87,7 @@ class CallController extends StateNotifier<CallDataModel?> {
         status: Constants.callStatusDialling,
         createdAt: Timestamp.now(),
       );
+      await _notifyIncomingCall(targetUser, callModel);
       final result = await _callRepository.initCall(callModel);
       return result.fold(
         (l) {

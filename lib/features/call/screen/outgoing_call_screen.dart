@@ -36,7 +36,6 @@ class _OutgoingCallScreenState extends ConsumerState<OutgoingCallScreen> {
     result.fold(
       (l) => showToast(false, l.message),
       (r) {
-        Navigator.pop(context);
         showToast(true, 'Call cancelled');
       },
     );

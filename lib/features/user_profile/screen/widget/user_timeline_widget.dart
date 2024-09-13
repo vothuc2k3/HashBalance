@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/preferred_theme.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/newsfeed/screen/post_container/post_container.dart';
+import 'package:hash_balance/features/theme/controller/theme_controller.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -31,8 +31,8 @@ class _UserTimelineWidgetState extends ConsumerState<UserTimelineWidget>
     super.build(context);
     final currentUser = ref.watch(userProvider)!;
     return Container(
-      decoration: const BoxDecoration(
-        color: PreferredTheme.firstTheme,
+      decoration: BoxDecoration(
+        color: ref.watch(preferredThemeProvider),
       ),
       child: RefreshIndicator(
         child: CustomScrollView(
@@ -67,7 +67,8 @@ class _UserTimelineWidgetState extends ConsumerState<UserTimelineWidget>
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                     return Center(
                       child: Padding(
-                        padding: const EdgeInsets.only(top: 200.0), // Adjust the value as needed
+                        padding: const EdgeInsets.only(
+                            top: 200.0), // Adjust the value as needed
                         child: const Text(
                           'You have no posts yet',
                           style: TextStyle(

@@ -224,6 +224,7 @@ class ModerationController extends StateNotifier<bool> {
           'uid': currentUser.uid,
           'communityId': community.id,
         },
+        Constants.moderatorInvitationType,
       );
       return right(null);
     } on FirebaseException catch (e) {
@@ -267,6 +268,6 @@ class ModerationController extends StateNotifier<bool> {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
-    } 
+    }
   }
 }

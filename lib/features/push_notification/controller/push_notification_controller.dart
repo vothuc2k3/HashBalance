@@ -20,13 +20,19 @@ class PushNotificationController extends StateNotifier<bool> {
   })  : _pushNotificationRepository = pushNotificationRepository,
         super(false);
 
-  Future<void> sendPushNotification(String token, String message,
-      String title, Map<String, dynamic> payload) async {
+  Future<void> sendPushNotification(
+    String token,
+    String message,
+    String title,
+    Map<String, dynamic> payload,
+    String type,
+  ) async {
     await _pushNotificationRepository.sendFCMNotification(
       token,
       message,
       title,
       payload,
+      type,
     );
   }
 }

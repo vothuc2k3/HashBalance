@@ -61,6 +61,7 @@ class Constants {
   static const String incomingMessageTitle = 'New Message!';
   static const String moderatorInvitationTitle =
       'You are invited as a moderator!';
+  static const String incomingCallTitle = 'Incoming Call!';
 
   static const String friendRequestType = 'friend_request';
   static const String acceptRequestType = 'accept_request';
@@ -68,6 +69,7 @@ class Constants {
   static const String incomingMessageType = 'incoming_message';
   static const String conversationInvitationType = 'conversation_invitation';
   static const String newFollowerType = 'new_follower';
+  static const String incomingCallType = 'incoming_call';
 
   static const String userReportType = 'user_report';
   static const String postReportType = 'post_report';
@@ -94,6 +96,10 @@ class Constants {
   static String getModeratorInvitationContent(
       String name, String communityName) {
     return '$name has invited you as a moderator of $communityName!';
+  }
+
+  static String getIncomingCallContent(String name) {
+    return '$name is calling....';
   }
 
   static String getNewFollowerContent(String name) {

@@ -9,9 +9,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/features/call/controller/call_controller.dart';
+import 'package:hash_balance/features/call/screen/incoming_call_screen.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
+import 'package:hash_balance/models/call_model.dart';
+import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:toastification/toastification.dart';
 
@@ -37,7 +41,6 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -53,13 +56,15 @@ void main() async {
       options.tracesSampleRate = 1.0;
       options.profilesSampleRate = 1.0;
     },
-    appRunner: () => runApp(
-      const ProviderScope(
-        child: ToastificationWrapper(
-          child: MyApp(),
+    appRunner: () {
+      runApp(
+        const ProviderScope(
+          child: ToastificationWrapper(
+            child: MyApp(),
+          ),
         ),
-      ),
-    ),
+      );
+    },
   );
 }
 
@@ -158,7 +163,6 @@ class MyAppState extends ConsumerState<MyApp> {
             break;
           case Constants.moderatorInvitationType:
             final communityId = payloadData['communityId'];
-
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -214,7 +218,22 @@ class MyAppState extends ConsumerState<MyApp> {
                 ),
               ),
             );
-
+            break;
+          case Constants.incomingCallType:
+            final caller = await _fetchUserByUid(payloadData['callerUid']);
+            final call = await _fetchCallById(payloadData['callId']);
+            final callData = CallDataModel(
+              call: call!,
+              caller: caller,
+              receiver: ref.read(userProvider)!,
+            );
+            navigatorKey.currentState?.push(
+              MaterialPageRoute(
+                builder: (context) => IncomingCallScreen(
+                  callData: callData,
+                ),
+              ),
+            );
             break;
           default:
             break;
@@ -227,13 +246,19 @@ class MyAppState extends ConsumerState<MyApp> {
     }
   }
 
-  Future<UserModel> _fetchUserByUid(String uid) async {
+  Future<UserModel> _fetchUserByUid(String uid) {
     return ref
         .watch(userControllerProvider.notifier)
         .fetchUserByUidProvider(uid);
   }
 
-  Future<void> showLocalNotification(RemoteMessage message) async {
+  Future<Call?> _fetchCallById(String callId) {
+    final call =
+        ref.watch(callControllerProvider.notifier).listenToCall(callId).first;
+    return call;
+  }
+
+  Future<void> _showLocalNotification(RemoteMessage message) async {
     const String channelId = 'default_channel';
     const String channelName = 'Default';
     const String channelDescription = 'Default Channel for Notifications';
@@ -264,26 +289,48 @@ class MyAppState extends ConsumerState<MyApp> {
     );
   }
 
+  // Future<void> _handleIncomingCall(RemoteMessage message) async {
+  //   const AndroidNotificationDetails androidPlatformChannelSpecifics =
+  //       AndroidNotificationDetails(
+  //     'call_channel',
+  //     'Call Notifications',
+  //     channelDescription: 'Channel for call notifications',
+  //     importance: Importance.max,
+  //     priority: Priority.high,
+  //     fullScreenIntent: true, // Hiển thị thông báo full-screen cho cuộc gọi
+  //   );
+
+  //   const NotificationDetails platformChannelSpecifics =
+  //       NotificationDetails(android: androidPlatformChannelSpecifics);
+
+  //   await flutterLocalNotificationsPlugin.show(
+  //     0,
+  //     'Incoming Call',
+  //     'You have an incoming call from ${message.data['caller_name']}',
+  //     platformChannelSpecifics,
+  //     payload: jsonEncode(message.data),
+  //   );
+  // }
+
   @override
   void initState() {
+    super.initState();
     _setupLocalNotifications();
     FirebaseMessaging.onMessage.listen(
-      (RemoteMessage message) {
+      (message) {
         final notification = message.notification;
         final android = message.notification?.android;
         if (notification != null && android != null) {
-          showLocalNotification(message);
+          _showLocalNotification(message);
         }
       },
     );
     _deviceTokenService = DeviceTokenService();
-    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     final userData = ref.watch(userProvider);
-
     return ref.watch(authStageChangeProvider).when(
           data: (user) {
             if (user != null) {

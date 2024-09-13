@@ -16,6 +16,7 @@
 
 
     <application
+        tools:replace="android:label"
         android:label="Hash Balance"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">

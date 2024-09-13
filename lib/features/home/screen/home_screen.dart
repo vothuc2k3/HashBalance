@@ -23,7 +23,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class HomeScreenState extends ConsumerState<HomeScreen>
-    with AutomaticKeepAliveClientMixin {
+    with TickerProviderStateMixin {
   int _page = 0;
   late PageController _pageController;
   bool _isIncomingCallScreenOpen = false;
@@ -83,12 +83,7 @@ class HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   @override
-  bool get wantKeepAlive => true;
-
-  @override
   Widget build(BuildContext context) {
-    super.build(context);
-
     ref.listen<AsyncValue<CallDataModel?>>(
       listenToIncomingCallsProvider,
       (previous, next) {
@@ -103,6 +98,8 @@ class HomeScreenState extends ConsumerState<HomeScreen>
       },
     );
     final user = ref.watch(userProvider);
+
+    GlobalAnimationController.initialize(this);
 
     return Scaffold(
       body: Container(
@@ -120,11 +117,21 @@ class HomeScreenState extends ConsumerState<HomeScreen>
         child: Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(
-            title: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: Text(
-                Constants.titles[_page],
-                key: ValueKey(_page),
+            // Use GlobalAnimationController in AnimatedSwitcher
+            title: AnimatedBuilder(
+              animation: GlobalAnimationController.animationController!,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: GlobalAnimationController.animationController!.value,
+                  child: child,
+                );
+              },
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: Text(
+                  Constants.titles[_page],
+                  key: ValueKey(_page),
+                ),
               ),
             ),
             centerTitle: false,
@@ -242,65 +249,85 @@ class HomeScreenState extends ConsumerState<HomeScreen>
       ),
     );
   }
+}
 
-  Widget _buildNotificationMenu(List<NotificationModel> notifs) {
-    return Stack(
-      children: [
-        PopupMenuButton<String>(
-          icon: const Icon(
-            Icons.notifications,
-            color: Colors.white,
-          ),
-          onSelected: (value) {},
-          itemBuilder: (BuildContext context) {
-            if (notifs.isEmpty) {
-              return [
-                const PopupMenuItem<String>(
-                  value: '',
-                  child: ListTile(
-                    leading: Icon(Icons.notifications),
-                    title: Text('No notifications'),
-                  ),
-                )
-              ];
-            }
-            return notifs.map((NotificationModel notification) {
-              return PopupMenuItem<String>(
-                value: notification.title,
-                child: ListTile(
-                  leading: const Icon(Icons.notifications),
-                  title: Text(notification.message),
-                ),
-              );
-            }).toList();
-          },
+Widget _buildNotificationMenu(List<NotificationModel> notifs) {
+  return Stack(
+    children: [
+      PopupMenuButton<String>(
+        icon: const Icon(
+          Icons.notifications,
+          color: Colors.white,
         ),
-        Positioned(
-          right: 11,
-          top: 11,
-          child: IgnorePointer(
-            child: Container(
-              padding: const EdgeInsets.all(1),
-              decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              constraints: const BoxConstraints(
-                minWidth: 16,
-                minHeight: 16,
-              ),
-              child: Text(
-                notifs.isNotEmpty ? notifs.length.toString() : '',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
+        onSelected: (value) {},
+        itemBuilder: (BuildContext context) {
+          if (notifs.isEmpty) {
+            return [
+              const PopupMenuItem<String>(
+                value: '',
+                child: ListTile(
+                  leading: Icon(Icons.notifications),
+                  title: Text('No notifications'),
                 ),
-                textAlign: TextAlign.center,
+              )
+            ];
+          }
+          return notifs.map((NotificationModel notification) {
+            return PopupMenuItem<String>(
+              value: notification.title,
+              child: ListTile(
+                leading: const Icon(Icons.notifications),
+                title: Text(notification.message),
               ),
+            );
+          }).toList();
+        },
+      ),
+      Positioned(
+        right: 11,
+        top: 11,
+        child: IgnorePointer(
+          child: Container(
+            padding: const EdgeInsets.all(1),
+            decoration: BoxDecoration(
+              color: Colors.red,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            constraints: const BoxConstraints(
+              minWidth: 16,
+              minHeight: 16,
+            ),
+            child: Text(
+              notifs.isNotEmpty ? notifs.length.toString() : '',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+              ),
+              textAlign: TextAlign.center,
             ),
           ),
         ),
-      ],
+      ),
+    ],
+  );
+}
+
+class GlobalAnimationController {
+  static AnimationController? animationController;
+
+  static void initialize(TickerProvider vsync) {
+    animationController ??= AnimationController(
+      vsync: vsync,
+      duration: const Duration(seconds: 2),
     );
+  }
+
+  static void start() {
+    animationController?.forward();
+  }
+
+  static void dispose() {
+    animationController?.dispose();
+    animationController = null;
   }
 }

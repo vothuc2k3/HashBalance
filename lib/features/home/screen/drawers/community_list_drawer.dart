@@ -10,6 +10,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/community/screen/create_community_screen.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
+import 'package:hash_balance/features/theme/controller/theme_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
@@ -89,15 +90,8 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
     super.build(context);
     return Drawer(
       child: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF001F3F),
-              Color(0xFF0074D9),
-            ],
-          ),
+        decoration: BoxDecoration(
+          color: ref.watch(preferredThemeProvider),
         ),
         child: SafeArea(
           child: Column(
@@ -171,11 +165,9 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
                           ),
                         ).animate().fadeIn();
                       },
-                      error: (e, s) => ErrorText(error: e.toString())
-                          .animate()
-                          .fadeIn(),
-                      loading: () =>
-                          const Loading().animate().fadeIn(),
+                      error: (e, s) =>
+                          ErrorText(error: e.toString()).animate().fadeIn(),
+                      loading: () => const Loading().animate().fadeIn(),
                     ),
               ).animate().fadeIn(),
               const Divider(),

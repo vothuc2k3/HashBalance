@@ -1,7 +1,6 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:agora_uikit/agora_uikit.dart';
+import 'package:agora_uikit/controllers/rtc_buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/constants/constants.dart';
@@ -33,13 +32,12 @@ class CallScreen extends ConsumerStatefulWidget {
 }
 
 class CallScreenState extends ConsumerState<CallScreen> {
-  bool muted = false;
   late String channelName;
   AgoraClient? agoraClient;
+  bool _isScreenPopped = false;
 
-  void _onEndCall() {
-    agoraClient?.engine.leaveChannel();
-    ref.read(callControllerProvider.notifier).endCall(widget._call);
+  Future<void> _onEndCall() async {
+    await ref.read(callControllerProvider.notifier).endCall(widget._call);
   }
 
   @override
@@ -61,9 +59,6 @@ class CallScreenState extends ConsumerState<CallScreen> {
         channelName: channelName,
         tempToken: widget._token,
       ),
-      agoraChannelData: AgoraChannelData(
-        muteAllRemoteAudioStreams: true,
-      ),
     );
   }
 
@@ -75,40 +70,77 @@ class CallScreenState extends ConsumerState<CallScreen> {
 
   void initAgora() async {
     await agoraClient!.initialize();
-
-    agoraClient!.engine.registerEventHandler(
-      RtcEngineEventHandler(
-        onLeaveChannel: (connection, stats) {
-          showToast(true, 'Leave call');
-          _onEndCall();
-        },
-        onUserOffline: (connection, uid, reason) {
-          showToast(false, 'User offline');
-          _onEndCall();
-        },
-        onConnectionLost: (connection) {
-          showToast(false, 'Connection lost');
-          _onEndCall();
-        },
-      ),
+    agoraClient!.engine.setChannelProfile(
+      ChannelProfileType.channelProfileCommunication,
     );
+    toggleCamera(sessionController: agoraClient!.sessionController);
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<Call?>>(
+      listenToCallProvider(widget._call.id),
+      (previous, next) {
+        next.when(
+          data: (call) {
+            if (call == null) {
+              if (!_isScreenPopped) {
+                _isScreenPopped = true;
+                Navigator.pop(context);
+              }
+            } else {
+              if (call.status != Constants.callStatusOngoing) {
+                if (!_isScreenPopped) {
+                  _isScreenPopped = true;
+                  Navigator.pop(context);
+                }
+              }
+            }
+          },
+          error: (_, __) {},
+          loading: () {},
+        );
+      },
+    );
     return Scaffold(
       body: agoraClient == null
           ? const Loading()
           : SafeArea(
               child: Stack(
                 children: [
-                  AgoraVideoViewer(client: agoraClient!),
+                  if (agoraClient!.sessionController.value.isLocalVideoDisabled)
+                    Center(
+                      child: CircleAvatar(
+                        radius: 60,
+                        backgroundImage: NetworkImage(
+                          widget._caller.profileImage,
+                        ),
+                      ),
+                    )
+                  else
+                    AgoraVideoViewer(client: agoraClient!),
+
+                  Positioned(
+                    bottom: 50,
+                    right: 50,
+                    child: agoraClient!
+                            .sessionController.value.isLocalVideoDisabled
+                        ? CircleAvatar(
+                            radius: 60,
+                            backgroundImage: NetworkImage(
+                              widget._receiver.profileImage,
+                            ),
+                          )
+                        : Container(),
+                  ),
+
                   AgoraVideoButtons(
                     client: agoraClient!,
                     disconnectButtonChild: IconButton(
                       onPressed: () async {
-                        await agoraClient!.engine.leaveChannel();
                         Navigator.pop(context);
+                        await agoraClient!.engine.leaveChannel();
+                        await _onEndCall();
                       },
                       icon: const Icon(Icons.call_end),
                     ),

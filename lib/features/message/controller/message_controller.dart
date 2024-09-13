@@ -109,7 +109,7 @@ class MessageController extends StateNotifier<bool> {
         message: Constants.getIncomingMessageContent(currentUser.name),
         targetUid: targetUid,
         senderUid: currentUser.uid,
-        type: Constants.friendRequestType,
+        type: Constants.incomingMessageType,
         createdAt: Timestamp.now(),
         isRead: false,
       );
@@ -120,9 +120,10 @@ class MessageController extends StateNotifier<bool> {
         notif.message,
         notif.title,
         {
-          'type': 'incoming_message',
+          'type': Constants.incomingMessageType,
           'uid': currentUser.uid,
         },
+        Constants.incomingMessageType,
       );
       return right(null);
     } on FirebaseException catch (e) {

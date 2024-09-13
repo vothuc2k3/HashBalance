@@ -24,7 +24,7 @@ final fetchFriendRequestsProvider = StreamProvider.family((ref, String uid) {
 });
 
 final fetchFriendsProvider = StreamProvider.family((ref, String uid) {
-  return ref.watch(friendControllerProvider.notifier).fetchFriendsByUser(uid);
+  return ref.read(friendControllerProvider.notifier).fetchFriendsByUser(uid);
 });
 
 final getFollowingStatusProvider =
@@ -111,9 +111,10 @@ class FriendController extends StateNotifier<bool> {
         notif.message,
         notif.title,
         {
-          'type': 'friend_request',
+          'type': Constants.friendRequestType,
           'uid': sender.uid,
         },
+        Constants.friendRequestType,
       );
 
       //SEND A NOTIFICATION TO THE TARGET USER
@@ -173,16 +174,17 @@ class FriendController extends StateNotifier<bool> {
       );
 
       //SEND ACCEPT REQUEST PUSH NOTIFICATION
-      final targetUserDeviceIds =
+      final targetUserDeviceId =
           await _userController.getUserDeviceTokens(targetUser.uid);
       await _pushNotificationController.sendPushNotification(
-        targetUserDeviceIds,
+        targetUserDeviceId,
         notif.message,
         notif.title,
         {
           'type': Constants.acceptRequestType,
           'uid': currentUser.uid,
         },
+        Constants.acceptRequestType,
       );
 
       //SEND ACCEPT FRIEND REQUEST NOTIFICATION
@@ -231,10 +233,11 @@ class FriendController extends StateNotifier<bool> {
     try {
       final currentUser = _ref.read(userProvider)!;
       final followerModel = Follower(
-          id: await generateRandomId(),
-          followerUid: currentUser.uid,
-          targetUid: targetUid,
-          createdAt: Timestamp.now());
+        id: await generateRandomId(),
+        followerUid: currentUser.uid,
+        targetUid: targetUid,
+        createdAt: Timestamp.now(),
+      );
       await _friendRepository.followUser(followerModel);
 
       final notif = NotificationModel(
@@ -262,6 +265,7 @@ class FriendController extends StateNotifier<bool> {
           'type': Constants.newFollowerType,
           'uid': currentUser.uid,
         },
+        Constants.acceptRequestType,
       );
 
       return right(null);

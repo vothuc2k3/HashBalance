@@ -4,7 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:hash_balance/core/preferred_theme.dart';
+import 'package:hash_balance/features/theme/controller/theme_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/widget/user_timeline_widget.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:image_picker/image_picker.dart';
@@ -662,8 +662,8 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
                   ref.refresh(userProfileDataProvider(currentUser.uid));
             }, // Hàm làm mới
             child: Container(
-              decoration: const BoxDecoration(
-                color: PreferredTheme.firstTheme,
+              decoration: BoxDecoration(
+                color: ref.watch(preferredThemeProvider),
               ),
               child: ListView(
                 padding: EdgeInsets.zero,
@@ -808,8 +808,8 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
                                   Padding(
                                     padding: const EdgeInsets.only(right: 10),
                                     child: InkWell(
-                                      onTap: () =>
-                                        _showEditDescriptionModal(currentUser),
+                                      onTap: () => _showEditDescriptionModal(
+                                          currentUser),
                                       child: const Icon(Icons.edit),
                                     ),
                                   ),
@@ -1044,107 +1044,107 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
   }
 
   Widget _buildFriendsWidget(String uid) {
-    final friendList = ref.watch(fetchFriendsProvider(uid));
-    return friendList.when(
-      data: (friendList) {
-        if (friendList.isEmpty) {
-          return const SizedBox.shrink();
-        }
-        return Column(
-          children: [
-            SizedBox(
-              height: 250,
-              child: GridView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                physics:
-                    const NeverScrollableScrollPhysics(), // Vô hiệu hóa scroll
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                  childAspectRatio: 0.75,
-                ),
-                itemCount: friendList.length,
-                itemBuilder: (context, index) {
-                  final friend = friendList[index];
-                  return Column(
-                    children: [
-                      InkWell(
-                        onTap: () => _navigateToFriendProfile(friend),
-                        child: CircleAvatar(
-                          radius: 30,
-                          backgroundImage: CachedNetworkImageProvider(
-                            friend.profileImage,
+    return ref.watch(fetchFriendsProvider(uid)).when(
+          data: (friendList) {
+            if (friendList.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            return Column(
+              children: [
+                SizedBox(
+                  height: 250,
+                  child: GridView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    physics:
+                        const NeverScrollableScrollPhysics(), // Vô hiệu hóa scroll
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                      childAspectRatio: 0.75,
+                    ),
+                    itemCount: friendList.length,
+                    itemBuilder: (context, index) {
+                      final friend = friendList[index];
+                      return Column(
+                        children: [
+                          InkWell(
+                            onTap: () => _navigateToFriendProfile(friend),
+                            child: CircleAvatar(
+                              radius: 30,
+                              backgroundImage: CachedNetworkImageProvider(
+                                friend.profileImage,
+                              ),
+                              child: friend.profileImage.isEmpty
+                                  ? const Icon(Icons.error)
+                                  : null,
+                            ),
                           ),
-                          child: friend.profileImage.isEmpty
-                              ? const Icon(Icons.error)
-                              : null,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        friend.name,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  elevation: 5, // Tạo hiệu ứng nổi cho nút
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.black
-                      .withOpacity(0.25), // Hiệu ứng shadow mượt hơn
-                ).copyWith(
-                  foregroundColor: WidgetStateProperty.all(Colors.white),
-                ),
-                onPressed: () {},
-                child: Ink(
-                  decoration: BoxDecoration(
-                    color: Colors
-                        .blueAccent, // Thay đổi từ gradient sang màu duy nhất
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: Container(
-                    alignment: Alignment.center,
-                    constraints: const BoxConstraints(minHeight: 50),
-                    child: const Text(
-                      'See all friends',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                        shadows: [
-                          Shadow(
-                            offset: Offset(0, 3),
-                            blurRadius: 6.0,
-                            color: Colors.black26,
+                          const SizedBox(height: 8),
+                          Text(
+                            friend.name,
+                            style: const TextStyle(fontSize: 14),
                           ),
                         ],
+                      );
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      elevation: 5, // Tạo hiệu ứng nổi cho nút
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.black
+                          .withOpacity(0.25), // Hiệu ứng shadow mượt hơn
+                    ).copyWith(
+                      foregroundColor: WidgetStateProperty.all(Colors.white),
+                    ),
+                    onPressed: () {},
+                    child: Ink(
+                      decoration: BoxDecoration(
+                        color: Colors
+                            .blueAccent, // Thay đổi từ gradient sang màu duy nhất
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Container(
+                        alignment: Alignment.center,
+                        constraints: const BoxConstraints(minHeight: 50),
+                        child: const Text(
+                          'See all friends',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                            shadows: [
+                              Shadow(
+                                offset: Offset(0, 3),
+                                blurRadius: 6.0,
+                                color: Colors.black26,
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
-            )
-          ],
+                )
+              ],
+            );
+          },
+          error: (error, stackTrace) => Center(
+            child: Text(
+              'Error: $error',
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
         );
-      },
-      error: (error, stackTrace) => Center(
-        child: Text(
-          'Error: $error',
-          style: const TextStyle(color: Colors.red),
-        ),
-      ),
-      loading: () => const Center(child: CircularProgressIndicator()),
-    );
   }
 }
