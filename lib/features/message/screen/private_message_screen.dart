@@ -1,5 +1,4 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/splash/splash_screen.dart';
@@ -12,6 +11,8 @@ import 'package:hash_balance/features/call/controller/call_controller.dart';
 import 'package:hash_balance/features/call/screen/outgoing_call_screen.dart';
 import 'package:hash_balance/features/message/controller/message_controller.dart';
 import 'package:hash_balance/features/message/screen/widget/message_bubble.dart';
+import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/models/message_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 class MessageScreen extends ConsumerStatefulWidget {
@@ -28,12 +29,47 @@ class MessageScreen extends ConsumerStatefulWidget {
 
 class _MessageScreenState extends ConsumerState<MessageScreen> {
   final TextEditingController _messageController = TextEditingController();
-
+  final ScrollController _scrollController = ScrollController();
   bool _isEmojiVisible = false;
+  bool _isLoadingMoreMessages = false;
+  List<Message> _messages = [];
+  Message? _lastMessage;
+  UserModel? currentUser;
 
-  void _onEmojiSelected(Emoji emoji) {
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() async {
+    if (_scrollController.position.pixels ==
+            _scrollController.position.maxScrollExtent &&
+        !_isLoadingMoreMessages) {
+      await _loadMoreMessages();
+    }
+  }
+
+  Future<void> _loadMoreMessages() async {
+    if (_lastMessage == null) return;
     setState(() {
-      _messageController.text += emoji.emoji;
+      _isLoadingMoreMessages = true;
+    });
+
+    final moreMessages = await ref
+        .read(messageControllerProvider.notifier)
+        .loadMorePrivateMessages(
+            getUids(widget._targetUser.uid, currentUser!.uid), _lastMessage!);
+
+    if (moreMessages != null && moreMessages.isNotEmpty) {
+      setState(() {
+        _messages.addAll(moreMessages);
+        _lastMessage = moreMessages.last;
+      });
+    }
+
+    setState(() {
+      _isLoadingMoreMessages = false;
     });
   }
 
@@ -88,10 +124,17 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    currentUser = ref.watch(userProvider);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(userProvider)!;
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: ref.watch(preferredThemeProvider),
         title: Row(
           children: [
             CircleAvatar(
@@ -106,11 +149,10 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
           ],
         ),
         centerTitle: true,
-        backgroundColor: Colors.black87,
         actions: [
           IconButton(
             icon: const Icon(Icons.call),
-            onPressed: () => _onStartVoiceCall(),
+            onPressed: () => _onStartVoiceCall(), // Gọi voice call
           ),
           IconButton(
             icon: const Icon(Icons.videocam),
@@ -123,22 +165,14 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
         ],
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF000000),
-              Color(0xFF0D47A1),
-              Color(0xFF1976D2),
-            ],
-          ),
+        decoration: BoxDecoration(
+          color: ref.watch(preferredThemeProvider),
         ),
         child: Column(
           children: [
             Expanded(
               child: ref
-                  .watch(privateChatMessagesProvider(widget._targetUser.uid))
+                  .watch(initialPrivateMessagesProvider(widget._targetUser.uid))
                   .when(
                     data: (messages) {
                       if (messages == null || messages.isEmpty) {
@@ -152,35 +186,51 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                           ),
                         );
                       }
+
+                      _messages = messages;
+                      _lastMessage = _messages.last;
+
                       return ListView.builder(
+                        controller: _scrollController,
                         padding: const EdgeInsets.symmetric(
                           vertical: 10,
                           horizontal: 15,
                         ),
                         reverse: true,
-                        itemCount: messages.length,
+                        itemCount: _messages.length + 1,
                         itemBuilder: (ctx, index) {
-                          final chatMessage = messages[index];
-                          final nextChatMessage = index + 1 < messages.length
-                              ? messages[index + 1]
+                          if (index == _messages.length) {
+                            return _isLoadingMoreMessages
+                                ? const Center(child: Loading())
+                                : const SizedBox.shrink();
+                          }
+
+                          final chatMessage = _messages[index];
+                          final nextChatMessage = index + 1 < _messages.length
+                              ? _messages[index + 1]
                               : null;
 
                           final currentMessageUserId = chatMessage.uid;
                           final nextMessageUserId = nextChatMessage?.uid;
                           final nextUserIsSame =
                               nextMessageUserId == currentMessageUserId;
+                          final isMe = currentUser.uid == currentMessageUserId;
 
                           if (nextUserIsSame) {
                             return MessageBubble.next(
                               message: chatMessage.text,
-                              isMe: currentUser.uid == currentMessageUserId,
+                              isMe: isMe,
                             );
                           } else {
                             return MessageBubble.first(
-                              userImage: widget._targetUser.profileImage,
-                              username: widget._targetUser.name,
+                              userImage: isMe
+                                  ? currentUser.profileImage
+                                  : widget._targetUser.profileImage,
+                              username: isMe
+                                  ? currentUser.name
+                                  : widget._targetUser.name,
                               message: chatMessage.text,
-                              isMe: currentUser.uid == currentMessageUserId,
+                              isMe: isMe,
                             );
                           }
                         },
@@ -192,19 +242,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                     ),
                   ),
             ),
-            if (_isEmojiVisible)
-              SizedBox(
-                height: 250,
-                child: EmojiPicker(
-                  onEmojiSelected: (category, emoji) {
-                    _onEmojiSelected(emoji);
-                  },
-                  config: const Config(
-                    height: 256,
-                    checkPlatformCompatibility: true,
-                  ),
-                ),
-              ),
+            // Input field và emoji picker
             Padding(
               padding: const EdgeInsets.symmetric(
                 vertical: 10,

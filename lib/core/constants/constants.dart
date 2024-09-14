@@ -58,7 +58,6 @@ class Constants {
   static const String friendRequestTitle = 'New Friend Request';
   static const String acceptRequestTitle = 'Friend Request Accepted';
   static const String newFollowerTitle = 'New Follower!';
-  static const String incomingMessageTitle = 'New Message!';
   static const String moderatorInvitationTitle =
       'You are invited as a moderator!';
   static const String incomingCallTitle = 'Incoming Call!';
@@ -87,10 +86,6 @@ class Constants {
 
   static String getAcceptRequestContent(String name) {
     return '$name has accepted your friend request!';
-  }
-
-  static String getIncomingMessageContent(String name) {
-    return '$name has sent you a message!';
   }
 
   static String getModeratorInvitationContent(

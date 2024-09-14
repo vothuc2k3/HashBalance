@@ -24,10 +24,21 @@ class CommentRepository {
   CollectionReference get _comments =>
       _firestore.collection(FirebaseConstants.commentsCollection);
 
-//COMMENT ON A POST
+  //COMMENT ON A POST
   FutureVoid comment(CommentModel comment) async {
     try {
       await _comments.doc(comment.id).set(comment.toMap());
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  FutureVoid deleteComment(String commentId) async {
+    try {
+      await _comments.doc(commentId).delete();
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));

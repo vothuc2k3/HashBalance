@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/screen/email_sign_in_screen.dart';
 import 'package:hash_balance/features/home/screen/home_screen.dart';
@@ -304,7 +305,7 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
                     backgroundColor: Pallete.blueColor,
                   ),
                   child: isPressed
-                      ? const CircularProgressIndicator()
+                      ? const Loading()
                       : const Text(
                           'Let\'s Go',
                           style: TextStyle(

@@ -15,17 +15,17 @@ import 'package:hash_balance/models/conbined_models/last_message_data_model.dart
 import 'package:hash_balance/models/message_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 
-final getCurrentUserConversationProvider = StreamProvider.autoDispose((ref) {
+final getCurrentUserConversationProvider = StreamProvider((ref) {
   return ref
       .watch(messageControllerProvider.notifier)
       .getCurrentUserConversation();
 });
 
-final privateChatMessagesProvider =
+final initialPrivateMessagesProvider =
     StreamProvider.family.autoDispose((ref, String targetUid) {
   return ref
       .watch(messageControllerProvider.notifier)
-      .loadPrivateMessages(targetUid);
+      .loadInitialPrivateMessages(targetUid);
 });
 
 final communityMessagesProvider =
@@ -36,10 +36,10 @@ final communityMessagesProvider =
 });
 
 final getLastMessageByConversationProvider =
-    StreamProvider.family((ref, String id) {
+    StreamProvider.family((ref, Conversation conversation) {
   return ref
       .watch(messageControllerProvider.notifier)
-      .getLastMessageByConversation(id);
+      .getLastMessageByConversation(conversation);
 });
 
 final messageControllerProvider =
@@ -72,10 +72,11 @@ class MessageController extends StateNotifier<bool> {
         _ref = ref,
         super(false);
 
-  Stream<List<Message>?> loadPrivateMessages(String targetUid) {
+  Stream<List<Message>?> loadInitialPrivateMessages(String targetUid) {
     try {
       final uid = _ref.read(userProvider)!.uid;
-      return _messageRepository.loadPrivateMessages(getUids(uid, targetUid));
+      final uids = getUids(uid, targetUid);
+      return _messageRepository.loadInitialPrivateMessages(uids);
     } on FirebaseException catch (e) {
       throw Failures(e.message!);
     } catch (e) {
@@ -105,8 +106,8 @@ class MessageController extends StateNotifier<bool> {
       );
       final notif = NotificationModel(
         id: await generateRandomId(),
-        title: Constants.incomingMessageTitle,
-        message: Constants.getIncomingMessageContent(currentUser.name),
+        title: currentUser.name,
+        message: text,
         targetUid: targetUid,
         senderUid: currentUser.uid,
         type: Constants.incomingMessageType,
@@ -131,6 +132,14 @@ class MessageController extends StateNotifier<bool> {
     } catch (e) {
       return left(Failures(e.toString()));
     }
+  }
+
+  Future<List<Message>?> loadMorePrivateMessages(
+      String conversationId, Message lastMessage) async {
+    return _messageRepository.loadMorePrivateMessages(
+      conversationId,
+      lastMessage,
+    );
   }
 
   FutureVoid sendCommunityMessage(String text, String communityId) async {
@@ -162,8 +171,11 @@ class MessageController extends StateNotifier<bool> {
     return _messageRepository.getCurrentUserConversation(uid);
   }
 
-  Stream<LastMessageDataModel> getLastMessageByConversation(String id) {
-    return _messageRepository.getLastMessageByConversation(id);
+  Stream<LastMessageDataModel> getLastMessageByConversation(
+      Conversation conversation) {
+    final currentUid = _ref.read(userProvider)!.uid;
+    return _messageRepository.getLastMessageByConversation(
+        conversation, currentUid);
   }
 
   void markAsRead(String targetUid) {

@@ -9,6 +9,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/community/screen/community_conversation_screen.dart';
 import 'package:hash_balance/features/message/controller/message_controller.dart';
 import 'package:hash_balance/features/message/screen/private_message_screen.dart';
+import 'package:hash_balance/features/theme/controller/theme_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
@@ -49,16 +50,8 @@ class _MessageListScreenState extends ConsumerState<MessageListScreen> {
     final currentUser = ref.watch(userProvider);
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF000000), // Màu đen ở trên
-              Color(0xFF0D47A1), // Màu xanh ở giữa
-              Color(0xFF1976D2), // Màu xanh đậm ở dưới
-            ],
-          ),
+        decoration: BoxDecoration(
+          color: ref.watch(preferredThemeProvider),
         ),
         child: conversations.when(
           data: (conversations) {
@@ -84,7 +77,7 @@ class _MessageListScreenState extends ConsumerState<MessageListScreen> {
                 itemBuilder: (context, index) {
                   final conversation = conversations[index];
                   final messages = ref.watch(
-                      getLastMessageByConversationProvider(conversation.id));
+                      getLastMessageByConversationProvider(conversation));
                   return messages.when(
                     data: (messageData) {
                       return Card(
@@ -98,14 +91,14 @@ class _MessageListScreenState extends ConsumerState<MessageListScreen> {
                             backgroundImage: CachedNetworkImageProvider(
                               messageData.conversation.type == 'Community'
                                   ? messageData.community!.profileImage
-                                  : messageData.author!.profileImage,
+                                  : messageData.targetUser!.profileImage,
                             ),
                             radius: 30,
                           ),
                           title: Text(
                             messageData.conversation.type == 'Community'
                                 ? messageData.community!.name
-                                : messageData.author!.name,
+                                : messageData.targetUser!.name,
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -127,11 +120,13 @@ class _MessageListScreenState extends ConsumerState<MessageListScreen> {
                             switch (conversation.type) {
                               case 'Private':
                                 _navigateToPrivateMessageScreen(
-                                    messageData.author!);
+                                  messageData.targetUser!,
+                                );
                                 break;
                               case 'Community':
                                 _navigateToCommunityConversationScreen(
-                                    messageData.community!);
+                                  messageData.community!,
+                                );
                                 break;
                               default:
                                 break;

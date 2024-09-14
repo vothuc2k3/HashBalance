@@ -10,6 +10,7 @@ import 'package:hash_balance/models/conversation_model.dart';
 import 'package:hash_balance/models/conbined_models/last_message_data_model.dart';
 import 'package:hash_balance/models/message_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:logger/logger.dart';
 
 final messageRepositoryProvider = Provider((ref) {
   return MessageRepository(firestore: ref.read(firebaseFirestoreProvider));
@@ -17,6 +18,7 @@ final messageRepositoryProvider = Provider((ref) {
 
 class MessageRepository {
   final FirebaseFirestore _firestore;
+  final _logger = Logger();
 
   MessageRepository({
     required FirebaseFirestore firestore,
@@ -32,28 +34,56 @@ class MessageRepository {
   CollectionReference get _communities =>
       _firestore.collection(FirebaseConstants.communitiesCollection);
 
-  Stream<List<Message>?> loadPrivateMessages(String conversationId) {
+  //LOAD INITIAL PRIVATE MESSAGES
+  Stream<List<Message>?> loadInitialPrivateMessages(String conversationId) {
     return _conversation
         .doc(conversationId)
         .collection(FirebaseConstants.messageCollection)
         .orderBy('createdAt', descending: true)
+        .limit(10)
         .snapshots()
         .map(
       (event) {
         if (event.docs.isEmpty) {
           return null;
         } else {
-          List<Message> messages = event.docs.map(
-            (doc) {
-              return Message.fromMap(doc.data());
-            },
-          ).toList();
+          List<Message> messages = event.docs.map((doc) {
+            return Message.fromMap(doc.data());
+          }).toList();
           return messages;
         }
       },
     );
   }
 
+  //LOAD MORE PRIVATE MESSAGES
+  Future<List<Message>?> loadMorePrivateMessages(
+    String conversationId,
+    Message lastMessage,
+  ) async {
+    _logger.d(lastMessage.toString());
+    final createdAt = lastMessage.createdAt;
+    final querySnapshot = await _conversation
+        .doc(conversationId)
+        .collection(FirebaseConstants.messageCollection)
+        .orderBy('createdAt', descending: true) 
+        .startAfter([createdAt])
+        .limit(10)
+        .get();
+
+    if (querySnapshot.docs.isEmpty) {
+      _logger.d('NULL MESSAGES');
+      return null;
+    } else {
+      List<Message> messages = querySnapshot.docs.map((doc) {
+        return Message.fromMap(doc.data());
+      }).toList();
+      _logger.d(messages.toString());
+      return messages;
+    }
+  }
+
+  //LOAD COMMUNITY MESSAGES
   Stream<List<Message>> loadCommunityMessage(String communityId) {
     return _conversation
         .doc(communityId)
@@ -72,6 +102,7 @@ class MessageRepository {
     );
   }
 
+  //SEND PRIVATE MESSAGE
   FutureVoid sendPrivateMessage(
       Message message, Conversation conversation) async {
     try {
@@ -79,7 +110,7 @@ class MessageRepository {
       if (conversationDoc.exists) {
         await _conversation
             .doc(conversation.id)
-              .collection(FirebaseConstants.messageCollection)
+            .collection(FirebaseConstants.messageCollection)
             .doc(message.id)
             .set(message.toMap());
       } else {
@@ -98,6 +129,7 @@ class MessageRepository {
     }
   }
 
+  //SEND COMMUNITY MESSAGE
   FutureVoid sendCommunityMessage(
     Message message,
     Conversation conversation,
@@ -120,17 +152,13 @@ class MessageRepository {
           });
         }
 
-        // Lưu tin nhắn vào collection messages
         await _conversation
             .doc(conversation.id)
             .collection(FirebaseConstants.messageCollection)
             .doc(message.id)
             .set(message.toMap());
       } else {
-        // Tạo cuộc trò chuyện mới nếu chưa tồn tại
         await _conversation.doc(conversation.id).set(conversation.toMap());
-
-        // Lưu tin nhắn vào collection messages
         await _conversation
             .doc(conversation.id)
             .collection(FirebaseConstants.messageCollection)
@@ -146,6 +174,7 @@ class MessageRepository {
     }
   }
 
+  //GET CURRENT USER CONVERSATIONS
   Stream<List<Conversation>?> getCurrentUserConversation(String uid) {
     return _conversation
         .where('participantUids', arrayContains: uid)
@@ -172,8 +201,10 @@ class MessageRepository {
     );
   }
 
-  Stream<LastMessageDataModel> getLastMessageByConversation(String conversationId) {
-    final conversationDocRef = _conversation.doc(conversationId);
+  //GET LAST MESSAGE BY CONVERSATION
+  Stream<LastMessageDataModel> getLastMessageByConversation(
+      Conversation c, String currentUid) {
+    final conversationDocRef = _conversation.doc(c.id);
     return conversationDocRef
         .collection(FirebaseConstants.messageCollection)
         .orderBy('createdAt', descending: true)
@@ -185,7 +216,7 @@ class MessageRepository {
         final conversationDoc = await conversationDocRef.get();
         final conversationData = conversationDoc.data() as Map<String, dynamic>;
         final conversation = Conversation(
-          id: conversationId,
+          id: c.id,
           type: conversationData['type'] as String,
           participantUids: List<String>.from(
             conversationData['participantUids'],
@@ -198,21 +229,28 @@ class MessageRepository {
           createdAt: messageDoc['createdAt'] as Timestamp,
         );
         if (conversation.type == 'Community') {
-          final communityDoc = await _communities.doc(conversationId).get();
+          final communityDoc = await _communities.doc(c.id).get();
           final community =
               Community.fromMap(communityDoc.data() as Map<String, dynamic>);
           return LastMessageDataModel(
-              conversation: conversation,
-              message: message,
-              community: community);
+            conversation: conversation,
+            message: message,
+            community: community,
+          );
         } else {
           final authorDoc = await _users.doc(message.uid).get();
           final author =
               UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
+          String targetUid = conversation.participantUids
+              .firstWhere((uid) => uid != currentUid);
+          final targetUserDoc = await _users.doc(targetUid).get();
+          final targetUser =
+              UserModel.fromMap(targetUserDoc.data() as Map<String, dynamic>);
           return LastMessageDataModel(
             conversation: conversation,
             message: message,
             author: author,
+            targetUser: targetUser,
           );
         }
       },

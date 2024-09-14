@@ -75,6 +75,10 @@ class CommentController extends StateNotifier<bool> {
     }
   }
 
+  FutureVoid deleteComment(String commentId) async {
+    return await _commentRepository.deleteComment(commentId);
+  }
+
   //FETCH ALL COMMENTS OF A POST
   Stream<List<CommentDataModel>?> getPostComments(String postId) {
     return _commentRepository.getPostComments(postId);

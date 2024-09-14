@@ -6,6 +6,7 @@ import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/comment/screen/comment_container/comment_container.dart';
+import 'package:hash_balance/features/theme/controller/theme_controller.dart';
 import 'package:hash_balance/models/comment_model.dart';
 import 'package:hash_balance/models/conbined_models/comment_data_model.dart';
 import 'package:hash_balance/models/post_model.dart';
@@ -42,10 +43,8 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
       case 'Option1':
         break;
       case 'Option2':
-        // Handle Option 2 action
         break;
       case 'Option3':
-        // Handle Option 3 action
         break;
     }
   }
@@ -82,12 +81,12 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
     final loading = ref.watch(commentControllerProvider);
     final commentsAsyncValue =
         ref.watch(getPostCommentsProvider(widget._post.id));
-
     return ProviderScope(
       overrides: [
         currentPostProvider.overrideWithValue(widget._post),
       ],
       child: Scaffold(
+        extendBodyBehindAppBar: true,
         appBar: AppBar(
           title: const Text('Comments'),
           backgroundColor: Colors.black,
@@ -116,16 +115,8 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
           ],
         ),
         body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF000000),
-                Color(0xFF0D47A1),
-                Color(0xFF1976D2),
-              ],
-            ),
+          decoration: BoxDecoration(
+            color: ref.watch(preferredThemeProvider),
           ),
           child: Column(
             children: [

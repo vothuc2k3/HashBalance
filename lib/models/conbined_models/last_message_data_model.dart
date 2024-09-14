@@ -8,11 +8,13 @@ import 'package:hash_balance/models/user_model.dart';
 class LastMessageDataModel {
   final Conversation conversation;
   final Message message;
+  final UserModel? targetUser;
   final UserModel? author;
   final Community? community;
   LastMessageDataModel({
     required this.conversation,
     required this.message,
+    this.targetUser,
     this.author,
     this.community,
   });
@@ -22,12 +24,14 @@ class LastMessageDataModel {
     Message? message,
     UserModel? author,
     Community? community,
+    UserModel? targetUser,
   }) {
     return LastMessageDataModel(
       conversation: conversation ?? this.conversation,
       message: message ?? this.message,
       author: author ?? this.author,
       community: community ?? this.community,
+      targetUser: targetUser ?? this.targetUser,
     );
   }
 
@@ -37,6 +41,7 @@ class LastMessageDataModel {
       'message': message.toMap(),
       'author': author?.toMap(),
       'community': community?.toMap(),
+      'targetUser': targetUser?.toMap(),
     };
   }
 
@@ -51,6 +56,9 @@ class LastMessageDataModel {
       community: map['community'] != null
           ? Community.fromMap(map['community'] as Map<String, dynamic>)
           : null,
+      targetUser: map['targetUser'] != null
+          ? UserModel.fromMap(map['targetUser'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -61,7 +69,7 @@ class LastMessageDataModel {
 
   @override
   String toString() {
-    return 'LastMessageDataModel(conversation: $conversation, message: $message, author: $author, community: $community)';
+    return 'LastMessageDataModel(conversation: $conversation, message: $message, author: $author, community: $community, targetUser: $targetUser)';
   }
 
   @override
@@ -71,7 +79,8 @@ class LastMessageDataModel {
     return other.conversation == conversation &&
         other.message == message &&
         other.author == author &&
-        other.community == community;
+        other.community == community &&
+        other.targetUser == targetUser;
   }
 
   @override
@@ -79,6 +88,7 @@ class LastMessageDataModel {
     return conversation.hashCode ^
         message.hashCode ^
         author.hashCode ^
-        community.hashCode;
+        community.hashCode ^
+        targetUser.hashCode;
   }
 }
