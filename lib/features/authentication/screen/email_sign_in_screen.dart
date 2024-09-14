@@ -1,12 +1,14 @@
+// ignore_for_file: implementation_imports
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/screen/email_sign_up_screen.dart';
 import 'package:hash_balance/features/home/screen/home_screen.dart';
 import 'package:hash_balance/theme/pallette.dart';
+import 'package:rive/rive.dart';
 
 class EmailSignInScreen extends ConsumerStatefulWidget {
   const EmailSignInScreen({super.key});
@@ -19,6 +21,20 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   late bool isPasswordValid;
+
+  FocusNode emailFocusNode = FocusNode();
+  TextEditingController email = TextEditingController();
+
+  FocusNode passwordFocusNode = FocusNode();
+  TextEditingController password = TextEditingController();
+
+  StateMachineController? controller;
+  SMIInput<bool>? isChecking;
+  SMIInput<double>? numLook;
+  SMIInput<bool>? isHandsUp;
+
+  SMIInput<bool>? trigSuccess;
+  SMIInput<bool>? trigFail;
 
   void checkPassword(String password) {
     if (password.length <= 5) {
@@ -61,15 +77,27 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
     );
   }
 
+  void emailFocus() {
+    isChecking?.change(emailFocusNode.hasFocus);
+  }
+
+  void passwordFocus() {
+    isHandsUp?.change(passwordFocusNode.hasFocus);
+  }
+
   @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
+    emailFocusNode.removeListener(emailFocus);
+    passwordFocusNode.removeListener(passwordFocus);
     super.dispose();
   }
 
   @override
   void initState() {
+    emailFocusNode.addListener(emailFocus);
+    passwordFocusNode.addListener(passwordFocus);
     isPasswordValid = true;
     super.initState();
   }
@@ -80,42 +108,18 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
+        extendBodyBehindAppBar: true,
         appBar: AppBar(
-          title: Image.asset(
-            Constants.logoPath,
-            height: 45,
-          ),
-          centerTitle: true,
-          actions: [
-            TextButton(
-              onPressed: () => navigateToSignUpScreen(context),
-              child: const Text(
-                'Sign Up',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
+          backgroundColor: Colors.transparent,
         ),
         body: Container(
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF000000),
-                Color(0xFF0D47A1),
-                Color(0xFF1976D2),
-              ],
-            ),
+            color: Color(0xFF8c336b),
           ),
           child: Column(
             children: [
               const SizedBox(
-                height: 30,
+                height: 40,
               ),
               const Text(
                 'Hi our old friend, let\'s sign you back in!',
@@ -125,8 +129,28 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
                 ),
               ),
               const SizedBox(height: 40),
-
-              //email input field
+              //MARK: - animation character
+              SizedBox(
+                width: 250,
+                height: 250,
+                child: RiveAnimation.asset(
+                  fit: BoxFit.fitHeight,
+                  stateMachines: const ["Login Machine"],
+                  onInit: ((artboard) {
+                    controller = StateMachineController.fromArtboard(
+                        artboard, "Login Machine");
+                    if (controller == null) return;
+                    artboard.addController(controller!);
+                    isChecking = controller?.findInput("isChecking");
+                    numLook = controller?.findInput("numLook");
+                    isHandsUp = controller?.findInput("isHandsUp");
+                    trigSuccess = controller?.findInput("trigSuccess");
+                    trigFail = controller?.findInput("trigFail");
+                  }),
+                  'assets/images/Login_character/character.riv',
+                ),
+              ),
+              //MARK: - email input field
               Padding(
                 padding: const EdgeInsets.only(
                   right: 30,
@@ -135,6 +159,7 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 25.0),
                   child: TextFormField(
+                    focusNode: emailFocusNode,
                     controller: emailController,
                     obscureText: false,
                     decoration: const InputDecoration(
@@ -152,12 +177,15 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
                         ),
                       ),
                     ),
+                    onChanged: (value) {
+                      numLook?.change(value.length.toDouble());
+                    },
                   ),
                 ),
               ),
               const SizedBox(height: 20),
 
-              //password input field
+              //MARK: - password input field
               Padding(
                 padding: const EdgeInsets.only(
                   right: 30,
@@ -166,6 +194,7 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 25.0),
                   child: TextFormField(
+                    focusNode: passwordFocusNode,
                     controller: passwordController,
                     obscureText: true,
                     decoration: InputDecoration(

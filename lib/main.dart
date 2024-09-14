@@ -330,7 +330,6 @@ class MyAppState extends ConsumerState<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    final userData = ref.watch(userProvider);
     return ref.watch(authStageChangeProvider).when(
           data: (user) {
             if (user != null) {
@@ -340,7 +339,7 @@ class MyAppState extends ConsumerState<MyApp> {
                 debugShowCheckedModeBanner: false,
                 title: 'Hash Balance',
                 theme: Pallete.darkModeAppTheme,
-                home: userData != null
+                home: ref.watch(userProvider) != null
                     ? const HomeScreen()
                     : const SplashScreen(),
               );

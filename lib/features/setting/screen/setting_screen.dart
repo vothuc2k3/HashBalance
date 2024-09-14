@@ -1,12 +1,10 @@
 import 'dart:async';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
-import 'package:hash_balance/features/call/controller/call_controller.dart';
-import 'package:hash_balance/models/user_model.dart';
+import 'package:hash_balance/features/theme/controller/theme_controller.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
 class SettingScreen extends ConsumerStatefulWidget {
@@ -26,7 +24,7 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
       isTrySigningOut = true;
     });
     Timer(const Duration(seconds: 1), () {
-      ref.watch(authControllerProvider.notifier).signOut(ref, context);
+      ref.read(authControllerProvider.notifier).signOut();
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const AuthScreen()),
         (Route<dynamic> route) => false,
@@ -34,22 +32,7 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
     });
   }
 
-  void _testButton() async {
-    await ref.read(callControllerProvider.notifier).initCall(
-          UserModel(
-            email: 'email',
-            name: 'name',
-            uid: 'Fs220CRiTIQoK6KbFEe5JJF3KZB3',
-            createdAt: Timestamp.now(),
-            profileImage: 'profileImage',
-            bannerImage: 'bannerImage',
-            isAuthenticated: true,
-            isRestricted: false,
-            activityPoint: 1,
-          ),
-        );
-    
-  }
+  void _testButton() async {}
 
   @override
   Widget build(BuildContext context) {
@@ -64,15 +47,9 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF000000),
-              Color(0xFF0D47A1),
-              Color(0xFF1976D2),
-            ],
+        decoration: BoxDecoration(
+          color: ref.watch(
+            preferredThemeProvider,
           ),
         ),
         child: Column(

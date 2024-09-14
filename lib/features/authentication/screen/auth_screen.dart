@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/features/authentication/screen/widget/email_sign_in_button.dart';
 
-import 'package:hash_balance/core/constants/constants.dart';
-import 'package:hash_balance/core/widgets/google_sign_in_button.dart';
+import 'package:hash_balance/features/authentication/screen/widget/google_sign_in_button.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/screen/email_sign_in_screen.dart';
 import 'package:hash_balance/features/authentication/screen/email_sign_up_screen.dart';
 import 'package:hash_balance/features/authentication/screen/forgot_password_screen.dart';
-import 'package:hash_balance/theme/pallette.dart';
+import 'package:rive/rive.dart';
 
 class AuthScreen extends ConsumerWidget {
   const AuthScreen({super.key});
@@ -42,57 +42,26 @@ class AuthScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isLoading = ref.watch(authControllerProvider);
-    final screenHeight =
-        MediaQuery.of(context).size.height; // Lấy chiều cao màn hình
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Image.asset(
-          Constants.logoPath,
-          height: 45,
-        ),
-        centerTitle: true,
-        actions: [
-          TextButton(
-            onPressed: () {},
-            child: const Text(
-              'Skip',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ],
-      ),
       body: Container(
-        height: screenHeight, // Đặt chiều cao toàn màn hình
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF000000),
-              Color(0xFF0D47A1),
-              Color(0xFF1976D2),
-            ],
-          ),
+          color: Color(0xFF8c336b),
         ),
+        height: screenHeight,
         child: isLoading
             ? const Loading()
             : SingleChildScrollView(
                 physics: const NeverScrollableScrollPhysics(),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    minHeight: screenHeight, // Đảm bảo chiều cao tối thiểu
+                    minHeight: screenHeight,
                   ),
                   child: IntrinsicHeight(
-                    // Sử dụng IntrinsicHeight để phù hợp với các widget bên trong
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment:
-                          MainAxisAlignment.spaceBetween, // Căn giữa nội dung
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const SizedBox(height: 30),
                         const Text(
@@ -103,11 +72,12 @@ class AuthScreen extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 30),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Image.asset(
-                            Constants.signinEmotePath,
-                            height: 400,
+                        const SizedBox(
+                          width: 250,
+                          height: 250,
+                          child: RiveAnimation.asset(
+                            fit: BoxFit.fitHeight,
+                            'assets/images/Login_character/character.riv',
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -116,33 +86,11 @@ class AuthScreen extends ConsumerWidget {
                           child: GoogleSignInButton(),
                         ),
                         const SizedBox(height: 10),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 30),
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              navigateToEmailSignUpScreen(context);
-                            },
-                            icon: Image.asset(
-                              Constants.emailLogoPath,
-                              width: 35,
-                            ),
-                            label: const Text(
-                              'Join with Email',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.white,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Pallete.greyColor,
-                              minimumSize: const Size(double.infinity, 50),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                            ),
-                          ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 30),
+                          child: EmailSignInButton(),
                         ),
-                        const Spacer(), // Thêm khoảng trống để đẩy các thành phần cuối xuống đáy màn hình
+                        const Spacer(),
                         Align(
                           alignment: Alignment.bottomCenter,
                           child: Padding(
@@ -157,8 +105,7 @@ class AuthScreen extends ConsumerWidget {
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontStyle: FontStyle.italic,
-                                        color: Colors
-                                            .white, // Giữ màu chữ của câu hỏi là trắng
+                                        color: Colors.white,
                                       ),
                                     ),
                                     TextButton(
@@ -168,43 +115,19 @@ class AuthScreen extends ConsumerWidget {
                                       child: const Text(
                                         'Sign In',
                                         style: TextStyle(
-                                          fontSize: 16, // Giữ kích thước chữ
-                                          fontWeight: FontWeight
-                                              .bold, // Đặt chữ in đậm để nổi bật hơn
-                                          color: Colors
-                                              .white, // Thay đổi màu chữ thành trắng để phù hợp với nền
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
                                           shadows: [
                                             Shadow(
-                                              offset: Offset(0, 1),
-                                              blurRadius: 2.0,
-                                              color: Colors
-                                                  .black45, // Thêm bóng nhẹ để nổi bật hơn
-                                            ),
+                                                offset: Offset(0, 1),
+                                                blurRadius: 2.0,
+                                                color: Colors.black45),
                                           ],
                                         ),
                                       ),
                                     ),
                                   ],
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    navigateToEmailSignInScreen(context);
-                                  },
-                                  child: const Text(
-                                    'Sign In',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      shadows: [
-                                        Shadow(
-                                          offset: Offset(0, 1),
-                                          blurRadius: 2.0,
-                                          color: Colors.black45,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
                                 ),
                               ],
                             ),

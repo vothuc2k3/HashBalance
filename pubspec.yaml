@@ -79,10 +79,11 @@ dependencies:
   image_picker: ^1.1.2
   logger: ^2.4.0
   just_audio: ^0.9.40
+  rive: ^0.13.13
 
 dependency_overrides:
   lints: ^3.0.0
-
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -115,6 +116,8 @@ flutter:
     - assets/images/user_profile_placeholder.png
     - assets/images/post_image_placeholder.png
     - assets/audio/ringtone.mp3
+    - assets/images/Login_character/
+
     
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

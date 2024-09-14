@@ -175,4 +175,14 @@ class AuthRepository {
       return left(Failures(e.toString()));
     }
   }
+
+  //SIGN OUT
+  Future<void> signOut(Ref ref) async {
+    await _firebaseAuth.signOut();
+    ref.read(userProvider.notifier).update(
+      (state) {
+        return null;
+      },
+    );
+  }
 }
