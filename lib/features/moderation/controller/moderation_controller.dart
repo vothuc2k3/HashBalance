@@ -21,6 +21,13 @@ import 'package:hash_balance/models/notification_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
+final fetchInitialCommunityMembersProvider =
+    StreamProvider.family.autoDispose((ref, String communityId) {
+  return ref
+      .read(moderationControllerProvider.notifier)
+      .fetchInitialCommunityMembers(communityId);
+});
+
 final getMembershipStatusProvider =
     StreamProvider.family.autoDispose((ref, String communityId) {
   return ref
@@ -268,6 +275,44 @@ class ModerationController extends StateNotifier<bool> {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
+    }
+  }
+
+  FutureVoid uploadProfileImage(Community community, File profileImage) async {
+    try {
+      final result = await _moderationRepository.uploadProfileImage(
+        community,
+        profileImage,
+      );
+      return result;
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  FutureVoid uploadBannerImage(Community community, File bannerImage) async {
+    try {
+      final result = await _moderationRepository.uploadBannerImage(
+        community,
+        bannerImage,
+      );
+      return result;
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  Stream<List<UserModel>> fetchInitialCommunityMembers(String communityId) {
+    try {
+      return _moderationRepository.fetchInitialCommunityMembers(communityId);
+    } on FirebaseException catch (e) {
+      throw Failures(e.message!);
+    } catch (e) {
+      throw Failures(e.toString());
     }
   }
 }

@@ -1,26 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
+import 'package:hash_balance/features/theme/controller/theme_controller.dart';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends ConsumerWidget {
   const SplashScreen({
     super.key,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF000000),
-              Color(0xFF0D47A1),
-              Color(0xFF1976D2),
-            ],
-          ),
-        ),
+        color: ref.watch(preferredThemeProvider),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

@@ -10,6 +10,7 @@ import 'package:hash_balance/features/community/controller/comunity_controller.d
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:hash_balance/features/theme/controller/theme_controller.dart';
 
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -87,17 +88,7 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen>
       body: RefreshIndicator.adaptive(
         onRefresh: _onRefresh,
         child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF000000), // Màu đen ở trên
-                Color(0xFF0D47A1), // Màu xanh ở giữa
-                Color(0xFF1976D2), // Màu xanh đậm ở dưới
-              ],
-            ),
-          ),
+          color: ref.watch(preferredThemeProvider),
           child: StreamBuilder<List<Community>?>(
             stream: communitiesStream,
             builder: (context, snapshot) {
@@ -106,10 +97,20 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen>
               } else if (snapshot.hasError) {
                 return ErrorText(error: snapshot.error.toString());
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Center(
-                        child: Text('There\'s no any communities :('))
-                    .animate()
-                    .fadeIn();
+                return Center(
+                  child: const Text(
+                    'There\'s no any communities :(',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.white70,
+                    ),
+                  ).animate().fadeIn(duration: 600.ms).moveY(
+                        begin: 30,
+                        end: 0,
+                        duration: 600.ms,
+                        curve: Curves.easeOutBack,
+                      ),
+                );
               } else {
                 final communities = snapshot.data!;
                 return ListView.builder(

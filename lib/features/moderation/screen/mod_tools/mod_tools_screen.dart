@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/features/moderation/screen/mod_tools/edit_community_screen.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/invite_moderators_screen.dart';
+import 'package:hash_balance/features/moderation/screen/mod_tools/membership_management_screen.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/pending_post_screen.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/reports_screen.dart';
+import 'package:hash_balance/features/theme/controller/theme_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
 
 class ModToolsScreen extends ConsumerWidget {
@@ -31,17 +32,6 @@ class ModToolsScreen extends ConsumerWidget {
     );
   }
 
-  void _navigateToEditCommunityScreen(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditCommunityScreen(
-          id: community.id,
-        ),
-      ),
-    );
-  }
-
   void _navigateToPendingPostScreen(BuildContext context) {
     Navigator.push(
       context,
@@ -53,12 +43,25 @@ class ModToolsScreen extends ConsumerWidget {
     );
   }
 
+  void _navigateToMembershipManagementScreen(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MembershipManagementScreen(
+          community: community,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
+      extendBodyBehindAppBar: false,
       appBar: AppBar(
+        backgroundColor: ref.watch(preferredThemeProvider),
         title: const Text(
-          'Customizing Your Community',
+          'Moderation Tools',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -66,17 +69,7 @@ class ModToolsScreen extends ConsumerWidget {
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF000000),
-              Color(0xFF0D47A1),
-              Color(0xFF1976D2),
-            ],
-          ),
-        ),
+        color: ref.watch(preferredThemeProvider),
         child: Column(
           children: [
             ListTile(
@@ -90,24 +83,14 @@ class ModToolsScreen extends ConsumerWidget {
               onTap: () => _navigateToInviteModeratorsScreen(context),
             ),
             ListTile(
-              leading: const Icon(Icons.edit),
-              title: const Text('Edit Community Visual'),
-              onTap: () => _navigateToEditCommunityScreen(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.edit_document),
-              title: const Text('Describe about your Community'),
-              onTap: () {},
-            ),
-            ListTile(
               leading: const Icon(Icons.privacy_tip),
               title: const Text('Change Community type'),
               onTap: () {},
             ),
             ListTile(
               leading: const Icon(Icons.person),
-              title: const Text('Users Management'),
-              onTap: () {},
+              title: const Text('Membership Management'),
+              onTap: () => _navigateToMembershipManagementScreen(context),
             ),
             ListTile(
               leading: const Icon(Icons.warning),

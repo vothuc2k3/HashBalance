@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/constants/constants.dart';
@@ -10,6 +13,7 @@ import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 final moderationRepositoryProvider = Provider((ref) {
   return ModerationRepository(
@@ -33,12 +37,10 @@ class ModerationRepository {
       _firestore.collection(FirebaseConstants.communitiesCollection);
   CollectionReference get _posts =>
       _firestore.collection(FirebaseConstants.postsCollection);
-  CollectionReference get _friendship =>
+  CollectionReference get _friendships =>
       _firestore.collection(FirebaseConstants.friendshipCollection);
   CollectionReference get _users =>
       _firestore.collection(FirebaseConstants.usersCollection);
-  CollectionReference get _membership =>
-      _firestore.collection(FirebaseConstants.communityMembershipCollection);
 
   //GET MODERATOR STATUS
   Stream<String> getMembershipStatus(String membershipId) {
@@ -146,11 +148,13 @@ class ModerationRepository {
       String currentModeratorUid, String communityId) async {
     try {
       // Fetch friends of the current moderator, considering both uid1 and uid2
-      final friendSnapshot1 =
-          await _friendship.where('uid1', isEqualTo: currentModeratorUid).get();
+      final friendSnapshot1 = await _friendships
+          .where('uid1', isEqualTo: currentModeratorUid)
+          .get();
 
-      final friendSnapshot2 =
-          await _friendship.where('uid2', isEqualTo: currentModeratorUid).get();
+      final friendSnapshot2 = await _friendships
+          .where('uid2', isEqualTo: currentModeratorUid)
+          .get();
 
       // Combine both queries (uid1 or uid2)
       final friendsUids = friendSnapshot1.docs
@@ -166,7 +170,7 @@ class ModerationRepository {
       }
 
       // Fetch current moderators in the community from membershipCollection
-      final moderatorSnapshot = await _membership
+      final moderatorSnapshot = await _communityMembership
           .where('communityId', isEqualTo: communityId)
           .where('role',
               isEqualTo:
@@ -223,5 +227,88 @@ class ModerationRepository {
     } catch (e) {
       return left(Failures(e.toString()));
     }
+  }
+
+  Future<Either<Failures, void>> uploadProfileImage(
+    Community community,
+    File profileImage,
+  ) async {
+    try {
+      final result = await _storageRepository.storeFile(
+        path: 'communities/profile',
+        id: community.id,
+        file: profileImage,
+      );
+      result.fold((l) => left(Failures(l.message)), (r) async {
+        final profileImageUrl = await FirebaseStorage.instance
+            .ref('communities/profile/${community.id}')
+            .getDownloadURL();
+        await _communities.doc(community.id).update({
+          'profileImage': profileImageUrl,
+        });
+      });
+      return right(null);
+    } on FirebaseException catch (e, stackTrace) {
+      await Sentry.captureException(e, stackTrace: stackTrace);
+      throw e.message ?? 'Unknown FirebaseException error';
+    } catch (e, stackTrace) {
+      await Sentry.captureException(e, stackTrace: stackTrace);
+      throw e.toString();
+    }
+  }
+
+  Future<Either<Failures, void>> uploadBannerImage(
+    Community community,
+    File bannerImage,
+  ) async {
+    try {
+      final result = await _storageRepository.storeFile(
+        path: 'communities/banner',
+        id: community.id,
+        file: bannerImage,
+      );
+      return result.fold((l) => left(Failures(l.message)), (r) async {
+        final bannerImageUrl = await FirebaseStorage.instance
+            .ref('communities/banner/${community.id}')
+            .getDownloadURL();
+        await _communities.doc(community.id).update({
+          'bannerImage': bannerImageUrl,
+        });
+        return right(null);
+      });
+    } on FirebaseException catch (e, stackTrace) {
+      await Sentry.captureException(e, stackTrace: stackTrace);
+      throw e.message ?? 'Unknown FirebaseException error';
+    } catch (e, stackTrace) {
+      await Sentry.captureException(e, stackTrace: stackTrace);
+      throw e.toString();
+    }
+  }
+
+  Stream<List<UserModel>> fetchInitialCommunityMembers(String communityId) {
+    return _communityMembership
+        .where('communityId', isEqualTo: communityId)
+        .orderBy('joinedAt', descending: true)
+        .limit(10)
+        .snapshots() 
+        .asyncMap((snapshot) async {
+      List<String> memberUids = snapshot.docs.map((doc) {
+        return doc['uid'] as String;
+      }).toList();
+
+      List<UserModel> members = [];
+      for (String uid in memberUids) {
+        final userSnapshot = await _users
+            .doc(uid)
+            .get();
+
+        if (userSnapshot.exists) {
+          UserModel user =
+              UserModel.fromMap(userSnapshot.data() as Map<String, dynamic>);
+          members.add(user);
+        }
+      }
+      return members;
+    });
   }
 }

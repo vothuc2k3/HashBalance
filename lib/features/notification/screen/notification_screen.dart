@@ -15,6 +15,7 @@ import 'package:hash_balance/features/community/controller/comunity_controller.d
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
+import 'package:hash_balance/features/theme/controller/theme_controller.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
@@ -105,7 +106,7 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
 
   Future<Community> _fetchCommunityById(String communityId) async {
     return ref
-        .watch(communityControllerProvider.notifier)
+        .read(communityControllerProvider.notifier)
         .fetchCommunityById(communityId);
   }
 
@@ -114,17 +115,7 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
     final user = ref.watch(userProvider);
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF000000),
-              Color(0xFF0D47A1),
-              Color(0xFF1976D2),
-            ],
-          ),
-        ),
+        color: ref.watch(preferredThemeProvider),
         child: ref.watch(getNotifsProvider(user!.uid)).when(
               data: (notifs) {
                 if (notifs == null || notifs.isEmpty) {

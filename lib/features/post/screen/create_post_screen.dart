@@ -16,6 +16,7 @@ import 'package:hash_balance/features/home/screen/home_screen.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
+import 'package:hash_balance/features/theme/controller/theme_controller.dart';
 
 class CreatePostScreen extends ConsumerStatefulWidget {
   final Community? _chosenCommunity;
@@ -155,6 +156,12 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen>
     }
   }
 
+  AppBar _buildAppBar() {
+    return AppBar(
+      title: const Text('Create Post'),
+    );
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -181,17 +188,10 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen>
     final user = ref.watch(userProvider);
 
     return Scaffold(
+      appBar: widget._isFromCommunityScreen == false ? null : _buildAppBar(),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF000000),
-              Color(0xFF0D47A1),
-              Color(0xFF1976D2),
-            ],
-          ),
+        decoration: BoxDecoration(
+          color: ref.watch(preferredThemeProvider),
         ),
         child: Scaffold(
           backgroundColor: Colors.transparent,

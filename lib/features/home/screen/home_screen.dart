@@ -12,6 +12,7 @@ import 'package:hash_balance/features/home/delegates/search_delegate.dart';
 import 'package:hash_balance/features/home/screen/drawers/community_list_drawer.dart';
 import 'package:hash_balance/features/home/screen/drawers/user_profile_drawer.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
+import 'package:hash_balance/features/theme/controller/theme_controller.dart';
 import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 
@@ -103,21 +104,11 @@ class HomeScreenState extends ConsumerState<HomeScreen>
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF000000),
-              Color(0xFF0D47A1),
-              Color(0xFF1976D2),
-            ],
-          ),
-        ),
+        color: ref.watch(preferredThemeProvider),
         child: Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(
-            // Use GlobalAnimationController in AnimatedSwitcher
+            backgroundColor: ref.watch(preferredThemeProvider),
             title: AnimatedBuilder(
               animation: GlobalAnimationController.animationController!,
               builder: (context, child) {
@@ -191,7 +182,7 @@ class HomeScreenState extends ConsumerState<HomeScreen>
           drawer: const CommunityListDrawer(),
           endDrawer: UserProfileDrawer(homeScreenContext: context),
           bottomNavigationBar: CupertinoTabBar(
-            backgroundColor: Colors.black87,
+            backgroundColor: ref.watch(preferredThemeProvider),
             activeColor: Colors.teal,
             inactiveColor: Colors.white70,
             iconSize: 28.0,

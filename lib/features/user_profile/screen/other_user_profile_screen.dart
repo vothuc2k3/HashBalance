@@ -9,6 +9,7 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/message/screen/private_message_screen.dart';
+import 'package:hash_balance/features/theme/controller/theme_controller.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 class OtherUserProfileScreen extends ConsumerStatefulWidget {
@@ -137,7 +138,7 @@ class _OtherUserProfileScreenState
     final double top = coverHeight - profileHeight / 2;
     final double bottom = profileHeight / 2;
     return Scaffold(
-      extendBodyBehindAppBar: true, // Extend the body behind the AppBar
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -185,17 +186,7 @@ class _OtherUserProfileScreenState
         ],
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF000000),
-              Color(0xFF0D47A1),
-              Color(0xFF1976D2),
-            ],
-          ),
-        ),
+        color: ref.watch(preferredThemeProvider),
         child: ListView(
           padding: EdgeInsets.zero,
           children: [

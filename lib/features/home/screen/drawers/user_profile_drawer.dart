@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/setting/screen/setting_screen.dart';
@@ -80,7 +81,7 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
           ),
           ListTile(
             leading: isLoading == 1
-                ? const CircularProgressIndicator()
+                ? const Loading()
                 : const Icon(Icons.public),
             title: !userIsRestricted
                 ? const Text(
@@ -114,7 +115,7 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
           ),
           ListTile(
             leading: isLoading == 2
-                ? const CircularProgressIndicator()
+                ? const Loading()
                 : const Icon(Icons.privacy_tip),
             title: userIsRestricted
                 ? const Text(

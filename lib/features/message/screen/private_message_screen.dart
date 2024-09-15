@@ -59,7 +59,9 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
     final moreMessages = await ref
         .read(messageControllerProvider.notifier)
         .loadMorePrivateMessages(
-            getUids(widget._targetUser.uid, currentUser!.uid), _lastMessage!);
+          getUids(widget._targetUser.uid, currentUser!.uid),
+          _lastMessage!,
+        );
 
     if (moreMessages != null && moreMessages.isNotEmpty) {
       setState(() {

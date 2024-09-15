@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -23,6 +25,8 @@ import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/invitation_model.dart';
 import 'package:hash_balance/models/post_model.dart';
+import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:image_picker/image_picker.dart';
 
 final currentCommunityProvider = Provider<Community>((ref) {
   throw UnimplementedError('currentCommunityProvider not overridden');
@@ -255,6 +259,177 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     );
   }
 
+  void _uploadProfileImage(XFile profileImageFile) async {
+    final result = await ref
+        .read(moderationControllerProvider.notifier)
+        .uploadProfileImage(widget._community, File(profileImageFile.path));
+    result.fold((l) => showToast(false, l.message), (_) {
+      showToast(true, 'Upload profile image successfully');
+    });
+  }
+
+  void _uploadBannerImage(XFile bannerImageFile) async {
+    final result = await ref
+        .read(moderationControllerProvider.notifier)
+        .uploadBannerImage(widget._community, File(bannerImageFile.path));
+    result.fold((l) => showToast(false, l.message), (_) {
+      showToast(true, 'Upload banner image successfully');
+    });
+  }
+
+  void _changeProfileImage() async {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
+      ),
+      builder: (context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Choose from gallery'),
+              onTap: () async {
+                Navigator.pop(context);
+                final XFile? image = await ImagePicker().pickImage(
+                  source: ImageSource.gallery, // Chọn từ bộ nhớ
+                  imageQuality: 100, // Giảm chất lượng ảnh để giảm dung lượng
+                );
+                if (image != null) {
+                  _uploadProfileImage(image); // Xử lý ảnh
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.cancel),
+              title: const Text('Cancel'),
+              onTap: () {
+                Navigator.pop(context); // Đóng modal
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _changeBannerImage() async {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
+      ),
+      builder: (context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Choose from gallery'),
+              onTap: () async {
+                Navigator.pop(context);
+                final XFile? image = await ImagePicker().pickImage(
+                  source: ImageSource.gallery, // Chọn từ bộ nhớ
+                  imageQuality: 100, // Giảm chất lượng ảnh để giảm dung lượng
+                );
+                if (image != null) {
+                  _uploadBannerImage(image); // Xử lý ảnh
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.cancel),
+              title: const Text('Cancel'),
+              onTap: () {
+                Navigator.pop(context); // Đóng modal
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _handleProfileImageAction() async {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
+      ),
+      builder: (BuildContext context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('View Profile Image'),
+              onTap: () {
+                Navigator.pop(context);
+                _showImage(widget._community.profileImage);
+              },
+            ),
+            if (tempMemberStatus == 'moderator')
+              ListTile(
+                leading: const Icon(Icons.edit),
+                title: const Text('Change Profile Image'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _changeProfileImage();
+                },
+              ),
+            ListTile(
+              leading: const Icon(Icons.cancel),
+              title: const Text('Cancel'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _handleBannerImageAction() async {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
+      ),
+      builder: (BuildContext context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('View Banner Image'),
+              onTap: () {
+                Navigator.pop(context);
+                _showImage(widget._community.bannerImage);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.edit),
+              title: const Text('Change Banner Image'),
+              onTap: () {
+                Navigator.pop(context);
+                _changeBannerImage();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.cancel),
+              title: const Text('Cancel'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showMemberMoreOptions() {
     showMenu<int>(
       context: context,
@@ -449,17 +624,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
       ],
       child: Scaffold(
         body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF000000),
-                Color(0xFF0D47A1),
-                Color(0xFF1976D2),
-              ],
-            ),
-          ),
+          color: ref.watch(preferredThemeProvider),
           child: RefreshIndicator(
             onRefresh: _onRefresh,
             child: CustomScrollView(
@@ -508,7 +673,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                   ],
                   expandedHeight: 150,
                   flexibleSpace: InkWell(
-                    onTap: () => _showImage(widget._community.bannerImage),
+                    onTap: () => _handleBannerImageAction(),
                     child: Stack(
                       children: [
                         Positioned.fill(
@@ -540,11 +705,11 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             InkWell(
-                              onTap: () =>
-                                  _showImage(widget._community.profileImage),
+                              onTap: () => _handleProfileImageAction(),
                               child: CircleAvatar(
                                 backgroundImage: CachedNetworkImageProvider(
-                                    widget._community.profileImage),
+                                  widget._community.profileImage,
+                                ),
                                 radius: 35,
                               ),
                             ),

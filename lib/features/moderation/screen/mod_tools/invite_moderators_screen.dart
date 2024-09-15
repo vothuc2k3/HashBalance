@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
+import 'package:hash_balance/features/theme/controller/theme_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
@@ -29,9 +30,12 @@ class _InviteModeratorsScreenState
     final result = await ref
         .read(moderationControllerProvider.notifier)
         .inviteAsModerator(friend.uid, widget._community);
-    result.fold((l) => showToast(false, l.message), (r) {
-      showToast(true, 'Invite sent to ${friend.name}');
-    });
+    result.fold(
+      (l) => showToast(false, l.message),
+      (r) {
+        showToast(true, 'Invite sent to ${friend.name}');
+      },
+    );
   }
 
   @override
@@ -47,18 +51,11 @@ class _InviteModeratorsScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text('Invite Moderators'),
+        backgroundColor: ref.watch(preferredThemeProvider),
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF000000),
-              Color(0xFF0D47A1),
-              Color(0xFF1976D2),
-            ],
-          ),
+        decoration: BoxDecoration(
+          color: ref.watch(preferredThemeProvider),
         ),
         child: Column(
           children: [

@@ -6,6 +6,7 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/conbined_models/message_data_model.dart';
 import 'package:hash_balance/models/conversation_model.dart';
 import 'package:hash_balance/models/conbined_models/last_message_data_model.dart';
 import 'package:hash_balance/models/message_model.dart';
@@ -66,7 +67,7 @@ class MessageRepository {
     final querySnapshot = await _conversation
         .doc(conversationId)
         .collection(FirebaseConstants.messageCollection)
-        .orderBy('createdAt', descending: true) 
+        .orderBy('createdAt', descending: true)
         .startAfter([createdAt])
         .limit(10)
         .get();
@@ -84,22 +85,64 @@ class MessageRepository {
   }
 
   //LOAD COMMUNITY MESSAGES
-  Stream<List<Message>> loadCommunityMessage(String communityId) {
+  Stream<List<MessageDataModel>?> loadInitialCommunityMessages(
+      String communityId) {
     return _conversation
         .doc(communityId)
         .collection(FirebaseConstants.messageCollection)
         .orderBy('createdAt', descending: true)
+        .limit(10)
         .snapshots()
-        .map(
-      (event) {
-        List<Message> messages = event.docs.map(
-          (doc) {
+        .asyncMap(
+      (event) async {
+        if (event.docs.isEmpty) {
+          return null;
+        } else {
+          List<MessageDataModel> messagesDataList = [];
+          final messages = event.docs.map((doc) {
             return Message.fromMap(doc.data());
-          },
-        ).toList();
-        return messages;
+          }).toList();
+          for (var message in messages) {
+            final authorDoc = await _users.doc(message.uid).get();
+            final author =
+                UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
+            final messageData = MessageDataModel(
+              message: message,
+              author: author,
+            );
+            messagesDataList.add(messageData);
+          }
+          return messagesDataList;
+        }
       },
     );
+  }
+
+  //LOAD MORE COMMUNITY MESSAGES
+  Future<List<Message>?> loadMoreCommunityMessages(
+    String conversationId,
+    Message lastMessage,
+  ) async {
+    _logger.d(lastMessage.toString());
+    final createdAt = lastMessage.createdAt;
+    final querySnapshot = await _conversation
+        .doc(conversationId)
+        .collection(FirebaseConstants.messageCollection)
+        .orderBy('createdAt', descending: true)
+        .startAfter([createdAt])
+        .limit(10)
+        .get();
+
+    if (querySnapshot.docs.isEmpty) {
+      _logger.d('NULL MESSAGES');
+      return null;
+    } else {
+      List<Message> messages = querySnapshot.docs.map((doc) {
+        return Message.fromMap(doc.data());
+      }).toList();
+      _logger.d(messages.toString());
+      return messages;
+    }
   }
 
   //SEND PRIVATE MESSAGE

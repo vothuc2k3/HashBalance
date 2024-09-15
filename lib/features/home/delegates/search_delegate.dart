@@ -10,6 +10,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/search/controller/search_controller.dart';
+import 'package:hash_balance/features/theme/controller/theme_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -17,6 +18,32 @@ import 'package:hash_balance/models/user_model.dart';
 class SearchCommunityDelegate extends SearchDelegate {
   final WidgetRef ref;
   SearchCommunityDelegate(this.ref);
+
+  // Ghi đè hàm buildAppBar để tạo AppBar tùy chỉnh
+  @override
+  ThemeData appBarTheme(BuildContext context) {
+    // Lấy màu từ preferredThemeProvider
+    Color appBarColor = ref.watch(preferredThemeProvider);
+
+    return ThemeData(
+      appBarTheme: AppBarTheme(
+        backgroundColor: appBarColor, // Đặt màu AppBar
+        iconTheme: const IconThemeData(
+          color: Colors.white, // Màu của biểu tượng trong AppBar
+        ),
+        titleTextStyle: const TextStyle(
+          color: Colors.white, // Màu của tiêu đề
+          fontSize: 20,
+        ),
+      ),
+      inputDecorationTheme: const InputDecorationTheme(
+        hintStyle: TextStyle(
+          color: Colors.white, // Màu của hint text trong ô tìm kiếm
+        ),
+        border: InputBorder.none,
+      ),
+    );
+  }
 
   @override
   List<Widget>? buildActions(BuildContext context) {
@@ -30,7 +57,10 @@ class SearchCommunityDelegate extends SearchDelegate {
 
   @override
   Widget? buildLeading(BuildContext context) {
-    return null;
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () => close(context, null),
+    );
   }
 
   @override
@@ -41,27 +71,15 @@ class SearchCommunityDelegate extends SearchDelegate {
   @override
   Widget buildSuggestions(BuildContext context) {
     final currentUser = ref.watch(userProvider)!;
+    Color color = ref.watch(preferredThemeProvider);
 
-    // Tái sử dụng BoxDecoration với gradient
-    const BoxDecoration gradientBackground = BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          Color(0xFF000000),
-          Color(0xFF0D47A1),
-          Color(0xFF1976D2),
-        ],
-      ),
-    );
-
-    // Hàm tái sử dụng cho Card với ListTile
-    Widget buildListItem(
-        {required String title,
-        required String imageUrl,
-        required VoidCallback onTap}) {
+    Widget buildListItem({
+      required String title,
+      required String imageUrl,
+      required VoidCallback onTap,
+    }) {
       return Card(
-        color: Colors.black87,
+        color: color,
         margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.0),
@@ -70,7 +88,12 @@ class SearchCommunityDelegate extends SearchDelegate {
           leading: CircleAvatar(
             backgroundImage: CachedNetworkImageProvider(imageUrl),
           ),
-          title: Text(title, style: const TextStyle(color: Colors.white)),
+          title: Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+            ),
+          ),
           onTap: onTap,
         ),
       );
@@ -78,7 +101,7 @@ class SearchCommunityDelegate extends SearchDelegate {
 
     return Scaffold(
       body: Container(
-        decoration: gradientBackground,
+        decoration: BoxDecoration(color: color),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0),
           child: Column(
@@ -131,7 +154,10 @@ class SearchCommunityDelegate extends SearchDelegate {
                           children: [
                             Icon(Icons.article, color: Colors.white),
                             SizedBox(width: 10),
-                            Text('=', style: TextStyle(color: Colors.white)),
+                            Text(
+                              '=',
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ],
                         ),
                       ),
@@ -166,7 +192,7 @@ class SearchCommunityDelegate extends SearchDelegate {
                           } else if (query.startsWith('#')) {
                             return ListView.separated(
                               itemCount: data.length,
-                              itemBuilder: (BuildContext context, int index) {
+                              itemBuilder: (context, index) {
                                 final user = data[index];
                                 if (user.uid == currentUser.uid) {
                                   return const SizedBox.shrink();

@@ -9,7 +9,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/message/repository/message_repository.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
-import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/conbined_models/message_data_model.dart';
 import 'package:hash_balance/models/conversation_model.dart';
 import 'package:hash_balance/models/conbined_models/last_message_data_model.dart';
 import 'package:hash_balance/models/message_model.dart';
@@ -28,11 +28,11 @@ final initialPrivateMessagesProvider =
       .loadInitialPrivateMessages(targetUid);
 });
 
-final communityMessagesProvider =
-    StreamProviderFamily((ref, Community community) {
+final initialCommunityMessagesProvider =
+    StreamProvider.family.autoDispose((ref, String communityId) {
   return ref
       .watch(messageControllerProvider.notifier)
-      .loadCommunityMessage(community.id);
+      .loadInitialCommunityMessages(communityId);
 });
 
 final getLastMessageByConversationProvider =
@@ -84,8 +84,17 @@ class MessageController extends StateNotifier<bool> {
     }
   }
 
-  Stream<List<Message>> loadCommunityMessage(String communityId) {
-    return _messageRepository.loadCommunityMessage(communityId);
+  Stream<List<MessageDataModel>?> loadInitialCommunityMessages(
+      String communityId) {
+    return _messageRepository.loadInitialCommunityMessages(communityId);
+  }
+
+  Future<List<Message>?> loadMoreCommunityMessages(
+      String conversationId, Message lastMessage) async {
+    return _messageRepository.loadMoreCommunityMessages(
+      conversationId,
+      lastMessage,
+    );
   }
 
   FutureVoid sendPrivateMessage(String text, String targetUid) async {
