@@ -10,6 +10,7 @@ import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 final fetchUserDataProvider = FutureProviderFamily((ref, String uid) {
@@ -19,6 +20,7 @@ final fetchUserDataProvider = FutureProviderFamily((ref, String uid) {
 final authControllerProvider = StateNotifierProvider<AuthController, bool>(
   (ref) => AuthController(
     authRepository: ref.watch(authRepositoryProvider),
+    userController: ref.watch(userControllerProvider.notifier),
     ref: ref,
   ),
 );
@@ -35,12 +37,15 @@ final getUserDataProvider = StreamProvider.family((ref, String uid) {
 
 class AuthController extends StateNotifier<bool> {
   final AuthRepository _authRepository;
+  final UserController _userController;
   final Ref _ref;
 
   AuthController({
     required AuthRepository authRepository,
+    required UserController userController,
     required Ref ref,
   })  : _authRepository = authRepository,
+        _userController = userController,
         _ref = ref,
         super(false);
 
@@ -179,5 +184,9 @@ class AuthController extends StateNotifier<bool> {
     } finally {
       state = false;
     }
+  }
+
+  void clearUserData(String uid) async {
+    await _userController.clearUserDeviceToken(uid);
   }
 }

@@ -8,6 +8,7 @@ import 'package:hash_balance/features/authentication/controller/auth_controller.
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/reply_comment/controller/reply_comment_controller.dart';
+import 'package:hash_balance/features/theme/controller/theme_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 import 'package:hash_balance/features/vote_comment/controller/vote_comment_controller.dart';
@@ -86,6 +87,52 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
     }
   }
 
+  void _handleDeleteComment(CommentModel comment) async {
+    final result = await ref
+        .read(commentControllerProvider.notifier)
+        .deleteComment(comment.id);
+    result.fold((l) => showToast(false, l.message), (_) {});
+  }
+
+  void _showEditDialog(CommentModel comment) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Comment'),
+          content: TextField(
+            controller: TextEditingController(text: comment.content),
+            decoration: const InputDecoration(
+              hintText: 'Edit your comment...',
+            ),
+            maxLines: 3,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                backgroundColor: ref.watch(preferredThemeProvider),
+              ),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (_replyController.text.isNotEmpty) {
+                  _replyComment(_replyController.text);
+                  Navigator.of(context).pop();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ref.watch(preferredThemeProvider),
+              ),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     _replyController = TextEditingController();
@@ -107,6 +154,8 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
   @override
   Widget build(BuildContext context) {
     int repliesCount = 0;
+    final themeColor = ref.watch(preferredThemeProvider);
+
     return Container(
       margin: const EdgeInsets.symmetric(
         vertical: 8,
@@ -114,7 +163,7 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
       ),
       padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-        color: widget.isReply ? Colors.grey[850] : Colors.black,
+        color: themeColor,
         borderRadius: BorderRadius.circular(8),
         boxShadow: const [
           BoxShadow(
@@ -198,6 +247,52 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
                 color: Colors.grey,
                 size: 12,
               ),
+              const Spacer(),
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  switch (value) {
+                    case 'edit':
+                      _showEditDialog(comment);
+                      break;
+                    case 'delete':
+                      _handleDeleteComment(comment);
+                      break;
+                    case 'view_profile':
+                      _navigateToOtherUserScreen(ref.read(userProvider)!.uid);
+                      break;
+                    case 'cancel':
+                      Navigator.of(context).pop();
+                      break;
+                  }
+                },
+                itemBuilder: (BuildContext context) {
+                  return [
+                    if (currentUser!.uid == comment.uid)
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Text('Edit'),
+                      ),
+                    if (currentUser!.uid == comment.uid)
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Text('Delete'),
+                      ),
+                    if (currentUser!.uid != comment.uid)
+                      PopupMenuItem(
+                        value: 'view_profile',
+                        child: Text('View ${widget.author.name} Profile'),
+                      ),
+                    const PopupMenuItem(
+                      value: 'cancel',
+                      child: Text('Cancel'),
+                    ),
+                  ];
+                },
+                icon: const Icon(
+                  Icons.more_horiz,
+                  color: Colors.white,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 4),
@@ -228,7 +323,7 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
                           color: Colors.white, size: 20),
                       onPressed: null,
                     ),
-                    loading: () => const CircularProgressIndicator(),
+                    loading: () => const SizedBox(),
                   ),
               // Upvote count
               ref.watch(getCommentVoteCountProvider(comment.id)).when(
@@ -240,7 +335,7 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
                     },
                     error: (e, s) =>
                         const Text('0', style: TextStyle(color: Colors.white)),
-                    loading: () => const CircularProgressIndicator(),
+                    loading: () => const SizedBox(),
                   ),
               const SizedBox(width: 10),
               ref.watch(getCommentVoteStatusProvider(comment.id)).when(
@@ -261,7 +356,7 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
                           color: Colors.white, size: 20),
                       onPressed: null,
                     ),
-                    loading: () => const CircularProgressIndicator(),
+                    loading: () => const SizedBox(),
                   ),
               // Downvote count
               ref.watch(getCommentVoteCountProvider(comment.id)).when(
@@ -273,7 +368,7 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
                     },
                     error: (e, s) =>
                         const Text('0', style: TextStyle(color: Colors.white)),
-                    loading: () => const CircularProgressIndicator(),
+                    loading: () => const SizedBox(),
                   ),
             ],
           ),

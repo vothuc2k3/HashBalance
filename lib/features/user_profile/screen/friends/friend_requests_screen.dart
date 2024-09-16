@@ -1,8 +1,11 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
+import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 class FriendRequestsScreen extends ConsumerStatefulWidget {
   final String _uid;
@@ -18,26 +21,30 @@ class FriendRequestsScreen extends ConsumerStatefulWidget {
 }
 
 class _FriendRequestsScreenState extends ConsumerState<FriendRequestsScreen> {
-  void _acceptFriendRequest() {}
+  void _acceptFriendRequest(UserModel targetUser) async {
+    await ref
+        .read(friendControllerProvider.notifier)
+        .acceptFriendRequest(targetUser);
+  }
 
-  void _deleteFriendRequest() {}
+  void _deleteFriendRequest(UserModel targetUser) async {
+    await ref
+        .read(friendControllerProvider.notifier)
+        .declineFriendRequest(targetUser);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final friendRequestsAsync = ref.watch(
-      fetchFriendRequestsProvider(widget._uid),
-    );
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Friends Requests'),
-        backgroundColor: const Color(0xFF0D47A1),
+        title: const Text('Friend Requests'),
+        backgroundColor: ref.watch(preferredThemeProvider),
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFF0D47A1), // Thay thế màu duy nhất ở đây
+        decoration: BoxDecoration(
+          color: ref.watch(preferredThemeProvider),
         ),
-        child: friendRequestsAsync.whenOrNull(
+        child: ref.watch(fetchFriendRequestsProvider(widget._uid)).whenOrNull(
               data: (friendRequests) {
                 if (friendRequests.isEmpty) {
                   return Center(
@@ -57,9 +64,7 @@ class _FriendRequestsScreenState extends ConsumerState<FriendRequestsScreen> {
                 }
                 return Column(
                   children: [
-                    // Top row with filters
                     const Divider(color: Colors.white54),
-                    // Friend request header
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Row(
@@ -94,8 +99,9 @@ class _FriendRequestsScreenState extends ConsumerState<FriendRequestsScreen> {
                           return ListTile(
                             leading: CircleAvatar(
                               radius: 25,
-                              backgroundImage:
-                                  NetworkImage(request.requester.profileImage),
+                              backgroundImage: CachedNetworkImageProvider(
+                                request.requester.profileImage,
+                              ),
                               backgroundColor: Colors.grey.shade700,
                             ),
                             title: Text(
@@ -104,32 +110,7 @@ class _FriendRequestsScreenState extends ConsumerState<FriendRequestsScreen> {
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600),
                             ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                ElevatedButton(
-                                  onPressed: () {},
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.blue.shade400,
-                                    minimumSize: const Size(80, 36),
-                                  ),
-                                  child: const Text('Confirm'),
-                                ),
-                                const SizedBox(width: 8),
-                                OutlinedButton(
-                                  onPressed: () {},
-                                  style: OutlinedButton.styleFrom(
-                                    side:
-                                        const BorderSide(color: Colors.white70),
-                                    minimumSize: const Size(80, 36),
-                                  ),
-                                  child: const Text(
-                                    'Delete',
-                                    style: TextStyle(color: Colors.white70),
-                                  ),
-                                ),
-                              ],
-                            ),
+                            subtitle: _buildFriendRequestStatus(request),
                           );
                         },
                       ),
@@ -141,5 +122,51 @@ class _FriendRequestsScreenState extends ConsumerState<FriendRequestsScreen> {
             const Loading().animate(),
       ),
     );
+  }
+
+  Widget _buildFriendRequestStatus(request) {
+    // Check the status of the friend request
+    switch (request.friendRequest.status) {
+      case 'pending':
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ElevatedButton(
+              onPressed: () => _acceptFriendRequest(request.requester),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue.shade400,
+                minimumSize: const Size(80, 36),
+              ),
+              child: const Text('Confirm'),
+            ),
+            const SizedBox(width: 8),
+            OutlinedButton(
+              onPressed: () => _deleteFriendRequest(request.id),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.white70),
+                minimumSize: const Size(80, 36),
+              ),
+              child: const Text(
+                'Delete',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
+          ],
+        );
+      case 'accepted':
+        return const Text(
+          'You two are now friends!',
+          style:
+              TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold),
+        );
+      case 'declined':
+        return const Text(
+          'Friend request declined',
+          style:
+              TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+        );
+      default:
+        return const SizedBox.shrink();
+    }
   }
 }

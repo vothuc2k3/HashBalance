@@ -338,33 +338,50 @@ class UserRepository {
     });
   }
 
-  Future<List<PostDataModel>> getUserPosts(UserModel user) async {
+  Stream<List<PostDataModel>> getUserPosts(UserModel user) {
     try {
-      final userPosts = await _posts
+      return _posts
           .where('uid', isEqualTo: user.uid)
           .where('status', isEqualTo: 'Approved')
-          .get();
+          .snapshots() // Sử dụng snapshots để lắng nghe thay đổi
+          .asyncMap((userPosts) async {
+        final List<PostDataModel> postDataModels = [];
 
-      final List<PostDataModel> postDataModels = [];
+        for (final postDoc in userPosts.docs) {
+          final postData = Post.fromMap(postDoc.data() as Map<String, dynamic>);
 
-      for (final postDoc in userPosts.docs) {
-        final postData = Post.fromMap(postDoc.data() as Map<String, dynamic>);
+          final communityDoc =
+              await _communities.doc(postData.communityId).get();
+          final communityData =
+              Community.fromMap(communityDoc.data() as Map<String, dynamic>);
 
-        final communityDoc = await _communities.doc(postData.communityId).get();
-        final communityData =
-            Community.fromMap(communityDoc.data() as Map<String, dynamic>);
-        postDataModels.add(
-          PostDataModel(
-            post: postData,
-            community: communityData,
-          ),
-        );
-      }
-      postDataModels
-          .sort((a, b) => b.post.createdAt.compareTo(a.post.createdAt));
-      return postDataModels;
+          postDataModels.add(
+            PostDataModel(
+              post: postData,
+              community: communityData,
+            ),
+          );
+        }
+
+        // Sắp xếp bài post theo createdAt
+        postDataModels
+            .sort((a, b) => b.post.createdAt.compareTo(a.post.createdAt));
+
+        return postDataModels; // Trả về danh sách bài viết đã được sắp xếp
+      });
     } on FirebaseException catch (e) {
       throw e.toString();
+    }
+  }
+
+  FutureVoid clearUserDeviceToken(String uid) async {
+    try {
+      await _userDevices.doc(uid).delete();
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
     }
   }
 }

@@ -104,10 +104,20 @@ class ModerationRepository {
     required Post post,
   }) async {
     try {
-      await _posts.doc(post.id).update({
-        'isPinned': true,
+      return await _firestore.runTransaction((transaction) async {
+        final otherPinnedPostsQuery = await _posts
+            .where('communityId', isEqualTo: post.communityId)
+            .where('isPinned', isEqualTo: true)
+            .get();
+        for (final doc in otherPinnedPostsQuery.docs) {
+          transaction.update(doc.reference, {'isPinned': false});
+        }
+
+        final postDocRef = _posts.doc(post.id);
+        transaction.update(postDocRef, {'isPinned': true});
+
+        return right(null);
       });
-      return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {
@@ -115,14 +125,25 @@ class ModerationRepository {
     }
   }
 
-  //PIN POST
-  FutureVoid unPinPost({
+  //UNPIN POST
+  FutureVoid unpinPost({
     required Post post,
   }) async {
     try {
-      await _posts.doc(post.id).update({
-        'isPinned': false,
-      });
+      final postDocRef = _posts.doc(post.id);
+      await postDocRef.update({'isPinned': false});
+
+      final otherPinnedPosts = await _posts
+          .where('communityId', isEqualTo: post.communityId)
+          .where('isPinned', isEqualTo: true)
+          .get();
+
+      if (otherPinnedPosts.docs.isNotEmpty) {
+        for (final doc in otherPinnedPosts.docs) {
+          await doc.reference.update({'isPinned': false});
+        }
+      }
+
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -134,7 +155,9 @@ class ModerationRepository {
   //APPROVE [OR] REJECT POST
   FutureVoid handlePostApproval(Post post, String decision) async {
     try {
-      await _posts.doc(post.id).update({'status': decision});
+      await _posts.doc(post.id).update({
+        'status': decision,
+      });
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -147,7 +170,6 @@ class ModerationRepository {
   Future<List<UserModel>> fetchModeratorCandidates(
       String currentModeratorUid, String communityId) async {
     try {
-      // Fetch friends of the current moderator, considering both uid1 and uid2
       final friendSnapshot1 = await _friendships
           .where('uid1', isEqualTo: currentModeratorUid)
           .get();
@@ -156,7 +178,6 @@ class ModerationRepository {
           .where('uid2', isEqualTo: currentModeratorUid)
           .get();
 
-      // Combine both queries (uid1 or uid2)
       final friendsUids = friendSnapshot1.docs
           .map((doc) => (doc.data() as Map<String, dynamic>)['uid2'] as String)
           .toList();
@@ -169,18 +190,14 @@ class ModerationRepository {
         return [];
       }
 
-      // Fetch current moderators in the community from membershipCollection
       final moderatorSnapshot = await _communityMembership
           .where('communityId', isEqualTo: communityId)
-          .where('role',
-              isEqualTo:
-                  'moderator') // Assuming role field is used to identify moderators
+          .where('role', isEqualTo: 'moderator')
           .get();
 
       final currentModerators =
           moderatorSnapshot.docs.map((doc) => doc['uid'] as String).toList();
 
-      // Fetch user data for all friends
       final friendDataSnapshot =
           await _users.where(FieldPath.documentId, whereIn: friendsUids).get();
 
@@ -188,7 +205,6 @@ class ModerationRepository {
           .map((doc) => UserModel.fromMap(doc.data() as Map<String, dynamic>))
           .toList();
 
-      // Filter out friends who are already moderators
       final moderatorCandidates = friends.where((friend) {
         return !currentModerators.contains(friend.uid);
       }).toList();
@@ -290,7 +306,7 @@ class ModerationRepository {
         .where('communityId', isEqualTo: communityId)
         .orderBy('joinedAt', descending: true)
         .limit(10)
-        .snapshots() 
+        .snapshots()
         .asyncMap((snapshot) async {
       List<String> memberUids = snapshot.docs.map((doc) {
         return doc['uid'] as String;
@@ -298,9 +314,7 @@ class ModerationRepository {
 
       List<UserModel> members = [];
       for (String uid in memberUids) {
-        final userSnapshot = await _users
-            .doc(uid)
-            .get();
+        final userSnapshot = await _users.doc(uid).get();
 
         if (userSnapshot.exists) {
           UserModel user =

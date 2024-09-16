@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
-import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/newsfeed/screen/post_container/post_container.dart';
 import 'package:hash_balance/features/theme/controller/theme_controller.dart';
-import 'package:hash_balance/models/conbined_models/post_data_model.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 class UserTimelineWidget extends ConsumerStatefulWidget {
   const UserTimelineWidget({
+    required UserModel user,
     super.key,
-    required Future<List<PostDataModel>> userPostsFuture,
-  }) : _userPostsFuture = userPostsFuture;
+  }) : _user = user;
 
-  final Future<List<PostDataModel>> _userPostsFuture;
+  final UserModel _user;
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
@@ -29,7 +29,6 @@ class _UserTimelineWidgetState extends ConsumerState<UserTimelineWidget>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final currentUser = ref.watch(userProvider)!;
     return Container(
       decoration: BoxDecoration(
         color: ref.watch(preferredThemeProvider),
@@ -38,71 +37,25 @@ class _UserTimelineWidgetState extends ConsumerState<UserTimelineWidget>
         child: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
-              child: FutureBuilder(
-                future: widget._userPostsFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          'Loading',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        const Loading(),
-                      ].animate().fadeIn(duration: 600.ms).moveY(
-                            begin: 30,
-                            end: 0,
-                            duration: 600.ms,
-                            curve: Curves.easeOutBack,
-                          ),
-                    );
-                  } else if (snapshot.hasError) {
-                    return ErrorText(error: snapshot.error.toString());
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                            top: 200.0), // Adjust the value as needed
-                        child: const Text(
-                          'You have no posts yet',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.white70,
-                          ),
-                        ).animate().fadeIn(duration: 600.ms).moveY(
-                              begin: 30,
-                              end: 0,
-                              duration: 600.ms,
-                              curve: Curves.easeOutBack,
-                            ),
-                      ),
-                    );
-                  } else if (snapshot.connectionState == ConnectionState.done) {
-                    final posts = snapshot.data!;
-                    return ListView.builder(
-                      physics: const NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      itemCount: posts.length,
-                      itemBuilder: (context, index) {
-                        final postData = posts[index];
-                        return PostContainer(
-                          author: currentUser,
-                          post: postData.post,
-                          community: postData.community,
-                        ).animate().fadeIn();
-                      },
-                    );
-                  } else {
-                    return const SizedBox.shrink();
-                  }
-                },
-              ),
+              child: ref.watch(userPostsProvider(widget._user)).when(
+                    data: (posts) {
+                      return ListView.builder(
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: posts.length,
+                        itemBuilder: (context, index) {
+                          final postData = posts[index];
+                          return PostContainer(
+                            author: widget._user,
+                            post: postData.post,
+                            community: postData.community,
+                          ).animate().fadeIn();
+                        },
+                      );
+                    },
+                    error: (e, s) => ErrorText(error: e.toString()),
+                    loading: () => const Loading(),
+                  ),
             )
           ],
         ),

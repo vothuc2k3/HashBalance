@@ -36,10 +36,37 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
   Message? _lastMessage;
   UserModel? currentUser;
 
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll);
+  void _showPrivateMessageOptions() {
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+    showMenu(
+      context: context,
+      position: RelativeRect.fromRect(
+        Rect.fromPoints(
+          overlay.localToGlobal(Offset.zero),
+          overlay.localToGlobal(overlay.size.bottomRight(Offset.zero)),
+        ),
+        Offset.zero & overlay.size,
+      ),
+      items: [
+        const PopupMenuItem(
+          value: 'block',
+          child: Text('Block'),
+        ),
+        const PopupMenuItem(
+          value: 'report',
+          child: Text('Report'),
+        ),
+      ],
+    ).then(
+      (value) {
+        if (value == 'block') {
+          // Implement block functionality
+        } else if (value == 'report') {
+          // Implement report functionality
+        }
+      },
+    );
   }
 
   void _onScroll() async {
@@ -126,6 +153,12 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     currentUser = ref.watch(userProvider);
@@ -162,7 +195,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.more_vert),
-            onPressed: () {},
+            onPressed: _showPrivateMessageOptions,
           ),
         ],
       ),

@@ -16,7 +16,9 @@ import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 
 final communityPostsProvider = StreamProvider.family((ref, String communityId) {
-  return ref.watch(communityControllerProvider.notifier).fetchCommunityPosts(communityId);
+  return ref
+      .watch(communityControllerProvider.notifier)
+      .fetchCommunityPosts(communityId);
 });
 
 final fetchCommunitiesProvider = StreamProvider(
@@ -59,8 +61,7 @@ final userCommunitiesProvider = StreamProvider((ref) {
   return communityController.getUserCommunities();
 });
 
-final communityByIdProvider =
-    StreamProvider.family((ref, String communityId) {
+final communityByIdProvider = StreamProvider.family((ref, String communityId) {
   return ref
       .watch(communityControllerProvider.notifier)
       .getCommunityById(communityId);
@@ -146,6 +147,7 @@ class CommunityController extends StateNotifier<bool> {
         joinedAt: Timestamp.now(),
         uid: uid,
         role: Constants.memberRole,
+        status: Constants.memberActiveStatus,
       );
 
       final result = await _communityRepository.joinCommunity(newMembership);
@@ -167,7 +169,7 @@ class CommunityController extends StateNotifier<bool> {
   FutureString joinCommunityAsModerator(
     String uid,
     String communityId,
-  ) async {   
+  ) async {
     try {
       final newMembership = CommunityMembership(
         id: getMembershipId(uid, communityId),
@@ -175,6 +177,7 @@ class CommunityController extends StateNotifier<bool> {
         joinedAt: Timestamp.now(),
         uid: uid,
         role: Constants.moderatorRole,
+        status: Constants.memberActiveStatus,
       );
 
       final result = await _communityRepository.joinCommunity(newMembership);

@@ -179,10 +179,8 @@ class AuthRepository {
   //SIGN OUT
   Future<void> signOut(Ref ref) async {
     await _firebaseAuth.signOut();
-    ref.read(userProvider.notifier).update(
-      (state) {
-        return null;
-      },
-    );
+    ref.read(userProvider.notifier).update((state) {
+      return null;
+    });
   }
 }

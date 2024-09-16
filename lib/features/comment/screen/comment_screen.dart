@@ -161,7 +161,7 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
       error: (error, stackTrace) => ErrorText(
         error: error.toString(),
       ),
-      loading: () => const Loading(),
+      loading: () => const SizedBox.shrink(),
     );
   }
 

@@ -10,6 +10,10 @@ import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/conbined_models/user_profile_data_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
+final userPostsProvider = StreamProvider.family((ref, UserModel user) {
+  return ref.watch(userControllerProvider.notifier).getUserPosts(user);
+});
+
 final userProfileDataProvider =
     StreamProvider.family<UserProfileDataModel, String>(
   (ref, String uid) =>
@@ -139,7 +143,11 @@ class UserController extends StateNotifier<bool> {
     return _userRepository.getUserProfileData(uid);
   }
 
-  Future<List<PostDataModel>> getUserPosts(UserModel user) async {
-    return await _userRepository.getUserPosts(user);
+  Stream<List<PostDataModel>> getUserPosts(UserModel user) {
+    return _userRepository.getUserPosts(user);
+  }
+
+  FutureVoid clearUserDeviceToken(String uid) async {
+    return await _userRepository.clearUserDeviceToken(uid);
   }
 }

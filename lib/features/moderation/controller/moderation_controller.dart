@@ -170,9 +170,9 @@ class ModerationController extends StateNotifier<bool> {
     }
   }
 
-  FutureVoid unPinPost(Post post) async {
+  FutureVoid unpinPost(Post post) async {
     try {
-      return await _moderationRepository.unPinPost(post: post);
+      return await _moderationRepository.unpinPost(post: post);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {

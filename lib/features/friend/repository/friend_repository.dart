@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
@@ -60,6 +61,20 @@ class FriendRepository {
     }
   }
 
+  //DECLINE FRIEND REQUEST
+  FutureVoid declineFriendRequest(String requestId) async {
+    try {
+      await _friendRequest.doc(requestId).update({
+        'status': Constants.friendRequestStatusDeclined,
+      });
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
   //GET THE SEND REQUEST STATUS
   Stream<FriendRequest?> getFriendRequestStatus(String uids) {
     try {
@@ -86,7 +101,9 @@ class FriendRepository {
 
       await _friendship.doc(uids).set(friendship.toMap());
 
-      await _friendRequest.doc(uids).delete();
+      await _friendRequest.doc(uids).update({
+        'status': Constants.friendRequestStatusAccepted,
+      });
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));

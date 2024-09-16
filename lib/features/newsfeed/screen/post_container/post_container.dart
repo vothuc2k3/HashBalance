@@ -6,6 +6,7 @@ import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/post_share/post_share_controller/post_share_controller.dart';
+import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/vote_post/controller/vote_post_controller.dart';
 import 'package:mdi/mdi.dart';
 import 'package:video_player/video_player.dart';
@@ -43,6 +44,17 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   String? _currentPosition;
   bool? isLoading;
   UserModel? currentUser;
+
+  void _navigateToOtherProfileScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OtherUserProfileScreen(
+          targetUser: widget.author,
+        ),
+      ),
+    );
+  }
 
   void _togglePlayPause() {
     setState(() {
@@ -95,8 +107,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     });
   }
 
-  void _handleBlock() {}
-
   void _handleDeletePost(Post post) async {
     final result =
         await ref.read(postControllerProvider.notifier).deletePost(post);
@@ -111,10 +121,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     );
   }
 
-  void _handleUnfollow() {}
-
-  void _handleUnfriend() {}
-
   void _showPostOptionsMenu(String currentUid, String postUsername) {
     showModalBottomSheet(
       context: context,
@@ -122,39 +128,31 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         return SafeArea(
           child: Wrap(
             children: [
-              ListTile(
-                leading: const Icon(Icons.person_remove),
-                title: Text('Unfollow $postUsername'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _handleUnfollow();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.person_off),
-                title: Text('Unfriend $postUsername'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _handleUnfriend();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.block),
-                title: Text('Block $postUsername'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _handleBlock();
-                },
-              ),
+              if (currentUid != widget.post.uid)
+                ListTile(
+                  leading: const Icon(Icons.person),
+                  title: Text('View $postUsername\'s Profile'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _navigateToOtherProfileScreen();
+                  },
+                ),
               if (currentUid == widget.post.uid)
                 ListTile(
                   leading: const Icon(Icons.delete),
-                  title: const Text('Delete'),
+                  title: const Text('Delete this post'),
                   onTap: () {
                     Navigator.of(context).pop();
                     _handleDeletePost(widget.post);
                   },
                 ),
+              ListTile(
+                leading: const Icon(Icons.cancel),
+                title: const Text('Cancel'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                },
+              ),
             ],
           ),
         );

@@ -103,6 +103,35 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     });
   }
 
+  void _handleDeletePost(Post post) async {
+    final confirmDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Confirm Delete'),
+          content: const Text('Are you sure you want to delete this post?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmDelete == true) {
+      final result =
+          await ref.read(postControllerProvider.notifier).deletePost(post);
+      result.fold((l) => showToast(false, l.message), (r) {
+        showToast(true, 'Post deleted successfully...');
+      });
+    }
+  }
+
   void _navigateToCommentScreen() {
     Navigator.push(
       context,
@@ -170,14 +199,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     );
   }
 
-  void _handleBlock() {}
-
-  void _handleDelete() {}
-
-  void _handleUnfollow() {}
-
-  void _handleUnfriend() {}
-
   void _handleReportPost() {
     TextEditingController reasonController = TextEditingController();
     showDialog(
@@ -239,7 +260,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     });
   }
 
-  void _showBottomSheet(String currentUid, String postUsername) {
+  void _showPostOptionsMenu(String currentUid, String postUsername) {
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -268,45 +289,29 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                     }
                   },
                 ),
-              ListTile(
-                leading: const Icon(Icons.person_remove),
-                title: Text('Unfollow $postUsername'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _handleUnfollow();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.person_off),
-                title: Text('Unfriend $postUsername'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _handleUnfriend();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.block),
-                title: Text('Block $postUsername'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _handleBlock();
-                },
-              ),
-              if (currentUid == widget.post.uid)
+              if (currentUid == widget.post.uid || widget.isMod)
                 ListTile(
                   leading: const Icon(Icons.delete),
                   title: const Text('Delete'),
                   onTap: () {
                     Navigator.of(context).pop();
-                    _handleDelete();
+                    _handleDeletePost(widget.post);
+                  },
+                ),
+              if (!widget.isMod || currentUid != widget.post.uid)
+                ListTile(
+                  leading: const Icon(Icons.warning),
+                  title: const Text('Report this post'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _handleReportPost();
                   },
                 ),
               ListTile(
-                leading: const Icon(Icons.warning),
-                title: const Text('Report this post'),
+                leading: const Icon(Icons.cancel),
+                title: const Text('Cancel'),
                 onTap: () {
                   Navigator.of(context).pop();
-                  _handleReportPost();
                 },
               ),
             ],
@@ -509,11 +514,9 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     return Row(
       children: [
         InkWell(
-          onTap: () => _navigateToOtherUserScreen(author.uid),
+          onTap: () => _navigateToOtherUserScreen(currentUser.uid),
           child: CircleAvatar(
-            backgroundImage: CachedNetworkImageProvider(
-              author.profileImage,
-            ),
+            backgroundImage: CachedNetworkImageProvider(author.profileImage),
           ),
         ),
         const SizedBox(width: 8),
@@ -548,7 +551,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         ),
         IconButton(
           onPressed: () {
-            _showBottomSheet(currentUser.uid, widget.author.name);
+            _showPostOptionsMenu(currentUser.uid, widget.author.name);
           },
           icon: const Icon(Icons.more_horiz),
         ),

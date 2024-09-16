@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
 import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
 class SettingScreen extends ConsumerStatefulWidget {
@@ -19,17 +22,22 @@ class SettingScreen extends ConsumerStatefulWidget {
 class SettingScreenState extends ConsumerState<SettingScreen> {
   bool isTrySigningOut = false;
 
-  void _signOut() {
+  void _signOut() async{
     setState(() {
       isTrySigningOut = true;
     });
-    Timer(const Duration(seconds: 1), () {
-      ref.read(authControllerProvider.notifier).signOut();
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const AuthScreen()),
-        (Route<dynamic> route) => false,
-      );
-    });
+    final uid = ref.read(userProvider)!.uid;
+    Timer(
+      const Duration(seconds: 1),
+      () {
+        ref.read(authControllerProvider.notifier).signOut();
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const AuthScreen()),
+          (Route<dynamic> route) => false,
+        );
+      },
+    );
+    await ref.read(userControllerProvider.notifier).clearUserDeviceToken(uid);
   }
 
   void _testButton() async {}
@@ -38,6 +46,7 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: ref.watch(preferredThemeProvider),
         title: const Text(
           'Setting',
           style: TextStyle(
@@ -56,7 +65,7 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
           children: [
             ListTile(
               leading: isTrySigningOut
-                  ? const CircularProgressIndicator()
+                  ? const Loading()
                   : Icon(
                       Icons.logout,
                       color: Pallete.redColor,

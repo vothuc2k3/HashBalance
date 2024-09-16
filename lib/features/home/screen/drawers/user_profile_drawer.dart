@@ -9,6 +9,7 @@ import 'package:hash_balance/features/authentication/controller/auth_controller.
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/setting/screen/setting_screen.dart';
 import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/user_profile/screen/friends/friend_requests_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
@@ -22,17 +23,24 @@ class UserProfileDrawer extends ConsumerStatefulWidget {
   }) : _homeScreenContext = homeScreenContext;
 
   @override
-  UserProfileDrawerState createState() => UserProfileDrawerState();
+  ConsumerState<UserProfileDrawer> createState() => UserProfileDrawerState();
 }
 
 class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
-  void navigateToProfileScreen(UserModel user) {
+  void _navigateToFriendRequestsScreen() {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const UserProfileScreen(),
+        builder: (context) => FriendRequestsScreen(
+          uid: ref.read(userProvider)!.uid,
+        ),
       ),
     );
+  }
+
+  void navigateToProfileScreen(UserModel user) {
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context) => const UserProfileScreen()));
   }
 
   void navigateToSettingScreen() {
@@ -44,12 +52,8 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
     );
   }
 
-  void _changeUserPrivacy(
-    WidgetRef ref,
-    bool setting,
-    UserModel user,
-    BuildContext homeScreenContext,
-  ) async {
+  void _changeUserPrivacy(WidgetRef ref, bool setting, UserModel user,
+      BuildContext homeScreenContext) async {
     final result =
         await ref.read(authControllerProvider.notifier).changeUserPrivacy(
               setting: setting,
@@ -80,9 +84,8 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
             margin: const EdgeInsets.symmetric(vertical: 8),
           ),
           ListTile(
-            leading: isLoading == 1
-                ? const Loading()
-                : const Icon(Icons.public),
+            leading:
+                isLoading == 1 ? const Loading() : const Icon(Icons.public),
             title: !userIsRestricted
                 ? const Text(
                     'Current: Public',
@@ -104,11 +107,7 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                         Navigator.pop(bottomSheetContext);
                         Scaffold.of(homeScreenContext).closeEndDrawer();
                         _changeUserPrivacy(
-                          ref,
-                          false,
-                          user,
-                          widget._homeScreenContext,
-                        );
+                            ref, false, user, widget._homeScreenContext);
                       },
                     );
                   },
@@ -234,6 +233,40 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                   ref,
                 ),
               ),
+              ListTile(
+                  title: const Text(
+                    'My Friends',
+                    style: TextStyle(
+                      color: Pallete.whiteColor,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  leading: const Icon(Icons.people),
+                  onTap: () {}),
+              ListTile(
+                title: const Text(
+                  'Pending Friend Requests',
+                  style: TextStyle(
+                    color: Pallete.whiteColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                leading: const Icon(Icons.pending_actions),
+                onTap: () => _navigateToFriendRequestsScreen(),
+              ),
+              ListTile(
+                  title: const Text(
+                    'Blocked Users',
+                    style: TextStyle(
+                      color: Pallete.whiteColor,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  leading: const Icon(Icons.block),
+                  onTap: () {}),
               Expanded(child: Container()),
               ListTile(
                 title: const Text(

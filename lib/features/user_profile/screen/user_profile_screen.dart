@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hash_balance/features/theme/controller/theme_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/widget/user_timeline_widget.dart';
-import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:hash_balance/core/utils.dart';
@@ -33,7 +32,6 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
   final double profileHeight = 120;
   late PageController _pageController;
   int _currentIndex = 0;
-  late Future<List<PostDataModel>> _userPosts;
 
   void _navigateToFriendRequestsScreen(String uid) {
     Navigator.push(
@@ -72,23 +70,23 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
     });
   }
 
-  void _editName(UserModel currentUser, String name) async {
-    if (name.isEmpty || name.length < 3) {
-      showToast(false, 'Name must be at least 3 characters');
-    } else if (name.length > 15) {
-      showToast(false, 'Name must be less than 15 characters');
-    } else {
-      final result = await ref
-          .read(userControllerProvider.notifier)
-          .editName(currentUser, name);
-      result.fold(
-        (l) => showToast(false, l.message),
-        (r) {
-          showToast(true, 'Edit name successfully');
-        },
-      );
-    }
-  }
+  // void _editName(UserModel currentUser, String name) async {
+  //   if (name.isEmpty || name.length < 3) {
+  //     showToast(false, 'Name must be at least 3 characters');
+  //   } else if (name.length > 15) {
+  //     showToast(false, 'Name must be less than 15 characters');
+  //   } else {
+  //     final result = await ref
+  //         .read(userControllerProvider.notifier)
+  //         .editName(currentUser, name);
+  //     result.fold(
+  //       (l) => showToast(false, l.message),
+  //       (r) {
+  //         showToast(true, 'Edit name successfully');
+  //       },
+  //     );
+  //   }
+  // }
 
   void _editBio(UserModel currentUser, String bio) async {
     if (bio.isEmpty) {
@@ -591,9 +589,6 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final currentUser = ref.read(userProvider)!;
-    _userPosts =
-        ref.read(userControllerProvider.notifier).getUserPosts(currentUser);
   }
 
   @override
@@ -921,10 +916,11 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
             ),
           ),
           //MARK: - User Timeline Widget
-          UserTimelineWidget(userPostsFuture: _userPosts),
+          UserTimelineWidget(user: currentUser),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: const Color(0xff181C30),
         currentIndex: _currentIndex,
         onTap: _onBottomNavTap,
         items: const [

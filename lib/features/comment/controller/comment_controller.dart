@@ -76,7 +76,15 @@ class CommentController extends StateNotifier<bool> {
   }
 
   FutureVoid deleteComment(String commentId) async {
-    return await _commentRepository.deleteComment(commentId);
+    try {
+      await _commentRepository.deleteComment(commentId);
+      await _commentRepository.clearCommentVotes(commentId);
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
   }
 
   //FETCH ALL COMMENTS OF A POST
@@ -96,5 +104,9 @@ class CommentController extends StateNotifier<bool> {
 
   Stream<Map<String, int>> getCommentVoteCount(String commentId) {
     return _commentRepository.getCommentVoteCount(commentId);
+  }
+
+  FutureVoid clearCommentVotes(String commentId) async {
+    return await _commentRepository.clearCommentVotes(commentId);
   }
 }

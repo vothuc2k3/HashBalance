@@ -89,6 +89,7 @@ class FriendController extends StateNotifier<bool> {
         requestUid: sender.uid,
         targetUid: targetUser.uid,
         createdAt: Timestamp.now(),
+        status: Constants.friendRequestStatusPending,
       );
       await _friendRepository.sendFriendRequest(request);
 
@@ -161,7 +162,6 @@ class FriendController extends StateNotifier<bool> {
           createdAt: Timestamp.now(),
         ),
       );
-
       final notif = NotificationModel(
         id: await generateRandomId(),
         title: Constants.acceptRequestTitle,
@@ -172,7 +172,6 @@ class FriendController extends StateNotifier<bool> {
         createdAt: Timestamp.now(),
         isRead: false,
       );
-
       //SEND ACCEPT REQUEST PUSH NOTIFICATION
       final targetUserDeviceId =
           await _userController.getUserDeviceTokens(targetUser.uid);
@@ -186,12 +185,23 @@ class FriendController extends StateNotifier<bool> {
         },
         Constants.acceptRequestType,
       );
-
       //SEND ACCEPT FRIEND REQUEST NOTIFICATION
       await _ref
           .watch(notificationControllerProvider.notifier)
           .addNotification(targetUser.uid, notif);
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
 
+  FutureVoid declineFriendRequest(UserModel targetUser) async {
+    try {
+      final currentUser = _ref.watch(userProvider);
+      await _friendRepository
+          .declineFriendRequest(getUids(currentUser!.uid, targetUser.uid));
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));

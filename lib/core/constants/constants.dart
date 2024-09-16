@@ -55,13 +55,15 @@ class Constants {
     'Chat',
     'Inbox'
   ];
-  static const String friendRequestTitle = 'New Friend Request';
-  static const String acceptRequestTitle = 'Friend Request Accepted';
+  //MARK: - Notification Constants
+  static const String friendRequestTitle = 'New Friend Request!';
+  static const String acceptRequestTitle = 'Friend Request Accepted!';
   static const String newFollowerTitle = 'New Follower!';
   static const String moderatorInvitationTitle =
       'You are invited as a moderator!';
   static const String incomingCallTitle = 'Incoming Call!';
 
+  //MARK: - Notification Types
   static const String friendRequestType = 'friend_request';
   static const String acceptRequestType = 'accept_request';
   static const String moderatorInvitationType = 'moderator_invitation';
@@ -69,16 +71,26 @@ class Constants {
   static const String conversationInvitationType = 'conversation_invitation';
   static const String newFollowerType = 'new_follower';
   static const String incomingCallType = 'incoming_call';
-
   static const String userReportType = 'user_report';
   static const String postReportType = 'post_report';
   static const String commentReportType = 'comment_report';
 
+  //MARK: - Call Status
   static const String callStatusDialling = 'dialling';
   static const String callStatusOngoing = 'on_going';
   static const String callStatusEnded = 'ended';
   static const String callStatusMissed = 'missed';
   static const String callStatusDeclined = 'declined';
+
+  //MARK: - Member Status
+  static const String memberActiveStatus = 'active';
+  static const String memberInactiveStatus = 'inactive';
+  static const String memberBannedStatus = 'banned';
+
+  //MARK: - Friend Request Status
+  static const String friendRequestStatusPending = 'pending';
+  static const String friendRequestStatusAccepted = 'accepted';
+  static const String friendRequestStatusDeclined = 'declined';
 
   static String getFriendRequestContent(String name) {
     return '$name has sent you a friend request!';

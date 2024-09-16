@@ -147,4 +147,23 @@ class CommentRepository {
       };
     });
   }
+
+  FutureVoid clearCommentVotes(String commentId) async {
+    try {
+      await _comments
+          .doc(commentId)
+          .collection(FirebaseConstants.commentVoteCollection)
+          .get()
+          .then((value) {
+        for (var doc in value.docs) {
+          doc.reference.delete();
+        }
+      });
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
 }
