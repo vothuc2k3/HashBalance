@@ -196,7 +196,7 @@ class MyAppState extends ConsumerState<MyApp> {
                     MaterialPageRoute(
                       builder: (context) => CommunityScreen(
                         memberStatus: membershipStatus!,
-                        community: community,
+                        communityId: community.id,
                       ),
                     ),
                   );

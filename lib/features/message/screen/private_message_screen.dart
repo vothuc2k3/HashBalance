@@ -220,7 +220,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
 
                           if (nextUserIsSame) {
                             return MessageBubble.next(
-                              message: chatMessage.text,
+                              message: chatMessage.text ?? '',
                               isMe: isMe,
                             );
                           } else {
@@ -231,7 +231,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                               username: isMe
                                   ? currentUser.name
                                   : widget._targetUser.name,
-                              message: chatMessage.text,
+                              message: chatMessage.text ?? '',
                               isMe: isMe,
                             );
                           }

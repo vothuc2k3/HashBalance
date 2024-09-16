@@ -188,7 +188,7 @@ class CommunityRepository {
     return Community.fromMap(doc.data() as Map<String, dynamic>);
   }
 
-  //GET ALL POST OF A COMMUNITY
+  // GET ALL POST OF A COMMUNITY
   Future<List<PostDataModel>> getCommunityPosts(String communityId) async {
     try {
       final communityPosts = await _posts
@@ -220,6 +220,55 @@ class CommunityRepository {
       postDataModels
           .sort((a, b) => b.post.createdAt.compareTo(a.post.createdAt));
       return postDataModels;
+    } on FirebaseException catch (e) {
+      throw e.toString();
+    }
+  }
+
+  Stream<List<PostDataModel>> fetchCommunityPosts(String communityId) async* {
+    try {
+      // Lấy stream từ Firestore
+      final communityPostsStream = _posts
+          .where('communityId', isEqualTo: communityId)
+          .where('status', isEqualTo: 'Approved')
+          .snapshots();
+
+      // Duyệt qua từng snapshot của Firestore
+      await for (final communityPosts in communityPostsStream) {
+        final List<PostDataModel> postDataModels = [];
+
+        // Duyệt qua từng document của post
+        for (final postDoc in communityPosts.docs) {
+          final postData = Post.fromMap(postDoc.data() as Map<String, dynamic>);
+
+          // Lấy thông tin tác giả
+          final authorDoc = await _users.doc(postData.uid).get();
+          final authorData =
+              UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
+
+          // Lấy thông tin cộng đồng
+          final communityDoc =
+              await _communities.doc(postData.communityId).get();
+          final communityData =
+              Community.fromMap(communityDoc.data() as Map<String, dynamic>);
+
+          // Tạo PostDataModel và thêm vào danh sách
+          postDataModels.add(
+            PostDataModel(
+              post: postData,
+              author: authorData,
+              community: communityData,
+            ),
+          );
+        }
+
+        // Sắp xếp các post theo thời gian tạo
+        postDataModels
+            .sort((a, b) => b.post.createdAt.compareTo(a.post.createdAt));
+
+        // Phát ra danh sách postDataModels
+        yield postDataModels;
+      }
     } on FirebaseException catch (e) {
       throw e.toString();
     }

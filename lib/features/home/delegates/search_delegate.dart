@@ -257,7 +257,7 @@ class SearchCommunityDelegate extends SearchDelegate {
           MaterialPageRoute(
             builder: (context) => CommunityScreen(
               memberStatus: membershipStatus!,
-              community: community,
+              communityId: community.id,
             ),
           ),
         );

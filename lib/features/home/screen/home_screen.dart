@@ -182,7 +182,7 @@ class HomeScreenState extends ConsumerState<HomeScreen>
           drawer: const CommunityListDrawer(),
           endDrawer: UserProfileDrawer(homeScreenContext: context),
           bottomNavigationBar: CupertinoTabBar(
-            backgroundColor: ref.watch(preferredThemeProvider),
+            backgroundColor: const Color(0xff181C30),
             activeColor: Colors.teal,
             inactiveColor: Colors.white70,
             iconSize: 28.0,

@@ -221,7 +221,7 @@ class _CommunityConversationScreenState
 
                           if (nextUserIsSame) {
                             return MessageBubble.next(
-                              message: chatMessage.text,
+                              message: chatMessage.text ?? '',
                               isMe: isMe,
                             );
                           } else {
@@ -232,7 +232,7 @@ class _CommunityConversationScreenState
                               username: isMe
                                   ? currentUser.name
                                   : messages[index].author.name,
-                              message: chatMessage.text,
+                              message: chatMessage.text ?? '',
                               isMe: isMe,
                             );
                           }

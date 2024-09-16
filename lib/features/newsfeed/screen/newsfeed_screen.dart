@@ -133,7 +133,7 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
     return InkWell(
       child: Container(
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-        color: Pallete.greyColor,
+        color: const Color(0xFF181C30),
         height: 125,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

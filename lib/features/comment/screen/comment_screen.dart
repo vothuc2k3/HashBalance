@@ -89,7 +89,7 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
         extendBodyBehindAppBar: true,
         appBar: AppBar(
           title: const Text('Comments'),
-          backgroundColor: Colors.black,
+          backgroundColor: ref.watch(preferredThemeProvider),
           actions: [
             PopupMenuButton<String>(
               onSelected: (value) =>
@@ -139,9 +139,17 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
         if (comments == null || comments.isEmpty) {
           return Center(
             child: const Text(
-              'Be the first one to comment!',
-              style: TextStyle(color: Colors.white),
-            ).animate(),
+              'Be the first one to leave a comment!',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.white70,
+              ),
+            ).animate().fadeIn(duration: 600.ms).moveY(
+                  begin: 30,
+                  end: 0,
+                  duration: 600.ms,
+                  curve: Curves.easeOutBack,
+                ),
           );
         }
         return ListView.builder(
@@ -170,7 +178,7 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8.0),
-        color: Colors.black,
+        color: ref.watch(preferredThemeProvider),
         child: Row(
           children: [
             IconButton(

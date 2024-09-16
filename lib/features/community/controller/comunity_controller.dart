@@ -15,6 +15,10 @@ import 'package:hash_balance/models/community_membership_model.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 
+final communityPostsProvider = StreamProvider.family((ref, String communityId) {
+  return ref.watch(communityControllerProvider.notifier).fetchCommunityPosts(communityId);
+});
+
 final fetchCommunitiesProvider = StreamProvider(
     (ref) => ref.read(communityControllerProvider.notifier).fetchCommunities());
 
@@ -55,7 +59,7 @@ final userCommunitiesProvider = StreamProvider((ref) {
   return communityController.getUserCommunities();
 });
 
-final getCommunityByIdProvider =
+final communityByIdProvider =
     StreamProvider.family((ref, String communityId) {
   return ref
       .watch(communityControllerProvider.notifier)
@@ -241,6 +245,10 @@ class CommunityController extends StateNotifier<bool> {
   Future<List<PostDataModel>> getCommunityPosts(String communityId) async {
     final list = await _communityRepository.getCommunityPosts(communityId);
     return list;
+  }
+
+  Stream<List<PostDataModel>> fetchCommunityPosts(String communityId) {
+    return _communityRepository.fetchCommunityPosts(communityId);
   }
 
   Stream<List<Community>> fetchCommunities() {

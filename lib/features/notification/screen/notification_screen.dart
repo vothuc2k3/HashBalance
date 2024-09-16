@@ -58,7 +58,7 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
             MaterialPageRoute(
               builder: (context) => CommunityScreen(
                 memberStatus: membershipStatus!,
-                community: community!,
+                communityId: community!.id,
               ),
             ),
           );

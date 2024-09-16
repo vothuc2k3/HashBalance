@@ -6,6 +6,7 @@ import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/post_share/post_share_controller/post_share_controller.dart';
 import 'package:hash_balance/features/report/controller/report_controller.dart';
+import 'package:hash_balance/features/theme/controller/theme_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 import 'package:hash_balance/features/vote_post/controller/vote_post_controller.dart';
@@ -388,7 +389,9 @@ class _PostContainerState extends ConsumerState<PostContainer> {
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-        color: widget.isPinnedPost ? Colors.blueGrey[900] : Colors.black,
+        color: widget.isPinnedPost
+            ? const Color(0xFF181C30)
+            : ref.watch(preferredThemeProvider),
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(

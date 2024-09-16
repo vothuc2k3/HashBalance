@@ -64,7 +64,7 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
           MaterialPageRoute(
             builder: (context) => CommunityScreen(
               memberStatus: membershipStatus!,
-              community: community,
+              communityId: community.id,
             ),
           ),
         );

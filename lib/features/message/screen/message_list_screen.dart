@@ -106,8 +106,8 @@ class _MessageListScreenState extends ConsumerState<MessageListScreen> {
                           ),
                           subtitle: Text(
                             messageData.message.uid == currentUser!.uid
-                                ? 'You: ${messageData.message.text}'
-                                : messageData.message.text,
+                                ? 'You: ${messageData.message.text ?? ''}'
+                                : messageData.message.text ?? '',
                             style: const TextStyle(color: Colors.white70),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

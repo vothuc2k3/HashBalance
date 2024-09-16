@@ -199,7 +199,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
           MaterialPageRoute(
             builder: (context) => CommunityScreen(
               memberStatus: membershipStatus!,
-              community: community,
+              communityId: community.id,
             ),
           ),
         );
@@ -310,17 +310,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       padding: const EdgeInsets.all(5),
-      decoration: BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.white,
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
+      color: const Color(0xFF181C30),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -462,7 +452,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '#${widget.community.name}',
+                    '#=${widget.community.name}',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
