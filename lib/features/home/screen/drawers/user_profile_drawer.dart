@@ -10,6 +10,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/setting/screen/setting_screen.dart';
 import 'package:hash_balance/features/theme/controller/theme_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/friends/friend_requests_screen.dart';
+import 'package:hash_balance/features/user_profile/screen/friends/friends_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
@@ -43,6 +44,17 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
         MaterialPageRoute(builder: (context) => const UserProfileScreen()));
   }
 
+  void navigateToFriendsScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FriendsScreen(
+          uid: ref.read(userProvider)!.uid,
+        ),
+      ),
+    );
+  }
+
   void navigateToSettingScreen() {
     Navigator.push(
       context,
@@ -66,7 +78,6 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
   void showChangePrivacyModal(
     BuildContext homeScreenContext,
     BuildContext drawerContext,
-    WidgetRef ref,
   ) {
     final user = ref.watch(userProvider);
     bool userIsRestricted = user!.isRestricted;
@@ -230,20 +241,20 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                 onTap: () => showChangePrivacyModal(
                   context,
                   widget._homeScreenContext,
-                  ref,
                 ),
               ),
               ListTile(
-                  title: const Text(
-                    'My Friends',
-                    style: TextStyle(
-                      color: Pallete.whiteColor,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
+                title: const Text(
+                  'My Friends',
+                  style: TextStyle(
+                    color: Pallete.whiteColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
                   ),
-                  leading: const Icon(Icons.people),
-                  onTap: () {}),
+                ),
+                leading: const Icon(Icons.people),
+                onTap: () => navigateToFriendsScreen(),
+              ),
               ListTile(
                 title: const Text(
                   'Pending Friend Requests',

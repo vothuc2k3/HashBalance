@@ -1,14 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
-import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
 import 'package:hash_balance/features/theme/controller/theme_controller.dart';
-import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/theme/pallette.dart';
+import 'package:logger/logger.dart';
 
 class SettingScreen extends ConsumerStatefulWidget {
   const SettingScreen({super.key});
@@ -20,24 +15,12 @@ class SettingScreen extends ConsumerStatefulWidget {
 }
 
 class SettingScreenState extends ConsumerState<SettingScreen> {
-  bool isTrySigningOut = false;
+  void _signOut() async {
+    Logger().d('REACHED HERE');
 
-  void _signOut() async{
-    setState(() {
-      isTrySigningOut = true;
-    });
-    final uid = ref.read(userProvider)!.uid;
-    Timer(
-      const Duration(seconds: 1),
-      () {
-        ref.read(authControllerProvider.notifier).signOut();
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const AuthScreen()),
-          (Route<dynamic> route) => false,
-        );
-      },
-    );
-    await ref.read(userControllerProvider.notifier).clearUserDeviceToken(uid);
+    // Đảm bảo signOut được thực hiện trước
+    await ref.watch(authControllerProvider.notifier).signOut(context);
+    Logger().d('SIGNED OUT SUCCESSFULLY');
   }
 
   void _testButton() async {}
@@ -64,12 +47,10 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
         child: Column(
           children: [
             ListTile(
-              leading: isTrySigningOut
-                  ? const Loading()
-                  : Icon(
-                      Icons.logout,
-                      color: Pallete.redColor,
-                    ),
+              leading: Icon(
+                Icons.logout,
+                color: Pallete.redColor,
+              ),
               title: const Text(
                 'Sign Out',
                 style: TextStyle(

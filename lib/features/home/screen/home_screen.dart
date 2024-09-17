@@ -149,29 +149,31 @@ class HomeScreenState extends ConsumerState<HomeScreen>
               ),
 
               //MARK: - NOTIFICATIONS
-              ref.watch(getNotifsProvider(user!.uid)).whenOrNull(
-                    data: (notifs) {
-                      if (notifs == null || notifs.isEmpty) {
-                        return const SizedBox.shrink();
-                      } else {
-                        return _buildNotificationMenu(notifs);
-                      }
-                    },
-                  ) ??
-                  _buildNotificationMenu([]),
+              if (user != null)
+                ref.watch(getNotifsProvider(user.uid)).whenOrNull(
+                      data: (notifs) {
+                        if (notifs == null || notifs.isEmpty) {
+                          return const SizedBox.shrink();
+                        } else {
+                          return _buildNotificationMenu(notifs);
+                        }
+                      },
+                    ) ??
+                    _buildNotificationMenu([]),
 
               //MARK: - PROFILE
-              Builder(
-                builder: (context) {
-                  return IconButton(
-                    icon: CircleAvatar(
-                      backgroundImage:
-                          CachedNetworkImageProvider(user.profileImage),
-                    ),
-                    onPressed: () => _displayUserProfileDrawer(context),
-                  );
-                },
-              ),
+              if (user != null)
+                Builder(
+                  builder: (context) {
+                    return IconButton(
+                      icon: CircleAvatar(
+                        backgroundImage:
+                            CachedNetworkImageProvider(user.profileImage),
+                      ),
+                      onPressed: () => _displayUserProfileDrawer(context),
+                    );
+                  },
+                ),
             ],
           ),
           body: PageView(
@@ -203,35 +205,36 @@ class HomeScreenState extends ConsumerState<HomeScreen>
                 icon: Icon(Icons.message_outlined),
                 label: 'Chat',
               ),
-              BottomNavigationBarItem(
-                icon: ref.watch(getNotifsProvider(user.uid)).whenOrNull(
-                      data: (notifs) {
-                        if (notifs == null || notifs.isEmpty) {
-                          return const Icon(Icons.notification_add_outlined);
-                        }
-                        int unreadCount = 0;
-                        for (var notif in notifs) {
-                          if (notif.isRead == false) {
-                            unreadCount++;
+              if (user != null)
+                BottomNavigationBarItem(
+                  icon: ref.watch(getNotifsProvider(user.uid)).whenOrNull(
+                        data: (notifs) {
+                          if (notifs == null || notifs.isEmpty) {
+                            return const Icon(Icons.notification_add_outlined);
                           }
-                        }
-                        return unreadCount == 0
-                            ? const Icon(Icons.notification_add_outlined)
-                            : Badge(
-                                label: Text(
-                                  '$unreadCount',
-                                  style: const TextStyle(
-                                      color: Colors.white, fontSize: 10),
-                                ),
-                                isLabelVisible: true,
-                                child:
-                                    const Icon(Icons.notification_add_outlined),
-                              );
-                      },
-                    ) ??
-                    const Icon(Icons.notification_add_outlined),
-                label: 'Inbox',
-              ),
+                          int unreadCount = 0;
+                          for (var notif in notifs) {
+                            if (notif.isRead == false) {
+                              unreadCount++;
+                            }
+                          }
+                          return unreadCount == 0
+                              ? const Icon(Icons.notification_add_outlined)
+                              : Badge(
+                                  label: Text(
+                                    '$unreadCount',
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 10),
+                                  ),
+                                  isLabelVisible: true,
+                                  child: const Icon(
+                                      Icons.notification_add_outlined),
+                                );
+                        },
+                      ) ??
+                      const Icon(Icons.notification_add_outlined),
+                  label: 'Inbox',
+                ),
             ],
             onTap: onTabTapped,
             currentIndex: _page,
