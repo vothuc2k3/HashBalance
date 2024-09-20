@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/reply_comment/repository/reply_comment_repository.dart';
@@ -37,7 +36,7 @@ class ReplyCommentController extends StateNotifier<bool> {
         super(false);
 
   //COMMENT
-  FutureVoid reply(
+  Future<Either<Failures, void>> reply(
     Post post,
     String parentCommentId,
     String? content,

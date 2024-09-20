@@ -9,7 +9,6 @@ import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -58,7 +57,8 @@ class ModerationRepository {
   }
 
   //FETCH MEMBERSHIP STATUS
-  FutureString fetchMembershipStatus(String membershipId) async {
+  Future<Either<Failures, String>> fetchMembershipStatus(
+      String membershipId) async {
     try {
       final membershipDoc = await _communityMembership.doc(membershipId).get();
       if (!membershipDoc.exists) {
@@ -78,7 +78,8 @@ class ModerationRepository {
   }
 
   //EDIT COMMUNITY VISUAL
-  FutureVoid editCommunityProfileOrBannerImage(Community community) async {
+  Future<Either<Failures, void>> editCommunityProfileOrBannerImage(
+      Community community) async {
     try {
       final Map<String, dynamic> communityAfterCast = {
         'id': community.id,
@@ -100,7 +101,7 @@ class ModerationRepository {
   }
 
   //PIN POST
-  FutureVoid pinPost({
+  Future<Either<Failures, void>> pinPost({
     required Post post,
   }) async {
     try {
@@ -126,7 +127,7 @@ class ModerationRepository {
   }
 
   //UNPIN POST
-  FutureVoid unpinPost({
+  Future<Either<Failures, void>> unpinPost({
     required Post post,
   }) async {
     try {
@@ -153,7 +154,8 @@ class ModerationRepository {
   }
 
   //APPROVE [OR] REJECT POST
-  FutureVoid handlePostApproval(Post post, String decision) async {
+  Future<Either<Failures, void>> handlePostApproval(
+      Post post, String decision) async {
     try {
       await _posts.doc(post.id).update({
         'status': decision,
@@ -218,7 +220,7 @@ class ModerationRepository {
   }
 
   //DELETE THE POST
-  FutureVoid deletePost(Post post, String uid) async {
+  Future<Either<Failures, void>> deletePost(Post post, String uid) async {
     final batch = _firestore.batch();
     try {
       final postVotes = await _posts

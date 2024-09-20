@@ -4,7 +4,6 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/message_data_model.dart';
 import 'package:hash_balance/models/conversation_model.dart';
@@ -146,7 +145,7 @@ class MessageRepository {
   }
 
   //SEND PRIVATE MESSAGE
-  FutureVoid sendPrivateMessage(
+  Future<Either<Failures, void>> sendPrivateMessage(
       Message message, Conversation conversation) async {
     try {
       final conversationDoc = await _conversation.doc(conversation.id).get();
@@ -173,7 +172,7 @@ class MessageRepository {
   }
 
   //SEND COMMUNITY MESSAGE
-  FutureVoid sendCommunityMessage(
+  Future<Either<Failures, void>> sendCommunityMessage(
     Message message,
     Conversation conversation,
   ) async {

@@ -5,7 +5,6 @@ import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/models/conbined_models/friend_requester_data_model.dart';
 import 'package:hash_balance/models/follower_model.dart';
@@ -38,7 +37,7 @@ class FriendRepository {
       _firestore.collection(FirebaseConstants.followerCollection);
 
   //SEND FRIEND REQUEST
-  FutureVoid sendFriendRequest(FriendRequest request) async {
+  Future<Either<Failures, void>> sendFriendRequest(FriendRequest request) async {
     try {
       await _friendRequest.doc(request.id).set(request.toMap());
       return right(null);
@@ -50,7 +49,7 @@ class FriendRepository {
   }
 
   //CANCEL FRIEND REQUEST
-  FutureVoid cancelFriendRequest(String requestId) async {
+  Future<Either<Failures, void>> cancelFriendRequest(String requestId) async {
     try {
       await _friendRequest.doc(requestId).delete();
       return right(null);
@@ -62,7 +61,7 @@ class FriendRepository {
   }
 
   //DECLINE FRIEND REQUEST
-  FutureVoid declineFriendRequest(String requestId) async {
+  Future<Either<Failures, void>> declineFriendRequest(String requestId) async {
     try {
       await _friendRequest.doc(requestId).update({
         'status': Constants.friendRequestStatusDeclined,
@@ -95,7 +94,7 @@ class FriendRepository {
   }
 
   //ACCEPT FRIEND REQUEST
-  FutureVoid acceptFriendRequest(Friendship friendship) async {
+  Future<Either<Failures, void>> acceptFriendRequest(Friendship friendship) async {
     try {
       final uids = getUids(friendship.uid1, friendship.uid2);
 
@@ -113,7 +112,7 @@ class FriendRepository {
   }
 
   //UNFRIEND
-  FutureVoid unfriend(String uids) async {
+  Future<Either<Failures, void>> unfriend(String uids) async {
     try {
       await _friendship.doc(uids).delete();
 
@@ -159,7 +158,7 @@ class FriendRepository {
     });
   }
 
-  FutureVoid followUser(Follower followerModel) async {
+  Future<Either<Failures, void>> followUser(Follower followerModel) async {
     try {
       await _follower.doc(followerModel.id).set(followerModel.toMap());
       return right(null);
@@ -170,7 +169,7 @@ class FriendRepository {
     }
   }
 
-  FutureVoid unfollowUser(String currentUid, String targetUid) async {
+  Future<Either<Failures, void>> unfollowUser(String currentUid, String targetUid) async {
     try {
       final docs = await _follower
           .where('followerUid', isEqualTo: currentUid)

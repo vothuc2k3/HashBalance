@@ -54,8 +54,7 @@ class _PendingPostContainerState extends ConsumerState<PendingPostContainer> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const UserProfileScreen(
-            ),
+            builder: (context) => const UserProfileScreen(),
           ),
         );
         break;
@@ -63,9 +62,8 @@ class _PendingPostContainerState extends ConsumerState<PendingPostContainer> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => OtherUserProfileScreen(
-              targetUser: widget._author,
-            ),
+            builder: (context) =>
+                OtherUserProfileScreen(targetUid: widget._author.uid),
           ),
         );
         break;

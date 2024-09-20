@@ -4,7 +4,6 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/notification_model.dart';
 
 final notificationRepositoryProvider = Provider((ref) {
@@ -21,11 +20,8 @@ class NotificationRepository {
   //REFERENCE ALL THE USERS
   CollectionReference get _users =>
       _firestore.collection(FirebaseConstants.usersCollection);
-  //REFERENCE ALL THE USERS
-  CollectionReference get _calls =>
-      _firestore.collection(FirebaseConstants.callCollection);
 
-  FutureVoid addNotification(
+  Future<Either<Failures, void>> addNotification(
     String targetUid,
     NotificationModel notification,
   ) async {

@@ -1,6 +1,5 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -31,7 +30,7 @@ class UpvoteCommentController extends StateNotifier<bool> {
         _ref = ref,
         super(false);
 
-  FutureVoid voteComment(String commentId) async {
+  Future<Either<Failures, void>> voteComment(String commentId) async {
     try {
       final user = _ref.watch(userProvider)!;
       final commentVoteModel = CommentVote(
@@ -62,7 +61,7 @@ class DownvoteCommentController extends StateNotifier<bool> {
         _ref = ref,
         super(false);
 
-  FutureVoid voteComment(String commentId) async {
+  Future<Either<Failures, void>> voteComment(String commentId) async {
     try {
       final user = _ref.read(userProvider)!;
       final commentVoteModel = CommentVote(

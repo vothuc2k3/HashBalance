@@ -79,18 +79,15 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => OtherUserProfileScreen(
-            targetUser: targetUser,
+          builder: (context) =>
+              OtherUserProfileScreen(targetUid: targetUser.uid),
           ),
-        ),
       );
     }
   }
 
-  void _markAsRead(String notifId, UserModel user) async {
-    await ref
-        .watch(notificationControllerProvider.notifier)
-        .markAsRead(notifId);
+  void _markAsRead(String notifId, UserModel user) {
+    // ref.read(notificationControllerProvider.notifier).markAsRead(notifId);
   }
 
   void _deleteNotification(String notifId) async {

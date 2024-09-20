@@ -1,18 +1,22 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/autocomplete_options.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/comment/screen/comment_container/comment_container.dart';
 import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/models/comment_model.dart';
 import 'package:hash_balance/models/conbined_models/comment_data_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/foundation.dart' as foundation;
 import 'package:hash_balance/models/user_model.dart';
+import 'package:multi_trigger_autocomplete/multi_trigger_autocomplete.dart';
 
 final currentCommentProvider = Provider<CommentModel>((ref) {
   throw UnimplementedError('currentCommentProvider not overridden');
@@ -35,20 +39,10 @@ class CommentScreen extends ConsumerStatefulWidget {
 }
 
 class _CommentScreenState extends ConsumerState<CommentScreen> {
-  final TextEditingController _commentController = TextEditingController();
   bool _isEmojiVisible = false;
-
-  void _handleMenuItemClick(String value, String commentId) async {
-    switch (value) {
-      case 'Option1':
-        break;
-      case 'Option2':
-        break;
-      case 'Option3':
-        break;
-    }
-  }
-
+  String? _commentText;
+  final List<UserModel> _selectedUsers = [];
+  TextEditingController _internalController = TextEditingController();
   void _toggleEmojiPicker() {
     setState(() {
       _isEmojiVisible = !_isEmojiVisible;
@@ -56,23 +50,34 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
   }
 
   void _addComment() async {
-    final commentText = _commentController.text.trim();
-    if (commentText.isNotEmpty) {
+    if (_commentText != null && _commentText!.isNotEmpty) {
       final result = await ref
-          .watch(commentControllerProvider.notifier)
-          .comment(widget._post, commentText);
+          .read(commentControllerProvider.notifier)
+          .comment(widget._post, _commentText!, _selectedUsers);
+      _selectedUsers.clear();
+      _internalController.clear();
+      _commentText = null;
       result.fold((l) => showToast(false, l.message), (r) {
-        _commentController.clear();
         setState(() {
           _isEmojiVisible = false;
         });
       });
+    } else {
+      showToast(false, 'Please enter content for your comment');
     }
+  }
+
+  void _navigateToTaggedUser(String uid) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OtherUserProfileScreen(targetUid: uid),
+      ),
+    );
   }
 
   @override
   void dispose() {
-    _commentController.dispose();
     super.dispose();
   }
 
@@ -90,29 +95,6 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
         appBar: AppBar(
           title: const Text('Comments'),
           backgroundColor: ref.watch(preferredThemeProvider),
-          actions: [
-            PopupMenuButton<String>(
-              onSelected: (value) =>
-                  _handleMenuItemClick(value, 'QPeVjW5xz41AMBxNGneGX'),
-              icon: const Icon(Icons.more_horiz),
-              itemBuilder: (BuildContext context) {
-                return [
-                  const PopupMenuItem<String>(
-                    value: 'Option1',
-                    child: Text('Option 1'),
-                  ),
-                  const PopupMenuItem<String>(
-                    value: 'Option2',
-                    child: Text('Option 2'),
-                  ),
-                  const PopupMenuItem<String>(
-                    value: 'Option3',
-                    child: Text('Option 3'),
-                  ),
-                ];
-              },
-            ),
-          ],
         ),
         body: Container(
           decoration: BoxDecoration(
@@ -123,6 +105,11 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
               Expanded(
                 child: _buildCommentsList(commentsAsyncValue),
               ),
+              const Divider(
+                height: 1,
+                color: Colors.white,
+              ),
+              if (_selectedUsers.isNotEmpty) _buildTagDisplay(),
               loading ? const Loading() : _buildInputArea(),
               if (_isEmojiVisible) _buildEmojiPicker(),
             ],
@@ -170,39 +157,103 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
       overrides: [
         currentCommentProvider.overrideWithValue(comment.comment),
       ],
-      child: CommentItemWidget(author: author),
+      child: CommentItemWidget(
+        author: author,
+        navigateToTaggedUser: _navigateToTaggedUser,
+      ),
     );
   }
 
   Widget _buildInputArea() {
     return SafeArea(
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        padding: const EdgeInsets.symmetric(horizontal: 1.0),
         color: ref.watch(preferredThemeProvider),
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              icon: const Icon(Icons.emoji_emotions, color: Colors.white),
-              onPressed: _toggleEmojiPicker,
-            ),
-            Expanded(
-              child: TextField(
-                controller: _commentController,
-                decoration: const InputDecoration(
-                  hintText: 'Add a comment...',
-                  hintStyle: TextStyle(color: Colors.white70),
-                  border: InputBorder.none,
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.emoji_emotions, color: Colors.white),
+                  onPressed: _toggleEmojiPicker,
                 ),
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.send, color: Colors.white),
-              onPressed: _addComment,
+                Expanded(
+                  child: MultiTriggerAutocomplete(
+                    optionsAlignment: OptionsAlignment.topStart,
+                    autocompleteTriggers: [
+                      AutocompleteTrigger(
+                        trigger: '#',
+                        optionsViewBuilder:
+                            (context, autocompleteQuery, controller) {
+                          return MentionAutocompleteOptions(
+                            query: autocompleteQuery.query,
+                            onMentionUserTap: (user) {
+                              final autocomplete =
+                                  MultiTriggerAutocomplete.of(context);
+                              autocomplete.acceptAutocompleteOption(user.name);
+                              if (!_selectedUsers.contains(user)) {
+                                setState(() {
+                                  _selectedUsers.add(user);
+                                  _commentText = _internalController.text;
+                                });
+                              }
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                    fieldViewBuilder: (context, controller, focusNode) {
+                      _internalController =
+                          controller; // Lưu controller để có thể clear khi cần
+                      return Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextField(
+                          focusNode: focusNode,
+                          controller: _internalController,
+                          decoration: const InputDecoration(
+                            hintText: 'Tag your friends with #...',
+                            hintStyle: TextStyle(color: Colors.grey),
+                          ),
+                          onChanged: (value) {
+                            _commentText = value;
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.send, color: Colors.white),
+                  onPressed: _addComment,
+                ),
+              ],
             ),
           ],
         ),
       ),
+    );
+  }
+
+  void _removeTag(UserModel user) {
+    setState(() {
+      _selectedUsers.remove(user);
+    });
+  }
+
+  Widget _buildTagDisplay() {
+    return Wrap(
+      spacing: 0.1,
+      children: _selectedUsers.map((user) {
+        return Chip(
+          avatar: CircleAvatar(
+            backgroundImage: CachedNetworkImageProvider(user.profileImage),
+          ),
+          label: Text(user.name),
+          deleteIcon: const Icon(Icons.close),
+          onDeleted: () => _removeTag(user),
+        );
+      }).toList(),
     );
   }
 
@@ -211,7 +262,7 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
       height: 250,
       child: EmojiPicker(
         onEmojiSelected: (category, emoji) {
-          _commentController.text += emoji.emoji;
+          _commentText = emoji.emoji;
         },
         config: Config(
           height: 256,
@@ -237,10 +288,12 @@ class CommentItemWidget extends ConsumerWidget {
   const CommentItemWidget({
     super.key,
     required UserModel author,
-  }) : _author = author;
+    required Function(String) navigateToTaggedUser,
+  })  : _author = author,
+        _navigateToTaggedUser = navigateToTaggedUser;
 
   final UserModel _author;
-
+  final Function(String) _navigateToTaggedUser;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final comment = ref.watch(currentCommentProvider);
@@ -250,6 +303,7 @@ class CommentItemWidget extends ConsumerWidget {
       author: _author,
       comment: comment,
       post: post,
+      navigateToTaggedUser: _navigateToTaggedUser,
     );
   }
 }

@@ -59,9 +59,8 @@ class _ReportPostContainerState extends ConsumerState<ReportPostContainer> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => OtherUserProfileScreen(
-              targetUser: widget._author,
-            ),
+            builder: (context) =>
+                OtherUserProfileScreen(targetUid: widget._author.uid),
           ),
         );
         break;

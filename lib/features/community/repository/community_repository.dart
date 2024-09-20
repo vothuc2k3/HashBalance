@@ -5,7 +5,6 @@ import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/community_membership_model.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
@@ -36,7 +35,7 @@ class CommunityRepository {
       _firestore.collection(FirebaseConstants.postsCollection);
 
   //CREATE A WHOLE NEW COMMUNITY
-  FutureString createCommunity(Community community) async {
+  Future<Either<Failures, String>> createCommunity(Community community) async {
     try {
       var communityDoc = await _communities.doc(community.id).get();
 
@@ -91,7 +90,7 @@ class CommunityRepository {
   }
 
   //LET USER JOIN COMMUNITY
-  FutureVoid joinCommunity(CommunityMembership membership) async {
+  Future<Either<Failures, void>> joinCommunity(CommunityMembership membership) async {
     try {
       final membershipDoc = await _communityMembership.doc(membership.id).get();
       if (membershipDoc.exists) {
@@ -110,7 +109,7 @@ class CommunityRepository {
   }
 
   //LET USER JOIN COMMUNITY
-  FutureVoid leaveCommunity(String membershipId) async {
+  Future<Either<Failures, void>> leaveCommunity(String membershipId) async {
     try {
       await _communityMembership.doc(membershipId).delete();
 

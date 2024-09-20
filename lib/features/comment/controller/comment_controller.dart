@@ -1,15 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:hash_balance/core/constants/constants.dart';
 
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/comment/repository/comment_repository.dart';
+import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
+import 'package:hash_balance/features/notification/controller/notification_controller.dart';
 import 'package:hash_balance/models/comment_model.dart';
 import 'package:hash_balance/models/conbined_models/comment_data_model.dart';
+import 'package:hash_balance/models/notification_model.dart';
 import 'package:hash_balance/models/post_model.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 final getCommentVoteStatusProvider =
     StreamProvider.family((ref, String commentId) {
@@ -32,29 +36,39 @@ final getPostCommentsProvider = StreamProvider.family((ref, String postId) {
 final commentControllerProvider =
     StateNotifierProvider<CommentController, bool>(
   (ref) => CommentController(
-    commentRepository: ref.watch(commentRepositoryProvider),
+    commentRepository: ref.read(commentRepositoryProvider),
+    pushNotificationController:
+        ref.read(pushNotificationControllerProvider.notifier),
+    notificationController: ref.read(notificationControllerProvider.notifier),
     ref: ref,
   ),
 );
 
 class CommentController extends StateNotifier<bool> {
   final CommentRepository _commentRepository;
+  final PushNotificationController _pushNotificationController;
+  final NotificationController _notificationController;
   final Ref _ref;
 
   CommentController({
     required CommentRepository commentRepository,
+    required PushNotificationController pushNotificationController,
+    required NotificationController notificationController,
     required Ref ref,
   })  : _commentRepository = commentRepository,
+        _pushNotificationController = pushNotificationController,
+        _notificationController = notificationController,
         _ref = ref,
         super(false);
 
   //COMMENT
-  FutureVoid comment(
+  Future<Either<Failures, void>> comment(
     Post post,
     String? content,
+    List<UserModel>? mentionUsers,
   ) async {
     try {
-      final user = _ref.watch(userProvider)!;
+      final user = _ref.read(userProvider)!;
       final comment = CommentModel(
         id: await generateRandomId(),
         uid: user.uid,
@@ -62,11 +76,49 @@ class CommentController extends StateNotifier<bool> {
         createdAt: Timestamp.now(),
         content: content,
         parentCommentId: '',
+        mentionedUser: {
+          for (var user in mentionUsers!) user.uid: user.name,
+        },
       );
       final result = await _commentRepository.comment(comment);
       return result.fold(
-        (l) => left((Failures(l.message))),
-        (r) => right(null),
+        (l) => left(
+          Failures(l.message),
+        ),
+        (r) async {
+          if (comment.mentionedUser != null &&
+              comment.mentionedUser!.isNotEmpty) {
+            final notification = NotificationModel(
+
+              id: await generateRandomId(),
+              title: Constants.commentMentionTitle,
+              message: Constants.getCommentMentionContent(user.name),
+              type: Constants.commentMentionType,
+              senderUid: comment.uid,
+              createdAt: Timestamp.now(),
+              isRead: false,
+            );
+            for (var uid in comment.mentionedUser!.keys) {
+              await _notificationController.addNotification(uid, notification);
+            }
+
+
+            await _pushNotificationController.sendMultipleFCMNotifications(
+              comment.mentionedUser!.keys.toList(),
+              Constants.getCommentMentionContent(user.name),
+              Constants.commentMentionTitle,
+
+              {
+                'type': Constants.commentMentionType,
+                'commentId': comment.id,
+                'postId': post.id,
+              },
+              Constants.commentMentionType,
+            );
+          }
+
+          return right(null);
+        },
       );
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -75,7 +127,7 @@ class CommentController extends StateNotifier<bool> {
     }
   }
 
-  FutureVoid deleteComment(String commentId) async {
+  Future<Either<Failures, void>> deleteComment(String commentId) async {
     try {
       await _commentRepository.deleteComment(commentId);
       await _commentRepository.clearCommentVotes(commentId);
@@ -93,7 +145,7 @@ class CommentController extends StateNotifier<bool> {
   }
 
   //DELETE A COMMENT
-  FutureVoid clearPostComments(String postId) async {
+  Future<Either<Failures, void>> clearPostComments(String postId) async {
     return await _commentRepository.clearPostComments(postId);
   }
 
@@ -106,7 +158,7 @@ class CommentController extends StateNotifier<bool> {
     return _commentRepository.getCommentVoteCount(commentId);
   }
 
-  FutureVoid clearCommentVotes(String commentId) async {
+  Future<Either<Failures, void>> clearCommentVotes(String commentId) async {
     return await _commentRepository.clearCommentVotes(commentId);
   }
 }

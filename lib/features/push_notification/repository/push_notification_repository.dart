@@ -45,4 +45,36 @@ class PushNotificationRepository {
       _logger.d('Response body: ${response.body}');
     }
   }
+
+  Future<void> sendMultipleFCMNotifications(
+    List<String> tokens,
+    String message,
+    String title,
+    Map<String, dynamic> data,
+    String type,
+  ) async {
+    _logger.d('TOKENS TO BE SENT: $tokens');
+    final url = Uri.parse('${Constants.domain}/sendPushNotification');
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        'tokens': tokens,
+        'message': message,
+        'title': title,
+        'data': data,
+        'type': type,
+      }),
+    );
+    if (response.statusCode == 200) {
+      _logger.d('Notification sent successfully');
+      _logger.d('Response body: ${response.body}');
+    } else {
+      _logger.d('Failed to send notification');
+      _logger.d('Response status: ${response.statusCode}');
+      _logger.d('Response body: ${response.body}');
+    }
+  }
 }

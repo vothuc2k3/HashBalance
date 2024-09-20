@@ -7,7 +7,8 @@ class NotificationModel {
   final String title;
   final String message;
   final String type;
-  final String targetUid;
+
+  final String? targetUid;
   final String senderUid;
   final String? postId;
   final String? communityId;
@@ -20,7 +21,7 @@ class NotificationModel {
     required this.title,
     required this.message,
     required this.type,
-    required this.targetUid,
+    this.targetUid,
     required this.senderUid,
     this.postId,
     this.communityId,
@@ -83,14 +84,12 @@ class NotificationModel {
       title: map['title'] as String,
       message: map['message'] as String,
       type: map['type'] as String,
-      targetUid: map['targetUid'] as String,
+      targetUid: map['targetUid'] != null ? map['targetUid'] as String : '',
       senderUid: map['senderUid'] as String,
       postId: map['postId'] != null ? map['postId'] as String : '',
-      communityId:
-          map['communityId'] != null ? map['communityId'] as String : '',
+      communityId: map['communityId'] != null ? map['communityId'] as String : '',
       commentId: map['commentId'] != null ? map['commentId'] as String : '',
-      conversationId:
-          map['conversationId'] != null ? map['conversationId'] as String : '',
+      conversationId: map['conversationId'] != null ? map['conversationId'] as String : '',
       createdAt: map['createdAt'] as Timestamp,
       isRead: map['isRead'] as bool,
     );

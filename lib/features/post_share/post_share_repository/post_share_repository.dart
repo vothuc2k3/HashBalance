@@ -4,7 +4,6 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/post_share_model.dart';
 
@@ -27,7 +26,7 @@ class PostShareRepository {
       _firestore.collection(FirebaseConstants.postsCollection);
 
   //SHARE A POST
-  FutureVoid sharePost(PostShare postShare) async {
+  Future<Either<Failures, void>> sharePost(PostShare postShare) async {
     try {
       await _postShares.doc(postShare.id).set(postShare.toMap());
       return right(null);

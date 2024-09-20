@@ -4,7 +4,6 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/comment_model.dart';
 import 'package:hash_balance/models/conbined_models/comment_data_model.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -25,7 +24,7 @@ class CommentRepository {
       _firestore.collection(FirebaseConstants.commentsCollection);
 
   //COMMENT ON A POST
-  FutureVoid comment(CommentModel comment) async {
+  Future<Either<Failures, void>> comment(CommentModel comment) async {
     try {
       await _comments.doc(comment.id).set(comment.toMap());
       return right(null);
@@ -36,7 +35,7 @@ class CommentRepository {
     }
   }
 
-  FutureVoid deleteComment(String commentId) async {
+  Future<Either<Failures, void>> deleteComment(String commentId) async {
     try {
       await _comments.doc(commentId).delete();
       return right(null);
@@ -47,7 +46,7 @@ class CommentRepository {
     }
   }
 
-  FutureVoid clearPostComments(String postId) async {
+  Future<Either<Failures, void>> clearPostComments(String postId) async {
     try {
       await _comments.where('postId', isEqualTo: postId).get().then((value) {
         for (var doc in value.docs) {
@@ -148,7 +147,7 @@ class CommentRepository {
     });
   }
 
-  FutureVoid clearCommentVotes(String commentId) async {
+  Future<Either<Failures, void>> clearCommentVotes(String commentId) async {
     try {
       await _comments
           .doc(commentId)

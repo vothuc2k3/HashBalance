@@ -1,6 +1,5 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/vote_post/repository/vote_post_repository.dart';
@@ -30,7 +29,7 @@ class UpvotePostController extends StateNotifier<bool> {
         _ref = ref,
         super(false);
 
-  FutureVoid votePost(Post post) async {
+  Future<Either<Failures, void>> votePost(Post post) async {
     try {
       final user = _ref.watch(userProvider)!;
       final postVoteModel = PostVote(
@@ -60,7 +59,7 @@ class DownvotePostController extends StateNotifier<bool> {
         _ref = ref,
         super(false);
 
-  FutureVoid votePost(Post post) async {
+  Future<Either<Failures, void>> votePost(Post post) async {
     try {
       final user = _ref.read(userProvider)!;
       final postVoteModel = PostVote(

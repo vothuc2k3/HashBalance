@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
@@ -23,6 +24,7 @@ class CommentContainer extends ConsumerStatefulWidget {
   final CommentModel comment;
   final Post post;
   final bool isReply;
+  final Function(String) navigateToTaggedUser;
 
   const CommentContainer({
     super.key,
@@ -30,6 +32,7 @@ class CommentContainer extends ConsumerStatefulWidget {
     required this.comment,
     required this.post,
     this.isReply = false,
+    required this.navigateToTaggedUser,
   });
 
   @override
@@ -53,7 +56,7 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
         context,
         MaterialPageRoute(
           builder: (context) =>
-              OtherUserProfileScreen(targetUser: widget.author),
+              OtherUserProfileScreen(targetUid: widget.author.uid),
         ),
       );
     }
@@ -296,10 +299,7 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
             ],
           ),
           const SizedBox(height: 4),
-          Text(
-            comment.content!,
-            style: const TextStyle(fontSize: 14),
-          ),
+          _buildCommentContent(comment),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -411,6 +411,65 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildCommentContent(CommentModel comment) {
+    List<TextSpan> spans = [];
+    final RegExp hashtagRegExp = RegExp(r'\B#\w\w+');
+
+    comment.content!.splitMapJoin(
+      hashtagRegExp,
+      onMatch: (Match match) {
+        String? hashtag = match.group(0);
+        if (hashtag != null && hashtag.startsWith('#')) {
+          String taggedName = hashtag.substring(1);
+
+          String? taggedUid = comment.mentionedUser!.entries
+              .firstWhere(
+                (entry) => entry.value == taggedName,
+                orElse: () => const MapEntry('', ''),
+              )
+              .key;
+          if (taggedUid.isNotEmpty) {
+            spans.add(
+              TextSpan(
+                text: hashtag,
+                style: const TextStyle(
+                  color: Colors.blue,
+                  fontWeight: FontWeight.bold,
+                ),
+                recognizer: TapGestureRecognizer()
+                  ..onTap = () {
+                    widget.navigateToTaggedUser(taggedUid);
+                  },
+              ),
+            );
+          } else {
+            spans.add(
+              TextSpan(
+                text: hashtag,
+                style: const TextStyle(fontSize: 14),
+              ),
+            );
+          }
+        }
+        return '';
+      },
+      onNonMatch: (String nonMatch) {
+        spans.add(TextSpan(
+          text: nonMatch,
+          style: const TextStyle(fontSize: 14),
+        ));
+        return '';
+      },
+    );
+
+    return RichText(
+      text: TextSpan(
+        children: spans,
+        style: const TextStyle(fontSize: 14),
+      ),
     );
   }
 }

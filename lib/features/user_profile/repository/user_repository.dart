@@ -9,7 +9,6 @@ import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/user_profile_data_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
@@ -56,7 +55,7 @@ class UserRepository {
       _firestore.collection(FirebaseConstants.communitiesCollection);
 
   //EDIT USER PROFLE
-  FutureVoid editUserProfile(
+  Future<Either<Failures, void>> editUserProfile(
     UserModel user,
     File? profileImage,
     File? bannerImage,
@@ -374,7 +373,7 @@ class UserRepository {
     }
   }
 
-  FutureVoid clearUserDeviceToken(String uid) async {
+  Future<Either<Failures, void>> clearUserDeviceToken(String uid) async {
     try {
       await _userDevices.doc(uid).delete();
       return right(null);

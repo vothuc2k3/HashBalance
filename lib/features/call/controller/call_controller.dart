@@ -1,11 +1,8 @@
-// ignore_for_file: unused_field
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
@@ -51,7 +48,7 @@ class CallController extends StateNotifier<CallDataModel?> {
         _ref = ref,
         super(null);
 
-  FutureString _fetchAgoraToken(String channelName) async {
+  Future<Either<Failures, String>> _fetchAgoraToken(String channelName) async {
     try {
       return await _callRepository.fetchAgoraToken(channelName);
     } catch (e) {
@@ -102,7 +99,7 @@ class CallController extends StateNotifier<CallDataModel?> {
     }
   }
 
-  FutureVoid acceptCall(Call call) async {
+  Future<Either<Failures, void>> acceptCall(Call call) async {
     try {
       final uids = getUids(call.callerUid, call.receiverUid);
       final result = await _fetchAgoraToken(uids);
@@ -116,7 +113,7 @@ class CallController extends StateNotifier<CallDataModel?> {
     }
   }
 
-  FutureVoid cancelCall(Call call) async {
+  Future<Either<Failures, void>> cancelCall(Call call) async {
     try {
       return await _callRepository.cancelCall(call);
     } catch (e) {
@@ -124,7 +121,7 @@ class CallController extends StateNotifier<CallDataModel?> {
     }
   }
 
-  FutureVoid declineCall(Call call) async {
+  Future<Either<Failures, void>> declineCall(Call call) async {
     try {
       return await _callRepository.declineCall(call);
     } catch (e) {
@@ -132,7 +129,7 @@ class CallController extends StateNotifier<CallDataModel?> {
     }
   }
 
-  FutureVoid endCall(Call call) async {
+  Future<Either<Failures, void>> endCall(Call call) async {
     try {
       return await _callRepository.endCall(call);
     } catch (e) {

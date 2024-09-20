@@ -270,7 +270,7 @@ class SearchCommunityDelegate extends SearchDelegate {
       context,
       MaterialPageRoute(
         builder: (context) => OtherUserProfileScreen(
-          targetUser: targetUser,
+          targetUid: targetUser.uid,
         ),
       ),
     );

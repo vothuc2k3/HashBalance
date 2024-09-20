@@ -9,7 +9,6 @@ import 'package:fpdart/fpdart.dart';
 
 import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -53,7 +52,7 @@ class AuthController extends StateNotifier<bool> {
   Stream<User?> get authStageChange => _authRepository.authStageChange;
 
   //SIGN THE USER IN WITH GOOGLE
-  FutureUserModel signInWithGoogle() async {
+  Future<Either<Failures, UserModel>> signInWithGoogle() async {
     state = true;
     try {
       final result = await _authRepository.signInWithGoogle();
@@ -71,7 +70,7 @@ class AuthController extends StateNotifier<bool> {
   }
 
   //SIGN UP WITH EMAIL AND PASSWORD
-  FutureUserModel signUpWithEmailAndPassword(
+  Future<Either<Failures, UserModel>> signUpWithEmailAndPassword(
     String email,
     String password,
     String name,
@@ -119,7 +118,7 @@ class AuthController extends StateNotifier<bool> {
   }
 
   //SIGN IN WITH EMAIL AND PASSWORD
-  FutureUserModel signInWithEmailAndPassword(
+  Future<Either<Failures, UserModel>> signInWithEmailAndPassword(
     String email,
     String password,
   ) async {
@@ -144,7 +143,7 @@ class AuthController extends StateNotifier<bool> {
     await _authRepository.signOut(_ref, context);
   }
 
-  FutureString changeUserPrivacy({
+  Future<Either<Failures, String>> changeUserPrivacy({
     required bool setting,
     required UserModel user,
   }) async {
@@ -173,7 +172,7 @@ class AuthController extends StateNotifier<bool> {
     return _authRepository.fetchUserData(uid);
   }
 
-  FutureVoid sendResetPasswordLink(String email) async {
+  Future<Either<Failures, void>> sendResetPasswordLink(String email) async {
     state = true;
     try {
       await _authRepository.sendResetPasswordLink(email);

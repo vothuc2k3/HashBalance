@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/message/repository/message_repository.dart';
@@ -97,7 +96,7 @@ class MessageController extends StateNotifier<bool> {
     );
   }
 
-  FutureVoid sendPrivateMessage(String text, String targetUid) async {
+  Future<Either<Failures, void>> sendPrivateMessage(String text, String targetUid) async {
     try {
       final currentUser = _ref.watch(userProvider)!;
       await _messageRepository.sendPrivateMessage(
@@ -151,7 +150,7 @@ class MessageController extends StateNotifier<bool> {
     );
   }
 
-  FutureVoid sendCommunityMessage(String text, String communityId) async {
+  Future<Either<Failures, void>> sendCommunityMessage(String text, String communityId) async {
     try {
       final currentUser = _ref.watch(userProvider)!;
       await _messageRepository.sendCommunityMessage(

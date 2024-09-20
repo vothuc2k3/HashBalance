@@ -2,6 +2,7 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 class CommentModel {
   final String id;
@@ -9,6 +10,7 @@ class CommentModel {
   final String postId;
   final String? parentCommentId;
   final String? content;
+  final Map<String, String>? mentionedUser;
   final Timestamp createdAt;
   CommentModel({
     required this.id,
@@ -16,6 +18,7 @@ class CommentModel {
     required this.postId,
     this.parentCommentId,
     this.content,
+    this.mentionedUser,
     required this.createdAt,
   });
 
@@ -25,6 +28,7 @@ class CommentModel {
     String? postId,
     String? parentCommentId,
     String? content,
+    Map<String, String>? mentionedUser,
     Timestamp? createdAt,
   }) {
     return CommentModel(
@@ -33,6 +37,7 @@ class CommentModel {
       postId: postId ?? this.postId,
       parentCommentId: parentCommentId ?? this.parentCommentId,
       content: content ?? this.content,
+      mentionedUser: mentionedUser ?? this.mentionedUser,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -44,6 +49,7 @@ class CommentModel {
       'postId': postId,
       'parentCommentId': parentCommentId,
       'content': content,
+      'mentionedUser': mentionedUser,
       'createdAt': createdAt,
     };
   }
@@ -55,8 +61,18 @@ class CommentModel {
       postId: map['postId'] as String,
       parentCommentId: map['parentCommentId'] != null
           ? map['parentCommentId'] as String
-          : null,
-      content: map['content'] != null ? map['content'] as String : null,
+          : '',
+      content: map['content'] != null ? map['content'] as String : '',
+      mentionedUser: map['mentionedUser'] != null
+          ? Map<String, String>.from(
+              (map['mentionedUser'] as Map).map(
+                (key, value) => MapEntry(
+                  key.toString(),
+                  value.toString(),
+                ),
+              ),
+            )
+          : {},
       createdAt: map['createdAt'] as Timestamp,
     );
   }
@@ -68,7 +84,7 @@ class CommentModel {
 
   @override
   String toString() {
-    return 'Comment(id: $id, uid: $uid, postId: $postId, parentCommentId: $parentCommentId, content: $content, createdAt: $createdAt)';
+    return 'CommentModel(id: $id, uid: $uid, postId: $postId, parentCommentId: $parentCommentId, content: $content, mentionedUser: $mentionedUser, createdAt: $createdAt)';
   }
 
   @override
@@ -80,6 +96,7 @@ class CommentModel {
         other.postId == postId &&
         other.parentCommentId == parentCommentId &&
         other.content == content &&
+        mapEquals(other.mentionedUser, mentionedUser) &&
         other.createdAt == createdAt;
   }
 
@@ -90,6 +107,7 @@ class CommentModel {
         postId.hashCode ^
         parentCommentId.hashCode ^
         content.hashCode ^
+        mentionedUser.hashCode ^
         createdAt.hashCode;
   }
 }

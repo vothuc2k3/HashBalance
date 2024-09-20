@@ -8,7 +8,6 @@ import 'package:nanoid/async.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:toastification/toastification.dart';
 
 void showToast(bool type, String message) {
@@ -39,7 +38,8 @@ void showToast(bool type, String message) {
   }
 }
 
-FutureBool checkExistingUserName(String name, String uid) async {
+Future<Either<Failures, bool>> checkExistingUserName(
+    String name, String uid) async {
   try {
     final result = await FirebaseFirestore.instance
         .collection('users')
@@ -59,7 +59,8 @@ FutureBool checkExistingUserName(String name, String uid) async {
   }
 }
 
-FutureBool checkExistingEmailWhenSignUp(String email) async {
+Future<Either<Failures, bool>> checkExistingEmailWhenSignUp(
+    String email) async {
   try {
     final result = await FirebaseFirestore.instance
         .collection('users')
@@ -77,7 +78,8 @@ FutureBool checkExistingEmailWhenSignUp(String email) async {
   }
 }
 
-FutureBool checkExistingUserNameWhenSignUp(String name) async {
+Future<Either<Failures, bool>> checkExistingUserNameWhenSignUp(
+    String name) async {
   try {
     final result = await FirebaseFirestore.instance
         .collection('users')

@@ -157,9 +157,8 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => OtherUserProfileScreen(
-              targetUser: widget.author,
-            ),
+            builder: (context) =>
+                OtherUserProfileScreen(targetUid: widget.author.uid),
           ),
         );
         break;

@@ -8,7 +8,6 @@ import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -33,7 +32,7 @@ class CallRepository {
       _firestore.collection(FirebaseConstants.usersCollection);
 
   //FETCH AGORA TOKEN
-  FutureString fetchAgoraToken(String channelName) async {
+  Future<Either<Failures, String>> fetchAgoraToken(String channelName) async {
     try {
       final response = await http.get(
         Uri.parse('${Constants.domain}/access_token?channelName=$channelName'),
@@ -49,7 +48,7 @@ class CallRepository {
     }
   }
 
-  FutureVoid initCall(Call call) async {
+  Future<Either<Failures, void>> initCall(Call call) async {
     try {
       await _calls.doc(call.id).set(call.toMap());
       return right(null);
@@ -58,7 +57,7 @@ class CallRepository {
     }
   }
 
-  FutureVoid acceptCall(Call call) async {
+  Future<Either<Failures, void>> acceptCall(Call call) async {
     try {
       await _calls.doc(call.id).update({
         'status': Constants.callStatusOngoing,
@@ -70,7 +69,7 @@ class CallRepository {
     }
   }
 
-  FutureVoid endCall(Call call) async {
+  Future<Either<Failures, void>> endCall(Call call) async {
     try {
       await _calls.doc(call.id).update({'status': Constants.callStatusEnded});
       return right(null);
@@ -79,7 +78,7 @@ class CallRepository {
     }
   }
 
-  FutureVoid cancelCall(Call call) async {
+  Future<Either<Failures, void>> cancelCall(Call call) async {
     try {
       await _calls.doc(call.id).update({'status': Constants.callStatusMissed});
       return right(null);
@@ -88,7 +87,7 @@ class CallRepository {
     }
   }
 
-  FutureVoid declineCall(Call call) async {
+  Future<Either<Failures, void>> declineCall(Call call) async {
     try {
       await _calls
           .doc(call.id)

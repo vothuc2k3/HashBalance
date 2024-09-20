@@ -8,6 +8,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/services/user_friends_service.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/call/controller/call_controller.dart';
 import 'package:hash_balance/features/call/screen/incoming_call_screen.dart';
@@ -17,10 +18,10 @@ import 'package:hash_balance/features/moderation/controller/moderation_controlle
 import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:multi_trigger_autocomplete/multi_trigger_autocomplete.dart';
 import 'package:toastification/toastification.dart';
 
 import 'package:hash_balance/core/constants/constants.dart';
-import 'package:hash_balance/core/hive_models/community/hive_community_model.dart';
 import 'package:hash_balance/core/hive_models/user_model/hive_user_model.dart';
 import 'package:hash_balance/core/services/device_token_service.dart';
 import 'package:hash_balance/core/splash/splash_screen.dart';
@@ -48,7 +49,6 @@ void main() async {
   await FirebaseMessaging.instance.getToken();
   await Hive.initFlutter();
   Hive.registerAdapter(HiveUserModelAdapter());
-  Hive.registerAdapter(HiveCommunityModelAdapter());
   await SentryFlutter.init(
     (options) {
       options.dsn =
@@ -81,6 +81,7 @@ class MyAppState extends ConsumerState<MyApp> {
   UserModel? userData;
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   late final DeviceTokenService _deviceTokenService;
+  late final UserFriendsService _userFriendsService;
 
   void _getUserData(User data) async {
     userData = await ref
@@ -89,6 +90,7 @@ class MyAppState extends ConsumerState<MyApp> {
         .first;
     ref.watch(userProvider.notifier).update((state) => userData);
     _deviceTokenService.updateUserDeviceToken(userData);
+    _userFriendsService.fetchFriendsByUser(userData);
   }
 
   void _setupLocalNotifications() async {
@@ -122,9 +124,8 @@ class MyAppState extends ConsumerState<MyApp> {
             final targetUser = await _fetchUserByUid(payloadData['uid']);
             navigatorKey.currentState?.pushReplacement(
               MaterialPageRoute(
-                builder: (context) => OtherUserProfileScreen(
-                  targetUser: targetUser,
-                ),
+                builder: (context) =>
+                    OtherUserProfileScreen(targetUid: targetUser.uid),
               ),
             );
             break;
@@ -139,9 +140,8 @@ class MyAppState extends ConsumerState<MyApp> {
 
             navigatorKey.currentState?.pushReplacement(
               MaterialPageRoute(
-                builder: (context) => OtherUserProfileScreen(
-                  targetUser: targetUser,
-                ),
+                builder: (context) =>
+                    OtherUserProfileScreen(targetUid: targetUser.uid),
               ),
             );
             break;
@@ -213,9 +213,8 @@ class MyAppState extends ConsumerState<MyApp> {
             final targetUser = await _fetchUserByUid(payloadData['uid']);
             navigatorKey.currentState?.pushReplacement(
               MaterialPageRoute(
-                builder: (context) => OtherUserProfileScreen(
-                  targetUser: targetUser,
-                ),
+                builder: (context) =>
+                    OtherUserProfileScreen(targetUid: targetUser.uid),
               ),
             );
             break;
@@ -289,29 +288,6 @@ class MyAppState extends ConsumerState<MyApp> {
     );
   }
 
-  // Future<void> _handleIncomingCall(RemoteMessage message) async {
-  //   const AndroidNotificationDetails androidPlatformChannelSpecifics =
-  //       AndroidNotificationDetails(
-  //     'call_channel',
-  //     'Call Notifications',
-  //     channelDescription: 'Channel for call notifications',
-  //     importance: Importance.max,
-  //     priority: Priority.high,
-  //     fullScreenIntent: true, // Hiển thị thông báo full-screen cho cuộc gọi
-  //   );
-
-  //   const NotificationDetails platformChannelSpecifics =
-  //       NotificationDetails(android: androidPlatformChannelSpecifics);
-
-  //   await flutterLocalNotificationsPlugin.show(
-  //     0,
-  //     'Incoming Call',
-  //     'You have an incoming call from ${message.data['caller_name']}',
-  //     platformChannelSpecifics,
-  //     payload: jsonEncode(message.data),
-  //   );
-  // }
-
   @override
   void initState() {
     super.initState();
@@ -325,7 +301,9 @@ class MyAppState extends ConsumerState<MyApp> {
         }
       },
     );
+
     _deviceTokenService = DeviceTokenService();
+    _userFriendsService = UserFriendsService();
   }
 
   @override
@@ -334,34 +312,42 @@ class MyAppState extends ConsumerState<MyApp> {
           data: (user) {
             if (user != null) {
               _getUserData(user);
-              return MaterialApp(
-                navigatorKey: navigatorKey,
-                debugShowCheckedModeBanner: false,
-                title: 'Hash Balance',
-                theme: Pallete.darkModeAppTheme,
-                home: ref.watch(userProvider) != null
-                    ? const HomeScreen()
-                    : const SplashScreen(),
+              return Portal(
+                child: MaterialApp(
+                  navigatorKey: navigatorKey,
+                  debugShowCheckedModeBanner: false,
+                  title: 'Hash Balance',
+                  theme: Pallete.darkModeAppTheme,
+                  home: ref.watch(userProvider) != null
+                      ? const HomeScreen()
+                      : const SplashScreen(),
+                ),
               );
             } else {
-              return MaterialApp(
-                navigatorKey: navigatorKey,
-                debugShowCheckedModeBanner: false,
-                title: 'Hash Balance',
-                theme: Pallete.darkModeAppTheme,
-                home: const AuthScreen(),
+              return Portal(
+                child: MaterialApp(
+                  navigatorKey: navigatorKey,
+                  debugShowCheckedModeBanner: false,
+                  title: 'Hash Balance',
+                  theme: Pallete.darkModeAppTheme,
+                  home: const AuthScreen(),
+                ),
               );
             }
           },
-          error: (error, stackTrace) => MaterialApp(
-            debugShowCheckedModeBanner: false,
-            title: 'Hash Balance',
-            home: ErrorText(error: error.toString()),
+          error: (error, stackTrace) => Portal(
+            child: MaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: 'Hash Balance',
+              home: ErrorText(error: error.toString()),
+            ),
           ),
-          loading: () => const MaterialApp(
-            debugShowCheckedModeBanner: false,
-            title: 'Hash Balance',
-            home: SplashScreen(),
+          loading: () => const Portal(
+            child: MaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: 'Hash Balance',
+              home: SplashScreen(),
+            ),
           ),
         );
   }

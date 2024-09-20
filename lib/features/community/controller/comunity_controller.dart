@@ -7,7 +7,6 @@ import 'package:fpdart/fpdart.dart';
 
 import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/repository/community_repository.dart';
@@ -90,7 +89,7 @@ class CommunityController extends StateNotifier<bool> {
         super(false);
 
   //CREATE A WHOLE NEW COMMUNITY
-  FutureString createCommunity(
+  Future<Either<Failures, String>> createCommunity(
     BuildContext context,
     String name,
     String type,
@@ -135,7 +134,7 @@ class CommunityController extends StateNotifier<bool> {
   }
 
   //LET USER JOIN COMMUNITY
-  FutureString joinCommunity(
+  Future<Either<Failures, String>> joinCommunity(
     String uid,
     String communityId,
   ) async {
@@ -166,7 +165,7 @@ class CommunityController extends StateNotifier<bool> {
   }
 
   //JOIN AS MOD
-  FutureString joinCommunityAsModerator(
+  Future<Either<Failures, String>> joinCommunityAsModerator(
     String uid,
     String communityId,
   ) async {
@@ -194,7 +193,7 @@ class CommunityController extends StateNotifier<bool> {
   }
 
   //LET USER LEAVE COMMUNITY
-  FutureString leaveCommunity(
+  Future<Either<Failures, String>> leaveCommunity(
     String uid,
     String communityId,
   ) async {

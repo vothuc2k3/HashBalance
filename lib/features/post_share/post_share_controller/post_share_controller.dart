@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/post_share/post_share_repository/post_share_repository.dart';
@@ -34,7 +33,7 @@ class PostShareController extends StateNotifier<bool> {
         super(false);
 
   //SHARE A POST
-  FutureVoid sharePost({
+  Future<Either<Failures, void>> sharePost({
     required String postId,
     required String? content,
   }) async {

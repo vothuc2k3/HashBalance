@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/friend/repository/friend_repository.dart';
@@ -28,17 +27,17 @@ final fetchFriendsProvider = StreamProvider.family((ref, String uid) {
 });
 
 final getFollowingStatusProvider =
-    StreamProvider.family((ref, UserModel targetUser) {
+    StreamProvider.family((ref, String targetUid) {
   return ref
       .watch(friendControllerProvider.notifier)
-      .getFollowingStatus(targetUser);
+      .getFollowingStatus(targetUid);
 });
 
 final getFriendshipStatusProvider =
-    StreamProvider.family((ref, UserModel targetUser) {
+    StreamProvider.family((ref, String targetUid) {
   return ref
       .watch(friendControllerProvider.notifier)
-      .getFriendshipStatus(targetUser);
+      .getFriendshipStatus(targetUid);
 });
 
 final getFriendRequestStatusProvider =
@@ -80,7 +79,7 @@ class FriendController extends StateNotifier<bool> {
         super(false);
 
   //SEND FRIEND REQUEST
-  FutureVoid sendFriendRequest(UserModel targetUser) async {
+  Future<Either<Failures, void>> sendFriendRequest(UserModel targetUser) async {
     try {
       final sender = _ref.watch(userProvider)!;
 
@@ -129,7 +128,7 @@ class FriendController extends StateNotifier<bool> {
   }
 
   //CANCEL FRIEND REQUEST
-  FutureVoid cancelFriendRequest(String requestId) async {
+  Future<Either<Failures, void>> cancelFriendRequest(String requestId) async {
     try {
       await _friendRepository.cancelFriendRequest(requestId);
       return right(null);
@@ -152,7 +151,7 @@ class FriendController extends StateNotifier<bool> {
   }
 
   //ACCEPT FRIEND REQUEST
-  FutureVoid acceptFriendRequest(UserModel targetUser) async {
+  Future<Either<Failures, void>> acceptFriendRequest(UserModel targetUser) async {
     try {
       final currentUser = _ref.watch(userProvider);
       await _friendRepository.acceptFriendRequest(
@@ -197,7 +196,7 @@ class FriendController extends StateNotifier<bool> {
     }
   }
 
-  FutureVoid declineFriendRequest(UserModel targetUser) async {
+  Future<Either<Failures, void>> declineFriendRequest(UserModel targetUser) async {
     try {
       final currentUser = _ref.watch(userProvider);
       await _friendRepository
@@ -210,7 +209,7 @@ class FriendController extends StateNotifier<bool> {
     }
   }
 
-  FutureVoid unfriend(UserModel targetUser) async {
+  Future<Either<Failures, void>> unfriend(UserModel targetUser) async {
     try {
       final currentUser = _ref.watch(userProvider);
       await _friendRepository
@@ -223,11 +222,11 @@ class FriendController extends StateNotifier<bool> {
     }
   }
 
-  Stream<bool> getFriendshipStatus(UserModel targetUser) {
+  Stream<bool> getFriendshipStatus(String targetUid) {
     try {
       final currentUser = _ref.read(userProvider);
       return _friendRepository
-          .getFriendshipStatus(getUids(currentUser!.uid, targetUser.uid));
+          .getFriendshipStatus(getUids(currentUser!.uid, targetUid));
     } on FirebaseException catch (e) {
       throw Failures(e.message!);
     } catch (e) {
@@ -239,7 +238,7 @@ class FriendController extends StateNotifier<bool> {
     return _friendRepository.fetchFriendsByUser(uid);
   }
 
-  FutureVoid followUser(String targetUid) async {
+  Future<Either<Failures, void>> followUser(String targetUid) async {
     try {
       final currentUser = _ref.read(userProvider)!;
       final followerModel = Follower(
@@ -286,7 +285,7 @@ class FriendController extends StateNotifier<bool> {
     }
   }
 
-  FutureVoid unfollowUser(String targetUid) async {
+  Future<Either<Failures, void>> unfollowUser(String targetUid) async {
     try {
       final uid = _ref.read(userProvider)!.uid;
       await _friendRepository.unfollowUser(uid, targetUid);
@@ -296,9 +295,9 @@ class FriendController extends StateNotifier<bool> {
     }
   }
 
-  Stream<bool> getFollowingStatus(UserModel targetUser) {
+  Stream<bool> getFollowingStatus(String targetUid) {
     final uid = _ref.read(userProvider)!.uid;
-    return _friendRepository.getFollowingStatus(uid, targetUser.uid);
+    return _friendRepository.getFollowingStatus(uid, targetUid);
   }
 
   Stream<List<FriendRequesterDataModel>> fetchFriendRequestsByUser(String uid) {

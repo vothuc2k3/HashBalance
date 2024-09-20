@@ -8,7 +8,6 @@ import 'package:fpdart/fpdart.dart';
 
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
@@ -58,7 +57,7 @@ class PostController extends StateNotifier<bool> {
         super(false);
 
   //CREATE A NEW POST
-  FutureVoid createPost(
+  Future<Either<Failures, void>> createPost(
     Community community,
     File? image,
     File? video,
@@ -119,7 +118,7 @@ class PostController extends StateNotifier<bool> {
         post, currentUser.uid);
   }
 
-  FutureVoid deletePost(Post post) async {
+  Future<Either<Failures, void>> deletePost(Post post) async {
     state = true;
     try {
       final user = _ref.watch(userProvider)!;
@@ -183,7 +182,7 @@ class PostController extends StateNotifier<bool> {
     }
   }
 
-  FutureVoid updatePostStatus(Post post, String status) async {
+  Future<Either<Failures, void>> updatePostStatus(Post post, String status) async {
     return await _postRepository.updatePostStatus(post, status);
   }
 }

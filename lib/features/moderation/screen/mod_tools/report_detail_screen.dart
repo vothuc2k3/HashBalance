@@ -35,7 +35,8 @@ class ReportDetailScreenState extends ConsumerState<ReportDetailScreen> {
       Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => OtherUserProfileScreen(targetUser: postOwner),
+            builder: (context) =>
+                OtherUserProfileScreen(targetUid: postOwner.uid),
           ));
     }
   }

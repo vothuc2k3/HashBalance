@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/invitation/repository/invitation_repository.dart';
@@ -28,7 +27,7 @@ class InvitationController {
   })  : _ref = ref,
         _invitationRepository = invitationRepository;
 
-  FutureVoid addInvitation(
+  Future<Either<Failures, void>> addInvitation(
     String receiverUid,
     String type,
     String communityId,

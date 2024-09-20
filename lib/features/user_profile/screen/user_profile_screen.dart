@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/theme/controller/theme_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/widget/user_timeline_widget.dart';
 import 'package:image_picker/image_picker.dart';
@@ -46,7 +47,8 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => OtherUserProfileScreen(targetUser: friend),
+        builder: (context) =>
+            OtherUserProfileScreen(targetUid: friend.uid),
       ),
     );
   }
@@ -1140,7 +1142,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
               style: const TextStyle(color: Colors.red),
             ),
           ),
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(child: Loading()),
         );
   }
 }

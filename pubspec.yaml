@@ -80,10 +80,11 @@ dependencies:
   logger: ^2.4.0
   just_audio: ^0.9.40
   rive: ^0.13.13
+  multi_trigger_autocomplete: ^1.0.0
 
 dependency_overrides:
   lints: ^3.0.0
-  
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -93,8 +94,7 @@ dev_dependencies:
   build_runner: ^2.4.12
   custom_lint: ^0.6.5
   riverpod_lint: ^2.3.12
-  hive_generator: ^2.0.1 
-
+  hive_generator: ^2.0.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -118,7 +118,6 @@ flutter:
     - assets/audio/ringtone.mp3
     - assets/images/Login_character/
 
-    
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 

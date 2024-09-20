@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/notification/repository/notification_repository.dart';
 import 'package:hash_balance/models/notification_model.dart';
@@ -38,7 +37,7 @@ class NotificationController extends StateNotifier<bool> {
         _ref = ref,
         super(false);
 
-  FutureVoid addNotification(
+  Future<Either<Failures, void>> addNotification(
     String targetUid,
     NotificationModel notification,
   ) async {

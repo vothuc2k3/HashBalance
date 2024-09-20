@@ -3,7 +3,6 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/invitation_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -25,7 +24,7 @@ class InvitationRepository {
       _firestore.collection(FirebaseConstants.invitationCollection);
 
   //ADD A NEW INVITATION
-  FutureVoid addInvitation(Invitation invitation) async {
+  Future<Either<Failures, void>> addInvitation(Invitation invitation) async {
     try {
       // Check if an invitation with the same sender, receiver, and type already exists
       final querySnapshot = await _invitations

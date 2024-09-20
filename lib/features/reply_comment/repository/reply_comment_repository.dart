@@ -4,7 +4,6 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/comment_model.dart';
 
 final replyCommentRepositoryProvider = Provider((ref) {
@@ -24,7 +23,7 @@ class ReplyCommentRepository {
       _firestore.collection(FirebaseConstants.commentsCollection);
 
 //COMMENT ON A POST
-  FutureVoid reply(CommentModel comment) async {
+  Future<Either<Failures, void>> reply(CommentModel comment) async {
     try {
       await _comments.doc(comment.id).set(comment.toMap());
       return right(null);

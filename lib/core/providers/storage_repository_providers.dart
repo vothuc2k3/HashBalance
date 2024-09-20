@@ -4,7 +4,6 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 
 final storageRepositoryProvider = Provider(
@@ -19,7 +18,7 @@ class StorageRepository {
   StorageRepository({required FirebaseStorage firebaseStorage})
       : _firebaseStorage = firebaseStorage;
 
-  FutureString storeFile({
+  Future<Either<Failures, String>> storeFile({
     required String path,
     required String id,
     required File? file,
@@ -38,7 +37,7 @@ class StorageRepository {
     }
   }
 
-  FutureVoid deleteFile({
+  Future<Either<Failures, void>> deleteFile({
     required String path,
   }) async {
     try {

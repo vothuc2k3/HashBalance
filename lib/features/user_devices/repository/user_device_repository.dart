@@ -4,7 +4,6 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/user_devices_model.dart';
 
 final userDeviceRepositoryProvider = Provider((ref) {
@@ -21,7 +20,7 @@ class UserDeviceRepository {
   }) : _firestore = firestore;
 
   //ADD USER DEVICE
-  FutureVoid addUserDevice(UserDevices userDevice) async {
+  Future<Either<Failures, void>> addUserDevice(UserDevices userDevice) async {
     try {
       await _userDevices.doc(userDevice.uid).set(userDevice.toMap());
       return right(null);

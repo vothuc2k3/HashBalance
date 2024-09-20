@@ -7,7 +7,6 @@ import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/post_model.dart';
@@ -44,7 +43,7 @@ class PostRepository {
       _firestore.collection(FirebaseConstants.postShareCollection);
 
   //CREATE A NEW POST
-  FutureVoid createPost(
+  Future<Either<Failures, void>> createPost(
     Post post,
     File? image,
     File? video,
@@ -184,7 +183,7 @@ class PostRepository {
   }
 
   //DELETE THE POST
-  FutureVoid deletePost(Post post, String uid) async {
+  Future<Either<Failures, void>> deletePost(Post post, String uid) async {
     final batch = _firestore.batch();
     try {
       final postVotes = await _posts
@@ -262,7 +261,7 @@ class PostRepository {
     return querySnapshot.size;
   }
 
-  FutureVoid updatePostStatus(Post post, String status) async {
+  Future<Either<Failures, void>> updatePostStatus(Post post, String status) async {
     try {
       await _posts.doc(post.id).update({
         'status': status,

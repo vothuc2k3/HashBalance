@@ -12,7 +12,6 @@ import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/providers/logger_provider.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -51,7 +50,7 @@ class AuthRepository {
   }
 
   //SIGN THE USER IN WITH GOOGLE
-  FutureUserModel signInWithGoogle() async {
+  Future<Either<Failures, UserModel>> signInWithGoogle() async {
     try {
       final googleUser = await _googleSignIn.signIn();
       final googleAuth = await googleUser?.authentication;
@@ -92,7 +91,7 @@ class AuthRepository {
   }
 
   //SIGN UP WITH EMAIL AND PASSWORD
-  FutureUserModel signUpWithEmailAndPassword(
+  Future<Either<Failures, UserModel>> signUpWithEmailAndPassword(
       UserModel newUser, String password) async {
     try {
       final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
@@ -116,7 +115,7 @@ class AuthRepository {
   }
 
   //SIGN THE USER IN WITH EMAIL AND PASSWORD
-  FutureUserModel signInWithEmailAndPassword(
+  Future<Either<Failures, UserModel>> signInWithEmailAndPassword(
       String email, String password) async {
     try {
       final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
@@ -150,7 +149,7 @@ class AuthRepository {
   }
 
   //CHANGE USER PRIVACY SETTING
-  FutureVoid changeUserPrivacy({
+  Future<Either<Failures, void>> changeUserPrivacy({
     required bool setting,
     required UserModel user,
   }) async {
@@ -168,7 +167,7 @@ class AuthRepository {
   }
 
   //SEND RESET PASSWORD LINK
-  FutureVoid sendResetPasswordLink(String email) async {
+  Future<Either<Failures, void>> sendResetPasswordLink(String email) async {
     try {
       await _firebaseAuth.sendPasswordResetEmail(email: email);
       return right(null);

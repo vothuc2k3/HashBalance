@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/type_defs.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/features/user_devices/repository/user_device_repository.dart';
 import 'package:hash_balance/models/user_devices_model.dart';
 
@@ -20,7 +21,7 @@ class UserDeviceController extends StateNotifier<bool> {
         super(false);
 
   //ADD USER DEVICE
-  FutureVoid addUserDevice(UserDevices userDevice) async {
+  Future<Either<Failures, void>> addUserDevice(UserDevices userDevice) async {
     state = true;
     final result = await _userDeviceRepository.addUserDevice(userDevice);
     state = false;

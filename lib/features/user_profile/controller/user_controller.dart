@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/type_defs.dart';
 import 'package:hash_balance/features/user_profile/repository/user_repository.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/conbined_models/user_profile_data_model.dart';
@@ -37,7 +36,7 @@ class UserController extends StateNotifier<bool> {
   })  : _userRepository = userRepository,
         super(false);
 
-  FutureString editUserProfile(
+  Future<Either<Failures, String>> editUserProfile(
     UserModel user,
     File? profileImage,
     File? bannerImage,
@@ -147,7 +146,7 @@ class UserController extends StateNotifier<bool> {
     return _userRepository.getUserPosts(user);
   }
 
-  FutureVoid clearUserDeviceToken(String uid) async {
+  Future<Either<Failures, void>> clearUserDeviceToken(String uid) async {
     return await _userRepository.clearUserDeviceToken(uid);
   }
 }

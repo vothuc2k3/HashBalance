@@ -266,7 +266,9 @@ Widget _buildNotificationMenu(List<NotificationModel> notifs) {
               )
             ];
           }
-          return notifs.map((NotificationModel notification) {
+          return notifs.where((NotificationModel notification) {
+            return notification.isRead == false;
+          }).map((NotificationModel notification) {
             return PopupMenuItem<String>(
               value: notification.title,
               child: ListTile(

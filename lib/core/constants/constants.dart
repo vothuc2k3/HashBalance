@@ -4,6 +4,7 @@ import 'package:hash_balance/features/message/screen/message_list_screen.dart';
 import 'package:hash_balance/features/newsfeed/screen/newsfeed_screen.dart';
 import 'package:hash_balance/features/notification/screen/notification_screen.dart';
 import 'package:hash_balance/features/post/screen/create_post_screen.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 class Constants {
   static const logoPath = 'assets/images/logo.png';
@@ -62,6 +63,7 @@ class Constants {
   static const String moderatorInvitationTitle =
       'You are invited as a moderator!';
   static const String incomingCallTitle = 'Incoming Call!';
+  static const String commentMentionTitle = 'Comment Mentioned!';
 
   //MARK: - Notification Types
   static const String friendRequestType = 'friend_request';
@@ -74,6 +76,7 @@ class Constants {
   static const String userReportType = 'user_report';
   static const String postReportType = 'post_report';
   static const String commentReportType = 'comment_report';
+  static const String commentMentionType = 'comment_mention';
 
   //MARK: - Call Status
   static const String callStatusDialling = 'dialling';
@@ -113,7 +116,13 @@ class Constants {
     return '$name has followed you!';
   }
 
+  static String getCommentMentionContent(String name) {
+    return '$name has mentioned you in a comment!';
+  }
+
   static String agoraAppId = 'a9942d0368fc4cdf9e59df9df19899c9';
 
   static String domain = 'https://web-production-f331.up.railway.app';
+
+  static List<UserModel>? friends;
 }
