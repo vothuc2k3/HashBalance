@@ -180,7 +180,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         builder: (context) => const SplashScreen(),
       ),
     );
-    String? membershipStatus;
     final result = await ref
         .watch(moderationControllerProvider.notifier)
         .fetchMembershipStatus(getMembershipId(uid, community.id));
@@ -189,13 +188,11 @@ class _PostContainerState extends ConsumerState<PostContainer> {
       (l) {
         showToast(false, 'Unexpected error happened...');
       },
-      (r) async {
-        membershipStatus = r;
+      (r) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => CommunityScreen(
-              memberStatus: membershipStatus!,
               communityId: community.id,
             ),
           ),

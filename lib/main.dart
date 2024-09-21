@@ -169,7 +169,6 @@ class MyAppState extends ConsumerState<MyApp> {
                 builder: (context) => const SplashScreen(),
               ),
             );
-            String? membershipStatus;
             final currentUser = ref.read(userProvider)!;
             final result = await ref
                 .watch(moderationControllerProvider.notifier)
@@ -186,7 +185,6 @@ class MyAppState extends ConsumerState<MyApp> {
                 Navigator.pop(context);
               },
               (r) async {
-                membershipStatus = r;
                 final community = await ref
                     .read(communityControllerProvider.notifier)
                     .fetchCommunityById(communityId);
@@ -195,7 +193,6 @@ class MyAppState extends ConsumerState<MyApp> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => CommunityScreen(
-                        memberStatus: membershipStatus!,
                         communityId: community.id,
                       ),
                     ),

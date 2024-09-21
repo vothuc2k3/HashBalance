@@ -12,9 +12,16 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/community/repository/community_repository.dart';
 import 'package:hash_balance/models/community_membership_model.dart';
 import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/conbined_models/current_user_role_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 
+final currentUserRoleProvider = StreamProvider.family((ref, String communityId) {
+  final uid = ref.read(userProvider)!.uid;
+  return ref.watch(communityControllerProvider.notifier).getCurrentUserRole(communityId, uid);
+});
+
 final communityPostsProvider = StreamProvider.family((ref, String communityId) {
+
   return ref
       .watch(communityControllerProvider.notifier)
       .fetchCommunityPosts(communityId);
@@ -255,5 +262,12 @@ class CommunityController extends StateNotifier<bool> {
 
   Stream<List<Community>> fetchCommunities() {
     return _communityRepository.fetchCommunities();
+  }
+
+  Stream<CurrentUserRoleModel?> getCurrentUserRole(
+    String communityId,
+    String uid,
+  ) {
+    return _communityRepository.getCurrentUserRole(communityId, uid);
   }
 }

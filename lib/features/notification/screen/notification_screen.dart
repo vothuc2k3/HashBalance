@@ -39,7 +39,6 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
         builder: (context) => const SplashScreen(),
       ),
     );
-    String? membershipStatus;
     Community? community;
     final result = await ref
         .watch(moderationControllerProvider.notifier)
@@ -50,14 +49,12 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
         showToast(false, 'Unexpected error happened...');
       },
       (r) async {
-        membershipStatus = r;
         community = await _fetchCommunityById(communityId);
         if (mounted && community != null) {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
               builder: (context) => CommunityScreen(
-                memberStatus: membershipStatus!,
                 communityId: community!.id,
               ),
             ),
@@ -81,7 +78,7 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
         MaterialPageRoute(
           builder: (context) =>
               OtherUserProfileScreen(targetUid: targetUser.uid),
-          ),
+        ),
       );
     }
   }

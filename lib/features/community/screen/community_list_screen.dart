@@ -38,9 +38,8 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen>
         builder: (context) => const SplashScreen(),
       ),
     );
-    String? membershipStatus;
     final result = await ref
-        .watch(moderationControllerProvider.notifier)
+        .read(moderationControllerProvider.notifier)
         .fetchMembershipStatus(getMembershipId(uid, community.id));
 
     result.fold(
@@ -48,12 +47,10 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen>
         showToast(false, 'Unexpected error happened...');
       },
       (r) {
-        membershipStatus = r;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => CommunityScreen(
-              memberStatus: membershipStatus!,
               communityId: community.id,
             ),
           ),

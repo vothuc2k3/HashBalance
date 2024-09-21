@@ -241,7 +241,6 @@ class SearchCommunityDelegate extends SearchDelegate {
         builder: (context) => const SplashScreen(),
       ),
     );
-    String? membershipStatus;
     final result = await ref
         .watch(moderationControllerProvider.notifier)
         .fetchMembershipStatus(getMembershipId(uid, community.id));
@@ -251,12 +250,10 @@ class SearchCommunityDelegate extends SearchDelegate {
         showToast(false, 'Unexpected error happened...');
       },
       (r) {
-        membershipStatus = r;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => CommunityScreen(
-              memberStatus: membershipStatus!,
               communityId: community.id,
             ),
           ),

@@ -5,8 +5,10 @@ import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
+import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/models/community_membership_model.dart';
 import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/conbined_models/current_user_role_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -90,7 +92,8 @@ class CommunityRepository {
   }
 
   //LET USER JOIN COMMUNITY
-  Future<Either<Failures, void>> joinCommunity(CommunityMembership membership) async {
+  Future<Either<Failures, void>> joinCommunity(
+      CommunityMembership membership) async {
     try {
       final membershipDoc = await _communityMembership.doc(membership.id).get();
       if (membershipDoc.exists) {
@@ -284,5 +287,23 @@ class CommunityRepository {
         return communities;
       },
     );
+  }
+
+  Stream<CurrentUserRoleModel?> getCurrentUserRole(
+      String communityId, String uid) {
+    final uids = getMembershipId(uid, communityId);
+    return _communityMembership.doc(uids).snapshots().map((event) {
+      if (event.exists) {
+        final data = event.data() as Map<String, dynamic>;
+        return CurrentUserRoleModel(
+          uid: uid,
+          communityId: communityId,
+          role: data['role'] as String,
+          status: data['status'] as String,
+        );
+      } else {
+        return null;
+      }
+    });
   }
 }

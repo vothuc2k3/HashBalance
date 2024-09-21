@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
@@ -16,14 +17,17 @@ class SettingScreen extends ConsumerStatefulWidget {
 
 class SettingScreenState extends ConsumerState<SettingScreen> {
   void _signOut() async {
-    Logger().d('REACHED HERE');
-
-    // Đảm bảo signOut được thực hiện trước
     await ref.watch(authControllerProvider.notifier).signOut(context);
-    Logger().d('SIGNED OUT SUCCESSFULLY');
   }
 
-  void _testButton() async {}
+  void _testButton() async {
+    final doc = await FirebaseFirestore.instance
+        .collection('community_memberships')
+        .doc('RjKiN4mr4TWKgchG469MNe7PGMf2JjNSuckltp2FV7hrkMNrz')
+        .get();
+    final data = doc.data() as Map<String, dynamic>;
+    Logger().d(data['role'] as String);
+  }
 
   @override
   Widget build(BuildContext context) {
