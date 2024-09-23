@@ -40,10 +40,12 @@ class NotificationRepository {
   }
 
   //GET ALL THE NOTIFICATION
-  Stream<List<NotificationModel>?> getNotificationByUid(String uid) {
+  Stream<List<NotificationModel>?> getInitialNotification(String uid) {
     return _users
         .doc(uid)
         .collection(FirebaseConstants.notificationCollection)
+        .orderBy('createdAt', descending: true)
+        .limit(10)
         .snapshots()
         .map(
       (event) {
@@ -82,5 +84,47 @@ class NotificationRepository {
         .collection(FirebaseConstants.notificationCollection)
         .doc(notifId)
         .delete();
+  }
+
+  Future<Either<Failures, void>> clearAllNotifications(String uid) async {
+    try {
+      await _users
+          .doc(uid)
+          .collection(FirebaseConstants.notificationCollection)
+          .get()
+          .then((querySnapshot) {
+        for (var doc in querySnapshot.docs) {
+          doc.reference.delete();
+        }
+      });
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  Stream<int> getUnreadNotificationCount(String uid) {
+    return _users
+        .doc(uid)
+        .collection(FirebaseConstants.notificationCollection)
+        .where('isRead', isEqualTo: false)
+        .snapshots()
+        .map((event) => event.docs.length);
+  }
+
+  Future<List<NotificationModel>?> loadMoreNotifications(
+      String uid, NotificationModel lastNotification) async {
+    final query = await _users
+        .doc(uid)
+        .collection(FirebaseConstants.notificationCollection)
+        .orderBy('createdAt', descending: true)
+        .startAfter([lastNotification.createdAt])
+        .limit(10)
+        .get();
+    return query.docs
+        .map((doc) => NotificationModel.fromMap(doc.data()))
+        .toList();
   }
 }

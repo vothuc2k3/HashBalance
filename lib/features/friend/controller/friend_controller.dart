@@ -15,6 +15,22 @@ import 'package:hash_balance/models/friendship_model.dart';
 import 'package:hash_balance/models/friendship_request_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:tuple/tuple.dart';
+
+final getBlockStatusProvider = StreamProvider.family((ref, String blockId) {
+  return ref
+      .watch(friendControllerProvider.notifier)
+      .getBlockStatus(blockId: blockId);
+});
+
+final getCombinedStatusProvider = StreamProvider.family((ref, Tuple3 data) {
+  return ref.watch(friendControllerProvider.notifier).getCombinedStatus(
+        blockId: data.item1,
+        currentUid: data.item2,
+        targetUid: data.item3,
+        friendshipUids: data.item1,
+      );
+});
 
 final fetchFriendRequestsProvider = StreamProvider.family((ref, String uid) {
   return ref
@@ -151,7 +167,8 @@ class FriendController extends StateNotifier<bool> {
   }
 
   //ACCEPT FRIEND REQUEST
-  Future<Either<Failures, void>> acceptFriendRequest(UserModel targetUser) async {
+  Future<Either<Failures, void>> acceptFriendRequest(
+      UserModel targetUser) async {
     try {
       final currentUser = _ref.watch(userProvider);
       await _friendRepository.acceptFriendRequest(
@@ -196,7 +213,8 @@ class FriendController extends StateNotifier<bool> {
     }
   }
 
-  Future<Either<Failures, void>> declineFriendRequest(UserModel targetUser) async {
+  Future<Either<Failures, void>> declineFriendRequest(
+      UserModel targetUser) async {
     try {
       final currentUser = _ref.watch(userProvider);
       await _friendRepository
@@ -302,5 +320,23 @@ class FriendController extends StateNotifier<bool> {
 
   Stream<List<FriendRequesterDataModel>> fetchFriendRequestsByUser(String uid) {
     return _friendRepository.fetchFriendRequestsByUser(uid);
+  }
+
+  Stream<bool> getBlockStatus({required String blockId}) {
+    return _friendRepository.getBlockStatus(blockId: blockId);
+  }
+
+  Stream<Tuple3<bool, bool, bool>> getCombinedStatus({
+    required String blockId,
+    required String currentUid,
+    required String targetUid,
+    required String friendshipUids,
+  }) {
+    return _friendRepository.getCombinedStatus(
+      blockId: blockId,
+      currentUid: currentUid,
+      targetUid: targetUid,
+      friendshipUids: friendshipUids,
+    );
   }
 }

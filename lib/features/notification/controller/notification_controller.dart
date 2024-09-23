@@ -5,6 +5,14 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/notification/repository/notification_repository.dart';
 import 'package:hash_balance/models/notification_model.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+final getUnreadNotifCountProvider =
+    StreamProvider.family.autoDispose((ref, String uid) {
+  return ref
+      .watch(notificationControllerProvider.notifier)
+      .getUnreadNotificationCount(uid);
+});
 
 final deleteNotifProvider =
     FutureProvider.family.autoDispose((ref, String notifId) {
@@ -13,10 +21,11 @@ final deleteNotifProvider =
       .deleteNotif(notifId);
 });
 
-final getNotifsProvider = StreamProvider.family.autoDispose((ref, String uid) {
+final getInitialNotifsProvider =
+    StreamProvider.family.autoDispose((ref, String uid) {
   return ref
       .watch(notificationControllerProvider.notifier)
-      .getNotificationByUid(uid);
+      .getInitialNotification(uid);
 });
 
 final notificationControllerProvider =
@@ -52,17 +61,45 @@ class NotificationController extends StateNotifier<bool> {
   }
 
   // GET ALL THE NOTIFICATION
-  Stream<List<NotificationModel>?> getNotificationByUid(String uid) {
-    return _notificationRepository.getNotificationByUid(uid);
+  Stream<List<NotificationModel>?> getInitialNotification(String uid) {
+    return _notificationRepository.getInitialNotification(uid);
   }
 
   Future<void> markAsRead(String notifId) async {
-    final uid = _ref.watch(userProvider)!.uid;
+    final uid = _ref.read(userProvider)!.uid;
     await _notificationRepository.markAsRead(uid, notifId);
   }
 
   Future<void> deleteNotif(String notifId) async {
-    final uid = _ref.watch(userProvider)!.uid;
+    final uid = _ref.read(userProvider)!.uid;
     await _notificationRepository.deleteNotification(uid, notifId);
+  }
+
+  Future<Either<Failures, void>> clearAllNotifications() async {
+    final uid = _ref.read(userProvider)!.uid;
+    try {
+      return await _notificationRepository.clearAllNotifications(uid);
+    } catch (e, stackTrace) {
+      await Sentry.captureException(
+        e,
+        stackTrace: stackTrace,
+        hint: Hint.withMap({
+          'message': 'Error while clearing all notifications for user: $uid',
+        }),
+      );
+      return Left(
+          Failures('Failed to clear all notifications. Please try again.'));
+    }
+  }
+
+  Stream<int> getUnreadNotificationCount(String uid) {
+    return _notificationRepository.getUnreadNotificationCount(uid);
+  }
+
+  Future<List<NotificationModel>?> loadMoreNotifications(
+    NotificationModel lastNotification,
+  ) async {
+    final uid = _ref.read(userProvider)!.uid;
+    return _notificationRepository.loadMoreNotifications(uid, lastNotification);
   }
 }

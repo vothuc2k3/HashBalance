@@ -1,3 +1,4 @@
+import 'package:rxdart/rxdart.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
@@ -11,6 +12,7 @@ import 'package:hash_balance/models/follower_model.dart';
 import 'package:hash_balance/models/friendship_model.dart';
 import 'package:hash_balance/models/friendship_request_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:tuple/tuple.dart';
 
 final friendRepositoryProvider = Provider((ref) {
   return FriendRepository(firestore: ref.read(firebaseFirestoreProvider));
@@ -36,8 +38,13 @@ class FriendRepository {
   CollectionReference get _follower =>
       _firestore.collection(FirebaseConstants.followerCollection);
 
+  //REFERENCE ALL THE BLOCKS
+  CollectionReference get _blocks =>
+      _firestore.collection(FirebaseConstants.blocksCollection);
+
   //SEND FRIEND REQUEST
-  Future<Either<Failures, void>> sendFriendRequest(FriendRequest request) async {
+  Future<Either<Failures, void>> sendFriendRequest(
+      FriendRequest request) async {
     try {
       await _friendRequest.doc(request.id).set(request.toMap());
       return right(null);
@@ -94,7 +101,8 @@ class FriendRepository {
   }
 
   //ACCEPT FRIEND REQUEST
-  Future<Either<Failures, void>> acceptFriendRequest(Friendship friendship) async {
+  Future<Either<Failures, void>> acceptFriendRequest(
+      Friendship friendship) async {
     try {
       final uids = getUids(friendship.uid1, friendship.uid2);
 
@@ -169,7 +177,8 @@ class FriendRepository {
     }
   }
 
-  Future<Either<Failures, void>> unfollowUser(String currentUid, String targetUid) async {
+  Future<Either<Failures, void>> unfollowUser(
+      String currentUid, String targetUid) async {
     try {
       final docs = await _follower
           .where('followerUid', isEqualTo: currentUid)
@@ -224,5 +233,33 @@ class FriendRepository {
 
       return friendRequestDataModels;
     });
+  }
+
+  Stream<bool> getBlockStatus({required String blockId}) {
+    return _blocks.doc(blockId).snapshots().map((event) {
+      return event.exists;
+    });
+  }
+
+  Stream<Tuple3<bool, bool, bool>> getCombinedStatus({
+    required String blockId,
+    required String currentUid,
+    required String targetUid,
+    required String friendshipUids,
+  }) {
+    Stream<bool> blockStatusStream = getBlockStatus(blockId: blockId);
+
+    Stream<bool> followingStatusStream =
+        getFollowingStatus(currentUid, targetUid);
+
+    Stream<bool> friendshipStatusStream = getFriendshipStatus(friendshipUids);
+    return Rx.combineLatest3(
+      blockStatusStream,
+      followingStatusStream,
+      friendshipStatusStream,
+      (bool isBlocked, bool isFollowing, bool isFriend) {
+        return Tuple3(isBlocked, isFollowing, isFriend);
+      },
+    );
   }
 }

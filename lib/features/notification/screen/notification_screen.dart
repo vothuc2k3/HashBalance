@@ -19,7 +19,9 @@ import 'package:hash_balance/features/theme/controller/theme_controller.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/notification_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:logger/logger.dart';
 
 class NotificationScreen extends ConsumerStatefulWidget {
   const NotificationScreen({super.key});
@@ -29,6 +31,53 @@ class NotificationScreen extends ConsumerStatefulWidget {
 }
 
 class NotificationScreenState extends ConsumerState<NotificationScreen> {
+  List<NotificationModel> _notifications = [];
+  NotificationModel? _lastNotification;
+  final ScrollController _scrollController = ScrollController();
+  bool _isLoadingMoreNotifications = false;
+
+  void _clearAllNotifications() async {
+    final result = await ref
+        .read(notificationControllerProvider.notifier)
+        .clearAllNotifications();
+    result.fold(
+      (l) => showToast(false, l.message),
+      (r) => showToast(true, 'All notifications cleared.'),
+    );
+  }
+
+  void _onScroll() async {
+    if (_scrollController.position.pixels ==
+            _scrollController.position.maxScrollExtent &&
+        !_isLoadingMoreNotifications) {
+      Logger().d('ONSCROLLLLLLLL');
+
+      await _loadMoreNotifications();
+    }
+  }
+
+  Future<void> _loadMoreNotifications() async {
+    if (_lastNotification == null) return;
+    setState(() {
+      _isLoadingMoreNotifications = true;
+    });
+
+    final moreNotifications = await ref
+        .read(notificationControllerProvider.notifier)
+        .loadMoreNotifications(_lastNotification!);
+
+    if (moreNotifications != null && moreNotifications.isNotEmpty) {
+      setState(() {
+        _notifications.addAll(moreNotifications);
+        _lastNotification = moreNotifications.last;
+      });
+    }
+
+    setState(() {
+      _isLoadingMoreNotifications = false;
+    });
+  }
+
   void _navigateToCommunityScreen(
     String communityId,
     String uid,
@@ -105,137 +154,198 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
     return Scaffold(
       body: Container(
         color: ref.watch(preferredThemeProvider),
-        child: ref.watch(getNotifsProvider(user!.uid)).when(
-              data: (notifs) {
-                if (notifs == null || notifs.isEmpty) {
-                  return Center(
-                    child: const Text(
-                      'You have no new notifications',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white70,
-                      ),
-                    ).animate().fadeIn(duration: 600.ms).moveY(
-                          begin: 30,
-                          end: 0,
-                          duration: 600.ms,
-                          curve: Curves.easeOutBack,
-                        ),
-                  );
-                }
-                return LayoutBuilder(
-                  builder: (context, constraints) {
-                    return ListView.builder(
-                      itemCount: notifs.length,
-                      itemBuilder: (context, index) {
-                        var notif = notifs[index];
-                        var timeString = formatTime(notif.createdAt);
-                        return Slidable(
-                          key: Key(notif.id),
-                          endActionPane: ActionPane(
-                            motion: const ScrollMotion(),
-                            dismissible: DismissiblePane(
-                              onDismissed: () {
-                                _deleteNotification(notif.id);
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: const Text('Clear All Notifications'),
+                          content: const Text(
+                              'Are you sure you want to clear all notifications?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
                               },
+                              child: const Text('Cancel'),
                             ),
-                            children: [
-                              SlidableAction(
-                                onPressed: (context) =>
-                                    _deleteNotification(notif.id),
-                                backgroundColor: Colors.red,
-                                foregroundColor: Colors.white,
-                                icon: Icons.delete,
-                                label: 'Delete',
-                              ),
-                            ],
-                          ),
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
-                            padding: const EdgeInsets.all(15),
-                            decoration: BoxDecoration(
-                              color: notif.isRead == true
-                                  ? Colors.grey[850]
-                                  : Colors.blueGrey[700],
-                              borderRadius: BorderRadius.circular(10),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Colors.black12,
-                                  blurRadius: 5,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: ListTile(
-                              title: Text(
-                                notif.title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    notif.message,
-                                    style:
-                                        const TextStyle(color: Colors.white70),
-                                  ),
-                                  const SizedBox(height: 5),
-                                  Text(
-                                    timeString,
-                                    style: const TextStyle(
-                                      color: Colors.white54,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              trailing: notif.isRead == true
-                                  ? null
-                                  : const Icon(Icons.new_releases,
-                                      color: Colors.red),
-                              onTap: () {
-                                _markAsRead(notif.id, user);
-                                switch (notif.type) {
-                                  case Constants.friendRequestType:
-                                    _navigateToProfileScreen(notif.senderUid);
-                                    break;
-                                  case Constants.acceptRequestType:
-                                    _navigateToProfileScreen(notif.senderUid);
-                                    break;
-                                  case Constants.moderatorInvitationType:
-                                    _navigateToCommunityScreen(
-                                        notif.communityId!, user.uid);
-                                    break;
-                                  case Constants.newFollowerType:
-                                    _navigateToProfileScreen(notif.senderUid);
-                                    break;
-                                  default:
-                                    break;
-                                }
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                _clearAllNotifications();
                               },
+                              child: const Text('Clear All'),
                             ),
-                          ),
+                          ],
                         );
                       },
                     );
                   },
-                );
-              },
-              error: (error, stackTrace) => ErrorText(error: error.toString()),
-              loading: () => const Loading(),
+                  icon: const Icon(Icons.delete_forever),
+                  label: const Text('Clear All Notifications'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
             ),
+            const SizedBox(height: 10),
+            // Sử dụng Expanded để bao quanh ListView.builder
+            Expanded(
+              child: ref.watch(getInitialNotifsProvider(user!.uid)).when(
+                    data: (notifs) {
+                      _notifications = notifs ?? [];
+                      _lastNotification = _notifications.last;
+                      if (_notifications.isEmpty) {
+                        return Center(
+                          child: const Text(
+                            'You have no new notifications',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.white70,
+                            ),
+                          ).animate().fadeIn(duration: 600.ms).moveY(
+                                begin: 30,
+                                end: 0,
+                                duration: 600.ms,
+                                curve: Curves.easeOutBack,
+                              ),
+                        );
+                      }
+                      return ListView.builder(
+                        controller: _scrollController,
+                        itemCount: _notifications.length + 1,
+                        itemBuilder: (context, index) {
+                          if (index == _notifications.length) {
+                            return _isLoadingMoreNotifications
+                                ? const Center(child: Loading())
+                                : const SizedBox.shrink();
+                          }
+
+                          final notif = _notifications[index];
+                          final timeString = formatTime(notif.createdAt);
+
+
+                          return Slidable(
+                            key: Key(notif.id),
+                            endActionPane: ActionPane(
+                              motion: const ScrollMotion(),
+                              dismissible: DismissiblePane(
+                                onDismissed: () {
+                                  _deleteNotification(notif.id);
+                                },
+                              ),
+                              children: [
+                                SlidableAction(
+                                  onPressed: (context) =>
+                                      _deleteNotification(notif.id),
+                                  backgroundColor: Colors.red,
+                                  foregroundColor: Colors.white,
+                                  icon: Icons.delete,
+                                  label: 'Delete',
+                                ),
+                              ],
+                            ),
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 5,
+                              ),
+                              padding: const EdgeInsets.all(15),
+                              decoration: BoxDecoration(
+                                color: notif.isRead == true
+                                    ? Colors.grey[850]
+                                    : Colors.blueGrey[700],
+                                borderRadius: BorderRadius.circular(10),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Colors.black12,
+                                    blurRadius: 5,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: ListTile(
+                                title: Text(
+                                  notif.title,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      notif.message,
+                                      style: const TextStyle(
+                                          color: Colors.white70),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      timeString,
+                                      style: const TextStyle(
+                                        color: Colors.white54,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                trailing: notif.isRead == true
+                                    ? null
+                                    : const Icon(Icons.new_releases,
+                                        color: Colors.red),
+                                onTap: () {
+                                  _markAsRead(notif.id, user);
+                                  switch (notif.type) {
+                                    case Constants.friendRequestType:
+                                      _navigateToProfileScreen(notif.senderUid);
+                                      break;
+                                    case Constants.acceptRequestType:
+                                      _navigateToProfileScreen(notif.senderUid);
+                                      break;
+                                    case Constants.moderatorInvitationType:
+                                      _navigateToCommunityScreen(
+                                          notif.communityId!, user.uid);
+                                      break;
+                                    case Constants.newFollowerType:
+                                      _navigateToProfileScreen(notif.senderUid);
+                                      break;
+                                    default:
+                                      break;
+                                  }
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                    error: (error, stackTrace) =>
+                        ErrorText(error: error.toString()),
+                    loading: () => const Loading(),
+                  ),
+            ),
+          ],
+        ),
       ),
     );
   }

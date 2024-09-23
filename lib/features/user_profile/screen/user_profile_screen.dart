@@ -16,6 +16,7 @@ import 'package:hash_balance/features/user_profile/controller/user_controller.da
 import 'package:hash_balance/features/user_profile/screen/friends/friend_requests_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class UserProfileScreen extends ConsumerStatefulWidget {
   const UserProfileScreen({
@@ -47,8 +48,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            OtherUserProfileScreen(targetUid: friend.uid),
+        builder: (context) => OtherUserProfileScreen(targetUid: friend.uid),
       ),
     );
   }
@@ -1106,8 +1106,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
                       onPressed: () {},
                       child: Ink(
                         decoration: BoxDecoration(
-                          color: Colors
-                              .blueAccent, // Thay đổi từ gradient sang màu duy nhất
+                          color: Colors.blueAccent,
                           borderRadius: BorderRadius.circular(30),
                         ),
                         child: Container(
@@ -1133,7 +1132,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
                     ),
                   )
                 ],
-              );
+              ).animate().fadeIn();
             }
           },
           error: (error, stackTrace) => Center(

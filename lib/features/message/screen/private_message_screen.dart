@@ -187,7 +187,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.call),
-            onPressed: () => _onStartVoiceCall(), // Gọi voice call
+            onPressed: () => _onStartVoiceCall(),
           ),
           IconButton(
             icon: const Icon(Icons.videocam),
@@ -277,7 +277,6 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                     ),
                   ),
             ),
-            // Input field và emoji picker
             Padding(
               padding: const EdgeInsets.symmetric(
                 vertical: 10,

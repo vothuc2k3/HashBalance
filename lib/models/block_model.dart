@@ -2,26 +2,26 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class Block {
+class BlockModel {
   final String id;
   final String uid;
   final String blockUid;
   final Timestamp createdAt;
 
-  Block({
+  BlockModel({
     required this.id,
     required this.uid,
     required this.blockUid,
     required this.createdAt,
   });
 
-  Block copyWith({
+  BlockModel copyWith({
     String? id,
     String? uid,
     String? blockUid,
     Timestamp? createdAt,
   }) {
-    return Block(
+    return BlockModel(
       id: id ?? this.id,
       uid: uid ?? this.uid,
       blockUid: blockUid ?? this.blockUid,
@@ -38,8 +38,8 @@ class Block {
     };
   }
 
-  factory Block.fromMap(Map<String, dynamic> map) {
-    return Block(
+  factory BlockModel.fromMap(Map<String, dynamic> map) {
+    return BlockModel(
       id: map['id'] as String,
       uid: map['uid'] as String,
       blockUid: map['blockUid'] as String,
@@ -49,8 +49,8 @@ class Block {
 
   String toJson() => json.encode(toMap());
 
-  factory Block.fromJson(String source) =>
-      Block.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory BlockModel.fromJson(String source) =>
+      BlockModel.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
@@ -58,7 +58,7 @@ class Block {
   }
 
   @override
-  bool operator ==(covariant Block other) {
+  bool operator ==(covariant BlockModel other) {
     if (identical(this, other)) return true;
     return other.id == id &&
         other.uid == uid &&

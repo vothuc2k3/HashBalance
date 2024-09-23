@@ -9,6 +9,7 @@ import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
+import 'package:hash_balance/models/block_model.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/user_profile_data_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
@@ -53,6 +54,9 @@ class UserRepository {
   //REFERENCE ALL THE COMMUNITIES
   CollectionReference get _communities =>
       _firestore.collection(FirebaseConstants.communitiesCollection);
+  //REFERENCE ALL THE BLOCKS
+  CollectionReference get _blocks =>
+      _firestore.collection(FirebaseConstants.blocksCollection);
 
   //EDIT USER PROFLE
   Future<Either<Failures, void>> editUserProfile(
@@ -381,6 +385,26 @@ class UserRepository {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
+    }
+  }
+
+  Future<Either<Failures, void>> blockUser(BlockModel blockModel) async {
+    try {
+      await _blocks.doc(blockModel.id).set(blockModel.toMap());
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    }
+  }
+
+  Future<Either<Failures, void>> unblockUser({
+    required String blockId,
+  }) async {
+    try {
+      await _blocks.doc(blockId).delete();
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
     }
   }
 }

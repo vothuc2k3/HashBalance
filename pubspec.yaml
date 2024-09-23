@@ -81,6 +81,8 @@ dependencies:
   just_audio: ^0.9.40
   rive: ^0.13.13
   multi_trigger_autocomplete: ^1.0.0
+  tuple: ^2.0.2
+  rxdart: ^0.28.0
 
 dependency_overrides:
   lints: ^3.0.0

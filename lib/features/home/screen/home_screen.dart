@@ -149,17 +149,17 @@ class HomeScreenState extends ConsumerState<HomeScreen>
               ),
 
               //MARK: - NOTIFICATIONS
-              if (user != null)
-                ref.watch(getNotifsProvider(user.uid)).whenOrNull(
-                      data: (notifs) {
-                        if (notifs == null || notifs.isEmpty) {
-                          return const SizedBox.shrink();
-                        } else {
-                          return _buildNotificationMenu(notifs);
-                        }
-                      },
-                    ) ??
-                    _buildNotificationMenu([]),
+              // if (user != null)
+              //   ref.watch(getNotifsProvider(user.uid)).whenOrNull(
+              //         data: (notifs) {
+              //           if (notifs == null || notifs.isEmpty) {
+              //             return const SizedBox.shrink();
+              //           } else {
+              //             return _buildNotificationMenu(notifs);
+              //           }
+              //         },
+              //       ) ??
+              //       _buildNotificationMenu([]),
 
               //MARK: - PROFILE
               if (user != null)
@@ -179,6 +179,7 @@ class HomeScreenState extends ConsumerState<HomeScreen>
           body: PageView(
             controller: _pageController,
             onPageChanged: _onPageChanged,
+            physics: const NeverScrollableScrollPhysics(),
             children: Constants.tabWidgets,
           ),
           drawer: const CommunityListDrawer(),
@@ -207,17 +208,10 @@ class HomeScreenState extends ConsumerState<HomeScreen>
               ),
               if (user != null)
                 BottomNavigationBarItem(
-                  icon: ref.watch(getNotifsProvider(user.uid)).whenOrNull(
-                        data: (notifs) {
-                          if (notifs == null || notifs.isEmpty) {
-                            return const Icon(Icons.notification_add_outlined);
-                          }
-                          int unreadCount = 0;
-                          for (var notif in notifs) {
-                            if (notif.isRead == false) {
-                              unreadCount++;
-                            }
-                          }
+                  icon: ref
+                          .watch(getUnreadNotifCountProvider(user.uid))
+                          .whenOrNull(
+                        data: (unreadCount) {
                           return unreadCount == 0
                               ? const Icon(Icons.notification_add_outlined)
                               : Badge(
@@ -228,7 +222,8 @@ class HomeScreenState extends ConsumerState<HomeScreen>
                                   ),
                                   isLabelVisible: true,
                                   child: const Icon(
-                                      Icons.notification_add_outlined),
+                                    Icons.notification_add_outlined,
+                                  ),
                                 );
                         },
                       ) ??

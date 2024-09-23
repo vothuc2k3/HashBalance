@@ -4,7 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
+import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/user_profile/repository/user_repository.dart';
+import 'package:hash_balance/models/block_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/conbined_models/user_profile_data_model.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -149,4 +151,27 @@ class UserController extends StateNotifier<bool> {
   Future<Either<Failures, void>> clearUserDeviceToken(String uid) async {
     return await _userRepository.clearUserDeviceToken(uid);
   }
+
+  Future<Either<Failures, void>> blockUser({
+    required String currentUid,
+    required String blockUid,
+  }) async {
+    final blockModel = BlockModel(
+      id: getUids(currentUid, blockUid),
+      uid: currentUid,
+      blockUid: blockUid,
+      createdAt: Timestamp.now(),
+    );
+    return await _userRepository.blockUser(blockModel);
+  }
+
+  Future<Either<Failures, void>> unblockUser({
+    required String currentUid,
+    required String blockUid,
+  }) async {
+    return await _userRepository.unblockUser(
+      blockId: getUids(currentUid, blockUid),
+    );
+  }
+
 }
