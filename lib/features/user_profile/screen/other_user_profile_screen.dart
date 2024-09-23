@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
@@ -176,8 +177,8 @@ class _OtherUserProfileScreenState
   Widget build(BuildContext context) {
     final currentUser = ref.watch(userProvider);
     final uids = getUids(currentUser!.uid, widget._targetUid);
-    final combinedStatus = ref.watch(getCombinedStatusProvider(
-        Tuple3(uids, currentUser.uid, widget._targetUid)));
+    final combinedStatus = ref.watch(
+        getCombinedStatusProvider(Tuple2(currentUser.uid, widget._targetUid)));
 
     final double top = coverHeight - profileHeight / 2;
     final double bottom = profileHeight / 2;
@@ -188,12 +189,13 @@ class _OtherUserProfileScreenState
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
+          onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
-          ref.watch(getBlockStatusProvider(uids)).whenOrNull(
+          ref
+                  .watch(isBlockedByCurrentUserProvider(
+                      Tuple2(currentUser.uid, widget._targetUid)))
+                  .whenOrNull(
                 data: (hasBlocked) {
                   return Stack(
                     children: [
@@ -209,7 +211,13 @@ class _OtherUserProfileScreenState
                   );
                 },
               ) ??
-              const Loading()
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(
+                  FontAwesomeIcons.ellipsisVertical,
+                  color: Colors.white,
+                ),
+              ),
         ],
       ),
       body: Container(
@@ -315,14 +323,14 @@ class _OtherUserProfileScreenState
                                     const SizedBox(height: 8, width: 8),
                                     //BUILD FOLLOWING WIDGET
                                     _buildFollowButton(
-                                      data.item2,
+                                      data.item3,
                                       followUser,
                                       _unfollowUser,
                                       user,
                                     ),
                                     //BUILD FRIEND WIDGET
                                     const SizedBox(height: 8, width: 8),
-                                    data.item3 == true
+                                    data.item4 == true
                                         ? _buildFriendsWidget(
                                             context,
                                             user,
@@ -344,7 +352,10 @@ class _OtherUserProfileScreenState
                                                     ],
                                                   );
                                                 } else if (request.requestUid ==
-                                                    currentUser.uid) {
+                                                        currentUser.uid &&
+                                                    request.status ==
+                                                        Constants
+                                                            .friendRequestStatusPending) {
                                                   return _buildFriendRequestSent(
                                                           cancelFriendRequest,
                                                           uids)
@@ -371,7 +382,7 @@ class _OtherUserProfileScreenState
                                     _buildMessageButton(
                                       onPressed: messageUser,
                                       targetUser: user,
-                                      hasBlocked: data.item1,
+                                      isBlocked: data.item2,
                                     ),
                                   ],
                                 ),
@@ -592,18 +603,16 @@ class _OtherUserProfileScreenState
   Widget _buildMessageButton({
     required Function(UserModel) onPressed,
     required UserModel targetUser,
-    required bool hasBlocked,
+    required bool isBlocked,
   }) {
     return ElevatedButton.icon(
-            onPressed: () {
-              hasBlocked
-                  ? showToast(false, 'You have blocked this user')
-                  : onPressed(targetUser);
-            },
+            onPressed: isBlocked
+                ? () => showToast(false, 'You are blocked by this user')
+                : () => onPressed(targetUser),
             icon: const Icon(Icons.message, color: Colors.white),
             label: const Text('Message'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: hasBlocked ? Colors.grey : Colors.blue,
+              backgroundColor: isBlocked ? Colors.grey : Colors.blue,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               textStyle: const TextStyle(
                 fontSize: 16,

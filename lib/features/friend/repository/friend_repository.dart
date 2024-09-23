@@ -1,3 +1,4 @@
+import 'package:logger/logger.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -132,7 +133,7 @@ class FriendRepository {
     }
   }
 
-  Stream<bool> getFriendshipStatus(String uids) {
+  Stream<bool> getFriendshipStatus({required String uids}) {
     return _friendship.doc(uids).snapshots().map((snapshot) {
       return snapshot.exists;
     });
@@ -195,7 +196,10 @@ class FriendRepository {
     }
   }
 
-  Stream<bool> getFollowingStatus(String currentUid, String targetUid) {
+  Stream<bool> getFollowingStatus({
+    required String currentUid,
+    required String targetUid,
+  }) {
     return _follower
         .where('followerUid', isEqualTo: currentUid)
         .where('targetUid', isEqualTo: targetUid)
@@ -235,30 +239,58 @@ class FriendRepository {
     });
   }
 
-  Stream<bool> getBlockStatus({required String blockId}) {
-    return _blocks.doc(blockId).snapshots().map((event) {
-      return event.exists;
+  Stream<bool> isBlockedByCurrentUser({
+    required String currentUid,
+    required String blockUid,
+  }) {
+    return _blocks
+        .where('uid', isEqualTo: currentUid)
+        .where('blockUid', isEqualTo: blockUid)
+        .snapshots()
+        .map((event) {
+      return event.docs.isNotEmpty;
     });
   }
 
-  Stream<Tuple3<bool, bool, bool>> getCombinedStatus({
-    required String blockId,
+  Stream<bool> isBlockedByTargetUser({
+    required String currentUid,
+    required String targetUid,
+  }) {
+    return _blocks
+        .where('uid', isEqualTo: targetUid)
+        .where('blockUid', isEqualTo: currentUid)
+        .snapshots()
+        .map((event) {
+      return event.docs.isNotEmpty;
+    });
+  }
+
+  Stream<Tuple4<bool, bool, bool, bool>> getCombinedStatus({
     required String currentUid,
     required String targetUid,
     required String friendshipUids,
   }) {
-    Stream<bool> blockStatusStream = getBlockStatus(blockId: blockId);
+    final logger = Logger();
 
+    Stream<bool> hasBlockedStream =
+        isBlockedByCurrentUser(currentUid: currentUid, blockUid: targetUid);
+    Stream<bool> isBlockedStream =
+        isBlockedByTargetUser(currentUid: currentUid, targetUid: targetUid);
     Stream<bool> followingStatusStream =
-        getFollowingStatus(currentUid, targetUid);
-
-    Stream<bool> friendshipStatusStream = getFriendshipStatus(friendshipUids);
-    return Rx.combineLatest3(
-      blockStatusStream,
+        getFollowingStatus(currentUid: currentUid, targetUid: targetUid);
+    Stream<bool> friendshipStatusStream =
+        getFriendshipStatus(uids: friendshipUids);
+    return Rx.combineLatest4(
+      hasBlockedStream,
+      isBlockedStream,
       followingStatusStream,
       friendshipStatusStream,
-      (bool isBlocked, bool isFollowing, bool isFriend) {
-        return Tuple3(isBlocked, isFollowing, isFriend);
+      (hasBlocked, isBlocked, isFollowing, isFriend) {
+        logger.d('hasBlocked: $hasBlocked');
+        logger.d('isBlocked: $isBlocked');
+        logger.d('isFollowing: $isFollowing');
+        logger.d('isFriend: $isFriend');
+        return Tuple4(hasBlocked, isBlocked, isFollowing, isFriend);
       },
     );
   }

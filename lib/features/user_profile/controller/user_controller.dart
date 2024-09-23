@@ -157,7 +157,7 @@ class UserController extends StateNotifier<bool> {
     required String blockUid,
   }) async {
     final blockModel = BlockModel(
-      id: getUids(currentUid, blockUid),
+      id: await generateRandomId(),
       uid: currentUid,
       blockUid: blockUid,
       createdAt: Timestamp.now(),
@@ -170,7 +170,8 @@ class UserController extends StateNotifier<bool> {
     required String blockUid,
   }) async {
     return await _userRepository.unblockUser(
-      blockId: getUids(currentUid, blockUid),
+      currentUid: currentUid,
+      blockUid: blockUid,
     );
   }
 

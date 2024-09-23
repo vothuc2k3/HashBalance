@@ -17,18 +17,18 @@ import 'package:hash_balance/models/notification_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:tuple/tuple.dart';
 
-final getBlockStatusProvider = StreamProvider.family((ref, String blockId) {
-  return ref
-      .watch(friendControllerProvider.notifier)
-      .getBlockStatus(blockId: blockId);
+final isBlockedByCurrentUserProvider =
+    StreamProvider.family((ref, Tuple2 data) {
+  return ref.watch(friendControllerProvider.notifier).isBlockedByCurrentUser(
+        currentUid: data.item1,
+        blockUid: data.item2,
+      );
 });
 
-final getCombinedStatusProvider = StreamProvider.family((ref, Tuple3 data) {
+final getCombinedStatusProvider = StreamProvider.family((ref, Tuple2 data) {
   return ref.watch(friendControllerProvider.notifier).getCombinedStatus(
-        blockId: data.item1,
-        currentUid: data.item2,
-        targetUid: data.item3,
-        friendshipUids: data.item1,
+        currentUid: data.item1,
+        targetUid: data.item2,
       );
 });
 
@@ -243,8 +243,9 @@ class FriendController extends StateNotifier<bool> {
   Stream<bool> getFriendshipStatus(String targetUid) {
     try {
       final currentUser = _ref.read(userProvider);
-      return _friendRepository
-          .getFriendshipStatus(getUids(currentUser!.uid, targetUid));
+      return _friendRepository.getFriendshipStatus(
+        uids: getUids(currentUser!.uid, targetUid),
+      );
     } on FirebaseException catch (e) {
       throw Failures(e.message!);
     } catch (e) {
@@ -315,28 +316,35 @@ class FriendController extends StateNotifier<bool> {
 
   Stream<bool> getFollowingStatus(String targetUid) {
     final uid = _ref.read(userProvider)!.uid;
-    return _friendRepository.getFollowingStatus(uid, targetUid);
+    return _friendRepository.getFollowingStatus(
+      currentUid: uid,
+      targetUid: targetUid,
+    );
   }
 
   Stream<List<FriendRequesterDataModel>> fetchFriendRequestsByUser(String uid) {
     return _friendRepository.fetchFriendRequestsByUser(uid);
   }
 
-  Stream<bool> getBlockStatus({required String blockId}) {
-    return _friendRepository.getBlockStatus(blockId: blockId);
+  Stream<bool> isBlockedByCurrentUser({
+    required String currentUid,
+    required String blockUid,
+  }) {
+    return _friendRepository.isBlockedByCurrentUser(
+      currentUid: currentUid,
+      blockUid: blockUid,
+    );
   }
 
-  Stream<Tuple3<bool, bool, bool>> getCombinedStatus({
-    required String blockId,
+  Stream<Tuple4<bool, bool, bool, bool>> getCombinedStatus({
     required String currentUid,
     required String targetUid,
-    required String friendshipUids,
   }) {
+    final uids = getUids(currentUid, targetUid);
     return _friendRepository.getCombinedStatus(
-      blockId: blockId,
       currentUid: currentUid,
       targetUid: targetUid,
-      friendshipUids: friendshipUids,
+      friendshipUids: uids,
     );
   }
 }

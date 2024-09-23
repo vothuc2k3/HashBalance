@@ -398,10 +398,15 @@ class UserRepository {
   }
 
   Future<Either<Failures, void>> unblockUser({
-    required String blockId,
+    required String currentUid,
+    required String blockUid,
   }) async {
     try {
-      await _blocks.doc(blockId).delete();
+      final query = await _blocks
+          .where('uid', isEqualTo: currentUid)
+          .where('blockUid', isEqualTo: blockUid)
+          .get();
+      await query.docs.first.reference.delete();
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));

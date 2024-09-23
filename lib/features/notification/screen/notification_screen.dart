@@ -31,7 +31,7 @@ class NotificationScreen extends ConsumerStatefulWidget {
 }
 
 class NotificationScreenState extends ConsumerState<NotificationScreen> {
-  List<NotificationModel> _notifications = [];
+  List<NotificationModel>? _notifications = [];
   NotificationModel? _lastNotification;
   final ScrollController _scrollController = ScrollController();
   bool _isLoadingMoreNotifications = false;
@@ -68,7 +68,7 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
 
     if (moreNotifications != null && moreNotifications.isNotEmpty) {
       setState(() {
-        _notifications.addAll(moreNotifications);
+        _notifications!.addAll(moreNotifications);
         _lastNotification = moreNotifications.last;
       });
     }
@@ -170,50 +170,54 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton.icon(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: const Text('Clear All Notifications'),
-                          content: const Text(
-                              'Are you sure you want to clear all notifications?'),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
-                              child: const Text('Cancel'),
-                            ),
-                            ElevatedButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                                _clearAllNotifications();
-                              },
-                              child: const Text('Clear All'),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                  icon: const Icon(Icons.delete_forever),
-                  label: const Text('Clear All Notifications'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.white,
+                if (_notifications != null && _notifications!.isNotEmpty)
+                  TextButton.icon(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text('Clear All Notifications'),
+                            content: const Text(
+                                'Are you sure you want to clear all notifications?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: const Text('Cancel'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  _clearAllNotifications();
+                                },
+                                child: const Text('Clear All'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                    icon: const Icon(Icons.delete_forever),
+                    label: const Text('Clear All Notifications'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.white,
+                    ),
                   ),
-                ),
               ],
             ),
             const SizedBox(height: 10),
-            // Sử dụng Expanded để bao quanh ListView.builder
             Expanded(
               child: ref.watch(getInitialNotifsProvider(user!.uid)).when(
                     data: (notifs) {
-                      _notifications = notifs ?? [];
-                      _lastNotification = _notifications.last;
-                      if (_notifications.isEmpty) {
+                      _notifications = notifs;
+                      _lastNotification =
+                          (_notifications != null && _notifications!.isNotEmpty)
+                              ? _notifications!.last
+                              : null;
+
+                      if (_notifications?.isEmpty ?? true) {
                         return Center(
                           child: const Text(
                             'You have no new notifications',
@@ -231,17 +235,16 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
                       }
                       return ListView.builder(
                         controller: _scrollController,
-                        itemCount: _notifications.length + 1,
+                        itemCount: _notifications!.length + 1,
                         itemBuilder: (context, index) {
-                          if (index == _notifications.length) {
+                          if (index == _notifications!.length) {
                             return _isLoadingMoreNotifications
                                 ? const Center(child: Loading())
                                 : const SizedBox.shrink();
                           }
 
-                          final notif = _notifications[index];
+                          final notif = _notifications![index];
                           final timeString = formatTime(notif.createdAt);
-
 
                           return Slidable(
                             key: Key(notif.id),
