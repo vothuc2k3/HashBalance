@@ -108,7 +108,7 @@ class HomeScreenState extends ConsumerState<HomeScreen>
         child: Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(
-            backgroundColor: ref.watch(preferredThemeProvider).second,
+            backgroundColor: ref.watch(preferredThemeProvider).third,
             title: AnimatedBuilder(
               animation: GlobalAnimationController.animationController!,
               builder: (context, child) {
@@ -185,7 +185,7 @@ class HomeScreenState extends ConsumerState<HomeScreen>
           drawer: const CommunityListDrawer(),
           endDrawer: UserProfileDrawer(homeScreenContext: context),
           bottomNavigationBar: CupertinoTabBar(
-            backgroundColor: const Color(0xff181C30),
+            backgroundColor: ref.watch(preferredThemeProvider).third,
             activeColor: Colors.teal,
             inactiveColor: Colors.white70,
             iconSize: 28.0,

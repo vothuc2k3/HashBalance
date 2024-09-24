@@ -17,6 +17,54 @@ class SettingScreen extends ConsumerStatefulWidget {
 }
 
 class SettingScreenState extends ConsumerState<SettingScreen> {
+  void _changeTheme() async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Choose a Theme Color'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: Colors.purple,
+                ),
+                title: const Text('Purple Theme'),
+                onTap: () {
+                  ref.read(preferredThemeProvider.notifier).setTheme(
+                        const ThemeColors(
+                          first: Color(0xFF6A0DAD), // Màu tím
+                          second: Color(0xFF4A0B7E), // Sắc tối hơn
+                          third: Color(0xFF3A0A5D), // Sắc tối nhất
+                        ),
+                      );
+                  Navigator.of(context).pop();
+                },
+              ),
+              ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: Colors.blue,
+                ),
+                title: const Text('Blue Theme'),
+                onTap: () {
+                  ref.read(preferredThemeProvider.notifier).setTheme(
+                        const ThemeColors(
+                          first: Color(0xFF1E90FF), // Màu xanh dương
+                          second: Color(0xFF1A73E8), // Sắc tối hơn
+                          third: Color(0xFF155FA0), // Sắc tối nhất
+                        ),
+                      );
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _signOut(BuildContext context) async {
     Navigator.push(
       context,
@@ -57,11 +105,24 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
         child: Column(
           children: [
             ListTile(
+              leading: const Icon(
+                Icons.color_lens,
+                color: Pallete.whiteColor,
+              ),
+              title: const Text(
+                'Change Theme',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onTap: _changeTheme,
+            ),
+            ListTile(
               leading: isLoading
                   ? const Loading()
-                  : Icon(
+                  : const Icon(
                       Icons.logout,
-                      color: Pallete.redColor,
+                      color: Pallete.whiteColor,
                     ),
               title: const Text(
                 'Sign Out',

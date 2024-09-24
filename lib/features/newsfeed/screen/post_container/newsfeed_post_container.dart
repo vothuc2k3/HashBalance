@@ -6,6 +6,7 @@ import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/post_share/post_share_controller/post_share_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/vote_post/controller/vote_post_controller.dart';
 import 'package:mdi/mdi.dart';
@@ -304,7 +305,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       padding: const EdgeInsets.all(5),
-      color: const Color(0xFF181C30),
+      color: ref.watch(preferredThemeProvider).second,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -446,7 +447,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '#=${widget.community.name}',
+                    widget.community.name,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 12,

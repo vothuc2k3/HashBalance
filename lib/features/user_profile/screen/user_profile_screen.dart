@@ -708,7 +708,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
                               child: Row(
                                 children: [
                                   Text(
-                                    '#${currentUser.name}',
+                                    currentUser.name,
                                     style: TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.bold,

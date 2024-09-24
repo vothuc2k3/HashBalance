@@ -87,7 +87,7 @@ class _MessageListScreenState extends ConsumerState<MessageListScreen> {
                           borderRadius: BorderRadius.circular(15),
                         ),
                         child: ListTile(
-                          tileColor: ref.watch(preferredThemeProvider).third,
+                          tileColor: ref.watch(preferredThemeProvider).second,
                           leading: CircleAvatar(
                             backgroundImage: CachedNetworkImageProvider(
                               messageData.conversation.type == 'Community'

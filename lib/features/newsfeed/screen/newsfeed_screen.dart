@@ -133,7 +133,7 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
     return InkWell(
       child: Container(
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-        color: const Color(0xFF181C30),
+        color: ref.watch(preferredThemeProvider).second,
         height: 125,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -152,11 +152,11 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
                 Expanded(
                   child: GestureDetector(
                     onTap: _navigateToCreatePostScreen,
-                    child: const TextField(
+                    child: TextField(
                       decoration: InputDecoration(
                         labelText: 'Share your moments....',
                         labelStyle: TextStyle(
-                          color: Color(0xFF38464E),
+                          color: ref.watch(preferredThemeProvider).first,
                         ),
                         enabled: false,
                         border: InputBorder.none,

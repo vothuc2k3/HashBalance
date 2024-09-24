@@ -171,50 +171,60 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 if (_notifications != null && _notifications!.isNotEmpty)
-                  TextButton.icon(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            backgroundColor: ref.watch(preferredThemeProvider).first,
-                            title: const Text('Clear All Notifications'),
-                            content: const Text(
-                                'Are you sure you want to clear all notifications?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text(
-                                  'Cancel',
-                                  style: TextStyle(
-                                    color: Colors.greenAccent,
-                                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 10.0, top: 10.0),
+                    child: TextButton.icon(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              backgroundColor:
+                                  ref.watch(preferredThemeProvider).first,
+                              title: const Text(
+                                'Clear All Notifications',
+                                style: TextStyle(
+                                  color: Colors.white,
                                 ),
                               ),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.redAccent,
-                                ),
-                                onPressed: () async {
-                                  Navigator.pop(context);
-                                  await _clearAllNotifications();
-                                },
-                                child: const Text(
-                                  'Clear All',
-                                  style: TextStyle(
-                                    color: Colors.white,
+                              content: const Text(
+                                'Are you sure you want to clear all notifications?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text(
+                                    'Cancel',
+                                    style: TextStyle(
+                                      color: Colors.greenAccent,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                    icon: const Icon(Icons.delete_forever),
-                    label: const Text('Clear All Notifications'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.white,
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.redAccent,
+                                  ),
+                                  onPressed: () async {
+                                    Navigator.pop(context);
+                                    await _clearAllNotifications();
+                                  },
+                                  child: const Text(
+                                    'Clear All',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      icon: const Icon(Icons.delete_forever),
+                      label: const Text('Clear All Notifications'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white,
+                      ),
                     ),
                   ),
               ],
@@ -285,9 +295,9 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
                               ),
                               padding: const EdgeInsets.all(15),
                               decoration: BoxDecoration(
-                                color: notif.isRead == true
-                                    ? Colors.grey[850]
-                                    : Colors.blueGrey[700],
+                                color: notif.isRead
+                                    ? ref.watch(preferredThemeProvider).first
+                                    : ref.watch(preferredThemeProvider).third,
                                 borderRadius: BorderRadius.circular(10),
                                 boxShadow: const [
                                   BoxShadow(

@@ -22,7 +22,11 @@ class PreferredTheme extends StateNotifier<ThemeColors> {
   );
 
   void changeTheme() {
-    state = _secondTheme;
+    state = (state == _firstTheme) ? _secondTheme : _firstTheme;
+  }
+
+  void setTheme(ThemeColors theme) {
+    state = theme;
   }
 
   void resetTheme() {

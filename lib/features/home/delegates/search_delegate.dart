@@ -21,11 +21,9 @@ class SearchCommunityDelegate extends SearchDelegate {
 
   @override
   ThemeData appBarTheme(BuildContext context) {
-    Color appBarColor = ref.watch(preferredThemeProvider).second;
-
     return ThemeData(
       appBarTheme: AppBarTheme(
-        backgroundColor: appBarColor,
+        backgroundColor: ref.watch(preferredThemeProvider).first,
         iconTheme: const IconThemeData(
           color: Colors.white,
         ),
@@ -39,6 +37,17 @@ class SearchCommunityDelegate extends SearchDelegate {
           color: Colors.white,
         ),
         border: InputBorder.none,
+        labelStyle: TextStyle(
+          color: Colors.white,
+        ),
+      ),
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: Colors.white, // Thêm màu con trỏ
+        selectionColor: Colors.white54, // Màu vùng chọn
+        selectionHandleColor: Colors.white, // Màu tay cầm chọn
+      ),
+      textTheme: const TextTheme(
+        bodyLarge: TextStyle(color: Colors.white), // Đặt màu text khi nhập liệu
       ),
     );
   }
