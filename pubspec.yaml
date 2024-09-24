@@ -83,6 +83,7 @@ dependencies:
   multi_trigger_autocomplete: ^1.0.0
   tuple: ^2.0.2
   rxdart: ^0.28.0
+  uuid: ^4.5.0
 
 dependency_overrides:
   lints: ^3.0.0

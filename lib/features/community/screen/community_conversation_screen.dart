@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,22 +9,24 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/message/controller/message_controller.dart';
 import 'package:hash_balance/features/message/screen/widget/message_bubble.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/conbined_models/message_data_model.dart';
 import 'package:hash_balance/models/message_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:uuid/uuid.dart';
 
 class CommunityConversationScreen extends ConsumerStatefulWidget {
-  final Community _community;
+  final Community community;
 
   const CommunityConversationScreen({
     super.key,
-    required Community community,
-  }) : _community = community;
+    required this.community,
+  });
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() =>
+  ConsumerState<CommunityConversationScreen> createState() =>
       _CommunityConversationScreenState();
 }
 
@@ -33,15 +36,10 @@ class _CommunityConversationScreenState
   final ScrollController _scrollController = ScrollController();
   bool _isEmojiVisible = false;
   bool _isLoadingMoreMessages = false;
-  List<Message> _messages = [];
+  List<MessageDataModel> _messages = [];
   Message? _lastMessage;
   UserModel? currentUser;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll);
-  }
+  bool _hasLoadedInitialMessages = false;
 
   void _onScroll() async {
     if (_scrollController.position.pixels ==
@@ -59,15 +57,12 @@ class _CommunityConversationScreenState
 
     final moreMessages = await ref
         .read(messageControllerProvider.notifier)
-        .loadMoreCommunityMessages(
-          widget._community.id,
-          _lastMessage!,
-        );
+        .loadMoreCommunityMessages(widget.community.id, _lastMessage!);
 
     if (moreMessages != null && moreMessages.isNotEmpty) {
       setState(() {
         _messages.addAll(moreMessages);
-        _lastMessage = moreMessages.last;
+        _lastMessage = moreMessages.last.message;
       });
     }
 
@@ -77,54 +72,41 @@ class _CommunityConversationScreenState
   }
 
   void _onSendMessage() async {
-    final result = await ref
-        .watch(messageControllerProvider.notifier)
-        .sendCommunityMessage(_messageController.text, widget._community.id);
+    final result =
+        await ref.read(messageControllerProvider.notifier).sendCommunityMessage(
+              text: _messageController.text,
+              communityId: widget.community.id,
+            );
     result.fold(
       (l) {
         showToast(false, l.message);
       },
-      (_) {},
+      (_) {
+        setState(() {
+          final newMessage = Message(
+            id: const Uuid().v4(),
+            text: _messageController.text,
+            uid: currentUser!.uid,
+            createdAt: Timestamp.now(),
+          );
+          _messages.insert(
+            0,
+            MessageDataModel(message: newMessage, author: currentUser!),
+          );
+        });
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _messageController.clear();
+          FocusManager.instance.primaryFocus?.unfocus();
+        });
+      },
     );
   }
 
-  // void _onStartVoiceCall() async {
-  //   Navigator.push(
-  //     context,
-  //     MaterialPageRoute(
-  //       builder: (context) => const SplashScreen(),
-  //     ),
-  //   );
-  //   final result = await ref
-  //       .read(callControllerProvider.notifier)
-  //       .initCall(widget._targetUser);
-  //   result.fold(
-  //     (l) {
-  //       showToast(
-  //         false,
-  //         l.message,
-  //       );
-  //       Navigator.pop(context);
-  //     },
-  //     (r) async {
-  //       final result =
-  //           await ref.read(callControllerProvider.notifier).fetchCallData(r);
-  //       result.fold(
-  //         (l) => showToast(false, l.message),
-  //         (r) {
-  //           if (mounted) {
-  //             Navigator.pushReplacement(
-  //               context,
-  //               MaterialPageRoute(
-  //                 builder: (context) => OutgoingCallScreen(callData: r),
-  //               ),
-  //             );
-  //           }
-  //         },
-  //       );
-  //     },
-  //   );
-  // }
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
 
   @override
   void didChangeDependencies() {
@@ -137,30 +119,22 @@ class _CommunityConversationScreenState
     final currentUser = ref.watch(userProvider)!;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: ref.watch(preferredThemeProvider),
+        backgroundColor: ref.watch(preferredThemeProvider).second,
         title: Row(
           children: [
             CircleAvatar(
               backgroundImage:
-                  CachedNetworkImageProvider(widget._community.profileImage),
+                  CachedNetworkImageProvider(widget.community.profileImage),
             ),
             const SizedBox(width: 10),
             Text(
-              widget._community.name,
+              widget.community.name,
               style: const TextStyle(fontSize: 14),
             ),
           ],
         ),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.call),
-            onPressed: () {}, // Gọi voice call
-          ),
-          IconButton(
-            icon: const Icon(Icons.videocam),
-            onPressed: () {},
-          ),
           IconButton(
             icon: const Icon(Icons.more_vert),
             onPressed: () {},
@@ -169,29 +143,34 @@ class _CommunityConversationScreenState
       ),
       body: Container(
         decoration: BoxDecoration(
-          color: ref.watch(preferredThemeProvider),
+          color: ref.watch(preferredThemeProvider).first,
         ),
         child: Column(
           children: [
             Expanded(
               child: ref
-                  .watch(initialCommunityMessagesProvider(widget._community.id))
+                  .read(initialCommunityMessagesProvider(widget.community.id))
                   .when(
                     data: (messages) {
-                      if (messages == null || messages.isEmpty) {
-                        return Center(
-                          child: const Text(
-                            'Text the first message!',
+                      if (!_hasLoadedInitialMessages) {
+                        _hasLoadedInitialMessages = true;
+                        _messages = messages ?? [];
+                        if (_messages.isNotEmpty) {
+                          _lastMessage = _messages.last.message;
+                        }
+                      }
+
+                      if (_messages.isEmpty) {
+                        return const Center(
+                          child: Text(
+                            'Start this conversation!',
                             style: TextStyle(
                               fontSize: 18,
                               color: Colors.grey,
                             ),
-                          ).animate().fadeIn(),
+                          ),
                         );
                       }
-
-                      _messages = messages.map((e) => e.message).toList();
-                      _lastMessage = _messages.last;
 
                       return ListView.builder(
                         controller: _scrollController,
@@ -213,31 +192,32 @@ class _CommunityConversationScreenState
                               ? _messages[index + 1]
                               : null;
 
-                          final currentMessageUserId = chatMessage.uid;
-                          final nextMessageUserId = nextChatMessage?.uid;
+                          final currentMessageUserId = chatMessage.message.uid;
+                          final nextMessageUserId =
+                              nextChatMessage?.message.uid;
                           final nextUserIsSame =
                               nextMessageUserId == currentMessageUserId;
                           final isMe = currentUser.uid == currentMessageUserId;
 
                           if (nextUserIsSame) {
                             return MessageBubble.next(
-                              message: chatMessage.text ?? '',
+                              message: chatMessage.message.text ?? '',
                               isMe: isMe,
                             );
                           } else {
                             return MessageBubble.first(
                               userImage: isMe
                                   ? currentUser.profileImage
-                                  : messages[index].author.profileImage,
+                                  : chatMessage.author.profileImage,
                               username: isMe
                                   ? currentUser.name
-                                  : messages[index].author.name,
-                              message: chatMessage.text ?? '',
+                                  : chatMessage.author.name,
+                              message: chatMessage.message.text ?? '',
                               isMe: isMe,
                             );
                           }
                         },
-                      );
+                      ).animate().fade(duration: 300.milliseconds);
                     },
                     loading: () => const Loading(),
                     error: (error, stackTrace) => ErrorText(
@@ -245,7 +225,7 @@ class _CommunityConversationScreenState
                     ),
                   ),
             ),
-            // Input field và emoji picker
+            // Ô nhập và nút gửi tin nhắn
             Padding(
               padding: const EdgeInsets.symmetric(
                 vertical: 10,
@@ -321,11 +301,7 @@ class _CommunityConversationScreenState
                   ),
                   const SizedBox(width: 10),
                   GestureDetector(
-                    onTap: () {
-                      _onSendMessage();
-                      _messageController.clear();
-                      FocusManager.instance.primaryFocus?.unfocus();
-                    },
+                    onTap: _onSendMessage,
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: const BoxDecoration(

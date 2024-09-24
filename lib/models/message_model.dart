@@ -38,7 +38,7 @@ class Message {
   }
 
   Map<String, dynamic> toMap() {
-    return <String, dynamic>{
+    return {
       'id': id,
       'text': text,
       'image': image,

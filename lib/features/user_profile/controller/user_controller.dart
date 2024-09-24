@@ -148,10 +148,6 @@ class UserController extends StateNotifier<bool> {
     return _userRepository.getUserPosts(user);
   }
 
-  Future<Either<Failures, void>> clearUserDeviceToken(String uid) async {
-    return await _userRepository.clearUserDeviceToken(uid);
-  }
-
   Future<Either<Failures, void>> blockUser({
     required String currentUid,
     required String blockUid,
@@ -174,5 +170,4 @@ class UserController extends StateNotifier<bool> {
       blockUid: blockUid,
     );
   }
-
 }

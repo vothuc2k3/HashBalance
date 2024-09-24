@@ -9,7 +9,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/community/screen/community_conversation_screen.dart';
 import 'package:hash_balance/features/message/controller/message_controller.dart';
 import 'package:hash_balance/features/message/screen/private_message_screen.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
@@ -51,7 +51,7 @@ class _MessageListScreenState extends ConsumerState<MessageListScreen> {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          color: ref.watch(preferredThemeProvider),
+          color: ref.watch(preferredThemeProvider).first,
         ),
         child: conversations.when(
           data: (conversations) {
@@ -87,6 +87,7 @@ class _MessageListScreenState extends ConsumerState<MessageListScreen> {
                           borderRadius: BorderRadius.circular(15),
                         ),
                         child: ListTile(
+                          tileColor: ref.watch(preferredThemeProvider).third,
                           leading: CircleAvatar(
                             backgroundImage: CachedNetworkImageProvider(
                               messageData.conversation.type == 'Community'

@@ -9,6 +9,7 @@ import 'package:hash_balance/features/friend/repository/friend_repository.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
+import 'package:hash_balance/models/conbined_models/block_data_model.dart';
 import 'package:hash_balance/models/conbined_models/friend_requester_data_model.dart';
 import 'package:hash_balance/models/follower_model.dart';
 import 'package:hash_balance/models/friendship_model.dart';
@@ -16,6 +17,10 @@ import 'package:hash_balance/models/friendship_request_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:tuple/tuple.dart';
+
+final blockedUsersProvider = StreamProvider((ref) {
+  return ref.watch(friendControllerProvider.notifier).fetchBlockedUsers();
+});
 
 final isBlockedByCurrentUserProvider =
     StreamProvider.family((ref, Tuple2 data) {
@@ -39,7 +44,7 @@ final fetchFriendRequestsProvider = StreamProvider.family((ref, String uid) {
 });
 
 final fetchFriendsProvider = StreamProvider.family((ref, String uid) {
-  return ref.read(friendControllerProvider.notifier).fetchFriendsByUser(uid);
+  return ref.watch(friendControllerProvider.notifier).fetchFriendsByUser(uid);
 });
 
 final getFollowingStatusProvider =
@@ -227,11 +232,11 @@ class FriendController extends StateNotifier<bool> {
     }
   }
 
-  Future<Either<Failures, void>> unfriend(UserModel targetUser) async {
+  Future<Either<Failures, void>> unfriend(String targetUid) async {
     try {
       final currentUser = _ref.watch(userProvider);
       await _friendRepository
-          .unfriend(getUids(targetUser.uid, currentUser!.uid));
+          .unfriend(getUids(targetUid, currentUser!.uid));
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -346,5 +351,10 @@ class FriendController extends StateNotifier<bool> {
       targetUid: targetUid,
       friendshipUids: uids,
     );
+  }
+
+  Stream<List<BlockDataModel>?> fetchBlockedUsers() {
+    final currentUid = _ref.read(userProvider)!.uid;
+    return _friendRepository.fetchBlockedUsers(currentUid);
   }
 }

@@ -37,7 +37,6 @@ final getUserDataProvider = StreamProvider.family((ref, String uid) {
 
 class AuthController extends StateNotifier<bool> {
   final AuthRepository _authRepository;
-  final UserController _userController;
   final Ref _ref;
 
   AuthController({
@@ -45,7 +44,6 @@ class AuthController extends StateNotifier<bool> {
     required UserController userController,
     required Ref ref,
   })  : _authRepository = authRepository,
-        _userController = userController,
         _ref = ref,
         super(false);
 
@@ -140,25 +138,12 @@ class AuthController extends StateNotifier<bool> {
   }
 
   Future<void> signOut(BuildContext context) async {
-    await _authRepository.signOut(_ref, context);
-  }
-
-  Future<Either<Failures, String>> changeUserPrivacy({
-    required bool setting,
-    required UserModel user,
-  }) async {
     state = true;
     try {
-      final result = await _authRepository.changeUserPrivacy(
-        setting: setting,
-        user: user,
-      );
-      return result.fold((l) => left(Failures(l.message)),
-          (r) => right('Successfully Updated User Privacy Setting!'));
-    } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
+      await _authRepository.signOut();
+      _ref.read(userProvider.notifier).update((state) => null);
     } catch (e) {
-      return left(Failures(e.toString()));
+      throw Exception(e.toString());
     } finally {
       state = false;
     }
@@ -184,9 +169,5 @@ class AuthController extends StateNotifier<bool> {
     } finally {
       state = false;
     }
-  }
-
-  void clearUserData(String uid) async {
-    await _userController.clearUserDeviceToken(uid);
   }
 }

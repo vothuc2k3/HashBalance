@@ -61,18 +61,14 @@ class MessageRepository {
     String conversationId,
     Message lastMessage,
   ) async {
-    _logger.d(lastMessage.toString());
-    final createdAt = lastMessage.createdAt;
     final querySnapshot = await _conversation
         .doc(conversationId)
         .collection(FirebaseConstants.messageCollection)
         .orderBy('createdAt', descending: true)
-        .startAfter([createdAt])
+        .startAfter([lastMessage.createdAt])
         .limit(10)
         .get();
-
     if (querySnapshot.docs.isEmpty) {
-      _logger.d('NULL MESSAGES');
       return null;
     } else {
       List<Message> messages = querySnapshot.docs.map((doc) {
@@ -90,7 +86,7 @@ class MessageRepository {
         .doc(communityId)
         .collection(FirebaseConstants.messageCollection)
         .orderBy('createdAt', descending: true)
-        .limit(10)
+        .limit(20)
         .snapshots()
         .asyncMap(
       (event) async {
@@ -101,7 +97,7 @@ class MessageRepository {
           final messages = event.docs.map((doc) {
             return Message.fromMap(doc.data());
           }).toList();
-          for (var message in messages) {
+          for (final message in messages) {
             final authorDoc = await _users.doc(message.uid).get();
             final author =
                 UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
@@ -118,7 +114,7 @@ class MessageRepository {
   }
 
   //LOAD MORE COMMUNITY MESSAGES
-  Future<List<Message>?> loadMoreCommunityMessages(
+  Future<List<MessageDataModel>?> loadMoreCommunityMessages(
     String conversationId,
     Message lastMessage,
   ) async {
@@ -133,36 +129,55 @@ class MessageRepository {
         .get();
 
     if (querySnapshot.docs.isEmpty) {
-      _logger.d('NULL MESSAGES');
       return null;
     } else {
+      List<MessageDataModel> messagesDataList = [];
       List<Message> messages = querySnapshot.docs.map((doc) {
         return Message.fromMap(doc.data());
       }).toList();
-      _logger.d(messages.toString());
-      return messages;
+      for (final message in messages) {
+        final authorDoc = await _users.doc(message.uid).get();
+        final author =
+            UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
+        final messageData = MessageDataModel(
+          message: message,
+          author: author,
+        );
+        messagesDataList.add(messageData);
+      }
+      return messagesDataList;
     }
   }
 
   //SEND PRIVATE MESSAGE
-  Future<Either<Failures, void>> sendPrivateMessage(
-      Message message, Conversation conversation) async {
+  Future<Either<Failures, void>> sendPrivateMessage({
+    required Message message,
+    required String conversationId,
+    required String targetUid,
+  }) async {
     try {
-      final conversationDoc = await _conversation.doc(conversation.id).get();
+      final batch = _firestore.batch();
+      final conversationRef = _conversation.doc(conversationId);
+      final messageRef = conversationRef
+          .collection(FirebaseConstants.messageCollection)
+          .doc(message.id);
+
+      final conversationDoc = await conversationRef.get();
+
       if (conversationDoc.exists) {
-        await _conversation
-            .doc(conversation.id)
-            .collection(FirebaseConstants.messageCollection)
-            .doc(message.id)
-            .set(message.toMap());
+        batch.set(messageRef, message.toMap());
       } else {
-        await _conversation.doc(conversation.id).set(conversation.toMap());
-        await _conversation
-            .doc(conversation.id)
-            .collection(FirebaseConstants.messageCollection)
-            .doc(message.id)
-            .set(message.toMap());
+        final newConversation = Conversation(
+          id: conversationId,
+          type: 'Private',
+          participantUids: [message.uid, targetUid],
+        );
+
+        batch.set(conversationRef, newConversation.toMap());
+        batch.set(messageRef, message.toMap());
       }
+      await batch.commit();
+
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -171,14 +186,14 @@ class MessageRepository {
     }
   }
 
-  //SEND COMMUNITY MESSAGE
-  Future<Either<Failures, void>> sendCommunityMessage(
-    Message message,
-    Conversation conversation,
-  ) async {
+//SEND COMMUNITY MESSAGE
+  Future<Either<Failures, void>> sendCommunityMessage({
+    required Message message,
+    required String communityId,
+  }) async {
     try {
-      final conversationDoc = await _conversation.doc(conversation.id).get();
-
+      final conversationDoc = await _conversation.doc(communityId).get();
+      final batch = _firestore.batch();
       if (conversationDoc.exists) {
         final data = conversationDoc.data() as Map<String, dynamic>;
         final existingConversation = Conversation(
@@ -186,28 +201,29 @@ class MessageRepository {
           type: data['type'] as String,
           participantUids: List<String>.from(data['participantUids']),
         );
-        final participantUids = existingConversation.participantUids;
 
-        if (!participantUids.contains(message.uid)) {
-          await _conversation.doc(conversation.id).update({
+        if (!existingConversation.participantUids.contains(message.uid)) {
+          batch.update(_conversation.doc(communityId), {
             'participantUids': FieldValue.arrayUnion([message.uid]),
           });
         }
-
-        await _conversation
-            .doc(conversation.id)
-            .collection(FirebaseConstants.messageCollection)
-            .doc(message.id)
-            .set(message.toMap());
       } else {
-        await _conversation.doc(conversation.id).set(conversation.toMap());
-        await _conversation
-            .doc(conversation.id)
-            .collection(FirebaseConstants.messageCollection)
-            .doc(message.id)
-            .set(message.toMap());
-      }
+        final newConversation = Conversation(
+          id: communityId,
+          type: 'Community',
+          participantUids: [message.uid],
+        );
 
+        batch.set(_conversation.doc(communityId), newConversation.toMap());
+      }
+      batch.set(
+        _conversation
+            .doc(communityId)
+            .collection(FirebaseConstants.messageCollection)
+            .doc(message.id),
+        message.toMap(),
+      );
+      await batch.commit();
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));

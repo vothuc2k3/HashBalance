@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 
 class SplashScreen extends ConsumerWidget {
   const SplashScreen({
@@ -11,8 +11,8 @@ class SplashScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      body: Container(
-        color: ref.watch(preferredThemeProvider),
+        body: Container(
+          color: ref.watch(preferredThemeProvider).first,
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

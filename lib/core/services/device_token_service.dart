@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/models/user_devices_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 class DeviceTokenService {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
@@ -41,4 +42,16 @@ class DeviceTokenService {
       return;
     }
   }
+
+  // REMOVE DEVICE TOKEN WHEN USER LOGS OUT
+  Future<void> removeUserDeviceToken(String uid) async {
+    try {
+      await _userDevices.doc(uid).delete();
+    } catch (e, stackTrace) {
+      await Sentry.captureException(e, stackTrace: stackTrace);
+      throw e.toString();
+    }
+  }
+
+  
 }

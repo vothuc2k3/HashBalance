@@ -1,4 +1,5 @@
-import 'package:logger/logger.dart';
+import 'package:hash_balance/models/block_model.dart';
+import 'package:hash_balance/models/conbined_models/block_data_model.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -270,8 +271,6 @@ class FriendRepository {
     required String targetUid,
     required String friendshipUids,
   }) {
-    final logger = Logger();
-
     Stream<bool> hasBlockedStream =
         isBlockedByCurrentUser(currentUid: currentUid, blockUid: targetUid);
     Stream<bool> isBlockedStream =
@@ -286,12 +285,34 @@ class FriendRepository {
       followingStatusStream,
       friendshipStatusStream,
       (hasBlocked, isBlocked, isFollowing, isFriend) {
-        logger.d('hasBlocked: $hasBlocked');
-        logger.d('isBlocked: $isBlocked');
-        logger.d('isFollowing: $isFollowing');
-        logger.d('isFriend: $isFriend');
         return Tuple4(hasBlocked, isBlocked, isFollowing, isFriend);
       },
     );
+  }
+
+  Stream<List<BlockDataModel>?> fetchBlockedUsers(String currentUid) {
+    return _blocks
+        .where('uid', isEqualTo: currentUid)
+        .snapshots()
+        .asyncMap((snapshot) async {
+      List<BlockDataModel> blockDataModels = [];
+      final snapshotData = snapshot.docs;
+      for (final doc in snapshotData) {
+        final data = doc.data() as Map<String, dynamic>;
+        final blockUid = data['blockUid'];
+        final blockId = data['id'];
+        final userDoc = await _users.doc(blockUid).get();
+        final blockDoc = await _blocks.doc(blockId).get();
+        if (userDoc.exists && blockDoc.exists) {
+          final userData = userDoc.data() as Map<String, dynamic>;
+          final blockDataModel = BlockDataModel(
+            block: BlockModel.fromMap(data),
+            user: UserModel.fromMap(userData),
+          );
+          blockDataModels.add(blockDataModel);
+        }
+      }
+      return blockDataModels;
+    });
   }
 }

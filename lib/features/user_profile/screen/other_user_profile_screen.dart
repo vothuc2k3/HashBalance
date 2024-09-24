@@ -11,7 +11,7 @@ import 'package:hash_balance/features/authentication/controller/auth_controller.
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/message/screen/private_message_screen.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:tuple/tuple.dart';
@@ -43,7 +43,7 @@ class _OtherUserProfileScreenState
       builder: (context) {
         return Container(
           decoration: BoxDecoration(
-            color: ref.watch(preferredThemeProvider),
+            color: ref.watch(preferredThemeProvider).first,
           ),
           child: Wrap(
             children: [
@@ -155,8 +155,9 @@ class _OtherUserProfileScreenState
   }
 
   void unfriend(UserModel targetUser) async {
-    final result =
-        await ref.read(friendControllerProvider.notifier).unfriend(targetUser);
+    final result = await ref
+        .read(friendControllerProvider.notifier)
+        .unfriend(targetUser.uid);
     result.fold((l) {
       showToast(false, l.message);
     }, (_) {});
@@ -221,7 +222,7 @@ class _OtherUserProfileScreenState
         ],
       ),
       body: Container(
-        color: ref.watch(preferredThemeProvider),
+        color: ref.watch(preferredThemeProvider).first,
         child: ref.watch(getUserDataProvider(widget._targetUid)).when(
               data: (user) {
                 return combinedStatus.when(
@@ -245,7 +246,7 @@ class _OtherUserProfileScreenState
                                     height: coverHeight,
                                     color: Colors.black,
                                     child: const Center(
-                                      child: CircularProgressIndicator(),
+                                      child: Loading(),
                                     ),
                                   ),
                                 ),
@@ -330,12 +331,10 @@ class _OtherUserProfileScreenState
                                     ),
                                     //BUILD FRIEND WIDGET
                                     const SizedBox(height: 8, width: 8),
-                                    data.item4 == true
+                                    data.item4
                                         ? _buildFriendsWidget(
-                                            context,
-                                            user,
-                                            unfriend,
-                                          ).animate()
+                                                context, user, unfriend)
+                                            .animate()
                                         : ref
                                             .watch(
                                                 getFriendRequestStatusProvider(
@@ -346,9 +345,9 @@ class _OtherUserProfileScreenState
                                                   return Column(
                                                     children: [
                                                       _buildAddFriendButton(
-                                                        sendAddFriendRequest,
-                                                        user,
-                                                      ).animate(),
+                                                              sendAddFriendRequest,
+                                                              user)
+                                                          .animate(),
                                                     ],
                                                   );
                                                 } else if (request.requestUid ==

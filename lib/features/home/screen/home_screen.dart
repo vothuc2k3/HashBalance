@@ -12,7 +12,7 @@ import 'package:hash_balance/features/home/delegates/search_delegate.dart';
 import 'package:hash_balance/features/home/screen/drawers/community_list_drawer.dart';
 import 'package:hash_balance/features/home/screen/drawers/user_profile_drawer.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 
@@ -104,11 +104,11 @@ class HomeScreenState extends ConsumerState<HomeScreen>
 
     return Scaffold(
       body: Container(
-        color: ref.watch(preferredThemeProvider),
+        color: ref.watch(preferredThemeProvider).first,
         child: Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(
-            backgroundColor: ref.watch(preferredThemeProvider),
+            backgroundColor: ref.watch(preferredThemeProvider).second,
             title: AnimatedBuilder(
               animation: GlobalAnimationController.animationController!,
               builder: (context, child) {

@@ -4,7 +4,7 @@ import 'package:hash_balance/features/moderation/screen/mod_tools/invite_moderat
 import 'package:hash_balance/features/moderation/screen/mod_tools/membership_management_screen.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/pending_post_screen.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/reports_screen.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/community_model.dart';
 
 class ModToolsScreen extends ConsumerWidget {
@@ -59,7 +59,7 @@ class ModToolsScreen extends ConsumerWidget {
     return Scaffold(
       extendBodyBehindAppBar: false,
       appBar: AppBar(
-        backgroundColor: ref.watch(preferredThemeProvider),
+        backgroundColor: ref.watch(preferredThemeProvider).second,
         title: const Text(
           'Moderation Tools',
           style: TextStyle(
@@ -69,7 +69,7 @@ class ModToolsScreen extends ConsumerWidget {
         ),
       ),
       body: Container(
-        color: ref.watch(preferredThemeProvider),
+        color: ref.watch(preferredThemeProvider).first,
         child: Column(
           children: [
             ListTile(

@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 class FriendRequestsScreen extends ConsumerStatefulWidget {
@@ -38,11 +38,11 @@ class _FriendRequestsScreenState extends ConsumerState<FriendRequestsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Friend Requests'),
-        backgroundColor: ref.watch(preferredThemeProvider),
+        backgroundColor: ref.watch(preferredThemeProvider).second,
       ),
       body: Container(
         decoration: BoxDecoration(
-          color: ref.watch(preferredThemeProvider),
+          color: ref.watch(preferredThemeProvider).first,
         ),
         child: ref.watch(fetchFriendRequestsProvider(widget._uid)).whenOrNull(
               data: (friendRequests) {

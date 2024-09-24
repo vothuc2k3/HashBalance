@@ -10,7 +10,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/search/controller/search_controller.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -19,26 +19,24 @@ class SearchCommunityDelegate extends SearchDelegate {
   final WidgetRef ref;
   SearchCommunityDelegate(this.ref);
 
-  // Ghi đè hàm buildAppBar để tạo AppBar tùy chỉnh
   @override
   ThemeData appBarTheme(BuildContext context) {
-    // Lấy màu từ preferredThemeProvider
-    Color appBarColor = ref.watch(preferredThemeProvider);
+    Color appBarColor = ref.watch(preferredThemeProvider).second;
 
     return ThemeData(
       appBarTheme: AppBarTheme(
-        backgroundColor: appBarColor, // Đặt màu AppBar
+        backgroundColor: appBarColor,
         iconTheme: const IconThemeData(
-          color: Colors.white, // Màu của biểu tượng trong AppBar
+          color: Colors.white,
         ),
         titleTextStyle: const TextStyle(
-          color: Colors.white, // Màu của tiêu đề
+          color: Colors.white,
           fontSize: 20,
         ),
       ),
       inputDecorationTheme: const InputDecorationTheme(
         hintStyle: TextStyle(
-          color: Colors.white, // Màu của hint text trong ô tìm kiếm
+          color: Colors.white,
         ),
         border: InputBorder.none,
       ),
@@ -71,7 +69,7 @@ class SearchCommunityDelegate extends SearchDelegate {
   @override
   Widget buildSuggestions(BuildContext context) {
     final currentUser = ref.watch(userProvider)!;
-    Color color = ref.watch(preferredThemeProvider);
+    Color color = ref.watch(preferredThemeProvider).first;
 
     Widget buildListItem({
       required String title,

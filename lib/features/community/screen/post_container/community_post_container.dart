@@ -6,7 +6,7 @@ import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/post_share/post_share_controller/post_share_controller.dart';
 import 'package:hash_balance/features/report/controller/report_controller.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 import 'package:hash_balance/features/vote_post/controller/vote_post_controller.dart';
@@ -395,7 +395,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
       decoration: BoxDecoration(
         color: widget.isPinnedPost
             ? const Color(0xFF181C30)
-            : ref.watch(preferredThemeProvider),
+            : ref.watch(preferredThemeProvider).second,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
@@ -524,7 +524,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '#${author.name}',
+                author.name,
                 style:
                     const TextStyle(fontWeight: FontWeight.w600, fontSize: 11),
               ),

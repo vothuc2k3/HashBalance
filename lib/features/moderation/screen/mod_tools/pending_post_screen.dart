@@ -6,7 +6,7 @@ import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/features/moderation/screen/post_container/pending_post_container.dart';
@@ -61,10 +61,10 @@ class PendingPostScreenState extends ConsumerState<PendingPostScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pending Posts'),
-        backgroundColor: ref.watch(preferredThemeProvider),
+        backgroundColor: ref.watch(preferredThemeProvider).second,
       ),
       body: Container(
-        color: ref.watch(preferredThemeProvider),
+        color: ref.watch(preferredThemeProvider).first,
         child: FutureBuilder<List<PostDataModel>>(
           future: pendingPosts,
           builder: (context, snapshot) {

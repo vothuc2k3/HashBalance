@@ -6,7 +6,7 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
@@ -42,11 +42,11 @@ class _MembershipManagementScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text('Membership Management'),
-        backgroundColor: ref.watch(preferredThemeProvider),
+        backgroundColor: ref.watch(preferredThemeProvider).second,
       ),
       body: Container(
         decoration: BoxDecoration(
-          color: ref.watch(preferredThemeProvider),
+          color: ref.watch(preferredThemeProvider).first,
         ),
         child: Column(
           children: [

@@ -6,7 +6,7 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/call/controller/call_controller.dart';
 import 'package:hash_balance/features/call/screen/call_screen.dart';
 import 'package:hash_balance/features/home/screen/home_screen.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 import 'package:just_audio/just_audio.dart';
@@ -143,7 +143,7 @@ class _IncomingCallScreenState extends ConsumerState<IncomingCallScreen> {
       backgroundColor: Colors.black,
       body: Container(
         decoration: BoxDecoration(
-          color: ref.watch(preferredThemeProvider),
+          color: ref.watch(preferredThemeProvider).first,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,

@@ -9,7 +9,7 @@ import 'package:hash_balance/features/authentication/controller/auth_controller.
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/reply_comment/controller/reply_comment_controller.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 import 'package:hash_balance/features/vote_comment/controller/vote_comment_controller.dart';
@@ -114,7 +114,7 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               style: TextButton.styleFrom(
-                backgroundColor: ref.watch(preferredThemeProvider),
+                backgroundColor: ref.watch(preferredThemeProvider).second,
               ),
               child: const Text('Cancel'),
             ),
@@ -126,7 +126,7 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: ref.watch(preferredThemeProvider),
+                backgroundColor: ref.watch(preferredThemeProvider).second,
               ),
               child: const Text('Save'),
             ),
@@ -166,7 +166,7 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
       ),
       padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-        color: themeColor,
+        color: themeColor.second,
         borderRadius: BorderRadius.circular(8),
         boxShadow: const [
           BoxShadow(

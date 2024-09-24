@@ -11,7 +11,7 @@ import 'package:hash_balance/features/call/controller/call_controller.dart';
 import 'package:hash_balance/features/call/screen/outgoing_call_screen.dart';
 import 'package:hash_balance/features/message/controller/message_controller.dart';
 import 'package:hash_balance/features/message/screen/widget/message_bubble.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/message_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
@@ -104,13 +104,18 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
 
   void _onSendMessage(String targetUid) async {
     final result = await ref
-        .watch(messageControllerProvider.notifier)
+        .read(messageControllerProvider.notifier)
         .sendPrivateMessage(_messageController.text, targetUid);
     result.fold(
       (l) {
         showToast(false, l.message);
       },
-      (_) {},
+      (_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _messageController.clear();
+          FocusManager.instance.primaryFocus?.unfocus();
+        });
+      },
     );
   }
 
@@ -169,7 +174,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
     final currentUser = ref.watch(userProvider)!;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: ref.watch(preferredThemeProvider),
+        backgroundColor: ref.watch(preferredThemeProvider).second,
         title: Row(
           children: [
             CircleAvatar(
@@ -201,7 +206,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
       ),
       body: Container(
         decoration: BoxDecoration(
-          color: ref.watch(preferredThemeProvider),
+          color: ref.watch(preferredThemeProvider).first,
         ),
         child: Column(
           children: [

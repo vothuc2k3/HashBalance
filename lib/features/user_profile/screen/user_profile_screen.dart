@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/widget/user_timeline_widget.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -657,10 +657,10 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
             onRefresh: () async {
               userProfileData =
                   ref.refresh(userProfileDataProvider(currentUser.uid));
-            }, // Hàm làm mới
+            },
             child: Container(
               decoration: BoxDecoration(
-                color: ref.watch(preferredThemeProvider),
+                color: ref.watch(preferredThemeProvider).first,
               ),
               child: ListView(
                 padding: EdgeInsets.zero,

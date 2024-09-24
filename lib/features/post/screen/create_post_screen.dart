@@ -16,7 +16,7 @@ import 'package:hash_balance/features/home/screen/home_screen.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 
 class CreatePostScreen extends ConsumerStatefulWidget {
   final Community? _chosenCommunity;
@@ -158,6 +158,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen>
 
   AppBar _buildAppBar() {
     return AppBar(
+      backgroundColor: ref.watch(preferredThemeProvider).second,
       title: const Text('Create Post'),
     );
   }
@@ -191,7 +192,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen>
       appBar: widget._isFromCommunityScreen == false ? null : _buildAppBar(),
       body: Container(
         decoration: BoxDecoration(
-          color: ref.watch(preferredThemeProvider),
+          color: ref.watch(preferredThemeProvider).first,
         ),
         child: Scaffold(
           backgroundColor: Colors.transparent,
@@ -256,7 +257,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen>
                             : () => _showSelectCommunityDialog(snapshot.data!),
                         child: Container(
                           padding: const EdgeInsets.all(10),
-                          color: Colors.grey[900],
+                          color: const Color(0xff181C30),
                           child: selectedCommunity == null
                               ? Row(
                                   mainAxisAlignment: MainAxisAlignment.center,

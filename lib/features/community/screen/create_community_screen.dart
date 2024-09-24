@@ -5,7 +5,7 @@ import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
 class CreateCommunityScreen extends ConsumerStatefulWidget {
@@ -117,10 +117,10 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
               color: Colors.white,
             ),
           ),
-          backgroundColor: ref.watch(preferredThemeProvider),
+          backgroundColor: ref.watch(preferredThemeProvider).second,
         ),
         body: Container(
-          color: ref.watch(preferredThemeProvider),
+          color: ref.watch(preferredThemeProvider).first,
           child: Column(
             children: [
               Expanded(

@@ -3,12 +3,11 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
-import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/setting/screen/setting_screen.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
+import 'package:hash_balance/features/user_profile/screen/friends/blocked_users_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/friends/friend_requests_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/friends/friends_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
@@ -28,6 +27,15 @@ class UserProfileDrawer extends ConsumerStatefulWidget {
 }
 
 class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
+  void _navigateToBlockedUsersScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const BlockedUsersScreen(),
+      ),
+    );
+  }
+
   void _navigateToFriendRequestsScreen() {
     Navigator.push(
       context,
@@ -62,17 +70,6 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
         builder: (context) => const SettingScreen(),
       ),
     );
-  }
-
-  void _changeUserPrivacy(WidgetRef ref, bool setting, UserModel user,
-      BuildContext homeScreenContext) async {
-    final result =
-        await ref.read(authControllerProvider.notifier).changeUserPrivacy(
-              setting: setting,
-              user: user,
-            );
-    result.fold((l) => showToast(false, l.message),
-        (r) => showToast(true, r.toString()));
   }
 
   void showChangePrivacyModal(
@@ -117,8 +114,6 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                       () {
                         Navigator.pop(bottomSheetContext);
                         Scaffold.of(homeScreenContext).closeEndDrawer();
-                        _changeUserPrivacy(
-                            ref, false, user, widget._homeScreenContext);
                       },
                     );
                   },
@@ -147,12 +142,6 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                       () {
                         Navigator.pop(bottomSheetContext);
                         Scaffold.of(homeScreenContext).closeEndDrawer();
-                        _changeUserPrivacy(
-                          ref,
-                          true,
-                          user,
-                          widget._homeScreenContext,
-                        );
                       },
                     );
                   },
@@ -169,7 +158,7 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
     return Drawer(
       child: Container(
         decoration: BoxDecoration(
-          color: ref.watch(preferredThemeProvider),
+          color: ref.watch(preferredThemeProvider).first,
         ),
         child: SafeArea(
           child: Column(
@@ -195,7 +184,7 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '#${user.name}',
+                            user.name,
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w500,
@@ -268,16 +257,17 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                 onTap: () => _navigateToFriendRequestsScreen(),
               ),
               ListTile(
-                  title: const Text(
-                    'Blocked Users',
-                    style: TextStyle(
-                      color: Pallete.whiteColor,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
+                title: const Text(
+                  'Blocked Users',
+                  style: TextStyle(
+                    color: Pallete.whiteColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
                   ),
-                  leading: const Icon(Icons.block),
-                  onTap: () {}),
+                ),
+                leading: const Icon(Icons.block),
+                onTap: () => _navigateToBlockedUsersScreen(),
+              ),
               Expanded(child: Container()),
               ListTile(
                 title: const Text(

@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/constants/constants.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 class MentionAutocompleteOptions extends ConsumerWidget {
@@ -27,7 +27,7 @@ class MentionAutocompleteOptions extends ConsumerWidget {
     }
 
     return Material(
-      color: ref.watch(preferredThemeProvider),
+      color: ref.watch(preferredThemeProvider).first,
       elevation: 4.0,
       child: ListView.builder(
         padding: EdgeInsets.zero,

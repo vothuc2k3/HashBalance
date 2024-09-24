@@ -18,6 +18,7 @@ import 'package:hash_balance/features/moderation/controller/moderation_controlle
 import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:logger/logger.dart';
 import 'package:multi_trigger_autocomplete/multi_trigger_autocomplete.dart';
 import 'package:toastification/toastification.dart';
 
@@ -83,14 +84,18 @@ class MyAppState extends ConsumerState<MyApp> {
   late final DeviceTokenService _deviceTokenService;
   late final UserFriendsService _userFriendsService;
 
-  void _getUserData(User data) async {
-    userData = await ref
-        .watch(authControllerProvider.notifier)
-        .getUserData(data.uid)
-        .first;
-    ref.watch(userProvider.notifier).update((state) => userData);
-    _deviceTokenService.updateUserDeviceToken(userData);
-    _userFriendsService.fetchFriendsByUser(userData);
+  void _getUserData(User? data) async {
+    if (data != null) {
+      final userData = await ref
+          .watch(authControllerProvider.notifier)
+          .getUserData(data.uid)
+          .first;
+      ref.read(userProvider.notifier).update((state) => userData);
+      _deviceTokenService.updateUserDeviceToken(userData);
+      _userFriendsService.fetchFriendsByUser(userData);
+    } else {
+      ref.read(userProvider.notifier).update((state) => null);
+    }
   }
 
   void _setupLocalNotifications() async {
@@ -305,6 +310,18 @@ class MyAppState extends ConsumerState<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<UserModel?>(userProvider, (previous, next) {
+      if (next != null) {
+        // navigatorKey.currentState?.pushAndRemoveUntil(
+        //   MaterialPageRoute(
+        //     builder: (context) => const AuthScreen(),
+        //   ),
+        //   (route) => false,
+        // );
+      } else {
+        Logger().d('User is logged out');
+      }
+    });
     return ref.watch(authStageChangeProvider).when(
           data: (user) {
             if (user != null) {

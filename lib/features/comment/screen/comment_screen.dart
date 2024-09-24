@@ -8,7 +8,7 @@ import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/comment/screen/comment_container/comment_container.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/models/comment_model.dart';
 import 'package:hash_balance/models/conbined_models/comment_data_model.dart';
@@ -94,11 +94,11 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
         extendBodyBehindAppBar: true,
         appBar: AppBar(
           title: const Text('Comments'),
-          backgroundColor: ref.watch(preferredThemeProvider),
+          backgroundColor: ref.watch(preferredThemeProvider).second,
         ),
         body: Container(
           decoration: BoxDecoration(
-            color: ref.watch(preferredThemeProvider),
+            color: ref.watch(preferredThemeProvider).first,
           ),
           child: Column(
             children: [
@@ -168,7 +168,7 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 1.0),
-        color: ref.watch(preferredThemeProvider),
+        color: ref.watch(preferredThemeProvider).first,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

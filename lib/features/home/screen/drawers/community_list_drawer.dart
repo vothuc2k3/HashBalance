@@ -10,7 +10,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/community/screen/create_community_screen.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
@@ -88,7 +88,7 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
     return Drawer(
       child: Container(
         decoration: BoxDecoration(
-          color: ref.watch(preferredThemeProvider),
+          color: ref.watch(preferredThemeProvider).first,
         ),
         child: SafeArea(
           child: Column(
@@ -116,8 +116,7 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
                       data: (communities) {
                         return DropdownSearch<Community>(
                           items: communities,
-                          itemAsString: (Community community) =>
-                              "#${community.name}",
+                          itemAsString: (Community community) => community.name,
                           onChanged: (Community? selectedCommunity) {
                             if (selectedCommunity != null) {
                               _navigateToCommunityScreen(
@@ -151,7 +150,7 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
                             ),
                             itemBuilder: (context, item, isSelected) {
                               return ListTile(
-                                title: Text("#${item.name}"),
+                                title: Text(item.name),
                                 leading: CircleAvatar(
                                   backgroundImage: CachedNetworkImageProvider(
                                     item.profileImage,
@@ -241,7 +240,7 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
                               title: Row(
                                 children: [
                                   Text(
-                                    '#${community.name}',
+                                    community.name,
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -346,7 +345,7 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
                               title: Row(
                                 children: [
                                   Text(
-                                    '#${community.name}',
+                                    community.name,
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),

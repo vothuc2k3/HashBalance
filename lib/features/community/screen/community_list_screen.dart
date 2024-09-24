@@ -10,7 +10,7 @@ import 'package:hash_balance/features/community/controller/comunity_controller.d
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -85,8 +85,8 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen>
       body: RefreshIndicator.adaptive(
         onRefresh: _onRefresh,
         child: Container(
-          color: ref.watch(preferredThemeProvider),
-          child: StreamBuilder<List<Community>?>(
+          color: ref.watch(preferredThemeProvider).first,
+          child: StreamBuilder(
             stream: communitiesStream,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -122,6 +122,8 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen>
                         borderRadius: BorderRadius.circular(15),
                       ),
                       child: ListTile(
+                        
+                        tileColor: ref.watch(preferredThemeProvider).second,
                         leading: CircleAvatar(
                           backgroundImage: CachedNetworkImageProvider(
                             community.profileImage,

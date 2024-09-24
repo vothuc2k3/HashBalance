@@ -12,7 +12,7 @@ import 'package:hash_balance/features/authentication/controller/auth_controller.
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/community/screen/community_conversation_screen.dart';
-import 'package:hash_balance/features/community/screen/post_container/post_container.dart';
+import 'package:hash_balance/features/community/screen/post_container/community_post_container.dart';
 import 'package:hash_balance/features/invitation/controller/invitation_controller.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/invite_moderators_screen.dart';
@@ -22,7 +22,7 @@ import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/invitation_model.dart';
 import 'package:hash_balance/models/post_model.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -620,7 +620,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     final memberModel = ref.watch(currentUserRoleProvider(widget._communityId));
     return Scaffold(
       body: Container(
-        color: ref.watch(preferredThemeProvider),
+        color: ref.watch(preferredThemeProvider).first,
         child: ref.watch(communityByIdProvider(widget._communityId)).when(
               data: (community) {
                 return memberModel.when(
@@ -644,7 +644,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                     _showStrangerMoreOptions();
                                     break;
                                 }
-                              },  
+                              },
                             ),
                           ],
                           expandedHeight: 150,
@@ -709,7 +709,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      '#=${community.name}',
+                                      community.name,
                                       style: const TextStyle(
                                           fontSize: 20,
                                           fontWeight: FontWeight.bold),

@@ -15,7 +15,7 @@ import 'package:hash_balance/features/community/controller/comunity_controller.d
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
-import 'package:hash_balance/features/theme/controller/theme_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
@@ -36,7 +36,7 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _isLoadingMoreNotifications = false;
 
-  void _clearAllNotifications() async {
+  Future<void> _clearAllNotifications() async {
     final result = await ref
         .read(notificationControllerProvider.notifier)
         .clearAllNotifications();
@@ -164,7 +164,7 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
     final user = ref.watch(userProvider);
     return Scaffold(
       body: Container(
-        color: ref.watch(preferredThemeProvider),
+        color: ref.watch(preferredThemeProvider).first,
         child: Column(
           children: [
             Row(
@@ -177,22 +177,34 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
                         context: context,
                         builder: (context) {
                           return AlertDialog(
+                            backgroundColor: ref.watch(preferredThemeProvider).first,
                             title: const Text('Clear All Notifications'),
                             content: const Text(
                                 'Are you sure you want to clear all notifications?'),
                             actions: [
                               TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                child: const Text('Cancel'),
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text(
+                                  'Cancel',
+                                  style: TextStyle(
+                                    color: Colors.greenAccent,
+                                  ),
+                                ),
                               ),
                               ElevatedButton(
-                                onPressed: () {
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.redAccent,
+                                ),
+                                onPressed: () async {
                                   Navigator.pop(context);
-                                  _clearAllNotifications();
+                                  await _clearAllNotifications();
                                 },
-                                child: const Text('Clear All'),
+                                child: const Text(
+                                  'Clear All',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                  ),
+                                ),
                               ),
                             ],
                           );

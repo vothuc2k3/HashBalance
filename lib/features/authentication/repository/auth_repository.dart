@@ -3,7 +3,6 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -11,9 +10,7 @@ import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
-import 'package:hash_balance/core/providers/logger_provider.dart';
 import 'package:hash_balance/core/utils.dart';
-import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 final userProvider = StateProvider<UserModel?>((ref) => null);
@@ -148,24 +145,6 @@ class AuthRepository {
     return UserModel.fromMap(doc.data() as Map<String, dynamic>);
   }
 
-  //CHANGE USER PRIVACY SETTING
-  Future<Either<Failures, void>> changeUserPrivacy({
-    required bool setting,
-    required UserModel user,
-  }) async {
-    try {
-      final updatedUser = user.copyWith(isRestricted: setting);
-      await _users.doc(user.uid).update({
-        'isRestricted': updatedUser.isRestricted,
-      });
-      return right(null);
-    } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
-    } catch (e) {
-      return left(Failures(e.toString()));
-    }
-  }
-
   //SEND RESET PASSWORD LINK
   Future<Either<Failures, void>> sendResetPasswordLink(String email) async {
     try {
@@ -178,16 +157,7 @@ class AuthRepository {
     }
   }
 
-  //SIGN OUT
-  Future<void> signOut(Ref ref, BuildContext context) async {
+  Future<void> signOut() async {
     await _firebaseAuth.signOut();
-    ref.read(userProvider.notifier).update((state) {
-      return null;
-    });
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const AuthScreen()),
-      (Route<dynamic> route) => false,
-    );
-    ref.read(loggerProvider).d('NAVIGATED');
   }
 }

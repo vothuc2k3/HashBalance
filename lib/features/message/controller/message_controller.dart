@@ -13,6 +13,7 @@ import 'package:hash_balance/models/conversation_model.dart';
 import 'package:hash_balance/models/conbined_models/last_message_data_model.dart';
 import 'package:hash_balance/models/message_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
+import 'package:uuid/uuid.dart';
 
 final getCurrentUserConversationProvider = StreamProvider((ref) {
   return ref
@@ -28,10 +29,10 @@ final initialPrivateMessagesProvider =
 });
 
 final initialCommunityMessagesProvider =
-    StreamProvider.family.autoDispose((ref, String communityId) {
+    FutureProvider.family((ref, String communityId) {
   return ref
-      .watch(messageControllerProvider.notifier)
-      .loadInitialCommunityMessages(communityId);
+      .read(messageControllerProvider.notifier)
+      .loadInitialCommunityMessages(communityId).first;
 });
 
 final getLastMessageByConversationProvider =
@@ -88,7 +89,7 @@ class MessageController extends StateNotifier<bool> {
     return _messageRepository.loadInitialCommunityMessages(communityId);
   }
 
-  Future<List<Message>?> loadMoreCommunityMessages(
+  Future<List<MessageDataModel>?> loadMoreCommunityMessages(
       String conversationId, Message lastMessage) async {
     return _messageRepository.loadMoreCommunityMessages(
       conversationId,
@@ -96,45 +97,53 @@ class MessageController extends StateNotifier<bool> {
     );
   }
 
-  Future<Either<Failures, void>> sendPrivateMessage(String text, String targetUid) async {
+  Future<Either<Failures, void>> sendPrivateMessage(
+      String text, String targetUid) async {
     try {
-      final currentUser = _ref.watch(userProvider)!;
-      await _messageRepository.sendPrivateMessage(
-        Message(
-          id: await generateRandomId(),
-          text: text,
-          uid: currentUser.uid,
-          createdAt: Timestamp.now(),
-        ),
-        Conversation(
-          id: getUids(currentUser.uid, targetUid),
-          type: 'Private',
-          participantUids: [targetUid, currentUser.uid],
-        ),
-      );
-      final notif = NotificationModel(
-        id: await generateRandomId(),
-        title: currentUser.name,
-        message: text,
-        targetUid: targetUid,
-        senderUid: currentUser.uid,
-        type: Constants.incomingMessageType,
+      final currentUser = _ref.read(userProvider)!;
+
+      final message = Message(
+        id: const Uuid().v4(),
+        text: text,
+        uid: currentUser.uid,
         createdAt: Timestamp.now(),
-        isRead: false,
       );
-      final targetUserDeviceIds =
-          await _userController.getUserDeviceTokens(targetUid);
-      await _pushNotificationController.sendPushNotification(
-        targetUserDeviceIds,
-        notif.message,
-        notif.title,
-        {
-          'type': Constants.incomingMessageType,
-          'uid': currentUser.uid,
-        },
-        Constants.incomingMessageType,
+
+      final conversationId = getUids(currentUser.uid, targetUid);
+      final result = await _messageRepository.sendPrivateMessage(
+        message: message,
+        conversationId: conversationId,
+        targetUid: targetUid,
       );
-      return right(null);
+
+      if (result.isRight()) {
+        final notif = NotificationModel(
+          id: await generateRandomId(),
+          title: currentUser.name,
+          message: text,
+          targetUid: targetUid,
+          senderUid: currentUser.uid,
+          type: Constants.incomingMessageType,
+          createdAt: Timestamp.now(),
+          isRead: false,
+        );
+
+        final targetUserDeviceIds =
+            await _userController.getUserDeviceTokens(targetUid);
+
+        await _pushNotificationController.sendPushNotification(
+          targetUserDeviceIds,
+          notif.message,
+          notif.title,
+          {
+            'type': Constants.incomingMessageType,
+            'uid': currentUser.uid,
+          },
+          Constants.incomingMessageType,
+        );
+      }
+
+      return result;
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {
@@ -150,23 +159,24 @@ class MessageController extends StateNotifier<bool> {
     );
   }
 
-  Future<Either<Failures, void>> sendCommunityMessage(String text, String communityId) async {
+  Future<Either<Failures, void>> sendCommunityMessage({
+    required String text,
+    required String communityId,
+  }) async {
     try {
       final currentUser = _ref.watch(userProvider)!;
-      await _messageRepository.sendCommunityMessage(
-        Message(
-          id: await generateRandomId(),
-          text: text,
-          uid: currentUser.uid,
-          createdAt: Timestamp.now(),
-        ),
-        Conversation(
-          id: communityId,
-          type: 'Community',
-          participantUids: [currentUser.uid],
-        ),
+
+      final message = Message(
+        id: const Uuid().v4(),
+        text: text,
+        uid: currentUser.uid,
+        createdAt: Timestamp.now(),
       );
-      return right(null);
+
+      return await _messageRepository.sendCommunityMessage(
+        message: message,
+        communityId: communityId,
+      );
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {
