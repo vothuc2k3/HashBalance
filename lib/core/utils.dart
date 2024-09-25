@@ -4,9 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:nanoid/async.dart';
 import 'package:timeago/timeago.dart' as timeago;
-
 import 'package:hash_balance/core/failures.dart';
 import 'package:toastification/toastification.dart';
 
@@ -106,11 +104,6 @@ Future<FilePickerResult?> pickImage() async {
 
 Future<FilePickerResult?> pickVideo() async {
   return await FilePicker.platform.pickFiles(type: FileType.video);
-}
-
-Future<String> generateRandomId() async {
-  var id = await nanoid();
-  return id;
 }
 
 String formatTime(Timestamp timestamp) {

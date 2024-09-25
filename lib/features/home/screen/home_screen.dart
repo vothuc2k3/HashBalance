@@ -30,7 +30,7 @@ class HomeScreenState extends ConsumerState<HomeScreen>
   bool _isIncomingCallScreenOpen = false;
 
   Future<void> _requestPushPermissions() async {
-    await ref.watch(firebaseMessagingProvider).requestPermission();
+    await ref.read(firebaseMessagingProvider).requestPermission();
   }
 
   void _displayCommunityListDrawer(BuildContext context) {
@@ -183,7 +183,7 @@ class HomeScreenState extends ConsumerState<HomeScreen>
             children: Constants.tabWidgets,
           ),
           drawer: const CommunityListDrawer(),
-          endDrawer: UserProfileDrawer(homeScreenContext: context),
+          endDrawer: const UserProfileDrawer(),
           bottomNavigationBar: CupertinoTabBar(
             backgroundColor: ref.watch(preferredThemeProvider).third,
             activeColor: Colors.teal,

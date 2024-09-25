@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/report/repository/report_repository.dart';
 import 'package:hash_balance/models/conbined_models/post_report_model.dart';
 import 'package:hash_balance/models/report_model.dart';
+import 'package:uuid/uuid.dart';
 
 final postReportDataProvider = StreamProviderFamily((ref, Report report) {
   return ref.watch(reportControllerProvider).fetchPostReportData(report);
@@ -24,7 +24,8 @@ final reportControllerProvider = Provider((ref) => ReportController(
 class ReportController {
   final ReportRepository _reportRepository;
   final Ref _ref;
-
+  final Uuid _uuid = const Uuid();
+  
   const ReportController({
     required ReportRepository reportRepository,
     required Ref ref,
@@ -45,7 +46,7 @@ class ReportController {
       switch (type) {
         case Constants.userReportType:
           report = Report(
-            id: await generateRandomId(),
+            id: _uuid.v1(),
             type: type,
             reporterUid: currentUser.uid,
             communityId: communityId,
@@ -56,7 +57,7 @@ class ReportController {
           break;
         case Constants.postReportType:
           report = Report(
-            id: await generateRandomId(),
+            id: _uuid.v1(),
             type: type,
             reporterUid: currentUser.uid,
             communityId: communityId,
@@ -67,7 +68,7 @@ class ReportController {
           break;
         case Constants.commentReportType:
           report = Report(
-            id: await generateRandomId(),
+            id: _uuid.v1(),
             type: type,
             reporterUid: currentUser.uid,
             communityId: communityId,

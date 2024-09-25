@@ -15,12 +15,9 @@ import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
 class UserProfileDrawer extends ConsumerStatefulWidget {
-  final BuildContext _homeScreenContext;
-
   const UserProfileDrawer({
     super.key,
-    required BuildContext homeScreenContext,
-  }) : _homeScreenContext = homeScreenContext;
+  });
 
   @override
   ConsumerState<UserProfileDrawer> createState() => UserProfileDrawerState();
@@ -227,10 +224,7 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                   ),
                 ),
                 leading: const Icon(Icons.privacy_tip),
-                onTap: () => showChangePrivacyModal(
-                  context,
-                  widget._homeScreenContext,
-                ),
+                onTap: () {}
               ),
               ListTile(
                 title: const Text(

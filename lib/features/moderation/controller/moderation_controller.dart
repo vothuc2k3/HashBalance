@@ -19,6 +19,7 @@ import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:uuid/uuid.dart';
 
 final fetchInitialCommunityMembersProvider =
     StreamProvider.family.autoDispose((ref, String communityId) {
@@ -60,6 +61,7 @@ class ModerationController extends StateNotifier<bool> {
   final CommentController _commentController;
   final UserController _userController;
   final Ref _ref;
+  final Uuid _uuid = const Uuid();
 
   ModerationController({
     required ModerationRepository moderationRepository,
@@ -151,7 +153,8 @@ class ModerationController extends StateNotifier<bool> {
     }
   }
 
-  Future<Either<Failures, String>> fetchMembershipStatus(String membershipId) async {
+  Future<Either<Failures, String>> fetchMembershipStatus(
+      String membershipId) async {
     return _moderationRepository.fetchMembershipStatus(membershipId);
   }
 
@@ -180,7 +183,8 @@ class ModerationController extends StateNotifier<bool> {
   }
 
   //APPROVE [OR] REJECT POST
-  Future<Either<Failures, void>> handlePostApproval(Post post, String decision) async {
+  Future<Either<Failures, void>> handlePostApproval(
+      Post post, String decision) async {
     try {
       return await _moderationRepository.handlePostApproval(post, decision);
     } on FirebaseException catch (e) {
@@ -191,7 +195,8 @@ class ModerationController extends StateNotifier<bool> {
   }
 
   //INVITE A FRIEND TO JOIN MODERATION
-  Future<Either<Failures, void>> inviteAsModerator(String uid, Community community) async {
+  Future<Either<Failures, void>> inviteAsModerator(
+      String uid, Community community) async {
     try {
       final currentUser = _ref.watch(userProvider)!;
 
@@ -204,7 +209,7 @@ class ModerationController extends StateNotifier<bool> {
 
       //ADD NOTIFICATION TO THE INVITEE
       final notif = NotificationModel(
-        id: await generateRandomId(),
+        id: _uuid.v1(),
         title: Constants.moderatorInvitationTitle,
         message: Constants.getModeratorInvitationContent(
           currentUser.name,
@@ -277,7 +282,8 @@ class ModerationController extends StateNotifier<bool> {
     }
   }
 
-  Future<Either<Failures, void>> uploadProfileImage(Community community, File profileImage) async {
+  Future<Either<Failures, void>> uploadProfileImage(
+      Community community, File profileImage) async {
     try {
       final result = await _moderationRepository.uploadProfileImage(
         community,
@@ -291,7 +297,8 @@ class ModerationController extends StateNotifier<bool> {
     }
   }
 
-  Future<Either<Failures, void>> uploadBannerImage(Community community, File bannerImage) async {
+  Future<Either<Failures, void>> uploadBannerImage(
+      Community community, File bannerImage) async {
     try {
       final result = await _moderationRepository.uploadBannerImage(
         community,

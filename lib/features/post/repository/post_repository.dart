@@ -9,6 +9,7 @@ import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
+import 'package:hash_balance/models/poll_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
@@ -32,6 +33,9 @@ class PostRepository {
   //REFERENCE ALL THE POSTS
   CollectionReference get _posts =>
       _firestore.collection(FirebaseConstants.postsCollection);
+  //REFERENCE ALL THE POLLS
+  CollectionReference get _polls =>
+      _firestore.collection(FirebaseConstants.pollsCollection);
   //REFERENCE ALL THE COMMENTS
   CollectionReference get _comments =>
       _firestore.collection(FirebaseConstants.commentsCollection);
@@ -261,12 +265,24 @@ class PostRepository {
     return querySnapshot.size;
   }
 
-  Future<Either<Failures, void>> updatePostStatus(Post post, String status) async {
+  Future<Either<Failures, void>> updatePostStatus(
+      Post post, String status) async {
     try {
       await _posts.doc(post.id).update({
         'status': status,
         'createdAt': Timestamp.now(),
       });
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  Future<Either<Failures, void>> createPoll(Poll poll) async {
+    try {
+      await _polls.doc(poll.id).set(poll.toMap());
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));

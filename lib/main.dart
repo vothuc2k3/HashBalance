@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -240,10 +238,10 @@ class MyAppState extends ConsumerState<MyApp> {
             break;
         }
       } catch (e) {
-        print('Error parsing payload: $e');
+        Logger().e('Error parsing payload: $e');
       }
     } else {
-      print('No payload found');
+      Logger().e('No payload found');
     }
   }
 

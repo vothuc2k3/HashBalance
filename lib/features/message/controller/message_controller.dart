@@ -60,6 +60,7 @@ class MessageController extends StateNotifier<bool> {
   final PushNotificationController _pushNotificationController;
   final UserController _userController;
   final Ref _ref;
+  final Uuid _uuid = const Uuid();
 
   MessageController({
     required MessageRepository messageRepository,
@@ -118,7 +119,7 @@ class MessageController extends StateNotifier<bool> {
 
       if (result.isRight()) {
         final notif = NotificationModel(
-          id: await generateRandomId(),
+          id: _uuid.v1(),
           title: currentUser.name,
           message: text,
           targetUid: targetUid,

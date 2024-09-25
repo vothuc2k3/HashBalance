@@ -11,7 +11,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
-import 'package:hash_balance/features/newsfeed/screen/post_container/newsfeed_post_container.dart';
+import 'package:hash_balance/features/newsfeed/screen/containers/newsfeed_post_container.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
 

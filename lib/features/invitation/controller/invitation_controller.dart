@@ -2,10 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/invitation/repository/invitation_repository.dart';
 import 'package:hash_balance/models/invitation_model.dart';
+import 'package:uuid/uuid.dart';
 
 final invitationProvider = StreamProviderFamily((ref, String communityId) =>
     ref.watch(invitationControllerProvider).fetchInvitation(communityId));
@@ -20,7 +20,7 @@ final invitationControllerProvider = Provider((ref) {
 class InvitationController {
   final Ref _ref;
   final InvitationRepository _invitationRepository;
-
+  final Uuid _uuid = const Uuid();
   InvitationController({
     required Ref ref,
     required InvitationRepository invitationRepository,
@@ -35,7 +35,7 @@ class InvitationController {
     try {
       final currentUser = _ref.read(userProvider)!;
       final invitation = Invitation(
-        id: await generateRandomId(),
+        id: _uuid.v1(),
         senderUid: currentUser.uid,
         receiverUid: receiverUid,
         type: type,

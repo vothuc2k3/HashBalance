@@ -14,21 +14,24 @@ import 'package:hash_balance/models/community_membership_model.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/current_user_role_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
+import 'package:uuid/uuid.dart';
 
-final currentUserRoleProvider = StreamProvider.family((ref, String communityId) {
+final currentUserRoleProvider =
+    StreamProvider.family((ref, String communityId) {
   final uid = ref.read(userProvider)!.uid;
-  return ref.watch(communityControllerProvider.notifier).getCurrentUserRole(communityId, uid);
+  return ref
+      .watch(communityControllerProvider.notifier)
+      .getCurrentUserRole(communityId, uid);
 });
 
 final communityPostsProvider = StreamProvider.family((ref, String communityId) {
-
   return ref
       .watch(communityControllerProvider.notifier)
       .fetchCommunityPosts(communityId);
 });
 
-final fetchCommunitiesProvider = StreamProvider(
-    (ref) => ref.read(communityControllerProvider.notifier).fetchCommunities());
+final fetchCommunitiesProvider = StreamProvider((ref) =>
+    ref.watch(communityControllerProvider.notifier).fetchCommunities());
 
 final fetchCommunityByIdProvider =
     FutureProviderFamily((ref, String communityId) {
@@ -62,10 +65,8 @@ final myCommunitiesProvider = StreamProvider((ref) {
   return communityController.getMyCommunities();
 });
 
-final userCommunitiesProvider = StreamProvider((ref) {
-  final communityController = ref.watch(communityControllerProvider.notifier);
-  return communityController.getUserCommunities();
-});
+final userCommunitiesProvider = StreamProvider((ref) =>
+    ref.watch(communityControllerProvider.notifier).getUserCommunities());
 
 final communityByIdProvider = StreamProvider.family((ref, String communityId) {
   return ref
@@ -87,6 +88,7 @@ final communityControllerProvider =
 class CommunityController extends StateNotifier<bool> {
   final CommunityRepository _communityRepository;
   final Ref _ref;
+  final Uuid _uuid = const Uuid();
 
   CommunityController({
     required CommunityRepository communityRepository,
@@ -107,7 +109,7 @@ class CommunityController extends StateNotifier<bool> {
     try {
       final currentUser = _ref.read(userProvider);
       final community = Community(
-        id: await generateRandomId(),
+        id: _uuid.v1(),
         name: name,
         profileImage: Constants
             .avatarDefault[Random().nextInt(Constants.avatarDefault.length)],

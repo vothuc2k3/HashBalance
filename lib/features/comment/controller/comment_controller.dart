@@ -4,7 +4,6 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/constants/constants.dart';
 
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/comment/repository/comment_repository.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
@@ -14,6 +13,7 @@ import 'package:hash_balance/models/conbined_models/comment_data_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:uuid/uuid.dart';
 
 final getCommentVoteStatusProvider =
     StreamProvider.family((ref, String commentId) {
@@ -49,6 +49,7 @@ class CommentController extends StateNotifier<bool> {
   final PushNotificationController _pushNotificationController;
   final NotificationController _notificationController;
   final Ref _ref;
+  final Uuid _uuid = const Uuid();
 
   CommentController({
     required CommentRepository commentRepository,
@@ -70,7 +71,7 @@ class CommentController extends StateNotifier<bool> {
     try {
       final user = _ref.read(userProvider)!;
       final comment = CommentModel(
-        id: await generateRandomId(),
+        id: _uuid.v4(),
         uid: user.uid,
         postId: post.id,
         createdAt: Timestamp.now(),
@@ -89,8 +90,7 @@ class CommentController extends StateNotifier<bool> {
           if (comment.mentionedUser != null &&
               comment.mentionedUser!.isNotEmpty) {
             final notification = NotificationModel(
-
-              id: await generateRandomId(),
+              id: _uuid.v4(),
               title: Constants.commentMentionTitle,
               message: Constants.getCommentMentionContent(user.name),
               type: Constants.commentMentionType,

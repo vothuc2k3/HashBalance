@@ -57,7 +57,6 @@ dependencies:
   http: ^1.2.2
   url_launcher: ^6.3.0
   firebase_messaging: ^15.0.3
-  nanoid: ^1.0.0
   image: ^4.2.0
   toastification: ^2.1.0
   agora_rtc_engine: ^6.3.2

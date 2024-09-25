@@ -4,12 +4,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/user_profile/repository/user_repository.dart';
 import 'package:hash_balance/models/block_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/conbined_models/user_profile_data_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:uuid/uuid.dart';
 
 final userPostsProvider = StreamProvider.family((ref, UserModel user) {
   return ref.watch(userControllerProvider.notifier).getUserPosts(user);
@@ -32,7 +32,7 @@ final getUserDeviceTokensProvider = FutureProvider.family((ref, String uid) =>
 
 class UserController extends StateNotifier<bool> {
   final UserRepository _userRepository;
-
+  final _uuid = const Uuid();
   UserController({
     required UserRepository userRepository,
   })  : _userRepository = userRepository,
@@ -153,7 +153,7 @@ class UserController extends StateNotifier<bool> {
     required String blockUid,
   }) async {
     final blockModel = BlockModel(
-      id: await generateRandomId(),
+      id: _uuid.v1(),
       uid: currentUid,
       blockUid: blockUid,
       createdAt: Timestamp.now(),

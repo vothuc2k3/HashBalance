@@ -2,11 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/post_share/post_share_repository/post_share_repository.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/post_share_model.dart';
+import 'package:uuid/uuid.dart';
 
 final getFriendsSharePostsProvider = StreamProvider.family(
     (ref, List<String> friendUids) => ref
@@ -24,7 +24,7 @@ final postShareControllerProvider = StateNotifierProvider((ref) {
 class PostShareController extends StateNotifier<bool> {
   final PostShareRepository _postShareRepository;
   final Ref _ref;
-
+  final Uuid _uuid = const Uuid();
   PostShareController({
     required PostShareRepository postShareRepository,
     required Ref ref,
@@ -40,7 +40,7 @@ class PostShareController extends StateNotifier<bool> {
     try {
       final currentUid = _ref.watch(userProvider)!.uid;
       final postShare = PostShare(
-        id: await generateRandomId(),
+        id: _uuid.v1(),
         postId: postId,
         uid: currentUid,
         content: content ?? '',

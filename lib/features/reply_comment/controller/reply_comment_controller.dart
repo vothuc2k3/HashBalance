@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/reply_comment/repository/reply_comment_repository.dart';
 import 'package:hash_balance/models/comment_model.dart';
 import 'package:hash_balance/models/post_model.dart';
+import 'package:uuid/uuid.dart';
 
 final getCommentRepliesProvider =
     StreamProvider.family.autoDispose((ref, String parentCommentId) {
@@ -27,6 +27,7 @@ final replyCommentControllerProvider =
 class ReplyCommentController extends StateNotifier<bool> {
   final ReplyCommentRepository _replyRepository;
   final Ref _ref;
+  final Uuid _uuid = const Uuid();
 
   ReplyCommentController({
     required ReplyCommentRepository replyCommentRepository,
@@ -48,7 +49,7 @@ class ReplyCommentController extends StateNotifier<bool> {
         postId: post.id,
         createdAt: Timestamp.now(),
         content: content,
-        id: await generateRandomId(),
+        id: _uuid.v1(),
         parentCommentId: parentCommentId,
       );
       final result = await _replyRepository.reply(comment);

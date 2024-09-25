@@ -10,8 +10,8 @@ import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
-import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:uuid/uuid.dart';
 
 final userProvider = StateProvider<UserModel?>((ref) => null);
 
@@ -29,6 +29,7 @@ class AuthRepository {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _firebaseAuth;
   final GoogleSignIn _googleSignIn;
+  final _uuid = const Uuid();
 
   //REFERENCE ALL THE USERS
   CollectionReference get _users =>
@@ -62,8 +63,8 @@ class AuthRepository {
       if (userCredential.additionalUserInfo!.isNewUser) {
         user = UserModel(
           email: userCredential.user!.email!,
-          name: userCredential.user!.displayName ??
-              'nameless_user_${generateRandomId()}',
+          name:
+              userCredential.user!.displayName ?? 'nameless_user_${_uuid.v1()}',
           profileImage: userCredential.user!.photoURL ??
               Constants.avatarDefault[
                   Random().nextInt(Constants.avatarDefault.length)],

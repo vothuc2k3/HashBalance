@@ -1,5 +1,3 @@
-// ignore_for_file: unused_field
-
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -8,14 +6,15 @@ import 'package:fpdart/fpdart.dart';
 
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
-import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/post/repository/post_repository.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
+import 'package:hash_balance/models/poll_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
+import 'package:uuid/uuid.dart';
 
 final getPostCommentCountProvider = FutureProvider.family((ref, String postId) {
   return ref.read(postControllerProvider.notifier).getPostCommentCount(postId);
@@ -43,6 +42,8 @@ class PostController extends StateNotifier<bool> {
   final PushNotificationController _pushNotificationController;
   final Ref _ref;
   final CommentController _commentController;
+  final Uuid _uuid = const Uuid();
+
   PostController({
     required PostRepository postRepository,
     required StorageRepository storageRepository,
@@ -80,7 +81,7 @@ class PostController extends StateNotifier<bool> {
             isEdited: false,
             isPinned: false,
             createdAt: Timestamp.now(),
-            id: await generateRandomId(),
+            id: _uuid.v1(),
           );
           final result = await _postRepository.createPost(post, image, video);
           return result;
@@ -95,7 +96,7 @@ class PostController extends StateNotifier<bool> {
             commentCount: 0,
             shareCount: 0,
             createdAt: Timestamp.now(),
-            id: await generateRandomId(),
+            id: _uuid.v1(),
           );
           final result = await _postRepository.createPost(post, image, video);
           return result;
@@ -182,7 +183,37 @@ class PostController extends StateNotifier<bool> {
     }
   }
 
-  Future<Either<Failures, void>> updatePostStatus(Post post, String status) async {
+  Future<Either<Failures, void>> updatePostStatus(
+      Post post, String status) async {
     return await _postRepository.updatePostStatus(post, status);
+  }
+
+  Future<Either<Failures, void>> createPoll(
+    String communityId,
+    String question,
+    List<String> options,
+  ) async {
+    List<Map<String, dynamic>> pollOptions = [];
+    for (var option in options) {
+      if (option.isEmpty) {
+        return left(Failures('Option cannot be empty'));
+      } else {
+        final pollOption = PollOption(
+          option: option,
+          voteMap: {},
+        );
+        pollOptions.add(pollOption.toMap());
+      }
+    }
+    final poll = Poll(
+      id: _uuid.v1(),
+      uid: _ref.read(userProvider)!.uid,
+      communityId: communityId,
+      question: question,
+      options: pollOptions,
+      createdAt: Timestamp.now(),
+    );
+    
+    return await _postRepository.createPoll(poll);
   }
 }

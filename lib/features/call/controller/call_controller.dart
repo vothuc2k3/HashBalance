@@ -11,6 +11,7 @@ import 'package:hash_balance/features/call/repository/call_repository.dart';
 import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:uuid/uuid.dart';
 
 final listenToCallProvider = StreamProvider.family((ref, String callId) {
   final callController = ref.read(callControllerProvider.notifier);
@@ -36,8 +37,8 @@ final callControllerProvider = StateNotifierProvider((ref) {
 class CallController extends StateNotifier<CallDataModel?> {
   final CallRepository _callRepository;
   final PushNotificationController _pushNotificationController;
-
   final Ref _ref;
+  final Uuid _uuid = const Uuid();
 
   CallController({
     required CallRepository callRepository,
@@ -78,7 +79,7 @@ class CallController extends StateNotifier<CallDataModel?> {
     try {
       final currentUser = _ref.read(userProvider)!;
       final callModel = Call(
-        id: await generateRandomId(),
+        id: _uuid.v1(),
         callerUid: currentUser.uid,
         receiverUid: targetUser.uid,
         status: Constants.callStatusDialling,

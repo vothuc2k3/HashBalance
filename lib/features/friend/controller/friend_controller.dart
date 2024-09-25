@@ -17,6 +17,7 @@ import 'package:hash_balance/models/friendship_request_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:tuple/tuple.dart';
+import 'package:uuid/uuid.dart';
 
 final blockedUsersProvider = StreamProvider((ref) {
   return ref.watch(friendControllerProvider.notifier).fetchBlockedUsers();
@@ -85,6 +86,7 @@ class FriendController extends StateNotifier<bool> {
   final PushNotificationController _pushNotificationController;
   final UserController _userController;
   final Ref _ref;
+  final Uuid _uuid = const Uuid();
 
   FriendController({
     required UserController userController,
@@ -114,7 +116,7 @@ class FriendController extends StateNotifier<bool> {
       await _friendRepository.sendFriendRequest(request);
 
       final notif = NotificationModel(
-        id: await generateRandomId(),
+        id: _uuid.v1(),
         title: Constants.friendRequestTitle,
         message: Constants.getFriendRequestContent(sender.name),
         targetUid: targetUser.uid,
@@ -184,7 +186,7 @@ class FriendController extends StateNotifier<bool> {
         ),
       );
       final notif = NotificationModel(
-        id: await generateRandomId(),
+        id: _uuid.v1(),
         title: Constants.acceptRequestTitle,
         message: Constants.getAcceptRequestContent(currentUser.name),
         targetUid: targetUser.uid,
@@ -266,7 +268,7 @@ class FriendController extends StateNotifier<bool> {
     try {
       final currentUser = _ref.read(userProvider)!;
       final followerModel = Follower(
-        id: await generateRandomId(),
+        id: _uuid.v1(),
         followerUid: currentUser.uid,
         targetUid: targetUid,
         createdAt: Timestamp.now(),
@@ -274,7 +276,7 @@ class FriendController extends StateNotifier<bool> {
       await _friendRepository.followUser(followerModel);
 
       final notif = NotificationModel(
-        id: await generateRandomId(),
+        id: _uuid.v1(),
         title: Constants.newFollowerTitle,
         message: Constants.getNewFollowerContent(currentUser.name),
         targetUid: targetUid,
