@@ -6,16 +6,25 @@ import 'package:fpdart/fpdart.dart';
 
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
+import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/post/repository/post_repository.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/poll_model.dart';
+import 'package:hash_balance/models/poll_option_vote_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
 import 'package:uuid/uuid.dart';
 import 'package:hash_balance/models/poll_option_model.dart';
+
+final getUserPollOptionVoteProvider =
+    StreamProvider.family((ref, String pollId) {
+  return ref
+      .watch(postControllerProvider.notifier)
+      .getUserPollOptionVote(pollId: pollId);
+});
 
 final getPostCommentCountProvider = FutureProvider.family((ref, String postId) {
   return ref.read(postControllerProvider.notifier).getPostCommentCount(postId);
@@ -185,11 +194,13 @@ class PostController extends StateNotifier<bool> {
     }
   }
 
+  //UPDATE POST STATUS
   Future<Either<Failures, void>> updatePostStatus(
       Post post, String status) async {
     return await _postRepository.updatePostStatus(post, status);
   }
 
+  //CREATE POLL
   Future<Either<Failures, void>> createPoll({
     required String communityId,
     required String question,
@@ -216,5 +227,33 @@ class PostController extends StateNotifier<bool> {
       poll: poll,
       pollOptions: pollOptions,
     );
+  }
+
+  //VOTE OPTION
+  Future<void> voteOption({
+    required String pollId,
+    required String optionId,
+  }) async {
+    final pollOptionVote = PollOptionVote(
+      id: getUids(_ref.read(userProvider)!.uid, pollId),
+      pollId: pollId,
+      pollOptionId: optionId,
+      uid: _ref.read(userProvider)!.uid,
+    );
+    return await _postRepository.voteOption(
+      pollOptionVote: pollOptionVote,
+    );
+  }
+
+  Future<void> deletePoll({required String pollId}) async {
+    return await _postRepository.deletePoll(pollId: pollId);
+  }
+
+  Stream<String?> getUserPollOptionVote({
+    required String pollId,
+  }) {
+    final currentUser = _ref.read(userProvider)!;
+    return _postRepository.getUserPollOptionVote(
+        pollId: pollId, uid: currentUser.uid);
   }
 }

@@ -13,6 +13,7 @@ import 'package:hash_balance/models/poll_model.dart';
 import 'package:hash_balance/models/poll_option_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:hash_balance/models/poll_option_vote_model.dart';
 
 final postRepositoryProvider = Provider((ref) {
   return PostRepository(
@@ -49,6 +50,9 @@ class PostRepository {
   //REFERENCE ALL THE POLL OPTIONS
   CollectionReference get _pollOptions =>
       _firestore.collection(FirebaseConstants.pollOptionsCollection);
+  //REFERENCE ALL THE POLL OPTION VOTES
+  CollectionReference get _pollOptionVotes =>
+      _firestore.collection(FirebaseConstants.pollOptionVotesCollection);
 
   //CREATE A NEW POST
   Future<Either<Failures, void>> createPost(
@@ -299,5 +303,47 @@ class PostRepository {
     } catch (e) {
       return left(Failures(e.toString()));
     }
+  }
+
+// VOTE THE OPTION
+  Future<void> voteOption({
+    required PollOptionVote pollOptionVote,
+  }) async {
+    final batch = _firestore.batch();
+    try {
+      await _pollOptionVotes.doc(pollOptionVote.id).set(pollOptionVote.toMap());
+      await batch.commit();
+    } on FirebaseException catch (e) {
+      throw e.message!;
+    } catch (e) {
+      throw e.toString();
+    }
+  }
+
+  Future<void> deletePoll({required String pollId}) async {
+    try {
+      await _polls.doc(pollId).delete();
+      await _pollOptions.doc(pollId).delete();
+    } on FirebaseException catch (e) {
+      throw e.message!;
+    }
+  }
+
+  Stream<String?> getUserPollOptionVote({
+    required String pollId,
+    required String uid,
+  }) {
+    return _pollOptionVotes
+        .where('pollId', isEqualTo: pollId)
+        .where('uid', isEqualTo: uid)
+        .snapshots()
+        .map((event) {
+      if (event.docs.isNotEmpty) {
+        final voteData = event.docs.first.data() as Map<String, dynamic>;
+        return voteData['pollOptionId'];
+      } else {
+        return null;
+      }
+    });
   }
 }

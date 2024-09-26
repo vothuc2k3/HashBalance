@@ -57,6 +57,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen>
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: ref.watch(preferredThemeProvider).first,
           title: const Text('Select Community'),
           content: SingleChildScrollView(
             child: Column(

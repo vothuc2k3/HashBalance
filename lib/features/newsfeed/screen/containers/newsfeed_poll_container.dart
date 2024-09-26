@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
-import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/post/controller/post_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/poll_model.dart';
 import 'package:hash_balance/models/poll_option_model.dart';
@@ -30,6 +31,105 @@ class _PollContainerState extends ConsumerState<PollContainer> {
   bool isLoading = false;
   UserModel? currentUser;
 
+  void _deletePoll() async {
+    await ref
+        .read(postControllerProvider.notifier)
+        .deletePoll(pollId: widget.poll.id);
+  }
+
+  void _handleDeletePoll() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: ref.watch(preferredThemeProvider).first,
+          title: const Text('Confirm Delete'),
+          content: const Text('Are you sure you want to delete this poll?'),
+          actions: <Widget>[
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: const TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+              onPressed: () => Navigator.of(context).pop(),
+              child:
+                  const Text('No', style: TextStyle(color: Colors.greenAccent)),
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: const TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _deletePoll();
+              },
+              child:
+                  const Text('Yes', style: TextStyle(color: Colors.redAccent)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showMoreOption() {
+    showModalBottomSheet(
+        context: context,
+        builder: (context) {
+          return Container(
+            decoration: BoxDecoration(
+              color: ref.watch(preferredThemeProvider).first,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                ListTile(
+                  leading: const Icon(Icons.edit),
+                  title: const Text('Edit Poll'),
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                ),
+                if (currentUser!.uid == widget.author.uid)
+                  ListTile(
+                    leading: const Icon(Icons.delete),
+                    title: const Text('Delete Poll'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _handleDeletePoll();
+                    },
+                  ),
+                ListTile(
+                  leading: const Icon(Icons.cancel),
+                  title: const Text('Cancel Poll'),
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.close),
+                  title: const Text('Close'),
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
+          );
+        });
+  }
+
+  void _handleOptionTap({
+    required String optionId,
+  }) async {
+    await ref
+        .read(postControllerProvider.notifier)
+        .voteOption(pollId: widget.poll.id, optionId: optionId);
+  }
+
   @override
   void didChangeDependencies() {
     currentUser = ref.read(userProvider)!;
@@ -41,7 +141,7 @@ class _PollContainerState extends ConsumerState<PollContainer> {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       padding: const EdgeInsets.all(10),
-      color: Colors.white.withOpacity(0.05),
+      color: ref.watch(preferredThemeProvider).second,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -52,9 +152,49 @@ class _PollContainerState extends ConsumerState<PollContainer> {
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
-          ..._buildOptions(),
-          const SizedBox(height: 8),
-          _buildPollStat(),
+          ref.watch(getUserPollOptionVoteProvider(widget.poll.id)).when(
+                data: (votedOptionId) {
+                  return Column(
+                    children: widget.options.map((option) {
+                      final isSelected = votedOptionId == option.id;
+                      return InkWell(
+                        onTap: isLoading
+                            ? null
+                            : () => _handleOptionTap(optionId: option.id),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Colors.green
+                                : ref.watch(preferredThemeProvider).third,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 8, horizontal: 12),
+                          margin: const EdgeInsets.symmetric(vertical: 5),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  option.option,
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ),
+                              if (isSelected)
+                                const Icon(
+                                  Icons.check,
+                                  color: Colors.white,
+                                ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  );
+                },
+                loading: () => const CircularProgressIndicator(),
+                error: (error, stackTrace) => Text('Error: $error',
+                    style: const TextStyle(color: Colors.red)),
+              ),
         ],
       ),
     );
@@ -72,73 +212,20 @@ class _PollContainerState extends ConsumerState<PollContainer> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              widget.author.name,
+              widget.community.name,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
             Text(
               formatTime(widget.poll.createdAt),
-              style: TextStyle(color: Colors.grey[600], fontSize: 10),
+              style: TextStyle(color: Colors.grey[600], fontSize: 12),
             ),
           ],
         ),
         const Spacer(),
         IconButton(
           icon: const Icon(Icons.more_vert),
-          onPressed: () {},
+          onPressed: () => _showMoreOption(),
         ),
-      ],
-    );
-  }
-
-  List<Widget> _buildOptions() {
-    return List<Widget>.generate(widget.options.length, (index) {
-      final option = widget.options[index];
-      return InkWell(
-        onTap: isLoading ? null : () {},
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-          margin: const EdgeInsets.symmetric(vertical: 5),
-          decoration: BoxDecoration(
-            color: Colors.grey[800],
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  option.option,
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-              const Icon(
-                Icons.check,
-                color: Colors.green,
-              ),
-            ],
-          ),
-        ),
-      );
-    });
-  }
-
-  Widget _buildPollStat() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        InkWell(
-          onTap: () {},
-          child: const Row(
-            children: [
-              Icon(Icons.comment, size: 18, color: Colors.white70),
-              SizedBox(width: 4),
-              Text(
-                '0 Comments',
-                style: TextStyle(fontSize: 12, color: Colors.white70),
-              ),
-            ],
-          ),
-        ),
-        isLoading ? const Loading() : const SizedBox.shrink(),
       ],
     );
   }

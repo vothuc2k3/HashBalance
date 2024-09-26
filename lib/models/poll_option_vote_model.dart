@@ -2,21 +2,25 @@ import 'dart:convert';
 
 class PollOptionVote {
   final String id;
+  final String pollId;
   final String pollOptionId;
   final String uid;
   PollOptionVote({
     required this.id,
+    required this.pollId,
     required this.pollOptionId,
     required this.uid,
   });
 
   PollOptionVote copyWith({
     String? id,
+    String? pollId,
     String? pollOptionId,
     String? uid,
   }) {
     return PollOptionVote(
       id: id ?? this.id,
+      pollId: pollId ?? this.pollId,
       pollOptionId: pollOptionId ?? this.pollOptionId,
       uid: uid ?? this.uid,
     );
@@ -25,6 +29,7 @@ class PollOptionVote {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'id': id,
+      'pollId': pollId,
       'pollOptionId': pollOptionId,
       'uid': uid,
     };
@@ -33,6 +38,7 @@ class PollOptionVote {
   factory PollOptionVote.fromMap(Map<String, dynamic> map) {
     return PollOptionVote(
       id: map['id'] as String,
+      pollId: map['pollId'] as String,
       pollOptionId: map['pollOptionId'] as String,
       uid: map['uid'] as String,
     );
@@ -43,7 +49,9 @@ class PollOptionVote {
   factory PollOptionVote.fromJson(String source) => PollOptionVote.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
-  String toString() => 'PollOptionVote(id: $id, pollOptionId: $pollOptionId, uid: $uid)';
+  String toString() {
+    return 'PollOptionVote(id: $id, pollId: $pollId, pollOptionId: $pollOptionId, uid: $uid)';
+  }
 
   @override
   bool operator ==(covariant PollOptionVote other) {
@@ -51,10 +59,16 @@ class PollOptionVote {
   
     return 
       other.id == id &&
+      other.pollId == pollId &&
       other.pollOptionId == pollOptionId &&
       other.uid == uid;
   }
 
   @override
-  int get hashCode => id.hashCode ^ pollOptionId.hashCode ^ uid.hashCode;
+  int get hashCode {
+    return id.hashCode ^
+      pollId.hashCode ^
+      pollOptionId.hashCode ^
+      uid.hashCode;
+  }
 }

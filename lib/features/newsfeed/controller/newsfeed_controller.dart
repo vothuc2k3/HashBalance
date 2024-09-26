@@ -3,10 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/newsfeed/repository/newsfeed_repository.dart';
 import 'package:hash_balance/models/conbined_models/newsfeed_data_model.dart';
 import 'package:hash_balance/models/conbined_models/poll_data_model.dart';
-import 'package:hash_balance/models/user_model.dart';
-import 'package:tuple/tuple.dart';
-import 'package:hash_balance/models/post_model.dart';
-import 'package:hash_balance/models/community_model.dart';
 
 final newsfeedStreamProvider = StreamProvider.family((ref, String uid) {
   return ref
@@ -15,7 +11,9 @@ final newsfeedStreamProvider = StreamProvider.family((ref, String uid) {
 });
 
 final pollProvider = StreamProvider.family((ref, String uid) {
-  return ref.watch(newsfeedControllerProvider.notifier).getNewsfeedPolls(uid: uid);
+  return ref
+      .watch(newsfeedControllerProvider.notifier)
+      .getNewsfeedPolls(uid: uid);
 });
 
 final newsfeedControllerProvider =

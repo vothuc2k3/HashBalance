@@ -18,6 +18,9 @@ class VotePostRepository {
   //REFERENCE ALL THE POST
   CollectionReference get _posts =>
       _firestore.collection(FirebaseConstants.postsCollection);
+  //REFERENCE ALL THE POST
+  CollectionReference get _pollOptions =>
+      _firestore.collection(FirebaseConstants.pollOptionsCollection);
 
 // VOTE THE POST
   Future<void> votePost(PostVote postVoteModel, Post post) async {

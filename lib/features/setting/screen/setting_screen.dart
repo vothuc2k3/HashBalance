@@ -156,29 +156,6 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
               ),
               onTap: _testButton,
             ),
-            ref.watch(pollProvider(ref.read(userProvider)!.uid)).when(
-                  data: (data) {
-                    if (data.isEmpty) {
-                      Logger().d('No polls available');
-                      return const SizedBox.shrink();
-                    }
-                    Logger().d('Polls available: ${data.length}');
-                    return ListView.builder(
-                      itemCount: data.length,
-                      itemBuilder: (context, index) {
-                        return PollContainer(
-                          author: data[index].author,
-                          poll: data[index].poll,
-                          options: data[index].options,
-                          community: data[index].community,
-                        );
-                      },
-                    );
-                  },
-                  error: (error, stackTrace) =>
-                      ErrorText(error: error.toString()),
-                  loading: () => const Loading(),
-                ),
           ],
         ),
       ),

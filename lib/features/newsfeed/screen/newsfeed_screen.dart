@@ -93,8 +93,7 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
                                       community: pollData.community,
                                     ).animate().fadeIn();
                                   }
-                                  return const SizedBox
-                                      .shrink(); // Return an empty widget if no data matches
+                                  return const SizedBox.shrink();
                                 },
                               );
                             },
