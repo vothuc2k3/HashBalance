@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 
 class Poll {
   final String id;
@@ -9,7 +8,6 @@ class Poll {
   final String communityId;
   final String question;
   final Timestamp createdAt;
-  final List<Map<String, dynamic>> options;
 
   Poll({
     required this.id,
@@ -17,7 +15,6 @@ class Poll {
     required this.communityId,
     required this.question,
     required this.createdAt,
-    required this.options,
   });
 
   Map<String, dynamic> toMap() {
@@ -27,7 +24,6 @@ class Poll {
       'communityId': communityId,
       'question': question,
       'createdAt': createdAt,
-      'options': options,
     };
   }
 
@@ -38,12 +34,6 @@ class Poll {
       communityId: map['communityId'] as String,
       question: map['question'] as String,
       createdAt: map['createdAt'] as Timestamp,
-      options: List<Map<String, dynamic>>.from(
-        (map['options'] as List<Map<String, dynamic>>)
-            .map<Map<String, dynamic>>(
-          (x) => x,
-        ),
-      ),
     );
   }
 
@@ -53,7 +43,6 @@ class Poll {
     String? communityId,
     String? question,
     Timestamp? createdAt,
-    List<Map<String, dynamic>>? options,
   }) {
     return Poll(
       id: id ?? this.id,
@@ -61,7 +50,6 @@ class Poll {
       communityId: communityId ?? this.communityId,
       question: question ?? this.question,
       createdAt: createdAt ?? this.createdAt,
-      options: options ?? this.options,
     );
   }
 
@@ -72,7 +60,7 @@ class Poll {
 
   @override
   String toString() {
-    return 'Poll(id: $id, uid: $uid, communityId: $communityId, question: $question, createdAt: $createdAt, options: $options)';
+    return 'Poll(id: $id, uid: $uid, communityId: $communityId, question: $question, createdAt: $createdAt)';
   }
 
   @override
@@ -83,8 +71,7 @@ class Poll {
         other.uid == uid &&
         other.communityId == communityId &&
         other.question == question &&
-        other.createdAt == createdAt &&
-        listEquals(other.options, options);
+        other.createdAt == createdAt;
   }
 
   @override
@@ -93,61 +80,6 @@ class Poll {
         uid.hashCode ^
         communityId.hashCode ^
         question.hashCode ^
-        createdAt.hashCode ^
-        options.hashCode;
+        createdAt.hashCode;
   }
-}
-
-class PollOption {
-  String option;
-  Map<String, dynamic> voteMap;
-
-  PollOption({
-    required this.option,
-    required this.voteMap,
-  });
-
-  Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'option': option,
-      'voteMap': voteMap,
-    };
-  }
-
-  factory PollOption.fromMap(Map<String, dynamic> map) {
-    return PollOption(
-      option: map['option'] as String,
-      voteMap: Map<String, dynamic>.from(
-        (map['voteMap'] as Map<String, dynamic>),
-      ),
-    );
-  }
-
-  PollOption copyWith({
-    String? option,
-    Map<String, dynamic>? voteMap,
-  }) {
-    return PollOption(
-      option: option ?? this.option,
-      voteMap: voteMap ?? this.voteMap,
-    );
-  }
-
-  String toJson() => json.encode(toMap());
-
-  factory PollOption.fromJson(String source) =>
-      PollOption.fromMap(json.decode(source) as Map<String, dynamic>);
-
-  @override
-  String toString() => 'PollOption(option: $option, voteMap: $voteMap)';
-
-  @override
-  bool operator ==(covariant PollOption other) {
-    if (identical(this, other)) return true;
-
-    return other.option == option && mapEquals(other.voteMap, voteMap);
-  }
-
-  @override
-  int get hashCode => option.hashCode ^ voteMap.hashCode;
 }

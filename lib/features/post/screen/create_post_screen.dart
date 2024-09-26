@@ -156,9 +156,9 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen>
       return;
     } else {
       final result = await ref.read(postControllerProvider.notifier).createPoll(
-          selectedCommunity!.id,
-          pollQuestionController.text,
-          pollOptionControllers
+          communityId: selectedCommunity!.id,
+          question: pollQuestionController.text,
+          options: pollOptionControllers
               .map((controller) => controller.text.trim())
               .toList());
       result.fold(
@@ -190,152 +190,167 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen>
     );
   }
 
-  Widget _buildPollWidget(
-      {required List<Community> communities, required UserModel currentUser}) {
+  Widget _buildPollWidget({
+    required List<Community> communities,
+    required UserModel currentUser,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: ref.watch(preferredThemeProvider).first,
       ),
-      child: Column(
-        children: [
-          GestureDetector(
-            onTap: () => _showSelectCommunityDialog(communities),
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              color: const Color(0xff181C30),
-              child: selectedCommunity == null
-                  ? Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Spacer(),
-                        Icon(
-                          Icons.add_circle_outline,
-                          color: Colors.white.withOpacity(0.7),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Select Community',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const Spacer(),
-                        Switch(
-                          value: isCreatingPoll,
-                          onChanged: (value) {
-                            setState(() {
-                              isCreatingPoll = value;
-                            });
-                          },
-                        ),
-                      ],
-                    )
-                  : Row(
-                      children: [
-                        const Spacer(),
-                        CircleAvatar(
-                          backgroundImage: CachedNetworkImageProvider(
-                            selectedCommunity!.profileImage,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          selectedCommunity!.name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const Spacer(),
-                        Switch(
-                          value: isCreatingPoll,
-                          onChanged: (value) {
-                            setState(() {
-                              isCreatingPoll = value;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-            ),
+      child: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight:
+                MediaQuery.of(context).size.height, // Chiều cao tối thiểu
           ),
-          _buildUserWidget(user: currentUser),
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  controller: pollQuestionController,
-                  decoration: const InputDecoration(
-                    hintText: 'Enter poll question...',
-                    hintStyle: TextStyle(color: Colors.grey),
-                    border: OutlineInputBorder(),
-                  ),
-                  style: const TextStyle(color: Colors.white),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start, // Căn đều nội dung
+            crossAxisAlignment:
+                CrossAxisAlignment.start, // Căn trái các phần tử
+            children: [
+              GestureDetector(
+                onTap: () => _showSelectCommunityDialog(communities),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  child: selectedCommunity == null
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Spacer(),
+                            Icon(
+                              Icons.add_circle_outline,
+                              color: Colors.white.withOpacity(0.7),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Select Community',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const Spacer(),
+                            Switch(
+                              value: isCreatingPoll,
+                              onChanged: (value) {
+                                setState(() {
+                                  isCreatingPoll = value;
+                                });
+                              },
+                            ),
+                          ],
+                        )
+                      : Row(
+                          children: [
+                            const Spacer(),
+                            CircleAvatar(
+                              backgroundImage: CachedNetworkImageProvider(
+                                  selectedCommunity!.profileImage),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              selectedCommunity!.name,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const Spacer(),
+                            Switch(
+                              value: isCreatingPoll,
+                              onChanged: (value) {
+                                setState(() {
+                                  isCreatingPoll = value;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
                 ),
-                const SizedBox(height: 10),
-                ...pollOptionControllers.map((controller) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 5),
-                    child: TextField(
-                      controller: controller,
-                      decoration: InputDecoration(
-                        hintText: 'Poll option',
-                        hintStyle: const TextStyle(color: Colors.grey),
-                        border: const OutlineInputBorder(),
-                        suffixIcon: pollOptionControllers.length > 2
-                            ? IconButton(
-                                icon: const Icon(Icons.remove_circle,
-                                    color: Colors.red),
-                                onPressed: () {
-                                  setState(() {
-                                    pollOptionControllers.remove(controller);
-                                  });
-                                },
-                              )
-                            : null,
+              ),
+              _buildUserWidget(user: currentUser),
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: pollQuestionController,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter poll question...',
+                        hintStyle: TextStyle(color: Colors.grey),
+                        border: OutlineInputBorder(),
                       ),
                       style: const TextStyle(color: Colors.white),
                     ),
-                  );
-                }),
-                const SizedBox(height: 10),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: ref
-                        .watch(preferredThemeProvider)
-                        .transparentButtonColor,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      pollOptionControllers.add(TextEditingController());
-                    });
-                  },
-                  child: const Text(
-                    'Add Option',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                    const SizedBox(height: 10),
+                    ...pollOptionControllers.map((controller) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 5),
+                        child: TextField(
+                          controller: controller,
+                          decoration: InputDecoration(
+                            hintText: 'Poll option',
+                            hintStyle: const TextStyle(color: Colors.grey),
+                            border: const OutlineInputBorder(),
+                            suffixIcon: pollOptionControllers.length > 2
+                                ? IconButton(
+                                    icon: const Icon(Icons.remove_circle,
+                                        color: Colors.red),
+                                    onPressed: () {
+                                      setState(() {
+                                        pollOptionControllers
+                                            .remove(controller);
+                                      });
+                                    },
+                                  )
+                                : null,
+                          ),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 10),
+                    // Chỉ hiển thị nút "Add Option" khi số lượng option nhỏ hơn 10
+                    if (pollOptionControllers.length < 10)
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: ref
+                              .watch(preferredThemeProvider)
+                              .transparentButtonColor,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            pollOptionControllers.add(TextEditingController());
+                          });
+                        },
+                        child: const Text(
+                          'Add Option',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: _createPoll,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: ref
+                            .watch(preferredThemeProvider)
+                            .approveButtonColor,
+                      ),
+                      child: const Text(
+                        'Create Poll',
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _createPoll,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        ref.watch(preferredThemeProvider).approveButtonColor,
-                  ),
-                  child: const Text(
-                    'Create Poll',
-                    style: TextStyle(color: Colors.black),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ).animate().fadeIn(),
+              ),
+            ],
+          ).animate().fadeIn(),
+        ),
+      ),
     );
   }
 

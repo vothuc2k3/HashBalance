@@ -10,6 +10,7 @@ import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/poll_model.dart';
+import 'package:hash_balance/models/poll_option_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
@@ -45,6 +46,9 @@ class PostRepository {
   //REFERENCE ALL THE POST SHARES
   CollectionReference get _postShares =>
       _firestore.collection(FirebaseConstants.postShareCollection);
+  //REFERENCE ALL THE POLL OPTIONS
+  CollectionReference get _pollOptions =>
+      _firestore.collection(FirebaseConstants.pollOptionsCollection);
 
   //CREATE A NEW POST
   Future<Either<Failures, void>> createPost(
@@ -280,9 +284,15 @@ class PostRepository {
     }
   }
 
-  Future<Either<Failures, void>> createPoll(Poll poll) async {
+  Future<Either<Failures, void>> createPoll({
+    required Poll poll,
+    required List<PollOption> pollOptions,
+  }) async {
     try {
       await _polls.doc(poll.id).set(poll.toMap());
+      for (var option in pollOptions) {
+        await _pollOptions.doc(option.id).set(option.toMap());
+      }
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));

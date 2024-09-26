@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/splash/splash_screen.dart';
+import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
+import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
+import 'package:hash_balance/features/newsfeed/screen/containers/newsfeed_poll_container.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/theme/pallette.dart';
+import 'package:logger/logger.dart';
 
 class SettingScreen extends ConsumerStatefulWidget {
   const SettingScreen({super.key});
@@ -151,6 +156,29 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
               ),
               onTap: _testButton,
             ),
+            ref.watch(pollProvider(ref.read(userProvider)!.uid)).when(
+                  data: (data) {
+                    if (data.isEmpty) {
+                      Logger().d('No polls available');
+                      return const SizedBox.shrink();
+                    }
+                    Logger().d('Polls available: ${data.length}');
+                    return ListView.builder(
+                      itemCount: data.length,
+                      itemBuilder: (context, index) {
+                        return PollContainer(
+                          author: data[index].author,
+                          poll: data[index].poll,
+                          options: data[index].options,
+                          community: data[index].community,
+                        );
+                      },
+                    );
+                  },
+                  error: (error, stackTrace) =>
+                      ErrorText(error: error.toString()),
+                  loading: () => const Loading(),
+                ),
           ],
         ),
       ),

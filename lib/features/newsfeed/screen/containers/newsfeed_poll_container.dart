@@ -3,17 +3,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/poll_model.dart';
+import 'package:hash_balance/models/poll_option_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 class PollContainer extends ConsumerStatefulWidget {
   final UserModel author;
   final Poll poll;
+  final List<PollOption> options;
+  final Community community;
 
   const PollContainer({
     super.key,
     required this.author,
     required this.poll,
+    required this.options,
+    required this.community,
   });
 
   @override
@@ -58,7 +64,7 @@ class _PollContainerState extends ConsumerState<PollContainer> {
     return Row(
       children: [
         CircleAvatar(
-          backgroundImage: NetworkImage(widget.author.profileImage),
+          backgroundImage: NetworkImage(widget.community.profileImage),
           radius: 20,
         ),
         const SizedBox(width: 10),
@@ -85,8 +91,8 @@ class _PollContainerState extends ConsumerState<PollContainer> {
   }
 
   List<Widget> _buildOptions() {
-    return List<Widget>.generate(widget.poll.options.length, (index) {
-      final option = widget.poll.options[index];
+    return List<Widget>.generate(widget.options.length, (index) {
+      final option = widget.options[index];
       return InkWell(
         onTap: isLoading ? null : () {},
         child: Container(
@@ -100,7 +106,7 @@ class _PollContainerState extends ConsumerState<PollContainer> {
             children: [
               Expanded(
                 child: Text(
-                  option['option'],
+                  option.option,
                   style: const TextStyle(color: Colors.white),
                 ),
               ),
@@ -127,7 +133,7 @@ class _PollContainerState extends ConsumerState<PollContainer> {
               SizedBox(width: 4),
               Text(
                 '0 Comments',
-                style: const TextStyle(fontSize: 12, color: Colors.white70),
+                style: TextStyle(fontSize: 12, color: Colors.white70),
               ),
             ],
           ),

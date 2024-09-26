@@ -15,6 +15,7 @@ import 'package:hash_balance/models/poll_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
 import 'package:uuid/uuid.dart';
+import 'package:hash_balance/models/poll_option_model.dart';
 
 final getPostCommentCountProvider = FutureProvider.family((ref, String postId) {
   return ref.read(postControllerProvider.notifier).getPostCommentCount(postId);
@@ -39,6 +40,7 @@ final postControllerProvider = StateNotifierProvider<PostController, bool>(
 class PostController extends StateNotifier<bool> {
   final PostRepository _postRepository;
   final StorageRepository _storageRepository;
+  // ignore: unused_field
   final PushNotificationController _pushNotificationController;
   final Ref _ref;
   final CommentController _commentController;
@@ -188,32 +190,31 @@ class PostController extends StateNotifier<bool> {
     return await _postRepository.updatePostStatus(post, status);
   }
 
-  Future<Either<Failures, void>> createPoll(
-    String communityId,
-    String question,
-    List<String> options,
-  ) async {
-    List<Map<String, dynamic>> pollOptions = [];
-    for (var option in options) {
-      if (option.isEmpty) {
-        return left(Failures('Option cannot be empty'));
-      } else {
-        final pollOption = PollOption(
-          option: option,
-          voteMap: {},
-        );
-        pollOptions.add(pollOption.toMap());
-      }
-    }
+  Future<Either<Failures, void>> createPoll({
+    required String communityId,
+    required String question,
+    required List<String> options,
+  }) async {
+    List<PollOption> pollOptions = [];
+
     final poll = Poll(
       id: _uuid.v1(),
       uid: _ref.read(userProvider)!.uid,
       communityId: communityId,
       question: question,
-      options: pollOptions,
       createdAt: Timestamp.now(),
     );
-    
-    return await _postRepository.createPoll(poll);
+    for (var option in options) {
+      final pollOption = PollOption(
+        id: _uuid.v1(),
+        pollId: poll.id,
+        option: option,
+      );
+      pollOptions.add(pollOption);
+    }
+    return await _postRepository.createPoll(
+      poll: poll,
+      pollOptions: pollOptions,
+    );
   }
 }

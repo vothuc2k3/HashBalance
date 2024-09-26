@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/home/screen/home_screen.dart';
+import 'package:hash_balance/features/newsfeed/screen/containers/newsfeed_poll_container.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
-import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -26,22 +26,10 @@ class NewsfeedScreen extends ConsumerStatefulWidget {
 
 class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
     with AutomaticKeepAliveClientMixin {
-  late Future<List<PostDataModel>> posts;
-
-  Future<void> _refreshPosts() async {
-    setState(() {
-      posts = ref.read(newsfeedControllerProvider).getJoinedCommunitiesPosts();
-    });
-  }
+  Future<void> _refreshPosts() async {}
 
   void _navigateToCreatePostScreen() {
     context.findAncestorStateOfType<HomeScreenState>()?.onTabTapped(2);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    posts = ref.read(newsfeedControllerProvider).getJoinedCommunitiesPosts();
   }
 
   @override
@@ -69,57 +57,70 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
                   child: SizedBox(height: 20),
                 ),
                 SliverToBoxAdapter(
-                  child: FutureBuilder<List<PostDataModel>?>(
-                    future: posts,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              'Loading',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
+                  child:
+                      ref.watch(newsfeedStreamProvider(currentUser.uid)).when(
+                            data: (data) {
+                              if (data.isEmpty) {
+                                return const Center(
+                                  child: Text(
+                                    'No posts available.',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                );
+                              }
+                              return ListView.builder(
+                                physics: const NeverScrollableScrollPhysics(),
+                                shrinkWrap: true,
+                                itemCount: data.length,
+                                itemBuilder: (context, index) {
+                                  final newsfeedData = data[index];
+                                  if (newsfeedData.post != null) {
+                                    final postData = newsfeedData.post!;
+                                    return PostContainer(
+                                      author: postData.author!,
+                                      post: postData.post,
+                                      community: postData.community,
+                                    ).animate().fadeIn();
+                                  } else if (newsfeedData.poll != null) {
+                                    final pollData = newsfeedData.poll!;
+                                    return PollContainer(
+                                      author: pollData.author,
+                                      poll: pollData.poll,
+                                      options: pollData.options,
+                                      community: pollData.community,
+                                    ).animate().fadeIn();
+                                  }
+                                  return const SizedBox
+                                      .shrink(); // Return an empty widget if no data matches
+                                },
+                              );
+                            },
+                            loading: () => Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text(
+                                  'Loading',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                const Loading(),
+                              ].animate().fadeIn(duration: 600.ms).moveY(
+                                    begin: 30,
+                                    end: 0,
+                                    duration: 600.ms,
+                                    curve: Curves.easeOutBack,
+                                  ),
                             ),
-                            const SizedBox(width: 10),
-                            const Loading(),
-                          ].animate().fadeIn(duration: 600.ms).moveY(
-                                begin: 30,
-                                end: 0,
-                                duration: 600.ms,
-                                curve: Curves.easeOutBack,
-                              ),
-                        );
-                      } else if (snapshot.hasError) {
-                        return ErrorText(error: snapshot.error.toString());
-                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return const Center(
-                          child: SizedBox.shrink(),
-                        );
-                      } else if (snapshot.connectionState ==
-                          ConnectionState.done) {
-                        final posts = snapshot.data!;
-                        return ListView.builder(
-                          physics: const NeverScrollableScrollPhysics(),
-                          shrinkWrap: true,
-                          itemCount: posts.length,
-                          itemBuilder: (context, index) {
-                            final postData = posts[index];
-                            return PostContainer(
-                              author: postData.author!,
-                              post: postData.post,
-                              community: postData.community,
-                            ).animate().fadeIn();
-                          },
-                        );
-                      } else {
-                        return const SizedBox.shrink();
-                      }
-                    },
-                  ),
+                            error: (error, stackTrace) =>
+                                ErrorText(error: error.toString()),
+                          ),
                 ),
               ],
             ),
