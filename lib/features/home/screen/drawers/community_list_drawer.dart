@@ -169,7 +169,7 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
               const Divider(),
               const ListTile(
                 title: Text(
-                  'Your Communities',
+                  'Moderation',
                   style: TextStyle(
                     color: Pallete.whiteColor,
                     fontSize: 15,

@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
-import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
@@ -33,6 +32,7 @@ class PollContainer extends ConsumerStatefulWidget {
 class _PollContainerState extends ConsumerState<PollContainer> {
   bool isLoading = false;
   UserModel? currentUser;
+  Widget? oldWidget;
 
   void _deletePoll() async {
     await ref
@@ -87,39 +87,64 @@ class _PollContainerState extends ConsumerState<PollContainer> {
               color: ref.watch(preferredThemeProvider).first,
             ),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                ListTile(
-                  leading: const Icon(Icons.edit),
-                  title: const Text('Edit Poll'),
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                if (currentUser!.uid == widget.author.uid)
-                  ListTile(
-                    leading: const Icon(Icons.delete),
-                    title: const Text('Delete Poll'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      _handleDeletePoll();
-                    },
+              children: widget.options.map((option) {
+                // Lấy AsyncValue từ provider
+                final asyncValue = ref.watch(
+                  getPollOptionVotesCountAndUserVoteStatusProvider(
+                    Tuple2(widget.poll.id, option.id),
                   ),
-                ListTile(
-                  leading: const Icon(Icons.cancel),
-                  title: const Text('Cancel Poll'),
-                  onTap: () {
-                    Navigator.pop(context);
+                );
+
+                // Sử dụng copyWithPrevious để giữ giá trị trước đó
+                final mergedAsyncValue =
+                    asyncValue.copyWithPrevious(asyncValue);
+
+                // Sử dụng maybeWhen để chỉ cập nhật khi có dữ liệu mới, nếu không giữ trạng thái cũ
+                return mergedAsyncValue.maybeWhen(
+                  data: (data) {
+                    final votedOptionId = data.item1;
+                    final voteCount = data.item2;
+
+                    final isSelected = votedOptionId == option.id;
+
+                    return InkWell(
+                      onTap: isLoading
+                          ? null
+                          : () => _handleOptionTap(optionId: option.id),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Colors.green
+                              : ref.watch(preferredThemeProvider).third,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 8, horizontal: 12),
+                        margin: const EdgeInsets.symmetric(vertical: 5),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '${option.option} ($voteCount votes)', // Hiển thị số lượng vote đúng cho từng option
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ),
+                            if (isSelected)
+                              const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
                   },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.close),
-                  title: const Text('Close'),
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-              ],
+                  orElse: () =>
+                      oldWidget ??
+                      Container(), // Giữ trạng thái cũ nếu không có dữ liệu mới
+                );
+              }).toList(),
             ),
           );
         });
@@ -157,54 +182,56 @@ class _PollContainerState extends ConsumerState<PollContainer> {
           const SizedBox(height: 10),
           Column(
             children: widget.options.map((option) {
-              // Sử dụng ref.watch bên trong từng option
-              return ref
-                  .watch(getPollOptionVotesCountAndUserVoteStatusProvider(
-                      Tuple2(widget.poll.id, option.id)))
-                  .when(
-                    data: (data) {
-                      final votedOptionId = data.item1;
-                      final voteCount = data.item2;
+              // Lấy AsyncValue từ provider
+              final asyncValue = ref.watch(
+                getPollOptionVotesCountAndUserVoteStatusProvider(
+                  Tuple2(widget.poll.id, option.id),
+                ),
+              );
 
-                      final isSelected = votedOptionId == option.id;
+              final mergedAsyncValue = asyncValue.copyWithPrevious(asyncValue);
 
-                      return InkWell(
-                        onTap: isLoading
-                            ? null
-                            : () => _handleOptionTap(optionId: option.id),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? Colors.green
-                                : ref.watch(preferredThemeProvider).third,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 8, horizontal: 12),
-                          margin: const EdgeInsets.symmetric(vertical: 5),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  '${option.option} ($voteCount votes)', // Hiển thị số lượng vote đúng cho từng option
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                              ),
-                              if (isSelected)
-                                const Icon(
-                                  Icons.check,
-                                  color: Colors.white,
-                                ),
-                            ],
-                          ),
+              return mergedAsyncValue.whenData((data) {
+                    final votedOptionId = data.item1;
+                    final voteCount = data.item2;
+
+                    final isSelected = votedOptionId == option.id;
+
+                    oldWidget = InkWell(
+                      onTap: isLoading
+                          ? null
+                          : () => _handleOptionTap(optionId: option.id),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Colors.green
+                              : ref.watch(preferredThemeProvider).third,
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                      );
-                    },
-                    loading: () => const Loading(),
-                    error: (error, stackTrace) => Text('Error: $error',
-                        style: const TextStyle(color: Colors.redAccent)),
-                  );
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 8, horizontal: 12),
+                        margin: const EdgeInsets.symmetric(vertical: 5),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '${option.option} ($voteCount votes)',
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ),
+                            if (isSelected)
+                              const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                    return oldWidget!;
+                  }).valueOrNull ??
+                  oldWidget!;
             }).toList(),
           ),
         ],

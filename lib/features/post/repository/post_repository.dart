@@ -16,6 +16,7 @@ import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/models/poll_option_vote_model.dart';
 import 'package:tuple/tuple.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:logger/logger.dart';
 
 final postRepositoryProvider = Provider((ref) {
   return PostRepository(
@@ -27,8 +28,9 @@ final postRepositoryProvider = Provider((ref) {
 class PostRepository {
   final FirebaseFirestore _firestore;
   final StorageRepository _storageRepository;
+  final Logger _logger = Logger();
 
-  const PostRepository({
+  PostRepository({
     required FirebaseFirestore firestore,
     required StorageRepository storageRepository,
   })  : _firestore = firestore,
@@ -224,23 +226,33 @@ class PostRepository {
     }
   }
 
-  Future<List<PostDataModel>> getPendingPosts(Community community) async {
-    final pendingPostsDoc = await _posts
-        .where('communityId', isEqualTo: community.id)
+  Stream<List<PostDataModel>> getPendingPosts({
+    required String communityId,
+  }) {
+    return _posts
+        .where('communityId', isEqualTo: communityId)
         .where('status', isEqualTo: 'Pending')
         .orderBy('createdAt', descending: true)
-        .get();
-    List<PostDataModel> posts = <PostDataModel>[];
-    for (var postDoc in pendingPostsDoc.docs) {
-      final post = Post.fromMap(postDoc.data() as Map<String, dynamic>);
-      final authorDoc = await _users.doc(post.uid).get();
-      final author =
-          UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
-      posts
-          .add(PostDataModel(post: post, author: author, community: community));
-    }
-
-    return posts;
+        .snapshots()
+        .asyncMap(
+      (event) async {
+        List<PostDataModel> posts = [];
+        if (event.docs.isNotEmpty) {
+          for (var postDoc in event.docs) {
+            final post = Post.fromMap(postDoc.data() as Map<String, dynamic>);
+            final authorDoc = await _users.doc(post.uid).get();
+            final author =
+                UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
+            posts.add(PostDataModel(post: post, author: author));
+          }
+          _logger.d('There are pending posts');
+          return posts;
+        } else {
+          _logger.d('No pending posts');
+          return [];
+        }
+      },
+    );
   }
 
   //FETCH PIN POST

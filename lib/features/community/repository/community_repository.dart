@@ -298,18 +298,6 @@ class CommunityRepository {
           NewsfeedCombinedModel(post: null, poll: pollDataModel),
         );
       }
-
-      // Sắp xếp các bài đăng và polls theo thời gian tạo
-      newsfeedDataList.sort((a, b) {
-        final postDateA = a.post?.post.createdAt ?? Timestamp(0, 0);
-        final pollDateA = a.poll?.poll.createdAt ?? Timestamp(0, 0);
-        final postDateB = b.post?.post.createdAt ?? Timestamp(0, 0);
-        final pollDateB = b.poll?.poll.createdAt ?? Timestamp(0, 0);
-
-        return pollDateB.toDate().compareTo(pollDateA.toDate()) +
-            postDateB.toDate().compareTo(postDateA.toDate());
-      });
-
       return newsfeedDataList;
     });
   }

@@ -16,10 +16,18 @@ import 'package:hash_balance/features/notification/controller/notification_contr
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:uuid/uuid.dart';
+
+final getArchivedPostsProvider =
+    StreamProvider.family((ref, String communityId) {
+  return ref
+      .read(moderationControllerProvider.notifier)
+      .getArchivedPosts(communityId);
+});
 
 final fetchInitialCommunityMembersProvider =
     StreamProvider.family((ref, String communityId) {
@@ -326,12 +334,48 @@ class ModerationController extends StateNotifier<bool> {
     try {
       return await _moderationRepository.updatePostStatus(
         postId: postId,
-        status: 'archived',
+        status: 'Archived',
       );
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
     }
+  }
+
+  Future<Either<Failures, void>> unarchivePost({required String postId}) async {
+    try {
+      return await _moderationRepository.updatePostStatus(
+        postId: postId,
+        status: 'Approved',
+      );
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  Future<Either<Failures, void>> changeCommunityType({
+    required String communityId,
+    required String type,
+  }) async {
+    state = true;
+    try {
+      return await _moderationRepository.changeCommunityType(
+        communityId: communityId,
+        type: type,
+      );
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    } finally {
+      state = false;
+    }
+  }
+
+  Stream<List<PostDataModel>> getArchivedPosts(String communityId) {
+    return _moderationRepository.getArchivedPosts(communityId);
   }
 }

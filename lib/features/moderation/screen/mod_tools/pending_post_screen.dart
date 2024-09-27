@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
@@ -8,9 +7,9 @@ import 'package:hash_balance/features/moderation/controller/moderation_controlle
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/community_model.dart';
-import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/features/moderation/screen/post_container/pending_post_container.dart';
 import 'package:hash_balance/models/post_model.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class PendingPostScreen extends ConsumerStatefulWidget {
   final Community _community;
@@ -25,8 +24,6 @@ class PendingPostScreen extends ConsumerStatefulWidget {
 }
 
 class PendingPostScreenState extends ConsumerState<PendingPostScreen> {
-  late Future<List<PostDataModel>> pendingPosts;
-
   void _handlePostApproval(Post post, String decision) async {
     final result = await ref
         .read(moderationControllerProvider.notifier)
@@ -35,25 +32,8 @@ class PendingPostScreenState extends ConsumerState<PendingPostScreen> {
       (l) => showToast(false, l.message),
       (r) {
         showToast(true, 'Approved post!');
-        _onRefresh(); // Refresh the list after approval
       },
     );
-  }
-
-  Future<void> _onRefresh() async {
-    setState(() {
-      pendingPosts = ref
-          .read(postControllerProvider.notifier)
-          .getPendingPosts(widget._community);
-    });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    pendingPosts = ref
-        .read(postControllerProvider.notifier)
-        .getPendingPosts(widget._community);
   }
 
   @override
@@ -65,47 +45,38 @@ class PendingPostScreenState extends ConsumerState<PendingPostScreen> {
       ),
       body: Container(
         color: ref.watch(preferredThemeProvider).first,
-        child: FutureBuilder<List<PostDataModel>>(
-          future: pendingPosts,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Loading();
-            } else if (snapshot.hasError) {
-              return ErrorText(error: snapshot.error.toString());
-            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(
-                child: const Text(
-                  'There\'s no any pending posts.....',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white70,
-                  ),
-                ).animate().fadeIn(duration: 600.ms).moveY(
-                      begin: 30,
-                      end: 0,
-                      duration: 600.ms,
-                      curve: Curves.easeOutBack,
-                    ),
-              );
-            } else {
-              final posts = snapshot.data!;
-              return RefreshIndicator(
-                onRefresh: _onRefresh,
-                child: ListView.builder(
-                  itemCount: posts.length,
+        child: ref.watch(getPendingPostsProvider(widget._community.id)).when(
+              data: (data) {
+                if (data.isEmpty) {
+                  return Center(
+                    child: const Text(
+                      'No pending posts awaiting...',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white70,
+                      ),
+                    ).animate().fadeIn(duration: 600.ms).moveY(
+                          begin: 30,
+                          end: 0,
+                          duration: 600.ms,
+                          curve: Curves.easeOutBack,
+                        ),
+                  );
+                }
+                return ListView.builder(
+                  itemCount: data.length,
                   itemBuilder: (context, index) {
-                    final post = posts[index];
                     return PendingPostContainer(
-                      author: post.author!,
-                      post: post.post,
+                      post: data[index].post,
+                      author: data[index].author!,
                       handlePostApproval: _handlePostApproval,
                     );
                   },
-                ),
-              );
-            }
-          },
-        ),
+                );
+              },
+              error: (error, stack) => ErrorText(error: error.toString()),
+              loading: () => const Center(child: Loading()),
+            ),
       ),
     );
   }

@@ -1,49 +1,38 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
-import 'package:hash_balance/features/post_share/post_share_controller/post_share_controller.dart';
-import 'package:hash_balance/features/report/controller/report_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
-import 'package:hash_balance/features/vote_post/controller/vote_post_controller.dart';
 import 'package:video_player/video_player.dart';
 
 import 'package:hash_balance/core/utils.dart';
-import 'package:hash_balance/features/comment/screen/comment_screen.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
-class PostContainer extends ConsumerStatefulWidget {
-  final bool isMod;
+class ArchivedPostContainer extends ConsumerStatefulWidget {
   final UserModel author;
   final Post post;
   final String communityId;
-  final bool isPinnedPost;
-  final Function(Post)? onPinPost;
-  final Function(Post)? onUnPinPost;
+  final Function(Post) unarchivePost;
 
-  const PostContainer({
+  const ArchivedPostContainer({
     super.key,
-    required this.isMod,
     required this.author,
     required this.post,
     required this.communityId,
-    required this.isPinnedPost,
-    this.onPinPost,
-    this.onUnPinPost,
+    required this.unarchivePost,
   });
 
   @override
-  ConsumerState<PostContainer> createState() => _PostContainerState();
+  ConsumerState<ArchivedPostContainer> createState() =>
+      _ArchivedPostContainerState();
 }
 
-class _PostContainerState extends ConsumerState<PostContainer> {
+class _ArchivedPostContainerState extends ConsumerState<ArchivedPostContainer> {
   late Stream<Map<String, dynamic>> _postVoteCountAndStatus;
   TextEditingController commentTextController = TextEditingController();
   TextEditingController shareTextController = TextEditingController();
@@ -52,24 +41,15 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   String? _videoDuration;
   String? _currentPosition;
 
-  void _archivePost(String postId) async {
-    final result = await ref
-        .read(moderationControllerProvider.notifier)
-        .archivePost(postId: postId);
-    result.fold((l) => showToast(false, l.message), (r) {
-      showToast(true, 'Post archived successfully...');
-    });
-  }
-
-  void _handleArchivePost(String postId) async {
+  void _handleUnarchivePost(String postId) async {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           backgroundColor: ref.watch(preferredThemeProvider).second,
-          title: const Text('Archive Post'),
+          title: const Text('Unarchive Post'),
           content: const Text(
-              'Archiving will hide this post out of newsfeed, are you sure?'),
+              'Unarchiving will show this post in newsfeed, are you sure?'),
           actions: [
             TextButton(
               style: TextButton.styleFrom(
@@ -83,10 +63,10 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                 backgroundColor: Colors.redAccent,
               ),
               onPressed: () {
-                _archivePost(postId);
+                widget.unarchivePost(widget.post);
                 Navigator.of(context).pop();
               },
-              child: const Text('Archive'),
+              child: const Text('Unarchive'),
             ),
           ],
         );
@@ -105,45 +85,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     });
   }
 
-  void _votePost(bool userVote) async {
-    switch (userVote) {
-      case true:
-        final result = await ref
-            .read(upvotePostControllerProvider.notifier)
-            .votePost(widget.post);
-        result.fold((l) {
-          showToast(false, l.toString());
-        }, (_) {
-          setState(() {});
-          _postVoteCountAndStatus = ref
-              .read(postControllerProvider.notifier)
-              .getPostVoteCountAndStatus(widget.post);
-        });
-        break;
-      case false:
-        final result = await ref
-            .read(downvotePostControllerProvider.notifier)
-            .votePost(widget.post);
-        result.fold((l) {
-          showToast(false, l.toString());
-        }, (_) {
-          setState(() {});
-          _postVoteCountAndStatus = ref
-              .read(postControllerProvider.notifier)
-              .getPostVoteCountAndStatus(widget.post);
-        });
-        break;
-    }
-  }
-
-  void _sharePost(String? content) async {
-    final result = await ref
-        .watch(postShareControllerProvider.notifier)
-        .sharePost(postId: widget.post.id, content: content);
-    result.fold((l) => showToast(false, l.message), (r) {
-      showToast(true, 'Share successfully...');
-    });
-  }
+  void _votePost(bool userVote) {}
 
   void _handleDeletePost(Post post) async {
     final confirmDelete = await showDialog<bool>(
@@ -174,17 +116,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     }
   }
 
-  void _navigateToCommentScreen() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CommentScreen(
-          post: widget.post,
-        ),
-      ),
-    );
-  }
-
   void _navigateToOtherUserScreen(String currentUid) {
     switch (currentUid == widget.author.uid) {
       case true:
@@ -207,156 +138,30 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     }
   }
 
-  void _showShareDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Share Post'),
-          content: TextField(
-            controller: shareTextController,
-            decoration: const InputDecoration(
-              hintText: 'Add a message to your share...',
-            ),
-            maxLines: 3,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (shareTextController.text.isNotEmpty) {
-                  _sharePost(shareTextController.text);
-                  Navigator.of(context).pop();
-                }
-              },
-              child: const Text('Share'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _handleReportPost() {
-    TextEditingController reasonController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Report Post'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Please enter the reason for reporting this post:'),
-              const SizedBox(height: 10),
-              TextField(
-                controller: reasonController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  hintText: 'Enter your reason here',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final reason = reasonController.text;
-                if (reason.isNotEmpty) {
-                  _submitReportPost(reason);
-                  Navigator.of(context).pop();
-                } else {
-                  showToast(false, 'Please provide a reason for reporting.');
-                }
-              },
-              child: const Text('Submit'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _submitReportPost(String reason) async {
-    final result = await ref.read(reportControllerProvider).addReport(
-          widget.post.id,
-          null,
-          null,
-          Constants.postReportType,
-          widget.communityId,
-          reason,
-        );
-    result.fold((l) => showToast(false, l.message), (r) {
-      showToast(true, 'Your report has been recorded!');
-    });
-  }
-
   void _showPostOptionsMenu(String currentUid, String postUsername) {
     showModalBottomSheet(
+      backgroundColor: ref.watch(preferredThemeProvider).second,
       context: context,
       builder: (context) {
         return SafeArea(
           child: Wrap(
             children: [
-              if (widget.isMod && !widget.isPinnedPost)
-                ListTile(
-                  leading: const Icon(Icons.person_remove),
-                  title: const Text('Pin this post'),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    if (widget.onPinPost != null) {
-                      widget.onPinPost!(widget.post);
-                    }
-                  },
-                ),
-              if (widget.isMod && widget.isPinnedPost)
-                ListTile(
-                  leading: const Icon(Icons.person_remove),
-                  title: const Text('Unpin this post'),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    if (widget.onUnPinPost != null) {
-                      widget.onUnPinPost!(widget.post);
-                    }
-                  },
-                ),
-              if (currentUid == widget.post.uid || widget.isMod)
-                ListTile(
-                  leading: const Icon(Icons.delete),
-                  title: const Text('Delete'),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    _handleDeletePost(widget.post);
-                  },
-                ),
-              if (widget.isMod)
-                ListTile(
-                  leading: const Icon(Icons.archive),
-                  title: const Text('Archive'),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    _handleArchivePost(widget.post.id);
-                  },
-                ),
-              if (!widget.isMod || currentUid != widget.post.uid)
-                ListTile(
-                  leading: const Icon(Icons.warning),
-                  title: const Text('Report this post'),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    _handleReportPost();
-                  },
-                ),
+              ListTile(
+                leading: const Icon(Icons.delete),
+                title: const Text('Delete'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _handleDeletePost(widget.post);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.archive),
+                title: const Text('Unarchive'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _handleUnarchivePost(widget.post.id);
+                },
+              ),
               ListTile(
                 leading: const Icon(Icons.cancel),
                 title: const Text('Cancel'),
@@ -444,15 +249,13 @@ class _PostContainerState extends ConsumerState<PostContainer> {
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-        color: widget.isPinnedPost
-            ? const Color(0xFF181C30)
-            : ref.watch(preferredThemeProvider).second,
+        color: ref.watch(preferredThemeProvider).second,
         borderRadius: BorderRadius.circular(8),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: widget.isPinnedPost ? Colors.orangeAccent : Colors.white,
+            color: Colors.white,
             blurRadius: 6,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -624,7 +427,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                   .getPostCommentCount(widget.post.id),
               builder: (context, snapshot) {
                 return InkWell(
-                  onTap: () => _navigateToCommentScreen(),
+                  onTap: () {},
                   child: Text(
                     '${snapshot.data} Comments',
                     style: TextStyle(
@@ -642,7 +445,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
                   .getPostShareCount(widget.post.id),
               builder: (context, snapshot) {
                 return InkWell(
-                  onTap: () => _navigateToCommentScreen(),
+                  onTap: () {},
                   child: Text(
                     '${snapshot.data} Shares',
                     style: TextStyle(
@@ -661,10 +464,8 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         ),
         PostActions(
           onVote: _votePost,
-          onComment: () {
-            _navigateToCommentScreen();
-          },
-          onShare: _showShareDialog,
+          onComment: () {},
+          onShare: () {},
           postVoteCountAndStatus: _postVoteCountAndStatus,
         ),
         const Divider(

@@ -12,7 +12,9 @@ import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:logger/logger.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 
 final moderationRepositoryProvider = Provider((ref) {
   return ModerationRepository(
@@ -342,5 +344,38 @@ class ModerationRepository {
     } catch (e) {
       return left(Failures(e.toString()));
     }
+  }
+
+  Future<Either<Failures, void>> changeCommunityType(
+      {required String communityId, required String type}) async {
+    try {
+      await _communities.doc(communityId).update({
+        'type': type,
+      });
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  Stream<List<PostDataModel>> getArchivedPosts(String communityId) {
+    return _posts
+        .where('communityId', isEqualTo: communityId)
+        .where('status', isEqualTo: 'Archived')
+        .snapshots()
+        .asyncMap((snapshot) async {
+      List<PostDataModel> posts = [];
+      for (final doc in snapshot.docs) {
+        final post = Post.fromMap(doc.data() as Map<String, dynamic>);
+        final authorDoc = await _users.doc(post.uid).get();
+        final author =
+            UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
+        posts.add(PostDataModel(post: post, author: author));
+      }
+      Logger().d('There are ${posts.length} archived posts');
+      return posts;
+    });
   }
 }

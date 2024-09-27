@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -46,6 +47,308 @@ class CommunityScreen extends ConsumerStatefulWidget {
 class CommunityScreenState extends ConsumerState<CommunityScreen> {
   Future<PostDataModel?>? pinnedPost;
   UserModel? _currentUser;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _currentUser = ref.watch(userProvider);
+  }
+
+  //MARK: - BUILD WIDGET
+  @override
+  Widget build(BuildContext context) {
+    final currentUser = ref.watch(userProvider)!;
+    final memberCount =
+        ref.watch(getCommunityMemberCountProvider(widget._communityId));
+    final invitaion = ref.watch(invitationProvider(widget._communityId));
+    final memberModel = ref.watch(currentUserRoleProvider(widget._communityId));
+    return Scaffold(
+      body: Container(
+        color: ref.watch(preferredThemeProvider).first,
+        child: ref.watch(communityByIdProvider(widget._communityId)).when(
+              data: (community) {
+                return memberModel.when(
+                  data: (memberModel) {
+                    final String role = memberModel?.role ?? '';
+                    return CustomScrollView(
+                      slivers: [
+                        SliverAppBar(
+                          actions: [
+                            IconButton(
+                              icon: const Icon(Icons.more_vert),
+                              onPressed: () {
+                                switch (role) {
+                                  case 'moderator':
+                                    _showModeratorMoreOptions(community);
+                                    break;
+                                  case 'member':
+                                    _showMemberMoreOptions(community);
+                                    break;
+                                  default:
+                                    _showStrangerMoreOptions();
+                                    break;
+                                }
+                              },
+                            ),
+                          ],
+                          expandedHeight: 150,
+                          flexibleSpace: InkWell(
+                            onTap: () => _handleBannerImageAction(community),
+                            child: Stack(
+                              children: [
+                                Positioned.fill(
+                                  child: CachedNetworkImage(
+                                    imageUrl: community.bannerImage,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) => Container(
+                                      width: double.infinity,
+                                      height: 150,
+                                      color: Colors.black,
+                                      child: const Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    ),
+                                    errorWidget: (context, url, error) =>
+                                        const Icon(Icons.error),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SliverPadding(
+                          padding: const EdgeInsets.all(16),
+                          sliver: SliverList(
+                            delegate: SliverChildListDelegate(
+                              [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    InkWell(
+                                      onTap: () => _handleProfileImageAction(
+                                          community, role),
+                                      child: CircleAvatar(
+                                        backgroundImage:
+                                            CachedNetworkImageProvider(
+                                          community.profileImage,
+                                        ),
+                                        radius: 35,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      onPressed: () =>
+                                          _navigateToCreatePostScreen(
+                                              community),
+                                      icon: const Icon(
+                                        Icons.add,
+                                        color: Colors.white,
+                                      ),
+                                      tooltip: 'Create a new post',
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      community.name,
+                                      style: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                                memberCount.when(
+                                  data: (countt) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 10),
+                                      child: Text('$countt members'),
+                                    );
+                                  },
+                                  error: (error, stackTrace) =>
+                                      ErrorText(error: error.toString()),
+                                  loading: () => const Loading(),
+                                ),
+
+                                //RENDER INVITATION
+                                invitaion.when(
+                                  data: (invitation) {
+                                    if (invitation == null) {
+                                      return const SizedBox.shrink();
+                                    } else {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(top: 10),
+                                        child: ElevatedButton(
+                                          onPressed: () =>
+                                              _showInvitationDetails(
+                                            currentUser.uid,
+                                            invitation,
+                                          ),
+                                          style: ButtonStyle(
+                                            backgroundColor:
+                                                WidgetStateProperty.all(
+                                                    Colors.blue),
+                                            foregroundColor:
+                                                WidgetStateProperty.all(
+                                                    Colors.white),
+                                            overlayColor:
+                                                WidgetStateProperty.resolveWith(
+                                              (states) {
+                                                if (states.contains(
+                                                    WidgetState.pressed)) {
+                                                  return Colors.green
+                                                      .withOpacity(0.2);
+                                                }
+                                                return null;
+                                              },
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            'Pending Invitation',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 18,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ).animate().fadeIn();
+                                    }
+                                  },
+                                  error: (e, s) =>
+                                      ErrorText(error: e.toString())
+                                          .animate()
+                                          .fadeIn(),
+                                  loading: () =>
+                                      const Loading().animate().fadeIn(),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        //MARK: - REGULAR POSTS
+                        SliverToBoxAdapter(
+                          child: ref
+                              .watch(
+                                  communityPostsProvider(widget._communityId))
+                              .when(
+                                data: (newsfeedItems) {
+                                  if (newsfeedItems.isEmpty) {
+                                    return Center(
+                                      child: const Text(
+                                        'No posts yet....',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          color: Colors.white70,
+                                        ),
+                                      )
+                                          .animate()
+                                          .fadeIn(duration: 600.ms)
+                                          .moveY(
+                                            begin: 30,
+                                            end: 0,
+                                            duration: 600.ms,
+                                            curve: Curves.easeOutBack,
+                                          ),
+                                    );
+                                  } else {
+                                    final pinnedPosts = newsfeedItems
+                                        .where((item) =>
+                                            item.post != null &&
+                                            item.post!.post.isPinned)
+                                        .toList();
+
+                                    final unpinnedPosts = newsfeedItems
+                                        .where((item) =>
+                                            item.post != null &&
+                                            !item.post!.post.isPinned)
+                                        .toList();
+
+                                    final polls = newsfeedItems
+                                        .where((item) => item.poll != null)
+                                        .toList();
+
+                                    final combinedItems = [
+                                      ...unpinnedPosts,
+                                      ...polls
+                                    ];
+
+                                    combinedItems.sort((a, b) {
+                                      final dateA = a.post?.post.createdAt ??
+                                          a.poll?.poll.createdAt ??
+                                          Timestamp(0, 0);
+                                      final dateB = b.post?.post.createdAt ??
+                                          b.poll?.poll.createdAt ??
+                                          Timestamp(0, 0);
+                                      return dateB.compareTo(dateA);
+                                    });
+
+                                    final sortedItems = [
+                                      ...pinnedPosts,
+                                      ...combinedItems
+                                    ];
+
+                                    return ListView.builder(
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      shrinkWrap: true,
+                                      itemCount: sortedItems
+                                          .length, // Use sortedItems.length
+                                      itemBuilder: (context, index) {
+                                        final newsfeedItem = sortedItems[
+                                            index]; // Use sortedItems[index]
+
+                                        if (newsfeedItem.post != null) {
+                                          final postData = newsfeedItem.post!;
+                                          return PostContainer(
+                                            isMod: role == 'moderator',
+                                            isPinnedPost:
+                                                postData.post.isPinned,
+                                            author: postData.author!,
+                                            post: postData.post,
+                                            communityId: widget._communityId,
+                                            onPinPost: _handlePinPost,
+                                            onUnPinPost: _handleUnpinPost,
+                                          ).animate().fadeIn();
+                                        } else if (newsfeedItem.poll != null) {
+                                          final pollData = newsfeedItem.poll!;
+                                          return PollContainer(
+                                            author: pollData.author,
+                                            poll: pollData.poll,
+                                            options: pollData.options,
+                                            communityId: widget._communityId,
+                                          ).animate().fadeIn();
+                                        }
+                                        return const SizedBox.shrink();
+                                      },
+                                    );
+                                  }
+                                },
+                                loading: () => const Center(child: Loading())
+                                    .animate()
+                                    .fade(),
+                                error: (error, stackTrace) =>
+                                    Text('Error: $error').animate().fade(),
+                              ),
+                        )
+                      ],
+                    );
+                  },
+                  error: (error, stackTrace) =>
+                      ErrorText(error: error.toString()),
+                  loading: () => const Loading(),
+                );
+              },
+              error: (e, s) =>
+                  ErrorText(error: e.toString()).animate().fadeIn(),
+              loading: () => const SizedBox.shrink(),
+            ),
+      ),
+    );
+  }
 
   void _onJoinCommunity() async {
     final result = await ref
@@ -506,6 +809,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
           ),
         ),
       ],
+      color: ref.watch(preferredThemeProvider).second,
     ).then(
       (value) {
         if (value != null) {
@@ -604,292 +908,4 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
   void _reportCommunity() {}
 
   void _blockCommunity() {}
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _currentUser = ref.watch(userProvider);
-  }
-
-  //MARK: - BUILD WIDGET
-  @override
-  Widget build(BuildContext context) {
-    final currentUser = ref.watch(userProvider)!;
-    final memberCount =
-        ref.watch(getCommunityMemberCountProvider(widget._communityId));
-    final invitaion = ref.watch(invitationProvider(widget._communityId));
-    final memberModel = ref.watch(currentUserRoleProvider(widget._communityId));
-    return Scaffold(
-      body: Container(
-        color: ref.watch(preferredThemeProvider).first,
-        child: ref.watch(communityByIdProvider(widget._communityId)).when(
-              data: (community) {
-                return memberModel.when(
-                  data: (memberModel) {
-                    final String role = memberModel?.role ?? '';
-                    return CustomScrollView(
-                      slivers: [
-                        SliverAppBar(
-                          actions: [
-                            IconButton(
-                              icon: const Icon(Icons.more_vert),
-                              onPressed: () {
-                                switch (role) {
-                                  case 'moderator':
-                                    _showModeratorMoreOptions(community);
-                                    break;
-                                  case 'member':
-                                    _showMemberMoreOptions(community);
-                                    break;
-                                  default:
-                                    _showStrangerMoreOptions();
-                                    break;
-                                }
-                              },
-                            ),
-                          ],
-                          expandedHeight: 150,
-                          flexibleSpace: InkWell(
-                            onTap: () => _handleBannerImageAction(community),
-                            child: Stack(
-                              children: [
-                                Positioned.fill(
-                                  child: CachedNetworkImage(
-                                    imageUrl: community.bannerImage,
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) => Container(
-                                      width: double.infinity,
-                                      height: 150,
-                                      color: Colors.black,
-                                      child: const Center(
-                                        child: CircularProgressIndicator(),
-                                      ),
-                                    ),
-                                    errorWidget: (context, url, error) =>
-                                        const Icon(Icons.error),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        SliverPadding(
-                          padding: const EdgeInsets.all(16),
-                          sliver: SliverList(
-                            delegate: SliverChildListDelegate(
-                              [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    InkWell(
-                                      onTap: () => _handleProfileImageAction(
-                                          community, role),
-                                      child: CircleAvatar(
-                                        backgroundImage:
-                                            CachedNetworkImageProvider(
-                                          community.profileImage,
-                                        ),
-                                        radius: 35,
-                                      ),
-                                    ),
-                                    IconButton(
-                                      onPressed: () =>
-                                          _navigateToCreatePostScreen(
-                                              community),
-                                      icon: const Icon(
-                                        Icons.add,
-                                        color: Colors.white,
-                                      ),
-                                      tooltip: 'Create a new post',
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      community.name,
-                                      style: const TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
-                                memberCount.when(
-                                  data: (countt) {
-                                    return Padding(
-                                      padding: const EdgeInsets.only(top: 10),
-                                      child: Text('$countt members'),
-                                    );
-                                  },
-                                  error: (error, stackTrace) =>
-                                      ErrorText(error: error.toString()),
-                                  loading: () => const Loading(),
-                                ),
-
-                                //RENDER INVITATION
-                                invitaion.when(
-                                  data: (invitation) {
-                                    if (invitation == null) {
-                                      return const SizedBox.shrink();
-                                    } else {
-                                      return Padding(
-                                        padding: const EdgeInsets.only(top: 10),
-                                        child: ElevatedButton(
-                                          onPressed: () =>
-                                              _showInvitationDetails(
-                                            currentUser.uid,
-                                            invitation,
-                                          ),
-                                          style: ButtonStyle(
-                                            backgroundColor:
-                                                WidgetStateProperty.all(
-                                                    Colors.blue),
-                                            foregroundColor:
-                                                WidgetStateProperty.all(
-                                                    Colors.white),
-                                            overlayColor:
-                                                WidgetStateProperty.resolveWith(
-                                              (states) {
-                                                if (states.contains(
-                                                    WidgetState.pressed)) {
-                                                  return Colors.green
-                                                      .withOpacity(0.2);
-                                                }
-                                                return null;
-                                              },
-                                            ),
-                                          ),
-                                          child: const Text(
-                                            'Pending Invitation',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 18,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                      ).animate().fadeIn();
-                                    }
-                                  },
-                                  error: (e, s) =>
-                                      ErrorText(error: e.toString())
-                                          .animate()
-                                          .fadeIn(),
-                                  loading: () =>
-                                      const Loading().animate().fadeIn(),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        //MARK: - REGULAR POSTS
-                        SliverToBoxAdapter(
-                          child: ref
-                              .watch(
-                                  communityPostsProvider(widget._communityId))
-                              .when(
-                                data: (newsfeedItems) {
-                                  if (newsfeedItems.isEmpty) {
-                                    return Center(
-                                      child: const Text(
-                                        'No posts yet....',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          color: Colors.white70,
-                                        ),
-                                      )
-                                          .animate()
-                                          .fadeIn(duration: 600.ms)
-                                          .moveY(
-                                            begin: 30,
-                                            end: 0,
-                                            duration: 600.ms,
-                                            curve: Curves.easeOutBack,
-                                          ),
-                                    );
-                                  } else {
-                                    // Separate pinned and unpinned posts, and include polls
-                                    final pinnedPosts = newsfeedItems
-                                        .where((item) =>
-                                            item.post != null &&
-                                            item.post!.post.isPinned)
-                                        .toList();
-                                    final unpinnedPosts = newsfeedItems
-                                        .where((item) =>
-                                            item.post != null &&
-                                            !item.post!.post.isPinned)
-                                        .toList();
-                                    final polls = newsfeedItems
-                                        .where((item) => item.poll != null)
-                                        .toList();
-
-                                    // Combine all items, prioritizing pinned posts, then polls, then unpinned posts
-                                    final sortedItems = [
-                                      ...pinnedPosts,
-                                      ...polls,
-                                      ...unpinnedPosts
-                                    ];
-
-                                    return ListView.builder(
-                                      physics:
-                                          const NeverScrollableScrollPhysics(),
-                                      shrinkWrap: true,
-                                      itemCount: sortedItems
-                                          .length, // Use sortedItems.length
-                                      itemBuilder: (context, index) {
-                                        final newsfeedItem = sortedItems[
-                                            index]; // Use sortedItems[index]
-
-                                        if (newsfeedItem.post != null) {
-                                          final postData = newsfeedItem.post!;
-                                          return PostContainer(
-                                            isMod: role == 'moderator',
-                                            isPinnedPost:
-                                                postData.post.isPinned,
-                                            author: postData.author!,
-                                            post: postData.post,
-                                            communityId: widget._communityId,
-                                            onPinPost: _handlePinPost,
-                                            onUnPinPost: _handleUnpinPost,
-                                          ).animate().fadeIn();
-                                        } else if (newsfeedItem.poll != null) {
-                                          final pollData = newsfeedItem.poll!;
-                                          return PollContainer(
-                                            author: pollData.author,
-                                            poll: pollData.poll,
-                                            options: pollData.options,
-                                            communityId: widget._communityId,
-                                          ).animate().fadeIn();
-                                        }
-                                        return const SizedBox.shrink();
-                                      },
-                                    );
-                                  }
-                                },
-                                loading: () => const Center(child: Loading())
-                                    .animate()
-                                    .fade(),
-                                error: (error, stackTrace) =>
-                                    Text('Error: $error').animate().fade(),
-                              ),
-                        )
-                      ],
-                    );
-                  },
-                  error: (error, stackTrace) =>
-                      ErrorText(error: error.toString()),
-                  loading: () => const Loading(),
-                );
-              },
-              error: (e, s) =>
-                  ErrorText(error: e.toString()).animate().fadeIn(),
-              loading: () => const SizedBox.shrink(),
-            ),
-      ),
-    );
-  }
 }

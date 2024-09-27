@@ -20,6 +20,13 @@ import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 import 'package:hash_balance/models/poll_option_model.dart';
 
+final getPendingPostsProvider =
+    StreamProvider.family((ref, String communityId) {
+  return ref
+      .watch(postControllerProvider.notifier)
+      .getPendingPosts(communityId);
+});
+
 final getPollOptionVotesCountAndUserVoteStatusProvider =
     StreamProvider.family((ref, Tuple2<String, String> data) {
   return ref
@@ -172,8 +179,8 @@ class PostController extends StateNotifier<bool> {
     }
   }
 
-  Future<List<PostDataModel>> getPendingPosts(Community community) {
-    return _postRepository.getPendingPosts(community);
+  Stream<List<PostDataModel>> getPendingPosts(String communityId) {
+    return _postRepository.getPendingPosts(communityId: communityId);
   }
 
   //GET POST COMMENT COUNT

@@ -57,13 +57,12 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
                 const SliverToBoxAdapter(
                   child: SizedBox(height: 20),
                 ),
-                
+
                 //MARK: - NEWSFEED
                 SliverToBoxAdapter(
                   child:
                       ref.watch(newsfeedStreamProvider(currentUser.uid)).when(
                             data: (data) {
-                              Logger().d(data.length);
                               if (data.isEmpty) {
                                 return const Center(
                                   child: Text(
