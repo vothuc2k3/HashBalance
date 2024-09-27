@@ -14,6 +14,7 @@ import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.da
 import 'package:hash_balance/features/newsfeed/screen/containers/newsfeed_post_container.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
+import 'package:logger/logger.dart';
 
 class NewsfeedScreen extends ConsumerStatefulWidget {
   const NewsfeedScreen({
@@ -56,10 +57,13 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
                 const SliverToBoxAdapter(
                   child: SizedBox(height: 20),
                 ),
+                
+                //MARK: - NEWSFEED
                 SliverToBoxAdapter(
                   child:
                       ref.watch(newsfeedStreamProvider(currentUser.uid)).when(
                             data: (data) {
+                              Logger().d(data.length);
                               if (data.isEmpty) {
                                 return const Center(
                                   child: Text(
@@ -82,7 +86,7 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
                                     return PostContainer(
                                       author: postData.author!,
                                       post: postData.post,
-                                      community: postData.community,
+                                      community: postData.community!,
                                     ).animate().fadeIn();
                                   } else if (newsfeedData.poll != null) {
                                     final pollData = newsfeedData.poll!;
@@ -90,7 +94,7 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
                                       author: pollData.author,
                                       poll: pollData.poll,
                                       options: pollData.options,
-                                      community: pollData.community,
+                                      community: pollData.community!,
                                     ).animate().fadeIn();
                                   }
                                   return const SizedBox.shrink();

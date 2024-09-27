@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
+import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/models/post_vote_model.dart';
 import 'package:hash_balance/models/post_model.dart';
@@ -18,12 +20,10 @@ class VotePostRepository {
   //REFERENCE ALL THE POST
   CollectionReference get _posts =>
       _firestore.collection(FirebaseConstants.postsCollection);
-  //REFERENCE ALL THE POST
-  CollectionReference get _pollOptions =>
-      _firestore.collection(FirebaseConstants.pollOptionsCollection);
 
 // VOTE THE POST
-  Future<void> votePost(PostVote postVoteModel, Post post) async {
+  Future<Either<Failures, void>> votePost(
+      PostVote postVoteModel, Post post) async {
     final batch = _firestore.batch();
     try {
       final ids = postVoteModel.id;
@@ -46,10 +46,11 @@ class VotePostRepository {
         }
       }
       await batch.commit();
+      return right(null);
     } on FirebaseException catch (e) {
-      throw e.message!;
+      return left(Failures(e.message!));
     } catch (e) {
-      throw e.toString();
+      return left(Failures(e.toString()));
     }
   }
 }

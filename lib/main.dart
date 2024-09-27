@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -13,6 +14,7 @@ import 'package:hash_balance/features/call/screen/incoming_call_screen.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
+import 'package:hash_balance/features/network/controller/network_controller.dart';
 import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -81,6 +83,8 @@ class MyAppState extends ConsumerState<MyApp> {
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   late final DeviceTokenService _deviceTokenService;
   late final UserFriendsService _userFriendsService;
+
+  ConnectivityResult? lastStatus;
 
   void _getUserData(User? data) async {
     if (data != null) {
@@ -288,6 +292,19 @@ class MyAppState extends ConsumerState<MyApp> {
     );
   }
 
+  String _connectivityStatusMessage(ConnectivityResult status) {
+    switch (status) {
+      case ConnectivityResult.wifi:
+        return 'Connected to Wi-Fi';
+      case ConnectivityResult.mobile:
+        return 'Connected to Mobile Network';
+      case ConnectivityResult.none:
+        return 'No Network Connection';
+      default:
+        return 'Unknown Network Status';
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -308,18 +325,25 @@ class MyAppState extends ConsumerState<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<UserModel?>(userProvider, (previous, next) {
-      if (next != null) {
-        // navigatorKey.currentState?.pushAndRemoveUntil(
-        //   MaterialPageRoute(
-        //     builder: (context) => const AuthScreen(),
-        //   ),
-        //   (route) => false,
-        // );
-      } else {
-        Logger().d('User is logged out');
-      }
+    ref.listen<AsyncValue<List<ConnectivityResult>>>(connectivityProvider,
+        (previous, next) {
+      next.when(
+        data: (statuses) {
+          if (statuses.isNotEmpty) {
+            final lastConnectivity = statuses.last;
+            if (lastConnectivity != lastStatus) {
+              lastStatus = lastConnectivity;
+              showToast(true, _connectivityStatusMessage(lastConnectivity));
+            }
+          }
+        },
+        loading: () {},
+        error: (error, stack) {
+          showToast(false, error.toString());
+        },
+      );
     });
+
     return ref.watch(authStageChangeProvider).when(
           data: (user) {
             if (user != null) {

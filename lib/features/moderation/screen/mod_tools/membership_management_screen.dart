@@ -60,7 +60,6 @@ class _MembershipManagementScreenState
                         itemCount: members.length,
                         itemBuilder: (context, index) {
                           final member = members[index];
-
                           return ExpansionTile(
                             leading: CircleAvatar(
                               backgroundImage: CachedNetworkImageProvider(

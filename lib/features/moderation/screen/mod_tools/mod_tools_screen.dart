@@ -14,6 +14,15 @@ class ModToolsScreen extends ConsumerWidget {
     required this.community,
   });
 
+  void _navigateToArchivedPostsScreen(BuildContext context) {
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(
+    //     builder: (context) => ArchivedPostsScreen(community: community),
+    //   ),
+    // );
+  }
+
   void _navigateToReportScreen(BuildContext context) {
     Navigator.push(
       context,
@@ -73,13 +82,18 @@ class ModToolsScreen extends ConsumerWidget {
         child: Column(
           children: [
             ListTile(
+              leading: const Icon(Icons.add_moderator),
+              title: const Text('Invite Moderators'),
+              onTap: () => _navigateToInviteModeratorsScreen(context),
+            ),
+            ListTile(
               leading: const Icon(Icons.access_time),
               title: const Text('Pending Posts'),
               onTap: () => _navigateToPendingPostScreen(context),
             ),
             ListTile(
-              leading: const Icon(Icons.add_moderator),
-              title: const Text('Invite Moderators'),
+              leading: const Icon(Icons.archive),
+              title: const Text('Archived Posts'),
               onTap: () => _navigateToInviteModeratorsScreen(context),
             ),
             ListTile(
@@ -94,7 +108,7 @@ class ModToolsScreen extends ConsumerWidget {
             ),
             ListTile(
               leading: const Icon(Icons.warning),
-              title: const Text('Report'),
+              title: const Text('Reports Management'),
               onTap: () => _navigateToReportScreen(context),
             ),
           ],

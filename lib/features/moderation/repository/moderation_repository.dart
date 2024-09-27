@@ -327,4 +327,20 @@ class ModerationRepository {
       return members;
     });
   }
+
+  Future<Either<Failures, void>> updatePostStatus({
+    required String postId,
+    required String status,
+  }) async {
+    try {
+      await _posts.doc(postId).update({
+        'status': status,
+      });
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
 }

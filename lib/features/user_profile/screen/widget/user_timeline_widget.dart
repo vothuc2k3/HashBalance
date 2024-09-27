@@ -48,7 +48,7 @@ class _UserTimelineWidgetState extends ConsumerState<UserTimelineWidget>
                           return PostContainer(
                             author: widget._user,
                             post: postData.post,
-                            community: postData.community,
+                            community: postData.community!,
                           ).animate().fadeIn();
                         },
                       );

@@ -15,7 +15,6 @@ import 'package:video_player/video_player.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/comment/screen/comment_screen.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
-import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
@@ -23,7 +22,7 @@ class PostContainer extends ConsumerStatefulWidget {
   final bool isMod;
   final UserModel author;
   final Post post;
-  final Community community;
+  final String communityId;
   final bool isPinnedPost;
   final Function(Post)? onPinPost;
   final Function(Post)? onUnPinPost;
@@ -33,7 +32,7 @@ class PostContainer extends ConsumerStatefulWidget {
     required this.isMod,
     required this.author,
     required this.post,
-    required this.community,
+    required this.communityId,
     required this.isPinnedPost,
     this.onPinPost,
     this.onUnPinPost,
@@ -251,7 +250,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
           null,
           null,
           Constants.postReportType,
-          widget.community.id,
+          widget.communityId,
           reason,
         );
     result.fold((l) => showToast(false, l.message), (r) {
@@ -364,13 +363,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     return '$minutes:$seconds';
   }
 
-  @override
-  void dispose() {
-    _videoController?.removeListener(_videoListener);
-    _videoController?.dispose();
-    super.dispose();
-  }
-
   void _videoListener() {
     if (_videoController!.value.position == _videoController!.value.duration) {
       if (mounted) {
@@ -385,6 +377,13 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         });
       }
     }
+  }
+
+  @override
+  void dispose() {
+    _videoController?.removeListener(_videoListener);
+    _videoController?.dispose();
+    super.dispose();
   }
 
   @override

@@ -7,12 +7,12 @@ class PollDataModel {
   final Poll poll;
   final List<PollOption> options;
   final UserModel author;
-  final Community community;
+  final Community? community;
 
   PollDataModel({
     required this.poll,
     required this.options,
     required this.author,
-    required this.community,
+    this.community,
   });
 }

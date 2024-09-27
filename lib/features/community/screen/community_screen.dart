@@ -17,6 +17,7 @@ import 'package:hash_balance/features/invitation/controller/invitation_controlle
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/invite_moderators_screen.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/mod_tools_screen.dart';
+import 'package:hash_balance/features/community/screen/post_container/community_poll_container.dart';
 import 'package:hash_balance/features/post/screen/create_post_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
@@ -46,7 +47,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
   Future<PostDataModel?>? pinnedPost;
   UserModel? _currentUser;
 
-  _onJoinCommunity() async {
+  void _onJoinCommunity() async {
     final result = await ref
         .read(communityControllerProvider.notifier)
         .joinCommunity(_currentUser!.uid, widget._communityId);
@@ -791,11 +792,11 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                               .watch(
                                   communityPostsProvider(widget._communityId))
                               .when(
-                                data: (posts) {
-                                  if (posts.isEmpty) {
+                                data: (newsfeedItems) {
+                                  if (newsfeedItems.isEmpty) {
                                     return Center(
                                       child: const Text(
-                                        'NO ANY POSTS',
+                                        'No posts yet....',
                                         style: TextStyle(
                                           fontSize: 18,
                                           color: Colors.white70,
@@ -811,41 +812,67 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                           ),
                                     );
                                   } else {
-                                    final pinnedPosts = posts
-                                        .where((postData) =>
-                                            postData.post.isPinned)
+                                    // Separate pinned and unpinned posts, and include polls
+                                    final pinnedPosts = newsfeedItems
+                                        .where((item) =>
+                                            item.post != null &&
+                                            item.post!.post.isPinned)
                                         .toList();
-                                    final unpinnedPosts = posts
-                                        .where((postData) =>
-                                            !postData.post.isPinned)
+                                    final unpinnedPosts = newsfeedItems
+                                        .where((item) =>
+                                            item.post != null &&
+                                            !item.post!.post.isPinned)
                                         .toList();
-                                    final sortedPosts = [
+                                    final polls = newsfeedItems
+                                        .where((item) => item.poll != null)
+                                        .toList();
+
+                                    // Combine all items, prioritizing pinned posts, then polls, then unpinned posts
+                                    final sortedItems = [
                                       ...pinnedPosts,
+                                      ...polls,
                                       ...unpinnedPosts
                                     ];
+
                                     return ListView.builder(
                                       physics:
                                           const NeverScrollableScrollPhysics(),
                                       shrinkWrap: true,
-                                      itemCount: sortedPosts.length,
+                                      itemCount: sortedItems
+                                          .length, // Use sortedItems.length
                                       itemBuilder: (context, index) {
-                                        final postData = sortedPosts[index];
-                                        return PostContainer(
-                                          isMod: role == 'moderator',
-                                          isPinnedPost: postData.post.isPinned,
-                                          author: postData.author!,
-                                          post: postData.post,
-                                          community: postData.community,
-                                          onPinPost: _handlePinPost,
-                                          onUnPinPost: _handleUnpinPost,
-                                        ).animate().fadeIn();
+                                        final newsfeedItem = sortedItems[
+                                            index]; // Use sortedItems[index]
+
+                                        if (newsfeedItem.post != null) {
+                                          final postData = newsfeedItem.post!;
+                                          return PostContainer(
+                                            isMod: role == 'moderator',
+                                            isPinnedPost:
+                                                postData.post.isPinned,
+                                            author: postData.author!,
+                                            post: postData.post,
+                                            communityId: widget._communityId,
+                                            onPinPost: _handlePinPost,
+                                            onUnPinPost: _handleUnpinPost,
+                                          ).animate().fadeIn();
+                                        } else if (newsfeedItem.poll != null) {
+                                          final pollData = newsfeedItem.poll!;
+                                          return PollContainer(
+                                            author: pollData.author,
+                                            poll: pollData.poll,
+                                            options: pollData.options,
+                                            communityId: widget._communityId,
+                                          ).animate().fadeIn();
+                                        }
+                                        return const SizedBox.shrink();
                                       },
                                     );
                                   }
                                 },
-                                loading: () => const Center(
-                                  child: Loading(),
-                                ).animate().fade(),
+                                loading: () => const Center(child: Loading())
+                                    .animate()
+                                    .fade(),
                                 error: (error, stackTrace) =>
                                     Text('Error: $error').animate().fade(),
                               ),

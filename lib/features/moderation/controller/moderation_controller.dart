@@ -22,7 +22,7 @@ import 'package:hash_balance/models/user_model.dart';
 import 'package:uuid/uuid.dart';
 
 final fetchInitialCommunityMembersProvider =
-    StreamProvider.family.autoDispose((ref, String communityId) {
+    StreamProvider.family((ref, String communityId) {
   return ref
       .read(moderationControllerProvider.notifier)
       .fetchInitialCommunityMembers(communityId);
@@ -319,6 +319,19 @@ class ModerationController extends StateNotifier<bool> {
       throw Failures(e.message!);
     } catch (e) {
       throw Failures(e.toString());
+    }
+  }
+
+  Future<Either<Failures, void>> archivePost({required String postId}) async {
+    try {
+      return await _moderationRepository.updatePostStatus(
+        postId: postId,
+        status: 'archived',
+      );
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
     }
   }
 }

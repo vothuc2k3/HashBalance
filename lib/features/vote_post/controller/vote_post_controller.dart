@@ -39,8 +39,7 @@ class UpvotePostController extends StateNotifier<bool> {
         isUpvoted: true,
         createdAt: Timestamp.now(),
       );
-      await _votePostRepository.votePost(postVoteModel, post);
-      return right(null);
+      return await _votePostRepository.votePost(postVoteModel, post);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {
@@ -69,8 +68,7 @@ class DownvotePostController extends StateNotifier<bool> {
         isUpvoted: false,
         createdAt: Timestamp.now(),
       );
-      await _votePostRepository.votePost(postVoteModel, post);
-      return right(null);
+      return await _votePostRepository.votePost(postVoteModel, post);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {

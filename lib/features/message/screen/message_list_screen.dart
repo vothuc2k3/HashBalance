@@ -139,7 +139,7 @@ class _MessageListScreenState extends ConsumerState<MessageListScreen> {
                     error: (error, stackTrace) => ErrorText(
                       error: error.toString(),
                     ),
-                    loading: () => const Loading(),
+                    loading: () => const SizedBox.shrink(),
                   );
                 },
               );

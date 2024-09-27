@@ -9,7 +9,11 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/models/community_membership_model.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/current_user_role_model.dart';
+import 'package:hash_balance/models/conbined_models/newsfeed_data_model.dart';
+import 'package:hash_balance/models/conbined_models/poll_data_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
+import 'package:hash_balance/models/poll_model.dart';
+import 'package:hash_balance/models/poll_option_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
@@ -35,6 +39,12 @@ class CommunityRepository {
   //GET THE COMMUNITIES DATA
   CollectionReference get _posts =>
       _firestore.collection(FirebaseConstants.postsCollection);
+  //GET THE COMMUNITIES DATA
+  CollectionReference get _polls =>
+      _firestore.collection(FirebaseConstants.pollsCollection);
+  //GET THE COMMUNITIES DATA
+  CollectionReference get _pollOptions =>
+      _firestore.collection(FirebaseConstants.pollOptionsCollection);
 
   //CREATE A WHOLE NEW COMMUNITY
   Future<Either<Failures, String>> createCommunity(Community community) async {
@@ -227,53 +237,81 @@ class CommunityRepository {
     }
   }
 
-  Stream<List<PostDataModel>> fetchCommunityPosts(String communityId) async* {
-    try {
-      // Lấy stream từ Firestore
-      final communityPostsStream = _posts
-          .where('communityId', isEqualTo: communityId)
-          .where('status', isEqualTo: 'Approved')
-          .snapshots();
+  Stream<List<NewsfeedCombinedModel>> fetchCommunityPosts(String communityId) {
+    // Lấy stream từ Firestore cho posts và polls
+    final communityPostsStream = _posts
+        .where('communityId', isEqualTo: communityId)
+        .where('status', isEqualTo: 'Approved')
+        .snapshots();
 
-      // Duyệt qua từng snapshot của Firestore
-      await for (final communityPosts in communityPostsStream) {
-        final List<PostDataModel> postDataModels = [];
+    final communityPollsStream =
+        _polls.where('communityId', isEqualTo: communityId).snapshots();
 
-        // Duyệt qua từng document của post
-        for (final postDoc in communityPosts.docs) {
-          final postData = Post.fromMap(postDoc.data() as Map<String, dynamic>);
+    return communityPostsStream.asyncMap((communityPosts) async {
+      // Khởi tạo danh sách để lưu trữ dữ liệu từ posts và polls
+      List<NewsfeedCombinedModel> newsfeedDataList = [];
 
-          // Lấy thông tin tác giả
-          final authorDoc = await _users.doc(postData.uid).get();
-          final authorData =
-              UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
+      // Duyệt qua từng document của posts
+      for (final postDoc in communityPosts.docs) {
+        final postData = Post.fromMap(postDoc.data() as Map<String, dynamic>);
 
-          // Lấy thông tin cộng đồng
-          final communityDoc =
-              await _communities.doc(postData.communityId).get();
-          final communityData =
-              Community.fromMap(communityDoc.data() as Map<String, dynamic>);
+        final authorDoc = await _users.doc(postData.uid).get();
+        final authorData =
+            UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
 
-          // Tạo PostDataModel và thêm vào danh sách
-          postDataModels.add(
-            PostDataModel(
-              post: postData,
-              author: authorData,
-              community: communityData,
-            ),
-          );
-        }
+        final postDataModel = PostDataModel(
+          post: postData,
+          author: authorData,
+        );
 
-        // Sắp xếp các post theo thời gian tạo
-        postDataModels
-            .sort((a, b) => b.post.createdAt.compareTo(a.post.createdAt));
-
-        // Phát ra danh sách postDataModels
-        yield postDataModels;
+        newsfeedDataList.add(
+          NewsfeedCombinedModel(post: postDataModel, poll: null),
+        );
       }
-    } on FirebaseException catch (e) {
-      throw e.toString();
-    }
+
+      // Duyệt qua các polls
+      final communityPolls = await communityPollsStream.first;
+
+      for (final pollDoc in communityPolls.docs) {
+        final pollData = Poll.fromMap(pollDoc.data() as Map<String, dynamic>);
+
+        final authorDoc = await _users.doc(pollData.uid).get();
+        final authorData =
+            UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
+
+        // Lấy các tùy chọn của cuộc thăm dò
+        final optionsQuery =
+            await _pollOptions.where('pollId', isEqualTo: pollData.id).get();
+        List<PollOption> options = optionsQuery.docs
+            .map((option) =>
+                PollOption.fromMap(option.data() as Map<String, dynamic>))
+            .toList();
+
+        // Tạo PollDataModel và thêm vào danh sách
+        final pollDataModel = PollDataModel(
+          poll: pollData,
+          author: authorData,
+          options: options,
+        );
+
+        newsfeedDataList.add(
+          NewsfeedCombinedModel(post: null, poll: pollDataModel),
+        );
+      }
+
+      // Sắp xếp các bài đăng và polls theo thời gian tạo
+      newsfeedDataList.sort((a, b) {
+        final postDateA = a.post?.post.createdAt ?? Timestamp(0, 0);
+        final pollDateA = a.poll?.poll.createdAt ?? Timestamp(0, 0);
+        final postDateB = b.post?.post.createdAt ?? Timestamp(0, 0);
+        final pollDateB = b.poll?.poll.createdAt ?? Timestamp(0, 0);
+
+        return pollDateB.toDate().compareTo(pollDateA.toDate()) +
+            postDateB.toDate().compareTo(postDateA.toDate());
+      });
+
+      return newsfeedDataList;
+    });
   }
 
   Stream<List<Community>> fetchCommunities() {

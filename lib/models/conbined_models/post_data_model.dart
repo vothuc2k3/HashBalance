@@ -5,11 +5,11 @@ import 'package:hash_balance/models/user_model.dart';
 class PostDataModel {
   final Post post;
   final UserModel? author;
-  final Community community;
+  final Community? community;
   PostDataModel({
     required this.post,
     this.author,
-    required this.community,
+    this.community,
   });
 
   @override

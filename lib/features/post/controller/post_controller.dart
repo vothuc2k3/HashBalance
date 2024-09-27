@@ -16,8 +16,17 @@ import 'package:hash_balance/models/poll_model.dart';
 import 'package:hash_balance/models/poll_option_vote_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
+import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 import 'package:hash_balance/models/poll_option_model.dart';
+
+final getPollOptionVotesCountAndUserVoteStatusProvider =
+    StreamProvider.family((ref, Tuple2<String, String> data) {
+  return ref
+      .watch(postControllerProvider.notifier)
+      .getPollOptionVotesCountAndUserVoteStatus(
+          pollId: data.item1, optionId: data.item2);
+});
 
 final getUserPollOptionVoteProvider =
     StreamProvider.family((ref, String pollId) {
@@ -255,5 +264,14 @@ class PostController extends StateNotifier<bool> {
     final currentUser = _ref.read(userProvider)!;
     return _postRepository.getUserPollOptionVote(
         pollId: pollId, uid: currentUser.uid);
+  }
+
+  Stream<Tuple2<String?, int>> getPollOptionVotesCountAndUserVoteStatus({
+    required String pollId,
+    required String optionId,
+  }) {
+    final currentUser = _ref.read(userProvider)!;
+    return _postRepository.getPollOptionVotesCountAndUserVoteStatus(
+        pollId: pollId, uid: currentUser.uid, optionId: optionId);
   }
 }

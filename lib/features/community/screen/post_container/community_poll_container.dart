@@ -6,7 +6,6 @@ import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
-import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/poll_model.dart';
 import 'package:hash_balance/models/poll_option_model.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -16,14 +15,14 @@ class PollContainer extends ConsumerStatefulWidget {
   final UserModel author;
   final Poll poll;
   final List<PollOption> options;
-  final Community community;
+  final String communityId;
 
   const PollContainer({
     super.key,
     required this.author,
     required this.poll,
     required this.options,
-    required this.community,
+    required this.communityId,
   });
 
   @override
@@ -144,7 +143,17 @@ class _PollContainerState extends ConsumerState<PollContainer> {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       padding: const EdgeInsets.all(10),
-      color: ref.watch(preferredThemeProvider).second,
+      decoration: BoxDecoration(
+        color: ref.watch(preferredThemeProvider).second,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.white,
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -157,7 +166,6 @@ class _PollContainerState extends ConsumerState<PollContainer> {
           const SizedBox(height: 10),
           Column(
             children: widget.options.map((option) {
-              // Sử dụng ref.watch bên trong từng option
               return ref
                   .watch(getPollOptionVotesCountAndUserVoteStatusProvider(
                       Tuple2(widget.poll.id, option.id)))
@@ -217,7 +225,7 @@ class _PollContainerState extends ConsumerState<PollContainer> {
       children: [
         CircleAvatar(
           backgroundImage:
-              CachedNetworkImageProvider(widget.community.profileImage),
+              CachedNetworkImageProvider(widget.author.profileImage),
           radius: 20,
         ),
         const SizedBox(width: 10),
@@ -225,7 +233,7 @@ class _PollContainerState extends ConsumerState<PollContainer> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              widget.community.name,
+              widget.author.name,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
             Text(
