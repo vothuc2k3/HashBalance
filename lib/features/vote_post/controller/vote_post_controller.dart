@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/features/activity_log/controller/activity_log_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/vote_post/repository/vote_post_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,25 +12,38 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 final upvotePostControllerProvider =
     StateNotifierProvider<UpvotePostController, bool>((ref) {
   return UpvotePostController(
-      votePostRepository: ref.read(votePostRepositoryProvider), ref: ref);
+    votePostRepository: ref.read(votePostRepositoryProvider),
+    activityLogController: ref.read(activityLogControllerProvider),
+    ref: ref,
+  );
 });
 final downvotePostControllerProvider =
     StateNotifierProvider<DownvotePostController, bool>((ref) {
   return DownvotePostController(
-      votePostRepository: ref.read(votePostRepositoryProvider), ref: ref);
+    votePostRepository: ref.read(votePostRepositoryProvider),
+    activityLogController: ref.read(activityLogControllerProvider),
+    ref: ref,
+  );
 });
 
 class UpvotePostController extends StateNotifier<bool> {
   final VotePostRepository _votePostRepository;
+  final ActivityLogController _activityLogController;
   final Ref _ref;
   UpvotePostController({
     required VotePostRepository votePostRepository,
+    required ActivityLogController activityLogController,
     required Ref ref,
   })  : _votePostRepository = votePostRepository,
+        _activityLogController = activityLogController,
         _ref = ref,
         super(false);
 
-  Future<Either<Failures, void>> votePost(Post post) async {
+  Future<Either<Failures, void>> votePost({
+    required Post post,
+    required String postAuthorName,
+    required String communityName,
+  }) async {
     try {
       final user = _ref.watch(userProvider)!;
       final postVoteModel = PostVote(
@@ -39,7 +53,17 @@ class UpvotePostController extends StateNotifier<bool> {
         isUpvoted: true,
         createdAt: Timestamp.now(),
       );
-      return await _votePostRepository.votePost(postVoteModel, post);
+      final result = await _votePostRepository.votePost(postVoteModel, post);
+      return result.fold(
+        (l) => left(l),
+        (r) {
+          _activityLogController.addUpvoteActivityLog(
+            postAuthorName: postAuthorName,
+            communityName: communityName,
+          );
+          return right(null);
+        },
+      );
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {
@@ -50,15 +74,22 @@ class UpvotePostController extends StateNotifier<bool> {
 
 class DownvotePostController extends StateNotifier<bool> {
   final VotePostRepository _votePostRepository;
+  final ActivityLogController _activityLogController;
   final Ref _ref;
   DownvotePostController({
     required VotePostRepository votePostRepository,
+    required ActivityLogController activityLogController,
     required Ref ref,
   })  : _votePostRepository = votePostRepository,
+        _activityLogController = activityLogController,
         _ref = ref,
         super(false);
 
-  Future<Either<Failures, void>> votePost(Post post) async {
+  Future<Either<Failures, void>> votePost({
+    required Post post,
+    required String postAuthorName,
+    required String communityName,
+  }) async {
     try {
       final user = _ref.read(userProvider)!;
       final postVoteModel = PostVote(
@@ -68,7 +99,17 @@ class DownvotePostController extends StateNotifier<bool> {
         isUpvoted: false,
         createdAt: Timestamp.now(),
       );
-      return await _votePostRepository.votePost(postVoteModel, post);
+      final result = await _votePostRepository.votePost(postVoteModel, post);
+      return result.fold(
+        (l) => left(l),
+        (r) {
+          _activityLogController.addDownvoteActivityLog(
+            postAuthorName: postAuthorName,
+            communityName: communityName,
+          );
+          return right(null);
+        },
+      );
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {

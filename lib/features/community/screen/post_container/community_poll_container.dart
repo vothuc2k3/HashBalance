@@ -6,22 +6,18 @@ import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
-import 'package:hash_balance/models/poll_model.dart';
-import 'package:hash_balance/models/poll_option_model.dart';
+import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
-import 'package:tuple/tuple.dart';
 
 class PollContainer extends ConsumerStatefulWidget {
   final UserModel author;
-  final Poll poll;
-  final List<PollOption> options;
+  final Post poll;
   final String communityId;
 
   const PollContainer({
     super.key,
     required this.author,
     required this.poll,
-    required this.options,
     required this.communityId,
   });
 
@@ -160,61 +156,67 @@ class _PollContainerState extends ConsumerState<PollContainer> {
           _buildPollHeader(),
           const SizedBox(height: 8),
           Text(
-            widget.poll.question,
+            widget.poll.content,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
-          Column(
-            children: widget.options.map((option) {
-              return ref
-                  .watch(getPollOptionVotesCountAndUserVoteStatusProvider(
-                      Tuple2(widget.poll.id, option.id)))
-                  .when(
-                    data: (data) {
-                      final votedOptionId = data.item1;
-                      final voteCount = data.item2;
-
-                      final isSelected = votedOptionId == option.id;
-
-                      return InkWell(
-                        onTap: isLoading
-                            ? null
-                            : () => _handleOptionTap(optionId: option.id),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? Colors.green
-                                : ref.watch(preferredThemeProvider).third,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 8, horizontal: 12),
-                          margin: const EdgeInsets.symmetric(vertical: 5),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  '${option.option} ($voteCount votes)', // Hiển thị số lượng vote đúng cho từng option
-                                  style: const TextStyle(color: Colors.white),
+          ref.watch(getUserPollOptionVoteProvider(widget.poll.id)).when(
+                data: (votedOptionId) {
+                  return Column(
+                      children: ref
+                          .watch(getPollOptionsProvider(widget.poll.id))
+                          .when(
+                            data: (options) => options.map((option) {
+                              final isSelected = votedOptionId == option.id;
+                              return InkWell(
+                                onTap: () =>
+                                    _handleOptionTap(optionId: option.id),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? Colors.green
+                                        : ref
+                                            .watch(preferredThemeProvider)
+                                            .third,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 8, horizontal: 12),
+                                  margin:
+                                      const EdgeInsets.symmetric(vertical: 5),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          option.option,
+                                          style: const TextStyle(
+                                              color: Colors.white),
+                                        ),
+                                      ),
+                                      if (isSelected)
+                                        const Icon(
+                                          Icons.check,
+                                          color: Colors.white,
+                                        ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              if (isSelected)
-                                const Icon(
-                                  Icons.check,
-                                  color: Colors.white,
-                                ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                    loading: () => const Loading(),
-                    error: (error, stackTrace) => Text('Error: $error',
-                        style: const TextStyle(color: Colors.redAccent)),
-                  );
-            }).toList(),
-          ),
+                              );
+                            }).toList(),
+                            error: (Object error, StackTrace stackTrace) {
+                              return [
+                                Text('Error: $error',
+                                    style: const TextStyle(color: Colors.red))
+                              ];
+                            },
+                            loading: () => [const Loading()],
+                          ));
+                },
+                loading: () => const Loading(),
+                error: (error, stackTrace) => Text('Error: $error',
+                    style: const TextStyle(color: Colors.red)),
+              ),
         ],
       ),
     );

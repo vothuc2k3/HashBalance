@@ -8,6 +8,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/message/repository/message_repository.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
+import 'package:hash_balance/models/archived_conversation_model.dart';
 import 'package:hash_balance/models/conbined_models/message_data_model.dart';
 import 'package:hash_balance/models/conversation_model.dart';
 import 'package:hash_balance/models/conbined_models/last_message_data_model.dart';
@@ -15,10 +16,16 @@ import 'package:hash_balance/models/message_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 import 'package:uuid/uuid.dart';
 
-final getCurrentUserConversationProvider = StreamProvider((ref) {
+final getArchivedConversationsProvider = StreamProvider((ref) {
   return ref
       .watch(messageControllerProvider.notifier)
-      .getCurrentUserConversation();
+      .getArchivedConversations();
+});
+
+final getCurrentUserConversationsProvider = StreamProvider((ref) {
+  return ref
+      .watch(messageControllerProvider.notifier)
+      .getCurrentUserConversations();
 });
 
 final initialPrivateMessagesProvider =
@@ -32,7 +39,8 @@ final initialCommunityMessagesProvider =
     FutureProvider.family((ref, String communityId) {
   return ref
       .read(messageControllerProvider.notifier)
-      .loadInitialCommunityMessages(communityId).first;
+      .loadInitialCommunityMessages(communityId)
+      .first;
 });
 
 final getLastMessageByConversationProvider =
@@ -185,9 +193,9 @@ class MessageController extends StateNotifier<bool> {
     }
   }
 
-  Stream<List<Conversation>?> getCurrentUserConversation() {
+  Stream<List<Conversation>?> getCurrentUserConversations() {
     final uid = _ref.read(userProvider)!.uid;
-    return _messageRepository.getCurrentUserConversation(uid);
+    return _messageRepository.getCurrentUserConversations(uid);
   }
 
   Stream<LastMessageDataModel> getLastMessageByConversation(
@@ -201,5 +209,31 @@ class MessageController extends StateNotifier<bool> {
     final currentUser = _ref.watch(userProvider);
     String conversationId = getUids(currentUser!.uid, targetUid);
     _messageRepository.markAsRead(conversationId, currentUser.uid);
+  }
+
+  Stream<List<Conversation>> getArchivedConversations() {
+    final currentUser = _ref.read(userProvider)!.uid;
+    return _messageRepository.getArchivedConversations(uid: currentUser);
+  }
+
+  Future<Either<Failures, void>> archiveConversation({
+    required String conversationId,
+  }) async {
+    final currentUser = _ref.read(userProvider)!;
+    final archivedConversation = ArchivedConversationModel(
+      id: _uuid.v1(),
+      archivedBy: currentUser.uid,
+      conversationId: conversationId,
+    );
+    return await _messageRepository.archiveConversation(
+        archivedConversation: archivedConversation);
+  }
+
+  Future<Either<Failures, void>> unarchiveConversation({
+    required String conversationId,
+  }) async {
+    final currentUser = _ref.read(userProvider)!;
+    return await _messageRepository.unarchiveConversation(
+        conversationId: conversationId, uid: currentUser.uid);
   }
 }

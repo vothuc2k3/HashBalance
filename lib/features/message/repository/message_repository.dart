@@ -4,6 +4,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
+import 'package:hash_balance/models/archived_conversation_model.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/message_data_model.dart';
 import 'package:hash_balance/models/conversation_model.dart';
@@ -33,6 +34,9 @@ class MessageRepository {
   //REFERENCES ALL THE COMMUNITIES
   CollectionReference get _communities =>
       _firestore.collection(FirebaseConstants.communitiesCollection);
+  //REFERENCES ALL THE ARCHIVED CONVERSATIONS
+  CollectionReference get _archivedConversations =>
+      _firestore.collection(FirebaseConstants.archivedConversationCollection);
 
   //LOAD INITIAL PRIVATE MESSAGES
   Stream<List<Message>?> loadInitialPrivateMessages(String conversationId) {
@@ -233,25 +237,36 @@ class MessageRepository {
   }
 
   //GET CURRENT USER CONVERSATIONS
-  Stream<List<Conversation>?> getCurrentUserConversation(String uid) {
+  Stream<List<Conversation>?> getCurrentUserConversations(String uid) {
     return _conversation
         .where('participantUids', arrayContains: uid)
         .snapshots()
-        .map(
-      (event) {
+        .asyncMap(
+      (event) async {
         if (event.docs.isEmpty) {
           return null;
         } else {
+          final archivedConversationDocs = await _archivedConversations
+              .where('archivedBy', isEqualTo: uid)
+              .get();
+          List<String> archivedConversationIds = [];
+          for (var doc in archivedConversationDocs.docs) {
+            final data = doc.data() as Map<String, dynamic>;
+            archivedConversationIds.add(data['conversationId'] as String);
+          }
           List<Conversation> conversations = [];
           for (var doc in event.docs) {
             final data = doc.data() as Map<String, dynamic>;
-            conversations.add(
-              Conversation(
-                id: data['id'] as String,
-                type: data['type'] as String,
-                participantUids: List<String>.from(data['participantUids']),
-              ),
-            );
+            final conversationId = data['id'] as String;
+            if (!archivedConversationIds.contains(conversationId)) {
+              conversations.add(
+                Conversation(
+                  id: data['id'] as String,
+                  type: data['type'] as String,
+                  participantUids: List<String>.from(data['participantUids']),
+                ),
+              );
+            }
           }
           return conversations;
         }
@@ -328,6 +343,85 @@ class MessageRepository {
         seenBy.add(seenUid);
         await doc.reference.update({'seenBy': seenBy});
       }
+    }
+  }
+
+  Stream<List<Conversation>> getArchivedConversations({
+    required String uid,
+  }) {
+    return _archivedConversations
+        .where('archivedBy', isEqualTo: uid)
+        .snapshots()
+        .asyncMap(
+      (event) async {
+        if (event.docs.isEmpty) {
+          return [];
+        } else {
+          List<Conversation> conversations = [];
+          List<String> conversationIds = [];
+          for (final doc in event.docs) {
+            final data = doc.data() as Map<String, dynamic>;
+            final conversationId = data['conversationId'] as String;
+            conversationIds.add(conversationId);
+          }
+          for (final conversationId in conversationIds) {
+            final conversationDoc =
+                await _conversation.doc(conversationId).get();
+            final conversationData =
+                conversationDoc.data() as Map<String, dynamic>;
+            conversations.add(
+              Conversation(
+                id: conversationData['id'] as String,
+                type: conversationData['type'] as String,
+                participantUids: List<String>.from(
+                  conversationData['participantUids'],
+                ),
+              ),
+            );
+          }
+          return conversations;
+        }
+      },
+    );
+  }
+
+  Future<Either<Failures, void>> archiveConversation({
+    required ArchivedConversationModel archivedConversation,
+  }) async {
+    try {
+      final batch = _firestore.batch();
+      batch.set(_archivedConversations.doc(archivedConversation.id),
+          archivedConversation.toMap());
+      await batch.commit();
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  Future<Either<Failures, void>> unarchiveConversation({
+    required String conversationId,
+    required String uid,
+  }) async {
+    try {
+      final batch = _firestore.batch();
+      final archivedConversationDoc = await _archivedConversations
+          .where('conversationId', isEqualTo: conversationId)
+          .where('archivedBy', isEqualTo: uid)
+          .get();
+      if (archivedConversationDoc.docs.isNotEmpty) {
+        batch.delete(archivedConversationDoc.docs.first.reference);
+      } else {
+        _logger.d('Conversation $conversationId not found');
+      }
+      await batch.commit();
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
     }
   }
 }

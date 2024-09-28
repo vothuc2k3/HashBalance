@@ -24,6 +24,7 @@ class PostContainer extends ConsumerStatefulWidget {
   final UserModel author;
   final Post post;
   final String communityId;
+  final String communityName;
   final bool isPinnedPost;
   final Function(Post)? onPinPost;
   final Function(Post)? onUnPinPost;
@@ -34,6 +35,7 @@ class PostContainer extends ConsumerStatefulWidget {
     required this.author,
     required this.post,
     required this.communityId,
+    required this.communityName,
     required this.isPinnedPost,
     this.onPinPost,
     this.onUnPinPost,
@@ -108,9 +110,12 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   void _votePost(bool userVote) async {
     switch (userVote) {
       case true:
-        final result = await ref
-            .read(upvotePostControllerProvider.notifier)
-            .votePost(widget.post);
+        final result =
+            await ref.read(upvotePostControllerProvider.notifier).votePost(
+                  post: widget.post,
+                  postAuthorName: widget.author.name,
+                  communityName: widget.communityName,
+                );
         result.fold((l) {
           showToast(false, l.toString());
         }, (_) {
@@ -121,9 +126,12 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         });
         break;
       case false:
-        final result = await ref
-            .read(downvotePostControllerProvider.notifier)
-            .votePost(widget.post);
+        final result =
+            await ref.read(downvotePostControllerProvider.notifier).votePost(
+                  post: widget.post,
+                  postAuthorName: widget.author.name,
+                  communityName: widget.communityName,
+                );
         result.fold((l) {
           showToast(false, l.toString());
         }, (_) {

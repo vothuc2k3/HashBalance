@@ -13,7 +13,6 @@ import 'package:hash_balance/features/community/repository/community_repository.
 import 'package:hash_balance/models/community_membership_model.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/current_user_role_model.dart';
-import 'package:hash_balance/models/conbined_models/newsfeed_data_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:uuid/uuid.dart';
 
@@ -259,7 +258,7 @@ class CommunityController extends StateNotifier<bool> {
     return list;
   }
 
-  Stream<List<NewsfeedCombinedModel>> fetchCommunityPosts(String communityId) {
+  Stream<List<PostDataModel>> fetchCommunityPosts(String communityId) {
     return _communityRepository.fetchCommunityPosts(communityId);
   }
 

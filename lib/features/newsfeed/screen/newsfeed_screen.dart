@@ -14,7 +14,6 @@ import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.da
 import 'package:hash_balance/features/newsfeed/screen/containers/newsfeed_post_container.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
-import 'package:logger/logger.dart';
 
 class NewsfeedScreen extends ConsumerStatefulWidget {
   const NewsfeedScreen({
@@ -45,88 +44,78 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
         decoration: BoxDecoration(
           color: ref.watch(preferredThemeProvider).first,
         ),
-        child: RefreshIndicator(
-          onRefresh: _refreshPosts,
-          child: GestureDetector(
-            onTap: FocusScope.of(context).unfocus,
-            child: CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: _buildCreatePostContainer(currentUser!),
-                ),
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: 20),
-                ),
-
-                //MARK: - NEWSFEED
-                SliverToBoxAdapter(
-                  child:
-                      ref.watch(newsfeedStreamProvider(currentUser.uid)).when(
-                            data: (data) {
-                              if (data.isEmpty) {
-                                return const Center(
-                                  child: Text(
-                                    'No posts available.',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                );
-                              }
-                              return ListView.builder(
-                                physics: const NeverScrollableScrollPhysics(),
-                                shrinkWrap: true,
-                                itemCount: data.length,
-                                itemBuilder: (context, index) {
-                                  final newsfeedData = data[index];
-                                  if (newsfeedData.post != null) {
-                                    final postData = newsfeedData.post!;
-                                    return PostContainer(
-                                      author: postData.author!,
-                                      post: postData.post,
-                                      community: postData.community!,
-                                    ).animate().fadeIn();
-                                  } else if (newsfeedData.poll != null) {
-                                    final pollData = newsfeedData.poll!;
-                                    return PollContainer(
-                                      author: pollData.author,
-                                      poll: pollData.poll,
-                                      options: pollData.options,
-                                      community: pollData.community!,
-                                    ).animate().fadeIn();
-                                  }
-                                  return const SizedBox.shrink();
-                                },
-                              );
-                            },
-                            loading: () => Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Text(
-                                  'Loading',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                const Loading(),
-                              ].animate().fadeIn(duration: 600.ms).moveY(
-                                    begin: 30,
-                                    end: 0,
-                                    duration: 600.ms,
-                                    curve: Curves.easeOutBack,
-                                  ),
-                            ),
-                            error: (error, stackTrace) =>
-                                ErrorText(error: error.toString()),
-                          ),
-                ),
-              ],
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: _buildCreatePostContainer(currentUser!),
             ),
-          ),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 20),
+            ),
+            //MARK: - NEWSFEED
+            SliverToBoxAdapter(
+              child:
+                  ref.watch(newsfeedStreamProvider(currentUser.uid)).when(
+                        data: (posts) {
+                          if (posts.isEmpty) {
+                            return const Center(
+                              child: Text(
+                                'No posts available.',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            );
+                          }
+                          return ListView.builder(
+                            physics: const ScrollPhysics(),
+                            shrinkWrap: true,
+                            itemCount: posts.length,
+                            itemBuilder: (context, index) {
+                              final postData = posts[index];
+                              if (!postData.post.isPoll) {
+                                return PostContainer(
+                                  author: postData.author!,
+                                  post: postData.post,
+                                  community: postData.community!,
+                                ).animate().fadeIn();
+                              } else if (postData.post.isPoll) {
+                                return PollContainer(
+                                  author: postData.author!,
+                                  poll: postData.post,
+                                  community: postData.community!,
+                                ).animate().fadeIn();
+                              }
+                              return const SizedBox.shrink();
+                            },
+                          );
+                        },
+                        loading: () => Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Loading',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            const Loading(),
+                          ].animate().fadeIn(duration: 600.ms).moveY(
+                                begin: 30,
+                                end: 0,
+                                duration: 600.ms,
+                                curve: Curves.easeOutBack,
+                              ),
+                        ),
+                        error: (error, stackTrace) =>
+                            ErrorText(error: error.toString()),
+                      ),
+            ),
+          ],
         ),
       ),
     );
@@ -188,7 +177,7 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
                   ),
                   const Spacer(),
                   IconButton(
-                    color: Pallete.redColor,
+                    color: Pallete.whiteColor,
                     onPressed: () {},
                     icon: const Icon(BoxIcons.bx_git_branch),
                   ),

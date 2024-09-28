@@ -12,13 +12,18 @@ import 'package:hash_balance/features/comment/controller/comment_controller.dart
 import 'package:hash_balance/features/post/repository/post_repository.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
-import 'package:hash_balance/models/poll_model.dart';
 import 'package:hash_balance/models/poll_option_vote_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
 import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 import 'package:hash_balance/models/poll_option_model.dart';
+
+final getPollOptionsProvider = StreamProvider.family((ref, String pollId) {
+  return ref
+      .watch(postControllerProvider.notifier)
+      .getPollOptions(pollId: pollId);
+});
 
 final getPendingPostsProvider =
     StreamProvider.family((ref, String communityId) {
@@ -85,12 +90,12 @@ class PostController extends StateNotifier<bool> {
         super(false);
 
   //CREATE A NEW POST
-  Future<Either<Failures, void>> createPost(
-    Community community,
+  Future<Either<Failures, void>> createPost({
+    required Community community,
     File? image,
     File? video,
-    String content,
-  ) async {
+    required String content,
+  }) async {
     try {
       if (content.isEmpty && image == null && video == null) {
         return left(Failures('Post cannot be empty'));
@@ -103,10 +108,9 @@ class PostController extends StateNotifier<bool> {
             uid: uid,
             content: content,
             status: 'Approved',
-            commentCount: 0,
-            shareCount: 0,
             isEdited: false,
             isPinned: false,
+            isPoll: false,
             createdAt: Timestamp.now(),
             id: _uuid.v1(),
           );
@@ -120,8 +124,7 @@ class PostController extends StateNotifier<bool> {
             status: 'Pending',
             isEdited: false,
             isPinned: false,
-            commentCount: 0,
-            shareCount: 0,
+            isPoll: false,
             createdAt: Timestamp.now(),
             id: _uuid.v1(),
           );
@@ -224,12 +227,16 @@ class PostController extends StateNotifier<bool> {
   }) async {
     List<PollOption> pollOptions = [];
 
-    final poll = Poll(
+    final poll = Post(
       id: _uuid.v1(),
       uid: _ref.read(userProvider)!.uid,
       communityId: communityId,
-      question: question,
+      content: question,
       createdAt: Timestamp.now(),
+      isPoll: true,
+      status: 'Approved',
+      isPinned: false,
+      isEdited: false,
     );
     for (var option in options) {
       final pollOption = PollOption(
@@ -280,5 +287,9 @@ class PostController extends StateNotifier<bool> {
     final currentUser = _ref.read(userProvider)!;
     return _postRepository.getPollOptionVotesCountAndUserVoteStatus(
         pollId: pollId, uid: currentUser.uid, optionId: optionId);
+  }
+
+  Stream<List<PollOption>> getPollOptions({required String pollId}) {
+    return _postRepository.getPollOptions(pollId: pollId);
   }
 }

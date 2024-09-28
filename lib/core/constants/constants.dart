@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hash_balance/features/community/screen/community_list_screen.dart';
-import 'package:hash_balance/features/message/screen/message_list_screen.dart';
+import 'package:hash_balance/features/message/screen/conversations_screen.dart';
 import 'package:hash_balance/features/newsfeed/screen/newsfeed_screen.dart';
 import 'package:hash_balance/features/notification/screen/notification_screen.dart';
 import 'package:hash_balance/features/post/screen/create_post_screen.dart';
@@ -45,7 +45,7 @@ class Constants {
     NewsfeedScreen(),
     CommunityListScreen(),
     CreatePostScreen(),
-    MessageListScreen(),
+    ConversationScreen(),
     NotificationScreen(),
   ];
 
@@ -95,6 +95,25 @@ class Constants {
   static const String friendRequestStatusAccepted = 'accepted';
   static const String friendRequestStatusDeclined = 'declined';
 
+  //MARK: - Activity Log Types
+  static const String activityLogTypeFriendRequest = 'friend_request';
+  static const String activityLogTypeAcceptRequest = 'accept_request';
+  static const String activityLogTypeNewFollowing = 'new_following';
+  static const String activityLogTypeNewFollower = 'new_follower';
+  static const String activityLogTypePost = 'post';
+  static const String activityLogTypeComment = 'comment';
+  static const String activityLogTypeUpvote = 'upvote';
+  static const String activityLogTypeDownvote = 'downvote';
+  static const String activityLogTypeJoinCommunity = 'join_community';
+  static const String activityLogTypeLeaveCommunity = 'leave_community';
+  static const String activityLogTypeDeletePost = 'delete_post';
+  static const String activityLogTypeDeleteComment = 'delete_comment';
+
+  static const String activityLogTypeDeleteJoinCommunity =
+      'delete_join_community';
+  static const String activityLogTypeDeleteLeaveCommunity =
+      'delete_leave_community';
+
   static String getFriendRequestContent(String name) {
     return '$name has sent you a friend request!';
   }
@@ -118,6 +137,20 @@ class Constants {
 
   static String getCommentMentionContent(String name) {
     return '$name has mentioned you in a comment!';
+  }
+
+  static String getActivityLogUpvoteMessage({
+    required String postAuthorName,
+    required String communityName,
+  }) {
+    return 'You have upvoted a post in $communityName by $postAuthorName.';
+  }
+
+  static String getActivityLogDownvoteMessage({
+    required String postAuthorName,
+    required String communityName,
+  }) {
+    return 'You have downvoted a post in $communityName by $postAuthorName.';
   }
 
   static String agoraAppId = 'a9942d0368fc4cdf9e59df9df19899c9';

@@ -122,9 +122,8 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen>
       showToast(false, 'Please enter some content post.');
       return;
     } else {
-      final result = await ref
-          .read(postControllerProvider.notifier)
-          .createPost(selectedCommunity!, image, video, contentController.text);
+      final result = await ref.read(postControllerProvider.notifier).createPost(
+          community: selectedCommunity!, content: contentController.text);
       result.fold(
         (l) {
           showToast(false, l.toString());

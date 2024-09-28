@@ -9,7 +9,6 @@ import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
-import 'package:hash_balance/models/poll_model.dart';
 import 'package:hash_balance/models/poll_option_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -39,9 +38,6 @@ class PostRepository {
   //REFERENCE ALL THE POSTS
   CollectionReference get _posts =>
       _firestore.collection(FirebaseConstants.postsCollection);
-  //REFERENCE ALL THE POLLS
-  CollectionReference get _polls =>
-      _firestore.collection(FirebaseConstants.pollsCollection);
   //REFERENCE ALL THE COMMENTS
   CollectionReference get _comments =>
       _firestore.collection(FirebaseConstants.commentsCollection);
@@ -303,11 +299,11 @@ class PostRepository {
   }
 
   Future<Either<Failures, void>> createPoll({
-    required Poll poll,
+    required Post poll,
     required List<PollOption> pollOptions,
   }) async {
     try {
-      await _polls.doc(poll.id).set(poll.toMap());
+      await _posts.doc(poll.id).set(poll.toMap());
       for (var option in pollOptions) {
         await _pollOptions.doc(option.id).set(option.toMap());
       }
@@ -346,7 +342,7 @@ class PostRepository {
 
   Future<void> deletePoll({required String pollId}) async {
     try {
-      await _polls.doc(pollId).delete();
+      await _posts.doc(pollId).delete();
       await _pollOptions.doc(pollId).delete();
       final voteDocs =
           await _pollOptionVotes.where('pollId', isEqualTo: pollId).get();
@@ -398,5 +394,12 @@ class PostRepository {
         (userPollOptionVote, pollOptionVotesCount) {
       return Tuple2(userPollOptionVote, pollOptionVotesCount);
     });
+  }
+
+  Stream<List<PollOption>> getPollOptions({required String pollId}) {
+    return _pollOptions.where('pollId', isEqualTo: pollId).snapshots().map(
+        (event) => event.docs
+            .map((e) => PollOption.fromMap(e.data() as Map<String, dynamic>))
+            .toList());
   }
 }

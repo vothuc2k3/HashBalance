@@ -1,4 +1,3 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -7,11 +6,10 @@ class Post {
   final String id;
   final String communityId;
   final String uid;
+  final bool isPoll;
   final String content;
   final String? image;
   final String? video;
-  final int commentCount;
-  final int shareCount;
   final String status;
   final bool isPinned;
   final bool isEdited;
@@ -23,8 +21,7 @@ class Post {
     required this.content,
     this.image,
     this.video,
-    required this.commentCount,
-    required this.shareCount,
+    required this.isPoll,
     required this.status,
     required this.isPinned,
     required this.isEdited,
@@ -38,8 +35,7 @@ class Post {
     String? content,
     String? image,
     String? video,
-    int? commentCount,
-    int? shareCount,
+    bool? isPoll,
     String? status,
     bool? isPinned,
     bool? isEdited,
@@ -52,8 +48,7 @@ class Post {
       content: content ?? this.content,
       image: image ?? this.image,
       video: video ?? this.video,
-      commentCount: commentCount ?? this.commentCount,
-      shareCount: shareCount ?? this.shareCount,
+      isPoll: isPoll ?? this.isPoll,
       status: status ?? this.status,
       isPinned: isPinned ?? this.isPinned,
       isEdited: isEdited ?? this.isEdited,
@@ -69,8 +64,7 @@ class Post {
       'content': content,
       'image': image,
       'video': video,
-      'commentCount': commentCount,
-      'shareCount': shareCount,
+      'isPoll': isPoll,
       'status': status,
       'isPinned': isPinned,
       'isEdited': isEdited,
@@ -86,8 +80,7 @@ class Post {
       content: map['content'] as String,
       image: map['image'] != null ? map['image'] as String : '',
       video: map['video'] != null ? map['video'] as String : '',
-      commentCount: map['commentCount'] as int,
-      shareCount: map['shareCount'] as int,
+      isPoll: map['isPoll'] as bool,
       status: map['status'] as String,
       isPinned: map['isPinned'] as bool,
       isEdited: map['isEdited'] as bool,
@@ -102,41 +95,38 @@ class Post {
 
   @override
   String toString() {
-    return 'Post(id: $id, communityId: $communityId, uid: $uid, content: $content, image: $image, video: $video, commentCount: $commentCount, shareCount: $shareCount, status: $status, isPinned: $isPinned, isEdited: $isEdited, createdAt: $createdAt)';
+    return 'Post(id: $id, communityId: $communityId, uid: $uid, content: $content, image: $image, video: $video, isPoll: $isPoll, status: $status, isPinned: $isPinned, isEdited: $isEdited, createdAt: $createdAt)';
   }
 
   @override
   bool operator ==(covariant Post other) {
     if (identical(this, other)) return true;
-  
-    return 
-      other.id == id &&
-      other.communityId == communityId &&
-      other.uid == uid &&
-      other.content == content &&
-      other.image == image &&
-      other.video == video &&
-      other.commentCount == commentCount &&
-      other.shareCount == shareCount &&
-      other.status == status &&
-      other.isPinned == isPinned &&
-      other.isEdited == isEdited &&
-      other.createdAt == createdAt;
+
+    return other.id == id &&
+        other.communityId == communityId &&
+        other.uid == uid &&
+        other.content == content &&
+        other.image == image &&
+        other.video == video &&
+        other.isPoll == isPoll &&
+        other.status == status &&
+        other.isPinned == isPinned &&
+        other.isEdited == isEdited &&
+        other.createdAt == createdAt;
   }
 
   @override
   int get hashCode {
     return id.hashCode ^
-      communityId.hashCode ^
-      uid.hashCode ^
-      content.hashCode ^
-      image.hashCode ^
-      video.hashCode ^
-      commentCount.hashCode ^
-      shareCount.hashCode ^
-      status.hashCode ^
-      isPinned.hashCode ^
-      isEdited.hashCode ^
-      createdAt.hashCode;
+        communityId.hashCode ^
+        uid.hashCode ^
+        content.hashCode ^
+        image.hashCode ^
+        video.hashCode ^
+        isPoll.hashCode ^
+        status.hashCode ^
+        isPinned.hashCode ^
+        isEdited.hashCode ^
+        createdAt.hashCode;
   }
 }

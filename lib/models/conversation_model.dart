@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -15,6 +16,7 @@ class Conversation {
   Conversation copyWith({
     String? id,
     String? type,
+    String? status,
     List<String>? participantUids,
   }) {
     return Conversation(
@@ -42,8 +44,9 @@ class Conversation {
   }
 
   @override
-  String toString() =>
-      'Conversation(id: $id, type: $type, participantUids: $participantUids)';
+  String toString() {
+    return 'Conversation(id: $id, type: $type, participantUids: $participantUids)';
+  }
 
   @override
   bool operator ==(covariant Conversation other) {
@@ -55,7 +58,9 @@ class Conversation {
   }
 
   @override
-  int get hashCode => id.hashCode ^ type.hashCode ^ participantUids.hashCode;
+  int get hashCode {
+    return id.hashCode ^ type.hashCode ^ participantUids.hashCode;
+  }
 
   String toJson() => json.encode(toMap());
 

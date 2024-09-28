@@ -18,7 +18,8 @@ class FirebaseConstants {
   static const reportCollection = 'reports';
   static const callCollection = 'calls';
   static const blocksCollection = 'blocks';
-  static const pollsCollection = 'polls';
   static const pollOptionsCollection = 'poll_options';
   static const pollOptionVotesCollection = 'poll_option_votes';
+  static const activityLogsCollection = 'activity_logs';
+  static const archivedConversationCollection = 'archived_conversations';
 }

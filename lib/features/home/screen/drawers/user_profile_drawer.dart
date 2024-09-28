@@ -7,6 +7,7 @@ import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/setting/screen/setting_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
+import 'package:hash_balance/features/user_profile/screen/activity_log_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/friends/blocked_users_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/friends/friend_requests_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/friends/friends_screen.dart';
@@ -24,6 +25,139 @@ class UserProfileDrawer extends ConsumerStatefulWidget {
 }
 
 class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
+  @override
+  Widget build(BuildContext context) {
+    final user = ref.watch(userProvider);
+
+    return Drawer(
+      child: Container(
+        decoration: BoxDecoration(
+          color: ref.watch(preferredThemeProvider).first,
+        ),
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              InkWell(
+                onTap: () {
+                  Timer(const Duration(milliseconds: 200), () {
+                    navigateToProfileScreen(user);
+                  });
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundImage:
+                            CachedNetworkImageProvider(user!.profileImage),
+                        radius: 50,
+                      ),
+                      const SizedBox(width: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user.name,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          Text(
+                            user.email,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const Divider(),
+              ListTile(
+                  title: const Text(
+                    'Change Privacy Settings',
+                    style: TextStyle(
+                      color: Pallete.whiteColor,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  leading: const Icon(Icons.privacy_tip),
+                  onTap: () {}),
+              ListTile(
+                title: const Text(
+                  'My Friends',
+                  style: TextStyle(
+                    color: Pallete.whiteColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                leading: const Icon(Icons.people),
+                onTap: () => navigateToFriendsScreen(),
+              ),
+              ListTile(
+                title: const Text(
+                  'Pending Friend Requests',
+                  style: TextStyle(
+                    color: Pallete.whiteColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                leading: const Icon(Icons.pending_actions),
+                onTap: () => _navigateToFriendRequestsScreen(),
+              ),
+              ListTile(
+                title: const Text(
+                  'Blocked Users',
+                  style: TextStyle(
+                    color: Pallete.whiteColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                leading: const Icon(Icons.block),
+                onTap: () => _navigateToBlockedUsersScreen(),
+              ),
+              ListTile(
+                leading: const Icon(Icons.archive),
+                onTap: () => _navigateToActivityLogScreen(),
+                title: const Text(
+                  'Archived Conversations',
+                  style: TextStyle(
+                    color: Pallete.whiteColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Expanded(child: Container()),
+              ListTile(
+                title: const Text(
+                  'Setting',
+                  style: TextStyle(
+                    color: Pallete.whiteColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                leading: const Icon(Icons.settings),
+                onTap: () => navigateToSettingScreen(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _navigateToBlockedUsersScreen() {
     Navigator.push(
       context,
@@ -148,136 +282,11 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final user = ref.watch(userProvider);
-
-    return Drawer(
-      child: Container(
-        decoration: BoxDecoration(
-          color: ref.watch(preferredThemeProvider).first,
-        ),
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              InkWell(
-                onTap: () {
-                  Timer(const Duration(milliseconds: 200), () {
-                    navigateToProfileScreen(user);
-                  });
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundImage:
-                            CachedNetworkImageProvider(user!.profileImage),
-                        radius: 50,
-                      ),
-                      const SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            user.name,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                          Text(
-                            user.email,
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const Divider(),
-              ListTile(
-                title: const Text(
-                  'Profile Management',
-                  style: TextStyle(
-                    color: Pallete.whiteColor,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                leading: const Icon(Icons.manage_accounts),
-                onTap: () {},
-              ),
-              ListTile(
-                title: const Text(
-                  'Change Privacy Settings',
-                  style: TextStyle(
-                    color: Pallete.whiteColor,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                leading: const Icon(Icons.privacy_tip),
-                onTap: () {}
-              ),
-              ListTile(
-                title: const Text(
-                  'My Friends',
-                  style: TextStyle(
-                    color: Pallete.whiteColor,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                leading: const Icon(Icons.people),
-                onTap: () => navigateToFriendsScreen(),
-              ),
-              ListTile(
-                title: const Text(
-                  'Pending Friend Requests',
-                  style: TextStyle(
-                    color: Pallete.whiteColor,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                leading: const Icon(Icons.pending_actions),
-                onTap: () => _navigateToFriendRequestsScreen(),
-              ),
-              ListTile(
-                title: const Text(
-                  'Blocked Users',
-                  style: TextStyle(
-                    color: Pallete.whiteColor,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                leading: const Icon(Icons.block),
-                onTap: () => _navigateToBlockedUsersScreen(),
-              ),
-              Expanded(child: Container()),
-              ListTile(
-                title: const Text(
-                  'Setting',
-                  style: TextStyle(
-                    color: Pallete.whiteColor,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                leading: const Icon(Icons.settings),
-                onTap: () => navigateToSettingScreen(),
-              ),
-            ],
-          ),
-        ),
+  void _navigateToActivityLogScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ActivityLogScreen(),
       ),
     );
   }

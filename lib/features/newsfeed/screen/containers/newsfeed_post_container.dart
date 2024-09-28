@@ -70,9 +70,12 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   void _votePost(bool userVote) async {
     switch (userVote) {
       case true:
-        final result = await ref
-            .read(upvotePostControllerProvider.notifier)
-            .votePost(widget.post);
+        final result =
+            await ref.read(upvotePostControllerProvider.notifier).votePost(
+                  post: widget.post,
+                  postAuthorName: widget.author.name,
+                  communityName: widget.community.name,
+                );
         result.fold((l) {
           showToast(false, l.toString());
         }, (_) {
@@ -83,9 +86,12 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         });
         break;
       case false:
-        final result = await ref
-            .read(downvotePostControllerProvider.notifier)
-            .votePost(widget.post);
+        final result =
+            await ref.read(downvotePostControllerProvider.notifier).votePost(
+                  post: widget.post,
+                  postAuthorName: widget.author.name,
+                  communityName: widget.community.name,
+                );
         result.fold((l) {
           showToast(false, l.toString());
         }, (_) {

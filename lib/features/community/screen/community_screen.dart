@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -235,8 +234,8 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                               .watch(
                                   communityPostsProvider(widget._communityId))
                               .when(
-                                data: (newsfeedItems) {
-                                  if (newsfeedItems.isEmpty) {
+                                data: (posts) {
+                                  if (posts.isEmpty) {
                                     return Center(
                                       child: const Text(
                                         'No posts yet....',
@@ -255,70 +254,29 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                           ),
                                     );
                                   } else {
-                                    final pinnedPosts = newsfeedItems
-                                        .where((item) =>
-                                            item.post != null &&
-                                            item.post!.post.isPinned)
-                                        .toList();
-
-                                    final unpinnedPosts = newsfeedItems
-                                        .where((item) =>
-                                            item.post != null &&
-                                            !item.post!.post.isPinned)
-                                        .toList();
-
-                                    final polls = newsfeedItems
-                                        .where((item) => item.poll != null)
-                                        .toList();
-
-                                    final combinedItems = [
-                                      ...unpinnedPosts,
-                                      ...polls
-                                    ];
-
-                                    combinedItems.sort((a, b) {
-                                      final dateA = a.post?.post.createdAt ??
-                                          a.poll?.poll.createdAt ??
-                                          Timestamp(0, 0);
-                                      final dateB = b.post?.post.createdAt ??
-                                          b.poll?.poll.createdAt ??
-                                          Timestamp(0, 0);
-                                      return dateB.compareTo(dateA);
-                                    });
-
-                                    final sortedItems = [
-                                      ...pinnedPosts,
-                                      ...combinedItems
-                                    ];
-
                                     return ListView.builder(
                                       physics:
                                           const NeverScrollableScrollPhysics(),
                                       shrinkWrap: true,
-                                      itemCount: sortedItems
-                                          .length, // Use sortedItems.length
+                                      itemCount: posts.length,
                                       itemBuilder: (context, index) {
-                                        final newsfeedItem = sortedItems[
-                                            index]; // Use sortedItems[index]
+                                        final post = posts[index];
 
-                                        if (newsfeedItem.post != null) {
-                                          final postData = newsfeedItem.post!;
+                                        if (!post.post.isPoll) {
                                           return PostContainer(
                                             isMod: role == 'moderator',
-                                            isPinnedPost:
-                                                postData.post.isPinned,
-                                            author: postData.author!,
-                                            post: postData.post,
+                                            isPinnedPost: post.post.isPinned,
+                                            author: post.author!,
+                                            post: post.post,
                                             communityId: widget._communityId,
+                                            communityName: community.name,
                                             onPinPost: _handlePinPost,
                                             onUnPinPost: _handleUnpinPost,
                                           ).animate().fadeIn();
-                                        } else if (newsfeedItem.poll != null) {
-                                          final pollData = newsfeedItem.poll!;
+                                        } else if (post.post.isPoll) {
                                           return PollContainer(
-                                            author: pollData.author,
-                                            poll: pollData.poll,
-                                            options: pollData.options,
+                                            author: post.author!,
+                                            poll: post.post,
                                             communityId: widget._communityId,
                                           ).animate().fadeIn();
                                         }
