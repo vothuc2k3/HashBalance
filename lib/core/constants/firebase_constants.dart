@@ -22,4 +22,5 @@ class FirebaseConstants {
   static const pollOptionVotesCollection = 'poll_option_votes';
   static const activityLogsCollection = 'activity_logs';
   static const archivedConversationCollection = 'archived_conversations';
+  static const suspendedUsersCollection = 'suspended_users';
 }

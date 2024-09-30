@@ -51,8 +51,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                     ),
                   ),
                   onPressed: () => Navigator.of(context).pop(false),
-                  child:
-                      const Text('No', style: TextStyle(color: Colors.greenAccent)),
+                  child: const Text('No',
+                      style: TextStyle(color: Colors.greenAccent)),
                 ),
                 TextButton(
                   style: TextButton.styleFrom(
@@ -61,8 +61,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                     ),
                   ),
                   onPressed: () => Navigator.of(context).pop(true),
-                  child:
-                      const Text('Yes', style: TextStyle(color: Colors.redAccent)),
+                  child: const Text('Yes',
+                      style: TextStyle(color: Colors.redAccent)),
                 ),
               ],
             );

@@ -16,9 +16,11 @@ import 'package:hash_balance/features/notification/controller/notification_contr
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/conbined_models/current_user_role_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 import 'package:hash_balance/models/post_model.dart';
+import 'package:hash_balance/models/suspend_user_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:uuid/uuid.dart';
 
@@ -320,7 +322,8 @@ class ModerationController extends StateNotifier<bool> {
     }
   }
 
-  Stream<List<UserModel>> fetchInitialCommunityMembers(String communityId) {
+  Stream<List<CurrentUserRoleModel>> fetchInitialCommunityMembers(
+      String communityId) {
     try {
       return _moderationRepository.fetchInitialCommunityMembers(communityId);
     } on FirebaseException catch (e) {
@@ -377,5 +380,25 @@ class ModerationController extends StateNotifier<bool> {
 
   Stream<List<PostDataModel>> getArchivedPosts(String communityId) {
     return _moderationRepository.getArchivedPosts(communityId);
+  }
+
+  Future<Either<Failures, void>> suspendUser({
+    required String uid,
+    required String communityId,
+    required bool isPermanent,
+    required String reason,
+    required Timestamp expiresAt,
+  }) async {
+    final suspendUserModel = SuspendUserModel(
+      id: _uuid.v1(),
+      uid: uid,
+      communityId: communityId,
+      reason: reason,
+      isPermanent: isPermanent,
+      suspendedAt: Timestamp.now(),
+      expiresAt: expiresAt,
+    );
+    return await _moderationRepository.suspendUser(
+        suspendUserModel: suspendUserModel);
   }
 }

@@ -10,7 +10,9 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
 import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/conbined_models/current_user_role_model.dart';
 import 'package:hash_balance/models/post_model.dart';
+import 'package:hash_balance/models/suspend_user_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:logger/logger.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -42,6 +44,8 @@ class ModerationRepository {
       _firestore.collection(FirebaseConstants.friendshipCollection);
   CollectionReference get _users =>
       _firestore.collection(FirebaseConstants.usersCollection);
+  CollectionReference get _suspendedUsers =>
+      _firestore.collection(FirebaseConstants.suspendedUsersCollection);
 
   //GET MODERATOR STATUS
   Stream<String> getMembershipStatus(String membershipId) {
@@ -305,7 +309,8 @@ class ModerationRepository {
     }
   }
 
-  Stream<List<UserModel>> fetchInitialCommunityMembers(String communityId) {
+  Stream<List<CurrentUserRoleModel>> fetchInitialCommunityMembers(
+      String communityId) {
     return _communityMembership
         .where('communityId', isEqualTo: communityId)
         .orderBy('joinedAt', descending: true)
@@ -316,14 +321,33 @@ class ModerationRepository {
         return doc['uid'] as String;
       }).toList();
 
-      List<UserModel> members = [];
-      for (String uid in memberUids) {
-        final userSnapshot = await _users.doc(uid).get();
+      Map<String, Map<String, String>> memberRolesAndStatus = {};
+      for (var doc in snapshot.docs) {
+        final role = doc['role'] as String;
+        final status = doc['status'] as String;
+        memberRolesAndStatus[doc['uid']] = {
+          'role': role,
+          'status': status,
+        };
+      }
 
-        if (userSnapshot.exists) {
+      final userSnapshots =
+          await _users.where('uid', whereIn: memberUids).get();
+      List<CurrentUserRoleModel> members = [];
+
+      for (var userDoc in userSnapshots.docs) {
+        if (userDoc.exists) {
           UserModel user =
-              UserModel.fromMap(userSnapshot.data() as Map<String, dynamic>);
-          members.add(user);
+              UserModel.fromMap(userDoc.data() as Map<String, dynamic>);
+          final role = memberRolesAndStatus[user.uid]?['role'] ?? 'Member';
+          final status = memberRolesAndStatus[user.uid]?['status'] ?? 'Active';
+
+          members.add(CurrentUserRoleModel(
+            user: user,
+            communityId: communityId,
+            role: role,
+            status: status,
+          ));
         }
       }
       return members;
@@ -377,5 +401,20 @@ class ModerationRepository {
       Logger().d('There are ${posts.length} archived posts');
       return posts;
     });
+  }
+
+  Future<Either<Failures, void>> suspendUser({
+    required SuspendUserModel suspendUserModel,
+  }) async {
+    try {
+      await _suspendedUsers
+          .doc(suspendUserModel.id)
+          .set(suspendUserModel.toMap());
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
   }
 }

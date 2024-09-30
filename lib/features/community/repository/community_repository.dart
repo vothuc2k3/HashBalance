@@ -271,11 +271,13 @@ class CommunityRepository {
   Stream<CurrentUserRoleModel?> getCurrentUserRole(
       String communityId, String uid) {
     final uids = getMembershipId(uid, communityId);
-    return _communityMembership.doc(uids).snapshots().map((event) {
+    return _communityMembership.doc(uids).snapshots().asyncMap((event) async {
       if (event.exists) {
         final data = event.data() as Map<String, dynamic>;
+        final userDoc = await _users.doc(data['uid']).get();
+        final user = UserModel.fromMap(userDoc.data() as Map<String, dynamic>);
         return CurrentUserRoleModel(
-          uid: uid,
+          user: user,
           communityId: communityId,
           role: data['role'] as String,
           status: data['status'] as String,

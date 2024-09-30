@@ -1,25 +1,27 @@
 import 'dart:convert';
 
+import 'package:hash_balance/models/user_model.dart';
+
 class CurrentUserRoleModel {
-  final String uid;
+  final UserModel user;
   final String communityId;
   final String role;
   final String status;
   CurrentUserRoleModel({
-    required this.uid,
+    required this.user,
     required this.communityId,
     required this.role,
     required this.status,
   });
 
   CurrentUserRoleModel copyWith({
-    String? uid,
+    UserModel? user,
     String? communityId,
     String? role,
     String? status,
   }) {
     return CurrentUserRoleModel(
-      uid: uid ?? this.uid,
+      user: user ?? this.user,
       communityId: communityId ?? this.communityId,
       role: role ?? this.role,
       status: status ?? this.status,
@@ -28,7 +30,7 @@ class CurrentUserRoleModel {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'uid': uid,
+      'user': user.toMap(),
       'communityId': communityId,
       'role': role,
       'status': status,
@@ -37,7 +39,7 @@ class CurrentUserRoleModel {
 
   factory CurrentUserRoleModel.fromMap(Map<String, dynamic> map) {
     return CurrentUserRoleModel(
-      uid: map['uid'] as String,
+      user: UserModel.fromMap(map['user'] as Map<String, dynamic>),
       communityId: map['communityId'] as String,
       role: map['role'] as String,
       status: map['status'] as String,
@@ -51,14 +53,14 @@ class CurrentUserRoleModel {
 
   @override
   String toString() {
-    return 'CurrentUserRoleModel(uid: $uid, communityId: $communityId, role: $role, status: $status)';
+    return 'CurrentUserRoleModel(user: $user, communityId: $communityId, role: $role, status: $status)';
   }
 
   @override
   bool operator ==(covariant CurrentUserRoleModel other) {
     if (identical(this, other)) return true;
 
-    return other.uid == uid &&
+    return other.user == user &&
         other.communityId == communityId &&
         other.role == role &&
         other.status == status;
@@ -66,7 +68,7 @@ class CurrentUserRoleModel {
 
   @override
   int get hashCode {
-    return uid.hashCode ^
+    return user.hashCode ^
         communityId.hashCode ^
         role.hashCode ^
         status.hashCode;

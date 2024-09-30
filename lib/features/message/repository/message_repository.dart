@@ -236,42 +236,43 @@ class MessageRepository {
     }
   }
 
-  //GET CURRENT USER CONVERSATIONS
-  Stream<List<Conversation>?> getCurrentUserConversations(String uid) {
+  Stream<List<Conversation>> getCurrentUserConversations(String uid) {
     return _conversation
         .where('participantUids', arrayContains: uid)
         .snapshots()
-        .asyncMap(
-      (event) async {
-        if (event.docs.isEmpty) {
-          return null;
-        } else {
-          final archivedConversationDocs = await _archivedConversations
-              .where('archivedBy', isEqualTo: uid)
-              .get();
-          List<String> archivedConversationIds = [];
-          for (var doc in archivedConversationDocs.docs) {
-            final data = doc.data() as Map<String, dynamic>;
-            archivedConversationIds.add(data['conversationId'] as String);
-          }
-          List<Conversation> conversations = [];
-          for (var doc in event.docs) {
-            final data = doc.data() as Map<String, dynamic>;
-            final conversationId = data['id'] as String;
-            if (!archivedConversationIds.contains(conversationId)) {
-              conversations.add(
-                Conversation(
-                  id: data['id'] as String,
-                  type: data['type'] as String,
-                  participantUids: List<String>.from(data['participantUids']),
-                ),
+        .asyncMap((event) async {
+      if (event.docs.isEmpty) {
+        return [];
+      }
+
+      try {
+        final archivedConversationIds = await _archivedConversations
+            .where('archivedBy', isEqualTo: uid)
+            .get()
+            .then((snapshot) => snapshot.docs
+                .map((doc) => doc['conversationId'] as String)
+                .toList());
+
+        return event.docs
+            .map((doc) {
+              final data = doc.data() as Map<String, dynamic>;
+              final conversationId = data['id'] as String;
+              if (archivedConversationIds.contains(conversationId)) {
+                return null;
+              }
+              return Conversation(
+                id: conversationId,
+                type: data['type'] as String,
+                participantUids: List<String>.from(data['participantUids']),
               );
-            }
-          }
-          return conversations;
-        }
-      },
-    );
+            })
+            .whereType<Conversation>()
+            .toList();
+      } catch (error) {
+        _logger.e('Error in asyncMap: $error');
+        return [];
+      }
+    });
   }
 
   //GET LAST MESSAGE BY CONVERSATION

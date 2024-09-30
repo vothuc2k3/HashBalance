@@ -12,7 +12,6 @@ import 'package:hash_balance/models/conbined_models/last_message_data_model.dart
 import 'package:hash_balance/models/user_model.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-// Chats Screen showing current conversations
 class ActiveConversationsScreen extends ConsumerStatefulWidget {
   final Function(UserModel) navigateToPrivateMessageScreen;
   final Function(Community) navigateToCommunityConversationScreen;
@@ -30,65 +29,62 @@ class ActiveConversationsScreen extends ConsumerStatefulWidget {
 
 class _ActiveConversationsScreenState
     extends ConsumerState<ActiveConversationsScreen> {
-
   @override
   Widget build(BuildContext context) {
-    final currentUser = ref.watch(userProvider);
+
+    final currentUser = ref.read(userProvider);
     return Container(
       decoration: BoxDecoration(
         color: ref.watch(preferredThemeProvider).first,
       ),
       child: ref.watch(getCurrentUserConversationsProvider).when(
-        data: (conversations) {
-          if (conversations == null || conversations.isEmpty) {
-            return Center(
-              child: const Text(
-                'You have no conversation going on...',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.white70,
-                ),
-              ).animate().fadeIn(duration: 600.ms).moveY(
-                    begin: 30,
-                    end: 0,
-                    duration: 600.ms,
-                    curve: Curves.easeOutBack,
-                  ),
-            );
-          } else {
-            return RefreshIndicator(
-              onRefresh: () async {},
-              child: ListView.builder(
-                padding: const EdgeInsets.all(10),
-                itemCount: conversations.length,
-                itemBuilder: (context, index) {
-                  final conversation = conversations[index];
-                  final messages = ref.watch(
-                      getLastMessageByConversationProvider(conversation));
-                  return messages.when(
-                    data: (messageData) {
-                      return _buildMessageCard(
-                        messageData,
-                        currentUser!,
-                        conversation.type,
-                        conversation.id,
-                        widget.navigateToPrivateMessageScreen,
-                        widget.navigateToCommunityConversationScreen,
-                      );
-                    },
-                    error: (error, stackTrace) => ErrorText(
-                      error: error.toString(),
+            data: (conversations) {
+              if (conversations.isEmpty) {
+                return Center(
+                  child: const Text(
+                    'You have no conversation going on...',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.white70,
                     ),
-                    loading: () => const SizedBox.shrink(),
-                  );
-                },
-              ),
-            );
-          }
-        },
-        error: (error, stackTrace) => ErrorText(error: error.toString()),
-        loading: () => const Loading(),
-      ),
+                  ).animate().fadeIn(duration: 600.ms).moveY(
+                        begin: 30,
+                        end: 0,
+                        duration: 600.ms,
+                        curve: Curves.easeOutBack,
+                      ),
+                );
+              } else {
+                return ListView.builder(
+                  padding: const EdgeInsets.all(10),
+                  itemCount: conversations.length,
+                  itemBuilder: (context, index) {
+                    final conversation = conversations[index];
+                    final messages = ref.watch(
+                        getLastMessageByConversationProvider(conversation));
+                    return messages.when(
+                      data: (messageData) {
+                        return _buildMessageCard(
+                          messageData,
+                          currentUser!,
+                          conversation.type,
+                          conversation.id,
+                          widget.navigateToPrivateMessageScreen,
+                          widget.navigateToCommunityConversationScreen,
+                        );
+                      },
+                      error: (error, stackTrace) => ErrorText(
+                        error: error.toString(),
+                      ),
+                      loading: () => const SizedBox.shrink(),
+                    );
+                  },
+                );
+              }
+            },
+            error: (error, stackTrace) => ErrorText(error: error.toString()),
+            loading: () => const Loading(),
+          ),
     );
   }
 
@@ -237,7 +233,7 @@ class _ActiveConversationsScreenState
         .archiveConversation(conversationId: conversationId);
     result.fold((l) => showToast(false, l.message), (r) {
       showToast(true, 'Conversation archived');
-      setState(() {});
+      ref.invalidate(getCurrentUserConversationsProvider);
     });
   }
 }

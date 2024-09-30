@@ -22,7 +22,7 @@ final getArchivedConversationsProvider = StreamProvider((ref) {
       .getArchivedConversations();
 });
 
-final getCurrentUserConversationsProvider = StreamProvider((ref) {
+final getCurrentUserConversationsProvider = StreamProvider.autoDispose((ref) {
   return ref
       .watch(messageControllerProvider.notifier)
       .getCurrentUserConversations();
@@ -193,7 +193,7 @@ class MessageController extends StateNotifier<bool> {
     }
   }
 
-  Stream<List<Conversation>?> getCurrentUserConversations() {
+  Stream<List<Conversation>> getCurrentUserConversations() {
     final uid = _ref.read(userProvider)!.uid;
     return _messageRepository.getCurrentUserConversations(uid);
   }

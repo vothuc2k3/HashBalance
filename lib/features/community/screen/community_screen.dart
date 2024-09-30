@@ -92,7 +92,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                           ],
                           expandedHeight: 150,
                           flexibleSpace: InkWell(
-                            onTap: () => _handleBannerImageAction(community),
+                            onTap: () => _handleBannerImageAction(community, role),
                             child: Stack(
                               children: [
                                 Positioned.fill(
@@ -561,73 +561,84 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
       ),
       builder: (BuildContext context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('View Profile Image'),
-              onTap: () {
-                Navigator.pop(context);
-                _showImage(community.profileImage);
-              },
-            ),
-            if (role == 'moderator')
+        return Container(
+          decoration: BoxDecoration(
+            color: ref.watch(preferredThemeProvider).first,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
               ListTile(
-                leading: const Icon(Icons.edit),
-                title: const Text('Change Profile Image'),
+                leading: const Icon(Icons.person),
+                title: const Text('View Profile Image'),
                 onTap: () {
                   Navigator.pop(context);
-                  _changeProfileImage(community);
+                  _showImage(community.profileImage);
                 },
               ),
-            ListTile(
-              leading: const Icon(Icons.cancel),
-              title: const Text('Cancel'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-          ],
+              if (role == 'moderator')
+                ListTile(
+                  leading: const Icon(Icons.edit),
+                  title: const Text('Change Profile Image'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _changeProfileImage(community);
+                  },
+                ),
+              ListTile(
+                leading: const Icon(Icons.cancel),
+                title: const Text('Cancel'),
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
         );
       },
     );
   }
 
-  void _handleBannerImageAction(Community community) async {
+  void _handleBannerImageAction(Community community, String role) async {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
       ),
       builder: (BuildContext context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('View Banner Image'),
-              onTap: () {
-                Navigator.pop(context);
-                _showImage(community.bannerImage);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.edit),
-              title: const Text('Change Banner Image'),
-              onTap: () {
-                Navigator.pop(context);
-                _changeBannerImage(community);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.cancel),
-              title: const Text('Cancel'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-          ],
+        return Container(
+          decoration: BoxDecoration(
+            color: ref.watch(preferredThemeProvider).first,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.person),
+                title: const Text('View Banner Image'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showImage(community.bannerImage);
+                },
+              ),
+              if (role == 'moderator')
+                ListTile(
+                  leading: const Icon(Icons.edit),
+                  title: const Text('Change Banner Image'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _changeBannerImage(community);
+                  },
+                ),
+              ListTile(
+                leading: const Icon(Icons.cancel),
+                title: const Text('Cancel'),
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
         );
       },
     );
