@@ -18,11 +18,19 @@ import 'package:hash_balance/features/user_profile/controller/user_controller.da
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/current_user_role_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
+import 'package:hash_balance/models/conbined_models/suspended_user_combined_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/suspend_user_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:uuid/uuid.dart';
+
+final fetchSuspendedUsersProvider =
+    StreamProvider.family((ref, String communityId) {
+  return ref
+      .watch(moderationControllerProvider.notifier)
+      .fetchSuspendedUsers(communityId);
+});
 
 final getArchivedPostsProvider =
     StreamProvider.family((ref, String communityId) {
@@ -400,5 +408,9 @@ class ModerationController extends StateNotifier<bool> {
     );
     return await _moderationRepository.suspendUser(
         suspendUserModel: suspendUserModel);
+  }
+
+  Stream<List<SuspendedUserCombinedModel>> fetchSuspendedUsers(String communityId) {
+    return _moderationRepository.fetchSuspendedUsers(communityId);
   }
 }

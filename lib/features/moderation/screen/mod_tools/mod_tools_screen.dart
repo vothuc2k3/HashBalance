@@ -5,7 +5,7 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/archived_posts_screen.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/invite_moderators_screen.dart';
-import 'package:hash_balance/features/moderation/screen/mod_tools/membership_management_screen.dart';
+import 'package:hash_balance/features/moderation/screen/mod_tools/membership_management/membership_management_screen.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/pending_post_screen.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/reports_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';

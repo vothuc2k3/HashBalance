@@ -9,8 +9,10 @@ import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/core/providers/storage_repository_providers.dart';
+import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/current_user_role_model.dart';
+import 'package:hash_balance/models/conbined_models/suspended_user_combined_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/suspend_user_model.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -314,7 +316,6 @@ class ModerationRepository {
     return _communityMembership
         .where('communityId', isEqualTo: communityId)
         .orderBy('joinedAt', descending: true)
-        .limit(10)
         .snapshots()
         .asyncMap((snapshot) async {
       List<String> memberUids = snapshot.docs.map((doc) {
@@ -407,6 +408,11 @@ class ModerationRepository {
     required SuspendUserModel suspendUserModel,
   }) async {
     try {
+      await _communityMembership
+          .doc(getMembershipId(suspendUserModel.uid, suspendUserModel.communityId))
+          .update({
+        'status': 'suspended',
+      });
       await _suspendedUsers
           .doc(suspendUserModel.id)
           .set(suspendUserModel.toMap());
@@ -416,5 +422,32 @@ class ModerationRepository {
     } catch (e) {
       return left(Failures(e.toString()));
     }
+  }
+
+  Stream<List<SuspendedUserCombinedModel>> fetchSuspendedUsers(
+      String communityId) {
+    return _suspendedUsers
+        .where('communityId', isEqualTo: communityId)
+        .snapshots()
+        .asyncMap((snapshot) async {
+      List<SuspendedUserCombinedModel> users = [];
+      for (final doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final uid = data['uid'] as String;
+        final userDoc = await _users.doc(uid).get();
+        final suspensionDoc = await _suspendedUsers.doc(doc.id).get();
+        if (userDoc.exists && suspensionDoc.exists) {
+          UserModel user =
+              UserModel.fromMap(userDoc.data() as Map<String, dynamic>);
+          SuspendUserModel suspension = SuspendUserModel.fromMap(
+              suspensionDoc.data() as Map<String, dynamic>);
+          users.add(SuspendedUserCombinedModel(
+            user: user,
+            suspension: suspension,
+          ));
+        }
+      }
+      return users;
+    });
   }
 }

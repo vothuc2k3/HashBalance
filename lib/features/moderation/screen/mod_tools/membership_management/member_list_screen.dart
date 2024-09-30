@@ -12,30 +12,24 @@ import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:logger/logger.dart';
 
-class MembershipManagementScreen extends ConsumerStatefulWidget {
+class MemberListScreen extends ConsumerStatefulWidget {
   final Community _community;
 
-  const MembershipManagementScreen({
+  const MemberListScreen({
     super.key,
     required Community community,
   }) : _community = community;
 
   @override
-  ConsumerState<MembershipManagementScreen> createState() =>
-      _MembershipManagementScreenState();
+  ConsumerState<MemberListScreen> createState() => _MemberListScreenState();
 }
 
-class _MembershipManagementScreenState
-    extends ConsumerState<MembershipManagementScreen> {
+class _MemberListScreenState extends ConsumerState<MemberListScreen> {
   String? suspendedUserReason;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Membership Management'),
-        backgroundColor: ref.watch(preferredThemeProvider).second,
-      ),
       body: Container(
         decoration: BoxDecoration(
           color: ref.watch(preferredThemeProvider).first,
@@ -56,71 +50,100 @@ class _MembershipManagementScreenState
                           final isCurrentUser =
                               member.user.uid == currentUser.uid;
 
-                          return ExpansionTile(
-                            leading: CircleAvatar(
-                              backgroundImage: CachedNetworkImageProvider(
-                                  member.user.profileImage),
+                          return Card(
+                            margin: const EdgeInsets.symmetric(
+                                vertical: 6, horizontal: 16),
+                            elevation: 3,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
                             ),
-                            title: Text(
-                              isCurrentUser
-                                  ? '${member.user.name} (You)'
-                                  : member.user.name,
-                              style: TextStyle(
-                                fontWeight: isCurrentUser
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
+                            color: member.status == 'suspended'
+                                ? Colors.grey
+                                : ref.watch(preferredThemeProvider).third,
+                            child: ExpansionTile(
+                              leading: CircleAvatar(
+                                backgroundImage: CachedNetworkImageProvider(
+                                    member.user.profileImage),
                               ),
-                            ),
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16.0, vertical: 8.0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    if (!isCurrentUser)
-                                      ElevatedButton(
-                                        onPressed: () =>
-                                            _sendInvite(member.user),
-                                        style: ElevatedButton.styleFrom(
-                                          foregroundColor: Colors.white,
-                                          backgroundColor: Colors.teal,
-                                        ),
-                                        child: const Text('Send Invite'),
-                                      ),
-                                    const SizedBox(width: 10),
-                                    if (!isCurrentUser)
-                                      ElevatedButton(
-                                        onPressed: () =>
-                                            _handleSuspendMember(member.user),
-                                        style: ElevatedButton.styleFrom(
-                                          foregroundColor: Colors.white,
-                                          backgroundColor: Colors.redAccent,
-                                        ),
-                                        child: const Text('Suspend'),
-                                      ),
-                                    if (isCurrentUser)
-                                      ElevatedButton(
-                                        onPressed: () =>
-                                            _leaveCommunity(currentUser),
-                                        style: ElevatedButton.styleFrom(
-                                          foregroundColor: Colors.white,
-                                          backgroundColor: Colors.redAccent,
-                                        ),
-                                        child: const Text('Leave'),
-                                      ),
-                                  ],
+                              title: Text(
+                                isCurrentUser
+                                    ? '${member.user.name} (You)'
+                                    : member.user.name,
+                                style: TextStyle(
+                                  fontWeight: isCurrentUser
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
                                 ),
                               ),
-                            ],
-                          );
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16.0, vertical: 8.0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      if (!isCurrentUser &&
+                                          member.status != 'suspended')
+                                        ElevatedButton(
+                                          onPressed: () =>
+                                              _inviteUserAsModerator(
+                                                  member.user),
+                                          style: ElevatedButton.styleFrom(
+                                            foregroundColor: Colors.white,
+                                            backgroundColor: Colors.teal,
+                                          ),
+                                          child: const Text('Send Invite'),
+                                        ),
+                                      const SizedBox(width: 10),
+                                      if (!isCurrentUser &&
+                                          member.status != 'suspended')
+                                        ElevatedButton(
+                                          onPressed: () =>
+                                              _showSuspendOptionsBottomSheet(
+                                                  member.user),
+                                          style: ElevatedButton.styleFrom(
+                                            foregroundColor: Colors.white,
+                                            backgroundColor: const Color.fromARGB(255, 131, 21, 21),
+                                          ),
+                                          child: const Text('Suspend'),
+                                        ),
+                                      if (isCurrentUser)
+                                        ElevatedButton(
+                                          onPressed: () =>
+                                              _handleLeaveCommunity(
+                                                  currentUser),
+                                          style: ElevatedButton.styleFrom(
+                                            foregroundColor: Colors.white,
+                                            backgroundColor: Colors.redAccent,
+                                          ),
+                                          child: const Text('Leave'),
+                                        ),
+                                      const SizedBox(width: 10),
+                                      if (!isCurrentUser)
+                                        ElevatedButton(
+                                          onPressed: () {},
+                                          style: ElevatedButton.styleFrom(
+                                            foregroundColor: Colors.white,
+                                            backgroundColor: Colors.redAccent,
+                                          ),
+                                          child: const Text('Kick'),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ).animate().fadeIn(duration: 300.ms).scale(
+                                begin: const Offset(0.9, 0.9),
+                                curve: Curves.easeOutBack,
+                              );
                         },
                       );
                     },
                     error: (error, stack) => Center(
-                      child: Text(error.toString()).animate().shimmer(
-                        colors: [Colors.grey, Colors.white],
-                      ),
+                      child: Text(error.toString())
+                          .animate()
+                          .shimmer(colors: [Colors.grey, Colors.white]),
                     ),
                     loading: () => const Center(
                       child: Loading(),
@@ -133,11 +156,11 @@ class _MembershipManagementScreenState
     );
   }
 
-  void _leaveCommunity(UserModel user) async {
+  void _handleLeaveCommunity(UserModel user) async {
     // Logic to leave the community
   }
 
-  void _handleSuspendMember(UserModel user) async {
+  void _showSuspendOptionsBottomSheet(UserModel user) async {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -169,48 +192,48 @@ class _MembershipManagementScreenState
                 title:
                     const Text('1 Day', style: TextStyle(color: Colors.white)),
                 onTap: () =>
-                    _suspendUserDuration(user, const Duration(days: 1)),
+                    _handleTemporarySuspension(user, const Duration(days: 1)),
               ),
               ListTile(
                 title:
                     const Text('3 Days', style: TextStyle(color: Colors.white)),
                 onTap: () =>
-                    _suspendUserDuration(user, const Duration(days: 3)),
+                    _handleTemporarySuspension(user, const Duration(days: 3)),
               ),
               ListTile(
                 title:
                     const Text('7 Days', style: TextStyle(color: Colors.white)),
                 onTap: () =>
-                    _suspendUserDuration(user, const Duration(days: 7)),
+                    _handleTemporarySuspension(user, const Duration(days: 7)),
               ),
               ListTile(
                 title: const Text('1 Month',
                     style: TextStyle(color: Colors.white)),
                 onTap: () =>
-                    _suspendUserDuration(user, const Duration(days: 30)),
+                    _handleTemporarySuspension(user, const Duration(days: 30)),
               ),
               ListTile(
                 title: const Text('3 Months',
                     style: TextStyle(color: Colors.white)),
                 onTap: () =>
-                    _suspendUserDuration(user, const Duration(days: 90)),
+                    _handleTemporarySuspension(user, const Duration(days: 90)),
               ),
               ListTile(
                 title: const Text('6 Months',
                     style: TextStyle(color: Colors.white)),
                 onTap: () =>
-                    _suspendUserDuration(user, const Duration(days: 180)),
+                    _handleTemporarySuspension(user, const Duration(days: 180)),
               ),
               ListTile(
                 title: const Text('12 Months',
                     style: TextStyle(color: Colors.white)),
                 onTap: () =>
-                    _suspendUserDuration(user, const Duration(days: 365)),
+                    _handleTemporarySuspension(user, const Duration(days: 365)),
               ),
               ListTile(
                 title: const Text('Permanent',
                     style: TextStyle(color: Colors.white)),
-                onTap: () => _suspendUserPer(user),
+                onTap: () => _performPermanentSuspension(user),
               ),
               const SizedBox(height: 20),
             ],
@@ -220,28 +243,27 @@ class _MembershipManagementScreenState
     );
   }
 
-  void _suspendUserDuration(UserModel user, Duration duration) async {
+  void _handleTemporarySuspension(UserModel user, Duration duration) async {
     Navigator.pop(context);
-
-    final bool? result = await _showSuspendConfirmationDialog(duration, false);
-
+    final bool? result =
+        await _showSuspensionConfirmationDialog(duration, false);
     if (result == true) {
-      suspendedUserReason = await _showSelectReasonDialog();
+      suspendedUserReason = await _showSuspensionReasonDialog();
       if (suspendedUserReason != null) {
-        _suspendUserForDays(
+        _performTemporarySuspension(
             user: user, reason: suspendedUserReason!, duration: duration);
         suspendedUserReason = null;
       }
     }
   }
 
-  void _suspendUserPer(UserModel user) async {
+  void _performPermanentSuspension(UserModel user) async {
     Navigator.pop(context);
 
-    final bool? result = await _showSuspendConfirmationDialog(null, true);
+    final bool? result = await _showSuspensionConfirmationDialog(null, true);
 
     if (result == true) {
-      suspendedUserReason = await _showSelectReasonDialog();
+      suspendedUserReason = await _showSuspensionReasonDialog();
 
       if (suspendedUserReason != null) {
         _suspendUserPermanently(
@@ -251,7 +273,7 @@ class _MembershipManagementScreenState
     }
   }
 
-  Future<bool?> _showSuspendConfirmationDialog(
+  Future<bool?> _showSuspensionConfirmationDialog(
       Duration? duration, bool isPermanent) {
     return showDialog<bool>(
       context: context,
@@ -289,8 +311,7 @@ class _MembershipManagementScreenState
     );
   }
 
-// Hàm hiển thị hộp thoại chọn lý do
-  Future<String?> _showSelectReasonDialog() async {
+  Future<String?> _showSuspensionReasonDialog() async {
     final List<String> reasons = [
       'Spamming',
       'Inappropriate behavior',
@@ -395,11 +416,11 @@ class _MembershipManagementScreenState
             'User ${user.name} suspended for ${duration.inDays} days. Reason: $reason'),
       );
     } else {
-      showToast(false, 'Unexpected error happenned :(');
+      showToast(false, 'Unexpected error happened :(');
     }
   }
 
-  void _suspendUserForDays({
+  void _performTemporarySuspension({
     required UserModel user,
     required Duration duration,
     required String reason,
@@ -421,7 +442,7 @@ class _MembershipManagementScreenState
     );
   }
 
-  void _sendInvite(UserModel friend) async {
+  void _inviteUserAsModerator(UserModel friend) async {
     final result = await ref
         .read(moderationControllerProvider.notifier)
         .inviteAsModerator(friend.uid, widget._community);

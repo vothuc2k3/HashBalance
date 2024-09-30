@@ -9,6 +9,7 @@ class SuspendUserModel {
   final String reason;
   final bool
       isPermanent; // true if the suspension is permanent, false if it's temporary
+  final int? days;
   final Timestamp suspendedAt;
   final Timestamp? expiresAt;
   SuspendUserModel({
@@ -19,6 +20,7 @@ class SuspendUserModel {
     required this.isPermanent,
     required this.suspendedAt,
     this.expiresAt,
+    this.days,
   });
 
   SuspendUserModel copyWith({
@@ -29,6 +31,7 @@ class SuspendUserModel {
     bool? isPermanent,
     Timestamp? suspendedAt,
     Timestamp? expiresAt,
+    int? days,
   }) {
     return SuspendUserModel(
       id: id ?? this.id,
@@ -38,6 +41,7 @@ class SuspendUserModel {
       isPermanent: isPermanent ?? this.isPermanent,
       suspendedAt: suspendedAt ?? this.suspendedAt,
       expiresAt: expiresAt ?? this.expiresAt,
+      days: days ?? this.days,
     );
   }
 
@@ -50,6 +54,7 @@ class SuspendUserModel {
       'isPermanent': isPermanent,
       'suspendedAt': suspendedAt,
       'expiresAt': expiresAt,
+      'days': days,
     };
   }
 
@@ -62,6 +67,7 @@ class SuspendUserModel {
       isPermanent: map['isPermanent'] as bool,
       suspendedAt: map['suspendedAt'] as Timestamp,
       expiresAt: map['expiresAt'] != null ? map['expiresAt'] as Timestamp : null,
+      days: map['days'] != null ? map['days'] as int : null,
     );
   }
 
@@ -85,7 +91,8 @@ class SuspendUserModel {
       other.reason == reason &&
       other.isPermanent == isPermanent &&
       other.suspendedAt == suspendedAt &&
-      other.expiresAt == expiresAt;
+      other.expiresAt == expiresAt &&
+      other.days == days;
   }
 
   @override
@@ -96,6 +103,7 @@ class SuspendUserModel {
       reason.hashCode ^
       isPermanent.hashCode ^
       suspendedAt.hashCode ^
-      expiresAt.hashCode;
+      expiresAt.hashCode ^
+      days.hashCode;
   }
 }
