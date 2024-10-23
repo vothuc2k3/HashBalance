@@ -201,13 +201,11 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen>
       child: SingleChildScrollView(
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            minHeight:
-                MediaQuery.of(context).size.height, // Chiều cao tối thiểu
+            minHeight: MediaQuery.of(context).size.height,
           ),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start, // Căn đều nội dung
-            crossAxisAlignment:
-                CrossAxisAlignment.start, // Căn trái các phần tử
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               GestureDetector(
                 onTap: () => _showSelectCommunityDialog(communities),
@@ -313,13 +311,11 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen>
                       );
                     }),
                     const SizedBox(height: 10),
-                    // Chỉ hiển thị nút "Add Option" khi số lượng option nhỏ hơn 10
                     if (pollOptionControllers.length < 10)
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: ref
-                              .watch(preferredThemeProvider)
-                              .transparentButtonColor,
+                          backgroundColor:
+                              ref.watch(preferredThemeProvider).third,
                         ),
                         onPressed: () {
                           setState(() {
@@ -335,13 +331,12 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen>
                     ElevatedButton(
                       onPressed: _createPoll,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: ref
-                            .watch(preferredThemeProvider)
-                            .approveButtonColor,
+                        backgroundColor:
+                            ref.watch(preferredThemeProvider).third,
                       ),
                       child: const Text(
                         'Create Poll',
-                        style: TextStyle(color: Colors.black),
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
                   ],
@@ -838,7 +833,7 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen>
                                                   backgroundColor: ref
                                                       .watch(
                                                           preferredThemeProvider)
-                                                      .approveButtonColor,
+                                                      .third,
                                                 ),
                                                 onPressed: _createPost,
                                                 child: const Center(

@@ -91,7 +91,8 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
     Community? community;
     final result = await ref
         .watch(moderationControllerProvider.notifier)
-        .fetchMembershipStatus(getMembershipId(uid, communityId));
+        .fetchMembershipStatus(
+            getMembershipId(uid: uid, communityId: communityId));
 
     result.fold(
       (l) {

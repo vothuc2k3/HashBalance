@@ -40,7 +40,9 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen>
     );
     final result = await ref
         .read(moderationControllerProvider.notifier)
-        .fetchMembershipStatus(getMembershipId(uid, community.id));
+        .fetchMembershipStatus(
+          getMembershipId(uid: uid, communityId: community.id),
+        );
 
     result.fold(
       (l) {

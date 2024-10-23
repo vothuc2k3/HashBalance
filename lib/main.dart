@@ -181,8 +181,8 @@ class MyAppState extends ConsumerState<MyApp> {
                 .watch(moderationControllerProvider.notifier)
                 .fetchMembershipStatus(
                   getMembershipId(
-                    currentUser.uid,
-                    communityId,
+                    uid: currentUser.uid,
+                    communityId: communityId,
                   ),
                 );
 

@@ -141,6 +141,7 @@ class AuthController extends StateNotifier<bool> {
     state = true;
     try {
       await _authRepository.signOut();
+      _ref.invalidate(userProvider);
       _ref.read(userProvider.notifier).update((state) => null);
     } catch (e) {
       throw Exception(e.toString());

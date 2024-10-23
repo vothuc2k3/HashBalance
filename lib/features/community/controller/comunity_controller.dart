@@ -18,10 +18,9 @@ import 'package:uuid/uuid.dart';
 
 final currentUserRoleProvider =
     StreamProvider.family((ref, String communityId) {
-  final uid = ref.read(userProvider)!.uid;
   return ref
       .watch(communityControllerProvider.notifier)
-      .getCurrentUserRole(communityId, uid);
+      .getCurrentUserRole(communityId);
 });
 
 final communityPostsProvider = StreamProvider.family((ref, String communityId) {
@@ -150,7 +149,7 @@ class CommunityController extends StateNotifier<bool> {
     state = true;
     try {
       final newMembership = CommunityMembership(
-        id: getMembershipId(uid, communityId),
+        id: getMembershipId(uid: uid, communityId: communityId),
         communityId: communityId,
         joinedAt: Timestamp.now(),
         uid: uid,
@@ -180,7 +179,7 @@ class CommunityController extends StateNotifier<bool> {
   ) async {
     try {
       final newMembership = CommunityMembership(
-        id: getMembershipId(uid, communityId),
+        id: getMembershipId(uid: uid, communityId: communityId),
         communityId: communityId,
         joinedAt: Timestamp.now(),
         uid: uid,
@@ -209,7 +208,7 @@ class CommunityController extends StateNotifier<bool> {
     state = true;
     try {
       final result = await _communityRepository
-          .leaveCommunity(getMembershipId(uid, communityId));
+          .leaveCommunity(getMembershipId(uid: uid, communityId: communityId));
 
       return result.fold(
         (l) => left(Failures(l.message)),
@@ -228,8 +227,8 @@ class CommunityController extends StateNotifier<bool> {
   Stream<bool> getMemberStatus(String communityId) {
     try {
       final currentUser = _ref.watch(userProvider);
-      return _communityRepository
-          .getMemberStatus(getMembershipId(currentUser!.uid, communityId));
+      return _communityRepository.getMemberStatus(
+          getMembershipId(uid: currentUser!.uid, communityId: communityId));
     } on FirebaseException catch (e) {
       throw Failures(e.message!);
     } catch (e) {
@@ -268,8 +267,16 @@ class CommunityController extends StateNotifier<bool> {
 
   Stream<CurrentUserRoleModel?> getCurrentUserRole(
     String communityId,
-    String uid,
   ) {
+    final uid = _ref.read(userProvider)!.uid;
     return _communityRepository.getCurrentUserRole(communityId, uid);
+  }
+
+  Future<Either<Failures, String?>> fetchSuspendStatus({
+    required String communityId,
+    required String uid,
+  }) async {
+    return await _communityRepository.fetchSuspendStatus(
+        communityId: communityId, uid: uid);
   }
 }

@@ -409,7 +409,7 @@ class ModerationRepository {
   }) async {
     try {
       await _communityMembership
-          .doc(getMembershipId(suspendUserModel.uid, suspendUserModel.communityId))
+          .doc(getMembershipId(uid: suspendUserModel.uid, communityId: suspendUserModel.communityId))
           .update({
         'status': 'suspended',
       });

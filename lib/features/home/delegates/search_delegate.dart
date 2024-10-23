@@ -250,7 +250,7 @@ class SearchCommunityDelegate extends SearchDelegate {
     );
     final result = await ref
         .watch(moderationControllerProvider.notifier)
-        .fetchMembershipStatus(getMembershipId(uid, community.id));
+        .fetchMembershipStatus(getMembershipId(uid: uid, communityId: community.id));
 
     result.fold(
       (l) {

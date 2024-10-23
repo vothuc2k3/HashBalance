@@ -103,7 +103,7 @@ class ModerationController extends StateNotifier<bool> {
   Stream<String> getMembershipStatus(String communityId) {
     final currentUser = _ref.watch(userProvider);
     return _moderationRepository
-        .getMembershipStatus(getMembershipId(currentUser!.uid, communityId));
+        .getMembershipStatus(getMembershipId(uid: currentUser!.uid, communityId: communityId));
   }
 
   //EDIT COMMUNITY VISUAL

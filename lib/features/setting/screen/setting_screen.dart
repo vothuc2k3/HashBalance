@@ -32,16 +32,6 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
                 ),
                 title: const Text('Purple Theme'),
                 onTap: () {
-                  ref.read(preferredThemeProvider.notifier).setTheme(
-                        const ThemeColors(
-                          first: Color(0xFF6A0DAD),
-                          second: Color(0xFF4A0B7E),
-                          third: Color(0xFF3A0A5D),
-                          approveButtonColor: Colors.purple,
-                          declineButtonColor: Colors.red,
-                          transparentButtonColor: Colors.transparent,
-                        ),
-                      );
                   Navigator.of(context).pop();
                 },
               ),
@@ -51,16 +41,6 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
                 ),
                 title: const Text('Blue Theme'),
                 onTap: () {
-                  ref.read(preferredThemeProvider.notifier).setTheme(
-                        const ThemeColors(
-                          first: Color(0xFF1E90FF),
-                          second: Color(0xFF1A73E8),
-                          third: Color(0xFF155FA0),
-                          approveButtonColor: Colors.blue,
-                          declineButtonColor: Colors.red,
-                          transparentButtonColor: Colors.transparent,
-                        ),
-                      );
                   Navigator.of(context).pop();
                 },
               ),

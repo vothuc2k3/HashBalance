@@ -122,7 +122,10 @@ String getUids(String uid1, String uid2) {
   return uids.join('_');
 }
 
-String getMembershipId(String uid, String communityId) {
+String getMembershipId({
+  required String uid,
+  required String communityId,
+}) {
   return [uid, communityId].join();
 }
 

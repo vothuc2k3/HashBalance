@@ -36,9 +36,11 @@ class SearchRepository {
                   communityQuery.codeUnitAt(communityQuery.length - 1) + 1);
 
       return _communities
-          .where('name',
-              isGreaterThanOrEqualTo: communityQuery,
-              isLessThan: communityQueryEnd)
+          .where(
+            'name',
+            isGreaterThanOrEqualTo: communityQuery,
+            isLessThan: communityQueryEnd,
+          )
           .snapshots()
           .map((event) {
         return event.docs.map((doc) {

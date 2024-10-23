@@ -36,6 +36,9 @@ class CommunityRepository {
   CollectionReference get _posts =>
       _firestore.collection(FirebaseConstants.postsCollection);
   //GET THE COMMUNITIES DATA
+  CollectionReference get _suspendedUsers =>
+      _firestore.collection(FirebaseConstants.suspendedUsersCollection);
+  //GET THE COMMUNITIES DATA
 
   //CREATE A WHOLE NEW COMMUNITY
   Future<Either<Failures, String>> createCommunity(Community community) async {
@@ -270,7 +273,7 @@ class CommunityRepository {
 
   Stream<CurrentUserRoleModel?> getCurrentUserRole(
       String communityId, String uid) {
-    final uids = getMembershipId(uid, communityId);
+    final uids = getMembershipId(uid: uid, communityId: communityId);
     return _communityMembership.doc(uids).snapshots().asyncMap((event) async {
       if (event.exists) {
         final data = event.data() as Map<String, dynamic>;
@@ -286,5 +289,22 @@ class CommunityRepository {
         return null;
       }
     });
+  }
+
+  Future<Either<Failures, String?>> fetchSuspendStatus({
+    required String communityId,
+    required String uid,
+  }) async {
+    try {
+      final snapshot =
+          await _suspendedUsers.doc(getMembershipId(uid: uid, communityId: communityId)).get();
+      if (snapshot.exists) {
+        return right(snapshot.data() as String?);
+      } else {
+        return right(null);
+      }
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    }
   }
 }

@@ -49,7 +49,6 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
                           final currentUser = ref.read(userProvider)!;
                           final isCurrentUser =
                               member.user.uid == currentUser.uid;
-
                           return Card(
                             margin: const EdgeInsets.symmetric(
                                 vertical: 6, horizontal: 16),
