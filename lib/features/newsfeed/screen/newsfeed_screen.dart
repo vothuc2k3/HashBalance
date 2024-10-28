@@ -144,11 +144,11 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
                 Expanded(
                   child: GestureDetector(
                     onTap: _navigateToCreatePostScreen,
-                    child: TextField(
+                    child: const TextField(
                       decoration: InputDecoration(
                         labelText: 'Share your moments....',
                         labelStyle: TextStyle(
-                          color: ref.watch(preferredThemeProvider).first,
+                          color: Colors.white54,
                         ),
                         enabled: false,
                         border: InputBorder.none,

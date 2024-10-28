@@ -1,12 +1,17 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/splash/splash_screen.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
+import 'package:hash_balance/features/post/screen/edit_post_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/poll_option_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
@@ -95,7 +100,7 @@ class _PollContainerState extends ConsumerState<PollContainer> {
                                 ),
                               );
                             }).toList(),
-                            error: (Object error, StackTrace stackTrace) {
+                            error: (error, stackTrace) {
                               return [
                                 Text('Error: $error',
                                     style: const TextStyle(color: Colors.red))
@@ -117,7 +122,8 @@ class _PollContainerState extends ConsumerState<PollContainer> {
     return Row(
       children: [
         CircleAvatar(
-          backgroundImage: CachedNetworkImageProvider(widget.community.profileImage),
+          backgroundImage:
+              CachedNetworkImageProvider(widget.community.profileImage),
           radius: 20,
         ),
         const SizedBox(width: 10),
@@ -198,13 +204,15 @@ class _PollContainerState extends ConsumerState<PollContainer> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                ListTile(
-                  leading: const Icon(Icons.edit),
-                  title: const Text('Edit Poll'),
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
+                if (widget.poll.uid == currentUser!.uid)
+                  ListTile(
+                    leading: const Icon(Icons.edit),
+                    title: const Text('Edit Poll'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _handleEditPoll();
+                    },
+                  ),
                 if (currentUser!.uid == widget.author.uid)
                   ListTile(
                     leading: const Icon(Icons.delete),
@@ -214,13 +222,6 @@ class _PollContainerState extends ConsumerState<PollContainer> {
                       _handleDeletePoll();
                     },
                   ),
-                ListTile(
-                  leading: const Icon(Icons.cancel),
-                  title: const Text('Cancel Poll'),
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
                 ListTile(
                   leading: const Icon(Icons.close),
                   title: const Text('Close'),
@@ -240,5 +241,30 @@ class _PollContainerState extends ConsumerState<PollContainer> {
     await ref
         .read(postControllerProvider.notifier)
         .voteOption(pollId: widget.poll.id, optionId: optionId);
+  }
+
+  void _handleEditPoll() async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SplashScreen(),
+      ),
+    );
+    List<PollOption> pollOptions = [];
+    pollOptions = await ref
+        .read(postControllerProvider.notifier)
+        .getPollOptions(pollId: widget.poll.id)
+        .first;
+    if (widget.poll.uid == currentUser!.uid) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EditPostScreen(
+            post: widget.poll,
+            initialPollOptions: pollOptions,
+          ),
+        ),
+      );
+    }
   }
 }

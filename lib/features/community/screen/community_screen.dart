@@ -76,7 +76,6 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                     .when(
                       data: (memberModel) {
                         final role = memberModel?.role ?? '';
-                        Logger().d('Role: $role');
                         return CustomScrollView(
                           slivers: [
                             SliverAppBar(

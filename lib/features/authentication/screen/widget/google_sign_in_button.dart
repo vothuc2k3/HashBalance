@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
-import 'package:hash_balance/theme/pallette.dart';
 
 class GoogleSignInButton extends ConsumerWidget {
   const GoogleSignInButton({
@@ -35,7 +34,7 @@ class GoogleSignInButton extends ConsumerWidget {
         ),
       ),
       style: ElevatedButton.styleFrom(
-        backgroundColor: Pallete.greyColor,
+        backgroundColor: const Color(0xFF592044),
         minimumSize: const Size(double.infinity, 50),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),

@@ -292,4 +292,15 @@ class PostController extends StateNotifier<bool> {
   Stream<List<PollOption>> getPollOptions({required String pollId}) {
     return _postRepository.getPollOptions(pollId: pollId);
   }
+
+  Future<Either<Failures, void>> updatePoll(
+    Post poll,
+    List<PollOption> pollOptions,
+  ) async {
+    return await _postRepository.updatePoll(poll, pollOptions);
+  }
+
+  Future<Either<Failures, void>> updatePost(Post post) async {
+    return await _postRepository.updatePost(post);
+  }
 }

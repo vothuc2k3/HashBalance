@@ -10,13 +10,13 @@ class PreferredTheme extends StateNotifier<ThemeColors> {
   PreferredTheme() : super(_firstTheme);
 
   static const ThemeColors _firstTheme = ThemeColors(
-    first: Color(0xFF1F4D35),
-    second: Color(0xFF193D2B),
-    third: Color(0xFF132E21),
+    // first: Color(0xFF1F4D35),
+    // second: Color(0xFF193D2B),
+    // third: Color(0xFF132E21),
 
-    // first: Color(0xFF232845),
-    // second: Color(0xFF1B1E36), // Darker shade
-    // third: Color(0xFF101224), // Even darker shade
+    first: Color(0xFF232845),
+    second: Color(0xFF1B1E36),
+    third: Color(0xFF101224),
     approveButtonColor: Color(0xFF4CAF50), // Green color for approve
     declineButtonColor: Color(0xFFF44336), // Red color for decline
     transparentButtonColor: Color(0x00000000), // Transparent color

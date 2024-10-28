@@ -1,11 +1,16 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/splash/splash_screen.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
+import 'package:hash_balance/features/post/screen/edit_post_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
+import 'package:hash_balance/models/poll_option_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
@@ -89,6 +94,7 @@ class _PollContainerState extends ConsumerState<PollContainer> {
                   title: const Text('Edit Poll'),
                   onTap: () {
                     Navigator.pop(context);
+                    _handleEditPoll();
                   },
                 ),
                 if (currentUser!.uid == widget.author.uid)
@@ -251,5 +257,30 @@ class _PollContainerState extends ConsumerState<PollContainer> {
         ),
       ],
     );
+  }
+
+  void _handleEditPoll() async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SplashScreen(),
+      ),
+    );
+    List<PollOption> pollOptions = [];
+    pollOptions = await ref
+        .read(postControllerProvider.notifier)
+        .getPollOptions(pollId: widget.poll.id)
+        .first;
+    if (widget.poll.uid == currentUser!.uid) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EditPostScreen(
+            post: widget.poll,
+            initialPollOptions: pollOptions,
+          ),
+        ),
+      );
+    }
   }
 }

@@ -41,17 +41,25 @@ class NewsfeedRepository {
         .where('uid', isEqualTo: uid)
         .snapshots()
         .asyncMap((event) async {
-      // Initialize lists for newsfeed data
       final List<PostDataModel> postDataList = [];
 
-      // Fetch community IDs
       final communityIds =
           event.docs.map((doc) => doc['communityId'] as String).toList();
 
-      final postsQuery = await _posts
-          .where('communityId', whereIn: communityIds)
-          .where('status', isEqualTo: 'Approved')
-          .get();
+      QuerySnapshot postsQuery;
+
+      if (communityIds.isEmpty) {
+        postsQuery = await _posts
+            .where('status', isEqualTo: 'Approved')
+            .orderBy('createdAt', descending: true)
+            .limit(10)
+            .get();
+      } else {
+        postsQuery = await _posts
+            .where('communityId', whereIn: communityIds)
+            .where('status', isEqualTo: 'Approved')
+            .get();
+      }
 
       List<Post> posts = [];
 
@@ -70,6 +78,7 @@ class NewsfeedRepository {
           PostDataModel(post: post, author: author, community: community),
         );
       }
+
       postDataList.sort((a, b) {
         final postDateA = a.post.createdAt;
         final postDateB = b.post.createdAt;

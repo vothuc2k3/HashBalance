@@ -9,9 +9,7 @@ import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 
 class UserTimelineWidget extends ConsumerStatefulWidget {
-  const UserTimelineWidget({
-    super.key,
-  });
+  const UserTimelineWidget({super.key});
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
@@ -29,14 +27,35 @@ class _UserTimelineWidgetState extends ConsumerState<UserTimelineWidget>
     super.build(context);
     return Container(
       decoration: BoxDecoration(
-        color: ref.watch(preferredThemeProvider).first,
+        color: ref.watch(preferredThemeProvider).third,
       ),
       child: RefreshIndicator(
+        onRefresh: _onRefresh,
         child: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
               child: ref.watch(userPostsProvider(currentUser)).when(
                     data: (posts) {
+                      if (posts.isEmpty) {
+                        return SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.6,
+                          child: Center(
+                            child: const Text(
+                              'You have no posts yet',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.white70,
+                              ),
+                            ).animate().fadeIn(duration: 600.ms).moveY(
+                                  begin: 30,
+                                  end: 0,
+                                  duration: 600.ms,
+                                  curve: Curves.easeOutBack,
+                                ),
+                          ),
+                        );
+                      }
+
                       return ListView.builder(
                         physics: const NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
@@ -57,8 +76,11 @@ class _UserTimelineWidgetState extends ConsumerState<UserTimelineWidget>
             )
           ],
         ),
-        onRefresh: () async {},
       ),
     );
+  }
+
+  Future<void> _onRefresh() async {
+    ref.invalidate(userPostsProvider);
   }
 }

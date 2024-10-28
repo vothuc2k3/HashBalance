@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/features/authentication/screen/email_sign_up_screen.dart';
-import 'package:hash_balance/theme/pallette.dart';
 
 class EmailSignInButton extends ConsumerWidget {
   const EmailSignInButton({
@@ -34,7 +33,7 @@ class EmailSignInButton extends ConsumerWidget {
         ),
       ),
       style: ElevatedButton.styleFrom(
-        backgroundColor: Pallete.greyColor,
+        backgroundColor: const Color(0xFF592044),
         minimumSize: const Size(double.infinity, 50),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),

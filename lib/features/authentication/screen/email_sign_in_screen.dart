@@ -1,5 +1,3 @@
-// ignore_for_file: implementation_imports
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
@@ -7,11 +5,12 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/screen/email_sign_up_screen.dart';
 import 'package:hash_balance/features/home/screen/home_screen.dart';
-import 'package:hash_balance/theme/pallette.dart';
 import 'package:rive/rive.dart';
 
 class EmailSignInScreen extends ConsumerStatefulWidget {
-  const EmailSignInScreen({super.key});
+  const EmailSignInScreen({
+    super.key,
+  });
 
   @override
   EmailSignInScreenState createState() => EmailSignInScreenState();
@@ -23,29 +22,19 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
   late bool isPasswordValid;
 
   FocusNode emailFocusNode = FocusNode();
-  TextEditingController email = TextEditingController();
-
   FocusNode passwordFocusNode = FocusNode();
-  TextEditingController password = TextEditingController();
 
   StateMachineController? controller;
   SMIInput<bool>? isChecking;
   SMIInput<double>? numLook;
   SMIInput<bool>? isHandsUp;
-
   SMIInput<bool>? trigSuccess;
   SMIInput<bool>? trigFail;
 
   void checkPassword(String password) {
-    if (password.length <= 5) {
-      setState(() {
-        isPasswordValid = false;
-      });
-    } else {
-      setState(() {
-        isPasswordValid = true;
-      });
-    }
+    setState(() {
+      isPasswordValid = password.length > 5;
+    });
   }
 
   void signInWithEmail() async {
@@ -105,76 +94,75 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
   @override
   Widget build(BuildContext context) {
     bool isLoading = ref.watch(authControllerProvider);
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
+        backgroundColor: const Color(0xFF8c336b),
+        resizeToAvoidBottomInset: true,
         extendBodyBehindAppBar: true,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
+          title: const Text('Hi our old friend'),
         ),
-        body: Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFF8c336b),
-          ),
-          child: Column(
-            children: [
-              const SizedBox(
-                height: 40,
-              ),
-              const Text(
-                'Hi our old friend, let\'s sign you back in!',
-                style: TextStyle(
-                  fontSize: 18,
-                  letterSpacing: 0.5,
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.only(
+              top: 40,
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: Column(
+              children: [
+                // MARK: - animation character
+                SizedBox(
+                  width: 250,
+                  height: 250,
+                  child: RiveAnimation.asset(
+                    fit: BoxFit.fitHeight,
+                    stateMachines: const ["Login Machine"],
+                    onInit: (artboard) {
+                      controller = StateMachineController.fromArtboard(
+                          artboard, "Login Machine");
+                      if (controller == null) return;
+                      artboard.addController(controller!);
+                      isChecking = controller?.findInput("isChecking");
+                      numLook = controller?.findInput("numLook");
+                      isHandsUp = controller?.findInput("isHandsUp");
+                      trigSuccess = controller?.findInput("trigSuccess");
+                      trigFail = controller?.findInput("trigFail");
+                    },
+                    'assets/images/Login_character/character.riv',
+                  ),
                 ),
-              ),
-              const SizedBox(height: 40),
-              //MARK: - animation character
-              SizedBox(
-                width: 250,
-                height: 250,
-                child: RiveAnimation.asset(
-                  fit: BoxFit.fitHeight,
-                  stateMachines: const ["Login Machine"],
-                  onInit: ((artboard) {
-                    controller = StateMachineController.fromArtboard(
-                        artboard, "Login Machine");
-                    if (controller == null) return;
-                    artboard.addController(controller!);
-                    isChecking = controller?.findInput("isChecking");
-                    numLook = controller?.findInput("numLook");
-                    isHandsUp = controller?.findInput("isHandsUp");
-                    trigSuccess = controller?.findInput("trigSuccess");
-                    trigFail = controller?.findInput("trigFail");
-                  }),
-                  'assets/images/Login_character/character.riv',
-                ),
-              ),
-              //MARK: - email input field
-              Padding(
-                padding: const EdgeInsets.only(
-                  right: 30,
-                  left: 30,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                SizedBox(height: screenHeight * 0.01),
+
+                // Email input field
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 30.0),
                   child: TextFormField(
                     focusNode: emailFocusNode,
                     controller: emailController,
-                    obscureText: false,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Email',
-                      labelStyle: TextStyle(
-                        color: Color(0xFF38464E),
+                      labelStyle: const TextStyle(
+                        color: Color(0xFF8C336B),
                       ),
                       hintText: 'johndoe@example.com',
+                      hintStyle: const TextStyle(color: Colors.grey),
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.1),
                       enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey),
-                      ),
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Colors.grey,
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF8C336B),
                         ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(
+                            color: Color(0xFF8C336B), width: 2),
                       ),
                     ),
                     onChanged: (value) {
@@ -182,17 +170,11 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
                     },
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-              //MARK: - password input field
-              Padding(
-                padding: const EdgeInsets.only(
-                  right: 30,
-                  left: 30,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                // Password input field
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 30.0),
                   child: TextFormField(
                     focusNode: passwordFocusNode,
                     controller: passwordController,
@@ -200,58 +182,61 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
                     decoration: InputDecoration(
                       labelText: 'Password',
                       labelStyle: const TextStyle(
-                        color: Color(0xFF38464E),
+                        color: Color(0xFF8C336B),
                       ),
-                      hintText: '***********',
-                      enabledBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey),
-                      ),
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: isPasswordValid ? Colors.grey : Colors.red,
+                      hintText: '********',
+                      hintStyle: const TextStyle(color: Colors.grey),
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.1),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF8C336B),
                         ),
                       ),
-                      errorText: isPasswordValid ? null : 'Invalid Email',
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(
+                            color: Color(0xFF8C336B), width: 2),
+                      ),
                     ),
                     onChanged: (value) {
                       checkPassword(value);
                     },
                   ),
                 ),
-              ),
-              const SizedBox(height: 30),
+                const SizedBox(height: 30),
 
-              //submit sign up request button
-              Padding(
-                padding: const EdgeInsets.only(
-                  right: 30,
-                  left: 30,
-                ),
-                child: ElevatedButton(
-                  onPressed: isLoading
-                      ? () {}
-                      : () {
-                          signInWithEmail();
-                        },
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                // Sign-in button
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                  child: ElevatedButton(
+                    onPressed: isLoading ? null : signInWithEmail,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(screenWidth * 0.8, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      backgroundColor: const Color(0xFF592044),
+                      shadowColor: Colors.black.withOpacity(0.2),
+                      elevation: 5,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 15),
                     ),
-                    backgroundColor: Pallete.blueColor,
-                  ),
-                  child: isLoading
-                      ? const Loading()
-                      : const Text(
-                          'Let\'s Go',
-                          style: TextStyle(
-                            fontSize: 17,
-                            color: Colors.white,
+                    child: isLoading
+                        ? const Loading()
+                        : const Text(
+                            'Let\'s Go',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/authentication/screen/widget/email_sign_in_button.dart';
-
 import 'package:hash_balance/features/authentication/screen/widget/google_sign_in_button.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
@@ -31,18 +30,20 @@ class AuthScreen extends ConsumerWidget {
     );
   }
 
-  void navigateToForgotPasswordScreen(context) {
+  void navigateToForgotPasswordScreen(BuildContext context) {
     Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const ForgotPasswordScreen(),
-        ));
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ForgotPasswordScreen(),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isLoading = ref.watch(authControllerProvider);
     final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       body: Container(
@@ -53,7 +54,6 @@ class AuthScreen extends ConsumerWidget {
         child: isLoading
             ? const Loading()
             : SingleChildScrollView(
-                physics: const NeverScrollableScrollPhysics(),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
                     minHeight: screenHeight,
@@ -63,38 +63,43 @@ class AuthScreen extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const SizedBox(height: 30),
+                        SizedBox(height: screenHeight * 0.1),
                         const Text(
                           'Let\'s join the communities!',
                           style: TextStyle(
                             fontSize: 24,
                             letterSpacing: 0.5,
+                            color: Colors.white,
                           ),
+                          textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 30),
-                        const SizedBox(
-                          width: 250,
-                          height: 250,
-                          child: RiveAnimation.asset(
+                        SizedBox(height: screenHeight * 0.03),
+                        SizedBox(
+                          width: screenWidth * 0.6,
+                          height: screenHeight * 0.3,
+                          child: const RiveAnimation.asset(
                             fit: BoxFit.fitHeight,
                             'assets/images/Login_character/character.riv',
                           ),
                         ),
-                        const SizedBox(height: 20),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 30),
-                          child: GoogleSignInButton(),
+                        SizedBox(height: screenHeight * 0.02),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.1),
+                          child: const GoogleSignInButton(),
                         ),
-                        const SizedBox(height: 10),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 30),
-                          child: EmailSignInButton(),
+                        SizedBox(height: screenHeight * 0.01),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.1),
+                          child: const EmailSignInButton(),
                         ),
                         const Spacer(),
                         Align(
                           alignment: Alignment.bottomCenter,
                           child: Padding(
-                            padding: const EdgeInsets.only(bottom: 40),
+                            padding:
+                                EdgeInsets.only(bottom: screenHeight * 0.05),
                             child: Column(
                               children: [
                                 Row(
@@ -120,9 +125,10 @@ class AuthScreen extends ConsumerWidget {
                                           color: Colors.white,
                                           shadows: [
                                             Shadow(
-                                                offset: Offset(0, 1),
-                                                blurRadius: 2.0,
-                                                color: Colors.black45),
+                                              offset: Offset(0, 1),
+                                              blurRadius: 2.0,
+                                              color: Colors.black45,
+                                            ),
                                           ],
                                         ),
                                       ),

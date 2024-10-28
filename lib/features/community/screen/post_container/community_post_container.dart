@@ -18,6 +18,7 @@ import 'package:hash_balance/features/comment/screen/comment_screen.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:hash_balance/features/post/screen/edit_post_screen.dart';
 
 class PostContainer extends ConsumerStatefulWidget {
   final bool isMod;
@@ -53,6 +54,17 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   bool _isPlaying = false;
   String? _videoDuration;
   String? _currentPosition;
+
+  void _handleEditPost() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditPostScreen(
+          post: widget.post,
+        ),
+      ),
+    );
+  }
 
   void _archivePost(String postId) async {
     final result = await ref
@@ -273,7 +285,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
               },
               child: const Text('Cancel'),
             ),
@@ -316,6 +328,15 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         return SafeArea(
           child: Wrap(
             children: [
+              if (!widget.post.isPoll && widget.post.uid == currentUid)
+                ListTile(
+                  leading: const Icon(Icons.edit),
+                  title: const Text('Edit post'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _handleEditPost();
+                  },
+                ),
               if (widget.isMod && !widget.isPinnedPost)
                 ListTile(
                   leading: const Icon(Icons.person_remove),

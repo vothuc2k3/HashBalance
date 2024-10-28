@@ -117,6 +117,8 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
         buttonBackgroundColor: ref.watch(preferredThemeProvider).second,
         animationCurve: Curves.easeInOut,
         animationDuration: const Duration(milliseconds: 600),
+        letIndexChange: (index) => true,
+        height: 60,
       ),
     );
   }

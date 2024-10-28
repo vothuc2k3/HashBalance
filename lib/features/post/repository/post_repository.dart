@@ -402,4 +402,36 @@ class PostRepository {
             .map((e) => PollOption.fromMap(e.data() as Map<String, dynamic>))
             .toList());
   }
+
+  Future<Either<Failures, void>> updatePoll(
+    Post poll,
+    List<PollOption> pollOptions,
+  ) async {
+    try {
+      final batch = _firestore.batch();
+      batch.update(_posts.doc(poll.id), poll.toMap());
+      for (final option in pollOptions) {
+        batch.set(_pollOptions.doc(option.id), option.toMap());
+      }
+      await batch.commit();
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  Future<Either<Failures, void>> updatePost(Post post) async {
+    try {
+      final batch = _firestore.batch();
+      batch.update(_posts.doc(post.id), post.toMap());
+      await batch.commit();
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
 }

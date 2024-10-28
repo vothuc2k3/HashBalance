@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -184,56 +185,100 @@ class HomeScreenState extends ConsumerState<HomeScreen>
           ),
           drawer: const CommunityListDrawer(),
           endDrawer: const UserProfileDrawer(),
-          bottomNavigationBar: CupertinoTabBar(
-            backgroundColor: ref.watch(preferredThemeProvider).third,
-            activeColor: Colors.teal,
-            inactiveColor: Colors.white70,
-            iconSize: 28.0,
+          bottomNavigationBar: CurvedNavigationBar(
+            index: _page,
+            height: 60.0,
             items: [
-              const BottomNavigationBarItem(
-                icon: Icon(Icons.home),
-                label: 'Home',
-              ),
-              const BottomNavigationBarItem(
-                icon: Icon(Icons.person_search_outlined),
-                label: 'Communities',
-              ),
-              const BottomNavigationBarItem(
-                icon: Icon(Icons.add_circle_outline_outlined),
-                label: 'Create',
-              ),
-              const BottomNavigationBarItem(
-                icon: Icon(Icons.message_outlined),
-                label: 'Chat',
-              ),
+              const Icon(Icons.home, size: 30, color: Colors.white),
+              const Icon(Icons.person_search_outlined,
+                  size: 30, color: Colors.white),
+              const Icon(Icons.add_circle, size: 30, color: Colors.white),
+              const Icon(Icons.message_outlined, size: 30, color: Colors.white),
               if (user != null)
-                BottomNavigationBarItem(
-                  icon: ref
-                          .watch(getUnreadNotifCountProvider(user.uid))
-                          .whenOrNull(
-                        data: (unreadCount) {
-                          return unreadCount == 0
-                              ? const Icon(Icons.notification_add_outlined)
-                              : Badge(
-                                  label: Text(
-                                    '$unreadCount',
-                                    style: const TextStyle(
-                                        color: Colors.white, fontSize: 10),
-                                  ),
-                                  isLabelVisible: true,
-                                  child: const Icon(
-                                    Icons.notification_add_outlined,
-                                  ),
-                                );
-                        },
-                      ) ??
-                      const Icon(Icons.notification_add_outlined),
-                  label: 'Inbox',
-                ),
+                ref.watch(getUnreadNotifCountProvider(user.uid)).whenOrNull(
+                      data: (unreadCount) {
+                        if (unreadCount == 0) {
+                          return const Icon(
+                            Icons.notification_add_outlined,
+                            size: 30,
+                            color: Colors.white,
+                          );
+                        }
+                        return Badge(
+                          label: Text(
+                            '$unreadCount',
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 10),
+                          ),
+                          isLabelVisible: true,
+                          child: const Icon(
+                            Icons.notification_add_outlined,
+                            size: 30,
+                          ),
+                        );
+                      },
+                    ) ??
+                    const Icon(Icons.notification_add_outlined,
+                        size: 30, color: Colors.white),
             ],
+            color: ref.watch(preferredThemeProvider).first,
+            backgroundColor: ref.watch(preferredThemeProvider).second,
+            buttonBackgroundColor: ref.watch(preferredThemeProvider).third,
+            animationCurve: Curves.easeInOut,
+            animationDuration: const Duration(milliseconds: 300),
             onTap: onTabTapped,
-            currentIndex: _page,
+            letIndexChange: (index) => true,
           ),
+          // bottomNavigationBar: CupertinoTabBar(
+          //   backgroundColor: ref.watch(preferredThemeProvider).third,
+          //   activeColor: Colors.teal,
+          //   inactiveColor: Colors.white70,
+          //   iconSize: 28.0,
+          //   items: [
+          //     const BottomNavigationBarItem(
+          //       icon: Icon(Icons.home),
+          //       label: 'Home',
+          //     ),
+          //     const BottomNavigationBarItem(
+          //       icon: Icon(Icons.person_search_outlined),
+          //       label: 'Communities',
+          //     ),
+          //     const BottomNavigationBarItem(
+          //       icon: Icon(Icons.add_circle_outline_outlined),
+          //       label: 'Create',
+          //     ),
+          //     const BottomNavigationBarItem(
+          //       icon: Icon(Icons.message_outlined),
+          //       label: 'Chat',
+          //     ),
+          //     if (user != null)
+          //       BottomNavigationBarItem(
+          //         icon: ref
+          //                 .watch(getUnreadNotifCountProvider(user.uid))
+          //                 .whenOrNull(
+          //               data: (unreadCount) {
+          //                 return unreadCount == 0
+          //                     ? const Icon(Icons.notification_add_outlined)
+          //                     : Badge(
+          //                         label: Text(
+          //                           '$unreadCount',
+          //                           style: const TextStyle(
+          //                               color: Colors.white, fontSize: 10),
+          //                         ),
+          //                         isLabelVisible: true,
+          //                         child: const Icon(
+          //                           Icons.notification_add_outlined,
+          //                         ),
+          //                       );
+          //               },
+          //             ) ??
+          //             const Icon(Icons.notification_add_outlined),
+          //         label: 'Inbox',
+          //       ),
+          //   ],
+          //   onTap: onTabTapped,
+          //   currentIndex: _page,
+          // ),
         ),
       ),
     );
