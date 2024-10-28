@@ -92,12 +92,12 @@ class PostController extends StateNotifier<bool> {
   //CREATE A NEW POST
   Future<Either<Failures, void>> createPost({
     required Community community,
-    File? image,
+    List<File>? images,
     File? video,
     required String content,
   }) async {
     try {
-      if (content.isEmpty && image == null && video == null) {
+      if (content.isEmpty && images == null && video == null) {
         return left(Failures('Post cannot be empty'));
       }
       final uid = _ref.watch(userProvider)!.uid;
@@ -114,7 +114,7 @@ class PostController extends StateNotifier<bool> {
             createdAt: Timestamp.now(),
             id: _uuid.v1(),
           );
-          final result = await _postRepository.createPost(post, image, video);
+          final result = await _postRepository.createPost(post, images, video);
           return result;
         default:
           final post = Post(
@@ -128,7 +128,7 @@ class PostController extends StateNotifier<bool> {
             createdAt: Timestamp.now(),
             id: _uuid.v1(),
           );
-          final result = await _postRepository.createPost(post, image, video);
+          final result = await _postRepository.createPost(post, images, video);
           return result;
       }
     } on FirebaseException catch (e) {
@@ -300,7 +300,12 @@ class PostController extends StateNotifier<bool> {
     return await _postRepository.updatePoll(poll, pollOptions);
   }
 
-  Future<Either<Failures, void>> updatePost(Post post) async {
-    return await _postRepository.updatePost(post);
+  Future<Either<Failures, void>> updatePost(
+      Post post, File? image, File? video) async {
+    return await _postRepository.updatePost(
+      post,
+      image,
+      video,
+    );
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 class Post {
   final String id;
@@ -8,7 +9,7 @@ class Post {
   final String uid;
   final bool isPoll;
   final String content;
-  final String? image;
+  final List<String>? image;
   final String? video;
   final String status;
   final bool isPinned;
@@ -18,10 +19,10 @@ class Post {
     required this.id,
     required this.communityId,
     required this.uid,
+    required this.isPoll,
     required this.content,
     this.image,
     this.video,
-    required this.isPoll,
     required this.status,
     required this.isPinned,
     required this.isEdited,
@@ -32,10 +33,10 @@ class Post {
     String? id,
     String? communityId,
     String? uid,
-    String? content,
-    String? image,
-    String? video,
     bool? isPoll,
+    String? content,
+    List<String>? image,
+    String? video,
     String? status,
     bool? isPinned,
     bool? isEdited,
@@ -45,10 +46,10 @@ class Post {
       id: id ?? this.id,
       communityId: communityId ?? this.communityId,
       uid: uid ?? this.uid,
+      isPoll: isPoll ?? this.isPoll,
       content: content ?? this.content,
       image: image ?? this.image,
       video: video ?? this.video,
-      isPoll: isPoll ?? this.isPoll,
       status: status ?? this.status,
       isPinned: isPinned ?? this.isPinned,
       isEdited: isEdited ?? this.isEdited,
@@ -61,10 +62,10 @@ class Post {
       'id': id,
       'communityId': communityId,
       'uid': uid,
+      'isPoll': isPoll,
       'content': content,
       'image': image,
       'video': video,
-      'isPoll': isPoll,
       'status': status,
       'isPinned': isPinned,
       'isEdited': isEdited,
@@ -77,10 +78,14 @@ class Post {
       id: map['id'] as String,
       communityId: map['communityId'] as String,
       uid: map['uid'] as String,
-      content: map['content'] as String,
-      image: map['image'] != null ? map['image'] as String : '',
-      video: map['video'] != null ? map['video'] as String : '',
       isPoll: map['isPoll'] as bool,
+      content: map['content'] as String,
+      image: map['image'] != null
+          ? List<String>.from(
+              (map['image'] as List<dynamic>),
+            )
+          : null,
+      video: map['video'] != null ? map['video'] as String : null,
       status: map['status'] as String,
       isPinned: map['isPinned'] as bool,
       isEdited: map['isEdited'] as bool,
@@ -95,7 +100,7 @@ class Post {
 
   @override
   String toString() {
-    return 'Post(id: $id, communityId: $communityId, uid: $uid, content: $content, image: $image, video: $video, isPoll: $isPoll, status: $status, isPinned: $isPinned, isEdited: $isEdited, createdAt: $createdAt)';
+    return 'Post(id: $id, communityId: $communityId, uid: $uid, isPoll: $isPoll, content: $content, image: $image, video: $video, status: $status, isPinned: $isPinned, isEdited: $isEdited, createdAt: $createdAt)';
   }
 
   @override
@@ -105,10 +110,10 @@ class Post {
     return other.id == id &&
         other.communityId == communityId &&
         other.uid == uid &&
-        other.content == content &&
-        other.image == image &&
-        other.video == video &&
         other.isPoll == isPoll &&
+        other.content == content &&
+        listEquals(other.image, image) &&
+        other.video == video &&
         other.status == status &&
         other.isPinned == isPinned &&
         other.isEdited == isEdited &&
@@ -120,10 +125,10 @@ class Post {
     return id.hashCode ^
         communityId.hashCode ^
         uid.hashCode ^
+        isPoll.hashCode ^
         content.hashCode ^
         image.hashCode ^
         video.hashCode ^
-        isPoll.hashCode ^
         status.hashCode ^
         isPinned.hashCode ^
         isEdited.hashCode ^

@@ -57,27 +57,29 @@ class PostRepository {
   //CREATE A NEW POST
   Future<Either<Failures, void>> createPost(
     Post post,
-    File? image,
+    List<File>? images,
     File? video,
   ) async {
     try {
       Post updatedPost = post;
-      if (image != null) {
-        final result = await _storageRepository.storeFile(
-          path: 'posts/images',
-          id: post.id,
-          file: image,
-        );
-        await result.fold(
-            (error) => throw FirebaseException(
-                  plugin: 'Firebase Exception',
-                  message: error.message,
-                ), (right) async {
-          String imageUrl = await FirebaseStorage.instance
-              .ref('posts/images/${post.id}')
-              .getDownloadURL();
-          updatedPost = updatedPost.copyWith(image: imageUrl);
-        });
+      if (images != null) {
+        for (var image in images) {
+          final result = await _storageRepository.storeFile(
+            path: 'posts/images',
+            id: post.id,
+            file: image,
+          );
+          await result.fold(
+              (error) => throw FirebaseException(
+                    plugin: 'Firebase Exception',
+                    message: error.message,
+                  ), (right) async {
+            String imageUrl = await FirebaseStorage.instance
+                .ref('posts/images/${post.id}')
+                .getDownloadURL();
+            updatedPost = updatedPost.copyWith(image: [imageUrl]);
+          });
+        }
       }
       if (video != null) {
         final result = await _storageRepository.storeFile(
@@ -422,11 +424,45 @@ class PostRepository {
     }
   }
 
-  Future<Either<Failures, void>> updatePost(Post post) async {
+  Future<Either<Failures, void>> updatePost(
+    Post post,
+    File? image,
+    File? video,
+  ) async {
     try {
       final batch = _firestore.batch();
-      batch.update(_posts.doc(post.id), post.toMap());
+
+      Post updatedPost = post;
+
+      if (image != null) {
+        await _storageRepository.storeFile(
+          path: 'posts/images',
+          id: post.id,
+          file: image,
+        );
+        String imageUrl = await FirebaseStorage.instance
+            .ref('posts/images/${post.id}')
+            .getDownloadURL();
+        updatedPost = updatedPost.copyWith(image: [imageUrl]);
+      }
+
+      if (video != null) {
+        await _storageRepository.storeFile(
+          path: 'posts/videos',
+          id: post.id,
+          file: video,
+        );
+        String videoUrl = await FirebaseStorage.instance
+            .ref('posts/videos/${post.id}')
+            .getDownloadURL();
+        updatedPost = updatedPost.copyWith(video: videoUrl);
+      }
+
+      final postRef = _firestore.collection('posts').doc(post.id);
+      batch.update(postRef, updatedPost.toMap());
+
       await batch.commit();
+
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));

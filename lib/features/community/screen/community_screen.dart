@@ -443,10 +443,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => CreatePostScreen(
-          chosenCommunity: community,
-          isFromCommunityScreen: true,
-        ),
+        builder: (context) => const CreatePostScreen(),
       ),
     );
   }

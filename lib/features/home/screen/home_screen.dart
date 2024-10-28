@@ -229,56 +229,6 @@ class HomeScreenState extends ConsumerState<HomeScreen>
             onTap: onTabTapped,
             letIndexChange: (index) => true,
           ),
-          // bottomNavigationBar: CupertinoTabBar(
-          //   backgroundColor: ref.watch(preferredThemeProvider).third,
-          //   activeColor: Colors.teal,
-          //   inactiveColor: Colors.white70,
-          //   iconSize: 28.0,
-          //   items: [
-          //     const BottomNavigationBarItem(
-          //       icon: Icon(Icons.home),
-          //       label: 'Home',
-          //     ),
-          //     const BottomNavigationBarItem(
-          //       icon: Icon(Icons.person_search_outlined),
-          //       label: 'Communities',
-          //     ),
-          //     const BottomNavigationBarItem(
-          //       icon: Icon(Icons.add_circle_outline_outlined),
-          //       label: 'Create',
-          //     ),
-          //     const BottomNavigationBarItem(
-          //       icon: Icon(Icons.message_outlined),
-          //       label: 'Chat',
-          //     ),
-          //     if (user != null)
-          //       BottomNavigationBarItem(
-          //         icon: ref
-          //                 .watch(getUnreadNotifCountProvider(user.uid))
-          //                 .whenOrNull(
-          //               data: (unreadCount) {
-          //                 return unreadCount == 0
-          //                     ? const Icon(Icons.notification_add_outlined)
-          //                     : Badge(
-          //                         label: Text(
-          //                           '$unreadCount',
-          //                           style: const TextStyle(
-          //                               color: Colors.white, fontSize: 10),
-          //                         ),
-          //                         isLabelVisible: true,
-          //                         child: const Icon(
-          //                           Icons.notification_add_outlined,
-          //                         ),
-          //                       );
-          //               },
-          //             ) ??
-          //             const Icon(Icons.notification_add_outlined),
-          //         label: 'Inbox',
-          //       ),
-          //   ],
-          //   onTap: onTabTapped,
-          //   currentIndex: _page,
-          // ),
         ),
       ),
     );

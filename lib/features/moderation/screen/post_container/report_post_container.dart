@@ -168,7 +168,7 @@ class _ReportPostContainerState extends ConsumerState<ReportPostContainer> {
               ? Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: CachedNetworkImage(
-                    imageUrl: widget._post.image!,
+                    imageUrl: widget._post.image!.first,
                     progressIndicatorBuilder: (context, url, downloadProgress) {
                       return const Loading();
                     },

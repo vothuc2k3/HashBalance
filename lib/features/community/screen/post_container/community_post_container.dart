@@ -506,7 +506,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
               ? Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: CachedNetworkImage(
-                    imageUrl: widget.post.image!,
+                    imageUrl: widget.post.image!.first,
                     progressIndicatorBuilder: (context, url, downloadProgress) {
                       return const Loading();
                     },

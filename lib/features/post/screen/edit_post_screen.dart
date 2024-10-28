@@ -30,10 +30,6 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
     pollOptions = widget.initialPollOptions ?? [];
   }
 
-  void _savePost() async {
-    // Save post logic
-  }
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -44,12 +40,6 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
         appBar: AppBar(
           backgroundColor: ref.watch(preferredThemeProvider).first,
           title: Text(widget._post.isPoll ? 'Edit Poll' : 'Edit Post'),
-          actions: [
-            IconButton(
-              onPressed: isSaving ? null : _savePost,
-              icon: const Icon(Icons.save),
-            ),
-          ],
         ),
         body: SingleChildScrollView(
           padding: EdgeInsets.only(
@@ -59,8 +49,13 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: widget._post.isPoll
-                ? EditPollWidget(post: widget._post, pollOptions: pollOptions)
-                : EditPostWidget(post: widget._post),
+                ? EditPollWidget(
+                    post: widget._post,
+                    pollOptions: pollOptions,
+                  )
+                : EditPostWidget(
+                    post: widget._post,
+                  ),
           ),
         ),
       ),

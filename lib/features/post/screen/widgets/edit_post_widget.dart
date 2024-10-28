@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:video_player/video_player.dart';
@@ -31,23 +33,33 @@ class _EditPostWidgetState extends ConsumerState<EditPostWidget> {
   @override
   void initState() {
     super.initState();
-    _imageUrl = widget.post.image;
+    _imageUrl = widget.post.image?.first;
     _videoUrl = widget.post.video;
+    _contentController.text = widget.post.content;
   }
 
-  void _savePost() {
-    ref.read(postControllerProvider.notifier).updatePost(
-          widget.post.copyWith(
-            content: _contentController.text,
-            image: _imageUrl,
-            video: _videoUrl,
-          ),
+  void _savePost() async {
+    final result = await ref.read(postControllerProvider.notifier).updatePost(
+          widget.post.copyWith(content: _contentController.text),
+          _imageFile,
+          _videoFile,
         );
+    result.fold(
+      (l) => showToast(false, l.message),
+      (r) {
+        showToast(true, 'Post updated');
+        Navigator.pop(context);
+      },
+    );
   }
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null && await pickedFile.length() >= 20 * 1024 * 1024) {
+      showToast(false, 'File size should be less than 20MB');
+      return;
+    }
     if (pickedFile != null) {
       setState(() {
         _imageFile = File(pickedFile.path);
@@ -58,6 +70,10 @@ class _EditPostWidgetState extends ConsumerState<EditPostWidget> {
   Future<void> _pickVideo() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickVideo(source: ImageSource.gallery);
+    if (pickedFile != null && await pickedFile.length() >= 100 * 1024 * 1024) {
+      showToast(false, 'File size should be less than 100MB');
+      return;
+    }
     if (pickedFile != null) {
       setState(() {
         _videoFile = File(pickedFile.path);
@@ -67,68 +83,146 @@ class _EditPostWidgetState extends ConsumerState<EditPostWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Stack(
       children: [
-        TextField(
-          controller: _contentController,
-          decoration: const InputDecoration(
-            labelText: 'Content',
-            hintText: 'Enter content',
-            border: OutlineInputBorder(),
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: _contentController,
+                decoration: const InputDecoration(
+                  labelText: 'Content',
+                  hintText: 'Enter content',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 5,
+              ),
+              const SizedBox(height: 16),
+              _imageUrl != null && _imageUrl!.isNotEmpty
+                  ? Column(
+                      children: [
+                        Image.network(
+                          _imageUrl!,
+                          height: 200,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            setState(() => _imageUrl = null);
+                          },
+                          child: const Text(
+                            'Remove Image',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    )
+                  : _imageFile != null
+                      ? Column(
+                          children: [
+                            Image.file(
+                              _imageFile!,
+                              height: 200,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                setState(() => _imageFile = null);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    Theme.of(context).colorScheme.error,
+                              ),
+                              child: const Text(
+                                'Remove Image',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : ElevatedButton(
+                          onPressed: _pickImage,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                Theme.of(context).colorScheme.secondary,
+                          ),
+                          child: const Text(
+                            'Pick Image',
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+              const SizedBox(height: 16),
+              _videoUrl != null && _videoUrl!.isNotEmpty
+                  ? Column(
+                      children: [
+                        VideoWidget(url: _videoUrl!),
+                        TextButton(
+                          onPressed: () {
+                            setState(() => _videoUrl = null);
+                          },
+                          child: const Text(
+                            'Remove Video',
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : _videoFile != null
+                      ? Column(
+                          children: [
+                            VideoWidget(url: _videoFile!.path),
+                            ElevatedButton(
+                              onPressed: () {
+                                setState(() => _videoFile = null);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    Theme.of(context).colorScheme.error,
+                              ),
+                              child: const Text(
+                                'Remove Video',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : ElevatedButton(
+                          onPressed: _pickVideo,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                Theme.of(context).colorScheme.secondary,
+                          ),
+                          child: const Text(
+                            'Pick Video',
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+              const SizedBox(height: 16),
+            ],
           ),
-          maxLines: 5,
         ),
-        const SizedBox(height: 16),
-        _imageUrl != null && _imageUrl!.isNotEmpty
-            ? Column(
-                children: [
-                  Image.network(
-                    _imageUrl!,
-                    height: 200,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      setState(() => _imageUrl = null);
-                    },
-                    child: const Text('Remove Image'),
-                  ),
-                ],
-              )
-            : _imageFile != null
-                ? Image.file(_imageFile!)
-                : ElevatedButton(
-                    onPressed: _pickImage,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.secondary,
-                    ),
-                    child: const Text('Pick Image'),
-                  ),
-        const SizedBox(height: 16),
-        _videoUrl != null && _videoUrl!.isNotEmpty
-            ? Column(
-                children: [
-                  VideoWidget(url: _videoUrl!),
-                  TextButton(
-                    onPressed: () {
-                      setState(() => _videoUrl = null);
-                    },
-                    child: const Text('Remove Video'),
-                  ),
-                ],
-              )
-            : _videoFile != null
-                ? VideoWidget(url: _videoFile!.path)
-                : ElevatedButton(
-                    onPressed: _pickVideo,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.secondary,
-                    ),
-                    child: const Text('Pick Video'),
-                  ),
-        const SizedBox(height: 16),
+        Positioned(
+          top: 10,
+          right: 10,
+          child: IconButton(
+            icon: const Icon(Icons.save, color: Colors.green),
+            onPressed: _savePost,
+          ),
+        ),
       ],
     );
   }
@@ -172,6 +266,6 @@ class _VideoWidgetState extends State<VideoWidget> {
             aspectRatio: _controller.value.aspectRatio,
             child: VideoPlayer(_controller),
           )
-        : const Center(child: CircularProgressIndicator());
+        : const Center(child: Loading());
   }
 }

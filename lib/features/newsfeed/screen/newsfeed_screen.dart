@@ -26,7 +26,10 @@ class NewsfeedScreen extends ConsumerStatefulWidget {
 
 class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
     with AutomaticKeepAliveClientMixin {
-  Future<void> _refreshPosts() async {}
+  Future<void> _refreshPosts() async {
+    final currentUser = ref.read(userProvider);
+    ref.invalidate(newsfeedStreamProvider(currentUser!.uid));
+  }
 
   void _navigateToCreatePostScreen() {
     context.findAncestorStateOfType<HomeScreenState>()?.onTabTapped(2);
@@ -44,78 +47,80 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
         decoration: BoxDecoration(
           color: ref.watch(preferredThemeProvider).first,
         ),
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: _buildCreatePostContainer(currentUser!),
-            ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 20),
-            ),
-            //MARK: - NEWSFEED
-            SliverToBoxAdapter(
-              child:
-                  ref.watch(newsfeedStreamProvider(currentUser.uid)).when(
-                        data: (posts) {
-                          if (posts.isEmpty) {
-                            return const Center(
-                              child: Text(
-                                'No posts available.',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            );
-                          }
-                          return ListView.builder(
-                            physics: const ScrollPhysics(),
-                            shrinkWrap: true,
-                            itemCount: posts.length,
-                            itemBuilder: (context, index) {
-                              final postData = posts[index];
-                              if (!postData.post.isPoll) {
-                                return PostContainer(
-                                  author: postData.author!,
-                                  post: postData.post,
-                                  community: postData.community!,
-                                ).animate().fadeIn();
-                              } else if (postData.post.isPoll) {
-                                return PollContainer(
-                                  author: postData.author!,
-                                  poll: postData.post,
-                                  community: postData.community!,
-                                ).animate().fadeIn();
-                              }
-                              return const SizedBox.shrink();
-                            },
-                          );
-                        },
-                        loading: () => Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              'Loading',
+        child: RefreshIndicator(
+          onRefresh: _refreshPosts,
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: _buildCreatePostContainer(currentUser!),
+              ),
+              const SliverToBoxAdapter(
+                child: SizedBox(height: 20),
+              ),
+              //MARK: - NEWSFEED
+              SliverToBoxAdapter(
+                child: ref.watch(newsfeedStreamProvider(currentUser.uid)).when(
+                      data: (posts) {
+                        if (posts.isEmpty) {
+                          return const Center(
+                            child: Text(
+                              'No posts available.',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(width: 10),
-                            const Loading(),
-                          ].animate().fadeIn(duration: 600.ms).moveY(
-                                begin: 30,
-                                end: 0,
-                                duration: 600.ms,
-                                curve: Curves.easeOutBack,
-                              ),
-                        ),
-                        error: (error, stackTrace) =>
-                            ErrorText(error: error.toString()),
+                          );
+                        }
+                        return ListView.builder(
+                          physics: const ScrollPhysics(),
+                          shrinkWrap: true,
+                          itemCount: posts.length,
+                          itemBuilder: (context, index) {
+                            final postData = posts[index];
+                            if (!postData.post.isPoll) {
+                              return PostContainer(
+                                author: postData.author!,
+                                post: postData.post,
+                                community: postData.community!,
+                              ).animate().fadeIn();
+                            } else if (postData.post.isPoll) {
+                              return PollContainer(
+                                author: postData.author!,
+                                poll: postData.post,
+                                community: postData.community!,
+                              ).animate().fadeIn();
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        );
+                      },
+                      loading: () => Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'Loading',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          const Loading(),
+                        ].animate().fadeIn(duration: 600.ms).moveY(
+                              begin: 30,
+                              end: 0,
+                              duration: 600.ms,
+                              curve: Curves.easeOutBack,
+                            ),
                       ),
-            ),
-          ],
+                      error: (error, stackTrace) =>
+                          ErrorText(error: error.toString()),
+                    ),
+              ),
+            ],
+          ),
         ),
       ),
     );
