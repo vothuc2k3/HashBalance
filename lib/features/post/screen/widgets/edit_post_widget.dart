@@ -33,7 +33,7 @@ class _EditPostWidgetState extends ConsumerState<EditPostWidget> {
   @override
   void initState() {
     super.initState();
-    _imageUrl = widget.post.image?.first;
+    _imageUrl = widget.post.images?.first;
     _videoUrl = widget.post.video;
     _contentController.text = widget.post.content;
   }

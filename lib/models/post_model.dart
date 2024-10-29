@@ -9,7 +9,7 @@ class Post {
   final String uid;
   final bool isPoll;
   final String content;
-  final List<String>? image;
+  final List<String>? images;
   final String? video;
   final String status;
   final bool isPinned;
@@ -21,7 +21,7 @@ class Post {
     required this.uid,
     required this.isPoll,
     required this.content,
-    this.image,
+    this.images,
     this.video,
     required this.status,
     required this.isPinned,
@@ -35,7 +35,7 @@ class Post {
     String? uid,
     bool? isPoll,
     String? content,
-    List<String>? image,
+    List<String>? images,
     String? video,
     String? status,
     bool? isPinned,
@@ -48,7 +48,7 @@ class Post {
       uid: uid ?? this.uid,
       isPoll: isPoll ?? this.isPoll,
       content: content ?? this.content,
-      image: image ?? this.image,
+      images: images ?? this.images,
       video: video ?? this.video,
       status: status ?? this.status,
       isPinned: isPinned ?? this.isPinned,
@@ -64,7 +64,7 @@ class Post {
       'uid': uid,
       'isPoll': isPoll,
       'content': content,
-      'image': image,
+      'images': images,
       'video': video,
       'status': status,
       'isPinned': isPinned,
@@ -80,10 +80,8 @@ class Post {
       uid: map['uid'] as String,
       isPoll: map['isPoll'] as bool,
       content: map['content'] as String,
-      image: map['image'] != null
-          ? List<String>.from(
-              (map['image'] as List<dynamic>),
-            )
+      images: map['images'] != null
+          ? List<String>.from((map['images'] as List<dynamic>))
           : null,
       video: map['video'] != null ? map['video'] as String : null,
       status: map['status'] as String,
@@ -100,7 +98,7 @@ class Post {
 
   @override
   String toString() {
-    return 'Post(id: $id, communityId: $communityId, uid: $uid, isPoll: $isPoll, content: $content, image: $image, video: $video, status: $status, isPinned: $isPinned, isEdited: $isEdited, createdAt: $createdAt)';
+    return 'Post(id: $id, communityId: $communityId, uid: $uid, isPoll: $isPoll, content: $content, images: $images, video: $video, status: $status, isPinned: $isPinned, isEdited: $isEdited, createdAt: $createdAt)';
   }
 
   @override
@@ -112,7 +110,7 @@ class Post {
         other.uid == uid &&
         other.isPoll == isPoll &&
         other.content == content &&
-        listEquals(other.image, image) &&
+        listEquals(other.images, images) &&
         other.video == video &&
         other.status == status &&
         other.isPinned == isPinned &&
@@ -127,7 +125,7 @@ class Post {
         uid.hashCode ^
         isPoll.hashCode ^
         content.hashCode ^
-        image.hashCode ^
+        images.hashCode ^
         video.hashCode ^
         status.hashCode ^
         isPinned.hashCode ^

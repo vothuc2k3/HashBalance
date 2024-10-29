@@ -2,15 +2,16 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/splash/splash_screen.dart';
-import 'package:hash_balance/core/widgets/loading.dart';
+import 'package:hash_balance/core/widgets/post_images_grid.dart';
+import 'package:hash_balance/core/widgets/video_player_widget.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
+import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
 import 'package:hash_balance/features/post_share/post_share_controller/post_share_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/vote_post/controller/vote_post_controller.dart';
 import 'package:mdi/mdi.dart';
-import 'package:video_player/video_player.dart';
 
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
@@ -39,10 +40,6 @@ class PostContainer extends ConsumerStatefulWidget {
 class _PostContainerState extends ConsumerState<PostContainer> {
   TextEditingController commentTextController = TextEditingController();
   TextEditingController shareTextController = TextEditingController();
-  VideoPlayerController? _videoController;
-  bool _isPlaying = false;
-  String? _videoDuration;
-  String? _currentPosition;
   bool? isLoading;
   UserModel? currentUser;
 
@@ -54,17 +51,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
             OtherUserProfileScreen(targetUid: widget.author.uid),
       ),
     );
-  }
-
-  void _togglePlayPause() {
-    setState(() {
-      if (_videoController!.value.isPlaying) {
-        _videoController!.pause();
-      } else {
-        _videoController!.play();
-      }
-      _isPlaying = _videoController!.value.isPlaying;
-    });
   }
 
   void _votePost(bool userVote) async {
@@ -122,7 +108,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
       },
       (r) {
         showToast(true, 'Delete successfully...');
-        setState(() {});
+        ref.invalidate(newsfeedStreamProvider);
       },
     );
   }
@@ -244,65 +230,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    if (widget.post.video != '') {
-      _initializeVideo();
-    }
-  }
-
-  Future<void> _initializeVideo() async {
-    if (widget.post.video != null && widget.post.video != '') {
-      _videoController = VideoPlayerController.networkUrl(
-        Uri.parse(widget.post.video!),
-      )..initialize().then((_) {
-          if (mounted) {
-            setState(() {
-              _videoDuration =
-                  _formatDuration(_videoController!.value.duration);
-            });
-          }
-        });
-
-      _videoController!.addListener(_videoListener);
-
-      if (mounted) {
-        setState(() {});
-      }
-    }
-  }
-
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return '$minutes:$seconds';
-  }
-
-  @override
-  void dispose() {
-    _videoController?.removeListener(_videoListener);
-    _videoController?.dispose();
-    super.dispose();
-  }
-
-  void _videoListener() {
-    if (_videoController!.value.position == _videoController!.value.duration) {
-      if (mounted) {
-        setState(() {
-          _isPlaying = false;
-        });
-      }
-    } else {
-      if (mounted) {
-        setState(() {
-          _currentPosition = _formatDuration(_videoController!.value.position);
-        });
-      }
-    }
-  }
-
-  @override
   void didChangeDependencies() {
     currentUser = ref.read(userProvider);
     super.didChangeDependencies();
@@ -325,104 +252,16 @@ class _PostContainerState extends ConsumerState<PostContainer> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(widget.post.content),
-                widget.post.image != '' && widget.post.video == ''
+                widget.post.images != null && widget.post.video == ''
                     ? const SizedBox(height: 6)
                     : const SizedBox.shrink(),
               ],
             ),
           ),
-          if (widget.post.image != null && widget.post.image != '')
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: CachedNetworkImage(
-                imageUrl: widget.post.image!.first,
-                progressIndicatorBuilder: (context, url, downloadProgress) {
-                  return const Loading();
-                },
-                imageBuilder: (context, imageProvider) {
-                  return FadeInImage(
-                    placeholder:
-                        const AssetImage('assets/post_image_placeholder.png'),
-                    image: imageProvider,
-                    fadeInDuration: const Duration(seconds: 1),
-                    fadeOutDuration: const Duration(seconds: 1),
-                  );
-                },
-              ),
-            ),
-          if (widget.post.video != '')
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: _videoController != null &&
-                      _videoController!.value.isInitialized
-                  ? LayoutBuilder(
-                      builder: (context, constraints) {
-                        final videoAspectRatio =
-                            _videoController!.value.aspectRatio;
-                        final screenWidth = constraints.maxWidth;
-                        final videoHeight = screenWidth / videoAspectRatio;
-                        final maxHeight =
-                            MediaQuery.of(context).size.height * 0.6;
-                        final finalHeight =
-                            videoHeight > maxHeight ? maxHeight : videoHeight;
-
-                        return Center(
-                          child: AspectRatio(
-                            aspectRatio: videoAspectRatio,
-                            child: ConstrainedBox(
-                              constraints:
-                                  BoxConstraints(maxHeight: finalHeight),
-                              child: Stack(
-                                alignment: Alignment.bottomCenter,
-                                children: [
-                                  VideoPlayer(_videoController!),
-                                  if (!_isPlaying)
-                                    Center(
-                                      child: IconButton(
-                                        icon: const Icon(
-                                          Icons.play_arrow,
-                                          color: Colors.white,
-                                          size: 64.0,
-                                        ),
-                                        onPressed: _togglePlayPause,
-                                      ),
-                                    ),
-                                  VideoProgressIndicator(
-                                    _videoController!,
-                                    allowScrubbing: true,
-                                    colors: const VideoProgressColors(
-                                      playedColor: Colors.red,
-                                      backgroundColor: Colors.black54,
-                                      bufferedColor: Colors.grey,
-                                    ),
-                                  ),
-                                  Positioned(
-                                    bottom: 8,
-                                    left: 8,
-                                    child: Text(
-                                      _currentPosition ?? '0:00',
-                                      style:
-                                          const TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    bottom: 8,
-                                    right: 8,
-                                    child: Text(
-                                      _videoDuration ?? '0:00',
-                                      style:
-                                          const TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    )
-                  : const Loading(),
-            ),
+          if (widget.post.images != null && widget.post.images!.isNotEmpty)
+            PostImagesGrid(images: widget.post.images!),
+          if (widget.post.video != null && widget.post.video!.isNotEmpty)
+            VideoPlayerWidget(videoUrl: widget.post.video!),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: _buildPostStat(),

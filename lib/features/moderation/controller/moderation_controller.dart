@@ -280,12 +280,12 @@ class ModerationController extends StateNotifier<bool> {
       final user = _ref.watch(userProvider)!;
       final result = await _moderationRepository.deletePost(post, user.uid);
       result.fold((l) => left(l), (r) async {
-        if (post.image != '') {
+        if (post.images != null && post.images!.isNotEmpty) {
           _storageRepository.deleteFile(
             path: 'posts/images/${post.id}',
           );
         }
-        if (post.video != '') {
+        if (post.video != null && post.video != '') {
           _storageRepository.deleteFile(
             path: 'posts/videos/${post.id}',
           );

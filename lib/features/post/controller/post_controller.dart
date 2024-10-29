@@ -15,6 +15,7 @@ import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/poll_option_vote_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
+import 'package:logger/logger.dart';
 import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 import 'package:hash_balance/models/poll_option_model.dart';
@@ -96,11 +97,12 @@ class PostController extends StateNotifier<bool> {
     File? video,
     required String content,
   }) async {
+    state = true;
     try {
       if (content.isEmpty && images == null && video == null) {
         return left(Failures('Post cannot be empty'));
       }
-      final uid = _ref.watch(userProvider)!.uid;
+      final uid = _ref.read(userProvider)!.uid;
       switch (community.type) {
         case 'Public':
           final post = Post(
@@ -132,9 +134,14 @@ class PostController extends StateNotifier<bool> {
           return result;
       }
     } on FirebaseException catch (e) {
+      Logger().d(e.message!);
       return left(Failures(e.message!));
     } catch (e) {
+      Logger().d(e.toString());
       return left(Failures(e.toString()));
+    } finally {
+      Logger().d('state = false');
+      state = false;
     }
   }
 
@@ -157,7 +164,7 @@ class PostController extends StateNotifier<bool> {
       if (user.uid == post.uid) {
         result = await _postRepository.deletePost(post, user.uid);
         result.fold((l) => left(l), (r) async {
-          if (post.image != '') {
+          if (post.images != null) {
             _storageRepository.deleteFile(
               path: 'posts/images/${post.id}',
             );

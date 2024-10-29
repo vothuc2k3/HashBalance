@@ -103,7 +103,12 @@ Future<FilePickerResult?> pickImage() async {
 }
 
 Future<FilePickerResult?> pickVideo() async {
-  return await FilePicker.platform.pickFiles(type: FileType.video);
+  final result = await FilePicker.platform.pickFiles(type: FileType.video);
+  if (result != null && result.files.first.size <= 200 * 1024 * 1024) {
+    return result;
+  } else {
+    return null;
+  }
 }
 
 String formatTime(Timestamp timestamp) {

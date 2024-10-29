@@ -62,46 +62,53 @@ class PostRepository {
   ) async {
     try {
       Post updatedPost = post;
+      List<String> imageUrls = [];
+
       if (images != null) {
         for (var image in images) {
           final result = await _storageRepository.storeFile(
-            path: 'posts/images',
-            id: post.id,
+            path: 'posts/images/${post.id}',
+            id: '${post.id}_${Timestamp.now().millisecondsSinceEpoch}',
             file: image,
           );
-          await result.fold(
-              (error) => throw FirebaseException(
-                    plugin: 'Firebase Exception',
-                    message: error.message,
-                  ), (right) async {
-            String imageUrl = await FirebaseStorage.instance
-                .ref('posts/images/${post.id}')
-                .getDownloadURL();
-            updatedPost = updatedPost.copyWith(image: [imageUrl]);
-          });
+
+          result.fold(
+            (error) => throw FirebaseException(
+              plugin: 'Firebase Exception',
+              message: error.message,
+            ),
+            (right) => imageUrls.add(right),
+          );
         }
+
+        updatedPost = updatedPost.copyWith(images: imageUrls);
       }
+
       if (video != null) {
-        final result = await _storageRepository.storeFile(
+        final videoResult = await _storageRepository.storeFile(
           path: 'posts/videos',
           id: post.id,
           file: video,
         );
-        await result.fold(
-            (error) => throw FirebaseException(
-                  plugin: 'Firebase Exception',
-                  message: error.message,
-                ), (right) async {
-          String videoUrl = await FirebaseStorage.instance
+
+        final videoUrl = await videoResult.fold(
+          (error) => throw FirebaseException(
+            plugin: 'Firebase Exception',
+            message: error.message,
+          ),
+          (right) async => await FirebaseStorage.instance
               .ref('posts/videos/${post.id}')
-              .getDownloadURL();
-          updatedPost = updatedPost.copyWith(video: videoUrl);
-        });
+              .getDownloadURL(),
+        );
+
+        updatedPost = updatedPost.copyWith(video: videoUrl);
       }
+
       await _posts.doc(post.id).set(updatedPost.toMap());
       await _users.doc(post.uid).update({
         'activityPoint': FieldValue.increment(1),
       });
+
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -443,7 +450,7 @@ class PostRepository {
         String imageUrl = await FirebaseStorage.instance
             .ref('posts/images/${post.id}')
             .getDownloadURL();
-        updatedPost = updatedPost.copyWith(image: [imageUrl]);
+        updatedPost = updatedPost.copyWith(images: [imageUrl]);
       }
 
       if (video != null) {

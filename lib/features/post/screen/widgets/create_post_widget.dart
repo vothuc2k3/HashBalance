@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:video_player/video_player.dart';
 
@@ -22,9 +23,7 @@ import 'package:hash_balance/theme/pallette.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 class CreatePostWidget extends ConsumerStatefulWidget {
-  const CreatePostWidget({
-    super.key,
-  });
+  const CreatePostWidget({super.key});
 
   @override
   ConsumerState<CreatePostWidget> createState() => _CreatePostWidgetState();
@@ -81,6 +80,7 @@ class _CreatePostWidgetState extends ConsumerState<CreatePostWidget> {
             community: selectedCommunity!,
             content: contentController.text,
             images: images,
+            video: video,
           );
       result.fold(
         (l) {
@@ -89,9 +89,14 @@ class _CreatePostWidgetState extends ConsumerState<CreatePostWidget> {
         (r) {
           showToast(true, 'Post created successfully');
           contentController.clear();
-          setState(() {
-            images.clear();
-          });
+          setState(
+            () {
+              images.clear();
+              video = null;
+            },
+          );
+          ref.invalidate(newsfeedStreamProvider);
+          context.findAncestorStateOfType<HomeScreenState>()?.onTabTapped(0);
         },
       );
     }
@@ -100,6 +105,7 @@ class _CreatePostWidgetState extends ConsumerState<CreatePostWidget> {
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.read(userProvider)!;
+    final loading = ref.watch(postControllerProvider);
 
     return Container(
       decoration: BoxDecoration(
@@ -242,45 +248,61 @@ class _CreatePostWidgetState extends ConsumerState<CreatePostWidget> {
                               ),
                               const SizedBox(height: 8),
                               images.isNotEmpty
-                                  ? Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 8.0),
-                                      child: StaggeredGrid.count(
-                                        crossAxisCount: 2,
-                                        mainAxisSpacing: 4.0,
-                                        crossAxisSpacing: 4.0,
-                                        children: images.map((image) {
-                                          return Stack(
-                                            alignment: Alignment.topRight,
-                                            children: [
-                                              ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                                child: AspectRatio(
-                                                  aspectRatio: 1,
-                                                  child: Image.file(
-                                                    image,
-                                                    fit: BoxFit.cover,
-                                                    width: double.infinity,
+                                  ? InkWell(
+                                      onTap: () => _selectImages(),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 8.0),
+                                        child: StaggeredGrid.count(
+                                          crossAxisCount: 2,
+                                          mainAxisSpacing: 4.0,
+                                          crossAxisSpacing: 4.0,
+                                          children: images.map((image) {
+                                            return Stack(
+                                              alignment: Alignment.topRight,
+                                              children: [
+                                                ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                  child: AspectRatio(
+                                                    aspectRatio: 1,
+                                                    child: Image.file(
+                                                      image,
+                                                      fit: BoxFit.cover,
+                                                      width: double.infinity,
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
-                                              IconButton(
-                                                icon: const Icon(Icons.close,
-                                                    color: Colors.red),
-                                                onPressed: () {
-                                                  setState(() {
-                                                    images.remove(image);
-                                                  });
-                                                },
-                                              ),
-                                            ],
-                                          );
-                                        }).toList(),
+                                                IconButton(
+                                                  icon: const Icon(Icons.close,
+                                                      color: Colors.red),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      images.remove(image);
+                                                    });
+                                                  },
+                                                ),
+                                              ],
+                                            );
+                                          }).toList(),
+                                        ),
                                       ),
                                     )
                                   : const SizedBox.shrink(),
                               const SizedBox(height: 8),
+                              ElevatedButton(
+                                onPressed: _selectVideo,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      Theme.of(context).colorScheme.primary,
+                                ),
+                                child: const Text(
+                                  'Pick Video',
+                                  style: TextStyle(
+                                    color: Colors.white60,
+                                  ),
+                                ),
+                              ),
                               isSelectingVideo
                                   ? InkWell(
                                       onTap: () {
@@ -346,16 +368,17 @@ class _CreatePostWidgetState extends ConsumerState<CreatePostWidget> {
                                 padding: const EdgeInsets.all(10),
                                 child: ElevatedButton(
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        ref.watch(preferredThemeProvider).third,
+                                    backgroundColor: Colors.teal,
                                   ),
                                   onPressed: _createPost,
-                                  child: const Center(
-                                    child: Text(
-                                      'Post',
-                                      style: TextStyle(color: Colors.white60),
-                                    ),
-                                  ),
+                                  child: loading
+                                      ? const Loading()
+                                      : const Text(
+                                          'Post',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                          ),
+                                        ),
                                 ),
                               ),
                               const SizedBox(height: 16),
