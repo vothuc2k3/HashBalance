@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:logger/logger.dart';
 
 class UserFriendsService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -43,6 +44,8 @@ class UserFriendsService {
       } else {
         Constants.friends = [];
       }
-    } catch (e) {}
+    } catch (e) {
+      Logger().e(e);
+    }
   }
 }

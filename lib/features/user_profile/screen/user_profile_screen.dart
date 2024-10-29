@@ -1,6 +1,7 @@
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/widget/user_profile_widget.dart';
 import 'package:hash_balance/features/user_profile/screen/widget/user_timeline_widget.dart';
@@ -55,6 +56,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.read(userProvider)!;
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -100,9 +102,9 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
       body: PageView(
         controller: _pageController,
         onPageChanged: _onPageChanged,
-        children: const [
-          UserProfileWidget(),
-          UserTimelineWidget(),
+        children: [
+          UserProfileWidget(user: user),
+          UserTimelineWidget(user: user),
         ],
       ),
       bottomNavigationBar: CurvedNavigationBar(

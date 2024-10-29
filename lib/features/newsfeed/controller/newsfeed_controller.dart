@@ -1,13 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 
 import 'package:hash_balance/features/newsfeed/repository/newsfeed_repository.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-final newsfeedStreamProvider = StreamProvider.family((ref, String uid) {
-  return ref
-      .watch(newsfeedControllerProvider.notifier)
-      .getNewsfeedPosts(uid: uid);
-});
+final newsfeedInitPostsProvider = StreamProvider(
+  (ref) =>
+      ref.watch(newsfeedControllerProvider.notifier).getNewsfeedInitPosts(),
+);
 
 final newsfeedControllerProvider =
     StateNotifierProvider<NewsfeedController, bool>(
@@ -22,7 +23,6 @@ final newsfeedControllerProvider =
 
 class NewsfeedController extends StateNotifier<bool> {
   final NewsfeedRepository _newsfeedRepository;
-  // ignore: unused_field
   final Ref _ref;
 
   NewsfeedController({
@@ -32,10 +32,13 @@ class NewsfeedController extends StateNotifier<bool> {
         _ref = ref,
         super(false);
 
-  Stream<List<PostDataModel>> getNewsfeedPosts({
-    required String uid,
-  }) {
-    return _newsfeedRepository.getNewsfeedPosts(uid: uid);
+  Stream<List<PostDataModel>> getNewsfeedInitPosts() async* {
+    final user = _ref.read(userProvider)!;
+    final sharedPreferences = await SharedPreferences.getInstance();
+    final communityIds = sharedPreferences
+            .getStringList('userJoinedCommunities_${user.uid}')
+            ?.cast<String>() ??
+        [];
+    yield* _newsfeedRepository.getNewsfeedInitPosts(communityIds: communityIds);
   }
-
 }

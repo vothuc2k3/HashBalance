@@ -29,61 +29,39 @@ class NewsfeedRepository {
   //REFERENCE THE POSTS DATA
   CollectionReference get _posts =>
       _firestore.collection(FirebaseConstants.postsCollection);
-  //REFERENCE THE COMMUNITIES DATA
-  CollectionReference get _communityMembership =>
-      _firestore.collection(FirebaseConstants.communityMembershipCollection);
-  //REFERENCE THE POLLS DATA
 
-  Stream<List<PostDataModel>> getNewsfeedPosts({
-    required String uid,
+  Stream<List<PostDataModel>> getNewsfeedInitPosts({
+    required List<String>? communityIds,
   }) {
-    return _communityMembership
-        .where('uid', isEqualTo: uid)
+    if (communityIds == null) {
+      return Stream.value([]);
+    }
+    return _posts
+        .where('communityId', whereIn: communityIds)
+        .where('status', isEqualTo: 'Approved')
+        .orderBy('createdAt', descending: true)
+        .limit(10)
         .snapshots()
-        .asyncMap((event) async {
+        .asyncMap((postsQuery) async {
       final List<PostDataModel> postDataList = [];
 
-      final communityIds =
-          event.docs.map((doc) => doc['communityId'] as String).toList();
-
-      QuerySnapshot postsQuery;
-
-      if (communityIds.isEmpty) {
-        postsQuery = await _posts
-            .where('status', isEqualTo: 'Approved')
-            .orderBy('createdAt', descending: true)
-            .limit(10)
-            .get();
-      } else {
-        postsQuery = await _posts
-            .where('communityId', whereIn: communityIds)
-            .where('status', isEqualTo: 'Approved')
-            .get();
-      }
-
-      List<Post> posts = [];
-
-      for (var post in postsQuery.docs) {
-        posts.add(Post.fromMap(post.data() as Map<String, dynamic>));
-      }
+      List<Post> posts = postsQuery.docs
+          .map((doc) => Post.fromMap(doc.data() as Map<String, dynamic>))
+          .toList();
 
       for (var post in posts) {
         final authorDoc = await _users.doc(post.uid).get();
         final author =
             UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
+
         final communityDoc = await _communities.doc(post.communityId).get();
         final community =
             Community.fromMap(communityDoc.data() as Map<String, dynamic>);
+
         postDataList.add(
           PostDataModel(post: post, author: author, community: community),
         );
       }
-
-      postDataList.sort((a, b) {
-        final postDateA = a.post.createdAt;
-        final postDateB = b.post.createdAt;
-        return postDateB.toDate().compareTo(postDateA.toDate());
-      });
 
       return postDataList;
     });

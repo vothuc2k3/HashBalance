@@ -3,13 +3,18 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
-import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/features/newsfeed/screen/containers/newsfeed_post_container.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
+import 'package:hash_balance/features/user_profile/screen/widget/timeline_post_container.dart';
+import 'package:hash_balance/models/user_model.dart';
 
 class UserTimelineWidget extends ConsumerStatefulWidget {
-  const UserTimelineWidget({super.key});
+  const UserTimelineWidget({
+    super.key,
+    required this.user,
+  });
+
+  final UserModel user;
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
@@ -23,7 +28,6 @@ class _UserTimelineWidgetState extends ConsumerState<UserTimelineWidget>
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = ref.watch(userProvider)!;
     super.build(context);
     return Container(
       decoration: BoxDecoration(
@@ -34,7 +38,7 @@ class _UserTimelineWidgetState extends ConsumerState<UserTimelineWidget>
         child: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
-              child: ref.watch(userPostsProvider(currentUser)).when(
+              child: ref.watch(userPostsProvider(widget.user)).when(
                     data: (posts) {
                       if (posts.isEmpty) {
                         return SizedBox(
@@ -62,8 +66,8 @@ class _UserTimelineWidgetState extends ConsumerState<UserTimelineWidget>
                         itemCount: posts.length,
                         itemBuilder: (context, index) {
                           final postData = posts[index];
-                          return PostContainer(
-                            author: currentUser,
+                          return TimelinePostContainer(
+                            author: widget.user,
                             post: postData.post,
                             community: postData.community!,
                           ).animate().fadeIn();
@@ -71,7 +75,24 @@ class _UserTimelineWidgetState extends ConsumerState<UserTimelineWidget>
                       );
                     },
                     error: (e, s) => ErrorText(error: e.toString()),
-                    loading: () => const Loading(),
+                    loading: () => SizedBox(
+                      height: MediaQuery.of(context).size.height,
+                      child: const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Loading(),
+                            Text(
+                              'Loading posts...',
+                              style: TextStyle(
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
             )
           ],

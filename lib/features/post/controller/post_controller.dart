@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
 import 'package:hash_balance/core/failures.dart';
-import 'package:hash_balance/core/providers/storage_repository_providers.dart';
+import 'package:hash_balance/core/providers/storage_repository.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
@@ -19,6 +19,13 @@ import 'package:logger/logger.dart';
 import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 import 'package:hash_balance/models/poll_option_model.dart';
+
+final getPostVoteCountAndStatusStreamProvider =
+    StreamProvider.family((ref, Post post) {
+  return ref
+      .watch(postControllerProvider.notifier)
+      .getPostVoteCountAndStatusStream(post);
+});
 
 final getPollOptionsProvider = StreamProvider.family((ref, String pollId) {
   return ref
@@ -146,12 +153,12 @@ class PostController extends StateNotifier<bool> {
   }
 
   Stream<Map<String, dynamic>> getPostVoteCountAndStatus(Post post) {
-    final currentUser = _ref.watch(userProvider)!;
+    final currentUser = _ref.read(userProvider)!;
     return _postRepository.getPostVoteCountAndStatus(post, currentUser.uid);
   }
 
   Stream<Map<String, dynamic>> getPostVoteCountAndStatusStream(Post post) {
-    final currentUser = _ref.watch(userProvider)!;
+    final currentUser = _ref.read(userProvider)!;
     return _postRepository.getPostVoteCountAndStatusStream(
         post, currentUser.uid);
   }
@@ -164,13 +171,15 @@ class PostController extends StateNotifier<bool> {
       if (user.uid == post.uid) {
         result = await _postRepository.deletePost(post, user.uid);
         result.fold((l) => left(l), (r) async {
-          if (post.images != null) {
-            _storageRepository.deleteFile(
-              path: 'posts/images/${post.id}',
-            );
+          if (post.images != null || post.images!.isNotEmpty) {
+            for (var image in post.images!) {
+              await _storageRepository.deleteFile(
+                path: 'posts/images/${post.id}/$image',
+              );
+            }
           }
-          if (post.video != '') {
-            _storageRepository.deleteFile(
+          if (post.video != '' || post.video != null) {
+            await _storageRepository.deleteFile(
               path: 'posts/videos/${post.id}',
             );
           }

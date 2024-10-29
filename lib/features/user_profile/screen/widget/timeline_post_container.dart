@@ -9,24 +9,22 @@ import 'package:hash_balance/features/moderation/controller/moderation_controlle
 import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
 import 'package:hash_balance/features/post_share/post_share_controller/post_share_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
-import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/vote_post/controller/vote_post_controller.dart';
 import 'package:mdi/mdi.dart';
 
 import 'package:hash_balance/core/utils.dart';
-import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/comment/screen/comment_screen.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
-class PostContainer extends ConsumerStatefulWidget {
+class TimelinePostContainer extends ConsumerStatefulWidget {
   final UserModel author;
   final Post post;
   final Community community;
 
-  const PostContainer({
+  const TimelinePostContainer({
     super.key,
     required this.author,
     required this.post,
@@ -34,25 +32,11 @@ class PostContainer extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<PostContainer> createState() => _PostContainerState();
+  ConsumerState<TimelinePostContainer> createState() =>
+      _TimelinePostContainerState();
 }
 
-class _PostContainerState extends ConsumerState<PostContainer> {
-  TextEditingController commentTextController = TextEditingController();
-  TextEditingController shareTextController = TextEditingController();
-  bool? isLoading;
-  UserModel? currentUser;
-
-  void _navigateToOtherProfileScreen() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            OtherUserProfileScreen(targetUid: widget.author.uid),
-      ),
-    );
-  }
-
+class _TimelinePostContainerState extends ConsumerState<TimelinePostContainer> {
   void _votePost(bool userVote) async {
     switch (userVote) {
       case true:
@@ -120,15 +104,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         return SafeArea(
           child: Wrap(
             children: [
-              if (currentUid != widget.post.uid)
-                ListTile(
-                  leading: const Icon(Icons.person),
-                  title: Text('View $postUsername\'s Profile'),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    _navigateToOtherProfileScreen();
-                  },
-                ),
               if (currentUid == widget.post.uid)
                 ListTile(
                   leading: const Icon(Icons.delete),
@@ -197,6 +172,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   }
 
   void _showShareDialog() {
+    TextEditingController shareTextController = TextEditingController();
     showDialog(
       context: context,
       builder: (context) {
@@ -230,12 +206,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   }
 
   @override
-  void didChangeDependencies() {
-    currentUser = ref.read(userProvider);
-    super.didChangeDependencies();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
@@ -244,7 +214,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildPostHeader(),
+          _buildPostHeader(widget.author),
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -271,7 +241,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     );
   }
 
-  Widget _buildPostHeader() {
+  Widget _buildPostHeader(UserModel currentUser) {
     return Row(
       children: [
         Expanded(
@@ -280,7 +250,9 @@ class _PostContainerState extends ConsumerState<PostContainer> {
               InkWell(
                 onTap: () {
                   _navigateToCommunityScreen(
-                      widget.community, currentUser!.uid);
+                    widget.community,
+                    currentUser.uid,
+                  );
                 },
                 child: CircleAvatar(
                   backgroundImage: CachedNetworkImageProvider(
@@ -317,7 +289,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
         ),
         IconButton(
           onPressed: () {
-            _showPostOptionsMenu(currentUser!.uid, widget.author.name);
+            _showPostOptionsMenu(currentUser.uid, widget.author.name);
           },
           icon: const Icon(Icons.more_horiz),
         ),
@@ -392,37 +364,73 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   }
 }
 
-class PostActions extends ConsumerWidget {
-  final Post _post;
-  final Function _onVote;
-  final Function _onComment;
-  final Function _onShare;
+class PostActions extends ConsumerStatefulWidget {
+  final Post post;
+  final Function(bool) onVote;
+  final Function onComment;
+  final Function onShare;
 
   const PostActions({
     super.key,
-    required Post post,
-    required Function(bool) onVote,
-    required Function onComment,
-    required Function onShare,
-  })  : _post = post,
-        _onVote = onVote,
-        _onComment = onComment,
-        _onShare = onShare;
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return StreamBuilder<Map<String, dynamic>>(
-      stream: ref
-          .read(postControllerProvider.notifier)
-          .getPostVoteCountAndStatus(_post),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        } else if (snapshot.hasData) {
-          final data = snapshot.data!;
-          final upvotes = data['upvotes'] ?? 0;
-          final downvotes = data['downvotes'] ?? 0;
-          final status = data['userVoteStatus'];
+    required this.post,
+    required this.onVote,
+    required this.onComment,
+    required this.onShare,
+  });
 
+  @override
+  ConsumerState<PostActions> createState() => _PostActionsState();
+}
+
+class _PostActionsState extends ConsumerState<PostActions> {
+  Map<String, dynamic>? previousData;
+
+  @override
+  Widget build(BuildContext context) {
+    final asyncValue =
+        ref.watch(getPostVoteCountAndStatusStreamProvider(widget.post));
+
+    return asyncValue.when(
+      data: (data) {
+        previousData = data;
+        final upvotes = data['upvotes'] ?? 0;
+        final downvotes = data['downvotes'] ?? 0;
+        final status = data['userVoteStatus'];
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            VoteButton(
+              icon: Icons.arrow_upward_rounded,
+              count: upvotes,
+              color: status == 'upvoted' ? Colors.orange : Colors.grey[600],
+              onTap: (isUpvote) => widget.onVote(isUpvote),
+              isUpvote: true,
+            ),
+            VoteButton(
+              icon: Mdi.arrowDown,
+              count: downvotes,
+              color: status == 'downvoted' ? Colors.blue : Colors.grey[600],
+              onTap: (isUpvote) => widget.onVote(isUpvote),
+              isUpvote: false,
+            ),
+            _buildActionButton(
+              icon: Mdi.commentOutline,
+              label: 'Comments',
+              onTap: widget.onComment,
+            ),
+            _buildActionButton(
+              icon: Mdi.shareOutline,
+              label: 'Share',
+              onTap: widget.onShare,
+            ),
+          ],
+        );
+      },
+      loading: () {
+        if (previousData != null) {
+          final upvotes = previousData!['upvotes'] ?? 0;
+          final downvotes = previousData!['downvotes'] ?? 0;
+          final status = previousData!['userVoteStatus'];
           return Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -430,25 +438,25 @@ class PostActions extends ConsumerWidget {
                 icon: Icons.arrow_upward_rounded,
                 count: upvotes,
                 color: status == 'upvoted' ? Colors.orange : Colors.grey[600],
-                onTap: (isUpvote) => _onVote(isUpvote),
+                onTap: (isUpvote) => widget.onVote(isUpvote),
                 isUpvote: true,
               ),
               VoteButton(
                 icon: Mdi.arrowDown,
                 count: downvotes,
                 color: status == 'downvoted' ? Colors.blue : Colors.grey[600],
-                onTap: (isUpvote) => _onVote(isUpvote),
+                onTap: (isUpvote) => widget.onVote(isUpvote),
                 isUpvote: false,
               ),
               _buildActionButton(
                 icon: Mdi.commentOutline,
                 label: 'Comments',
-                onTap: _onComment,
+                onTap: widget.onComment,
               ),
               _buildActionButton(
                 icon: Mdi.shareOutline,
                 label: 'Share',
-                onTap: _onShare,
+                onTap: widget.onShare,
               ),
             ],
           );
@@ -456,6 +464,7 @@ class PostActions extends ConsumerWidget {
           return const SizedBox.shrink();
         }
       },
+      error: (error, stack) => Text('Error: $error'),
     );
   }
 

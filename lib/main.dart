@@ -7,6 +7,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/services/community_service.dart';
 import 'package:hash_balance/core/services/user_friends_service.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/call/controller/call_controller.dart';
@@ -17,13 +18,11 @@ import 'package:hash_balance/features/moderation/controller/moderation_controlle
 import 'package:hash_balance/features/network/controller/network_controller.dart';
 import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/conbined_models/call_data_model.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:logger/logger.dart';
 import 'package:multi_trigger_autocomplete/multi_trigger_autocomplete.dart';
 import 'package:toastification/toastification.dart';
 
 import 'package:hash_balance/core/constants/constants.dart';
-import 'package:hash_balance/core/hive_models/user_model/hive_user_model.dart';
 import 'package:hash_balance/core/services/device_token_service.dart';
 import 'package:hash_balance/core/splash/splash_screen.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
@@ -48,8 +47,6 @@ void main() async {
   );
 
   await FirebaseMessaging.instance.getToken();
-  await Hive.initFlutter();
-  Hive.registerAdapter(HiveUserModelAdapter());
   await SentryFlutter.init(
     (options) {
       options.dsn =
@@ -83,6 +80,7 @@ class MyAppState extends ConsumerState<MyApp> {
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   late final DeviceTokenService _deviceTokenService;
   late final UserFriendsService _userFriendsService;
+  late final CommunityService _communityService;
 
   ConnectivityResult? lastStatus;
 
@@ -95,6 +93,7 @@ class MyAppState extends ConsumerState<MyApp> {
       ref.read(userProvider.notifier).update((state) => userData);
       _deviceTokenService.updateUserDeviceToken(userData);
       _userFriendsService.fetchFriendsByUser(userData);
+      await _communityService.getUserJoinedCommunities(userData.uid);
     } else {
       ref.read(userProvider.notifier).update((state) => null);
     }
@@ -321,6 +320,7 @@ class MyAppState extends ConsumerState<MyApp> {
 
     _deviceTokenService = DeviceTokenService();
     _userFriendsService = UserFriendsService();
+    _communityService = CommunityService();
   }
 
   @override

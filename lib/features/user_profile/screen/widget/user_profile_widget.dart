@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
-import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
@@ -17,7 +16,9 @@ import 'package:hash_balance/models/user_model.dart';
 import 'package:image_picker/image_picker.dart';
 
 class UserProfileWidget extends ConsumerStatefulWidget {
-  const UserProfileWidget({super.key});
+  const UserProfileWidget({super.key, required this.user});
+
+  final UserModel user;
 
   @override
   ConsumerState<UserProfileWidget> createState() => UserProfileWidgetState();
@@ -31,11 +32,10 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
   Widget build(BuildContext context) {
     final double top = coverHeight - profileHeight / 2;
     final double bottom = profileHeight / 2;
-    final currentUser = ref.watch(userProvider)!;
-    var userProfileData = ref.watch(userProfileDataProvider(currentUser.uid));
+    var userProfileData = ref.watch(userProfileDataProvider(widget.user.uid));
     return RefreshIndicator(
       onRefresh: () async {
-        userProfileData = ref.refresh(userProfileDataProvider(currentUser.uid));
+        userProfileData = ref.refresh(userProfileDataProvider(widget.user.uid));
       },
       child: Container(
         decoration: BoxDecoration(
@@ -51,9 +51,9 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                 alignment: Alignment.center,
                 children: [
                   InkWell(
-                    onTap: () => _handleBannerImageAction(currentUser),
+                    onTap: () => _handleBannerImageAction(widget.user),
                     child: CachedNetworkImage(
-                      imageUrl: currentUser.bannerImage,
+                      imageUrl: widget.user.bannerImage,
                       width: double.infinity,
                       height: coverHeight,
                       fit: BoxFit.cover,
@@ -63,12 +63,12 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                     top: top,
                     left: 10,
                     child: InkWell(
-                      onTap: () => _handleProfileImageAction(currentUser),
+                      onTap: () => _handleProfileImageAction(widget.user),
                       child: CircleAvatar(
                         radius: (profileHeight / 2) - 10,
                         backgroundColor: Colors.grey.shade800,
                         backgroundImage: CachedNetworkImageProvider(
-                          currentUser.profileImage,
+                          widget.user.profileImage,
                         ),
                       ),
                     ),
@@ -87,7 +87,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                         child: Row(
                           children: [
                             Text(
-                              currentUser.name,
+                              widget.user.name,
                               style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
@@ -105,7 +105,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                             Padding(
                               padding: const EdgeInsets.only(right: 10),
                               child: InkWell(
-                                onTap: () => _showEditNameModal(currentUser),
+                                onTap: () => _showEditNameModal(widget.user),
                                 child: const Icon(Icons.edit),
                               ),
                             ),
@@ -124,7 +124,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                         child: Row(
                           children: [
                             Text(
-                              currentUser.bio ??
+                              widget.user.bio ??
                                   'You haven\'t said anything yet...',
                               style: TextStyle(
                                 fontSize: 16,
@@ -143,7 +143,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                             Padding(
                               padding: const EdgeInsets.only(right: 10),
                               child: InkWell(
-                                onTap: () => _showEditBioModal(currentUser),
+                                onTap: () => _showEditBioModal(widget.user),
                                 child: const Icon(Icons.edit),
                               ),
                             ),
@@ -162,7 +162,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                         child: Row(
                           children: [
                             Text(
-                              currentUser.description ??
+                              widget.user.description ??
                                   'You haven\'t described yourself yet...',
                               style: const TextStyle(
                                 fontSize: 14,
@@ -183,7 +183,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                               padding: const EdgeInsets.only(right: 10),
                               child: InkWell(
                                 onTap: () =>
-                                    _showEditDescriptionModal(currentUser),
+                                    _showEditDescriptionModal(widget.user),
                                 child: const Icon(Icons.edit),
                               ),
                             ),
@@ -223,7 +223,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                           oldValue: 0,
                           newValue: data.friends.length,
                           onPressed: () =>
-                              _navigateToFriendRequestsScreen(currentUser.uid),
+                              _navigateToFriendRequestsScreen(widget.user.uid),
                         ),
                         _buildVerticalDivider(),
                         _buildAnimatedButton(
@@ -243,7 +243,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                         _buildAnimatedButton(
                           text: 'Points',
                           oldValue: 0,
-                          newValue: currentUser.activityPoint,
+                          newValue: widget.user.activityPoint,
                           onPressed: () {},
                         ),
                       ],
@@ -257,7 +257,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                           text: 'Friends',
                           value: 0,
                           onPressed: () =>
-                              _navigateToFriendRequestsScreen(currentUser.uid),
+                              _navigateToFriendRequestsScreen(widget.user.uid),
                         ),
                         _buildVerticalDivider(),
                         _buildButton(
@@ -285,7 +285,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                 const SizedBox(height: 16),
                 const Divider(),
                 const SizedBox(height: 16),
-                _buildFriendsWidget(currentUser.uid),
+                _buildFriendsWidget(widget.user.uid),
               ],
             )
           ],

@@ -43,7 +43,6 @@ class DeviceTokenService {
     }
   }
 
-  // REMOVE DEVICE TOKEN WHEN USER LOGS OUT
   Future<void> removeUserDeviceToken(String uid) async {
     try {
       await _userDevices.doc(uid).delete();
@@ -52,6 +51,4 @@ class DeviceTokenService {
       throw e.toString();
     }
   }
-
-  
 }

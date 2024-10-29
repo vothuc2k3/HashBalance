@@ -95,7 +95,7 @@ class _CreatePostWidgetState extends ConsumerState<CreatePostWidget> {
               video = null;
             },
           );
-          ref.invalidate(newsfeedStreamProvider);
+          ref.invalidate(newsfeedInitPostsProvider);
           context.findAncestorStateOfType<HomeScreenState>()?.onTabTapped(0);
         },
       );

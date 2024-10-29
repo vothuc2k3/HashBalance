@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/splash/splash_screen.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
-import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
@@ -51,21 +49,8 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
     );
   }
 
-  void _signOut(BuildContext context) async {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const SplashScreen(),
-      ),
-    );
-    await ref.watch(authControllerProvider.notifier).signOut(context);
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const AuthScreen(),
-      ),
-      (route) => false,
-    );
+  void _signOut() async {
+    await ref.watch(authControllerProvider.notifier).signOut();
   }
 
   void _testButton() async {}
@@ -116,7 +101,7 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              onTap: () => _signOut(context),
+              onTap: () => _signOut(),
             ),
             ListTile(
               leading: Icon(

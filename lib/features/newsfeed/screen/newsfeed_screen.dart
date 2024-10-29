@@ -5,6 +5,7 @@ import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/home/screen/home_screen.dart';
 import 'package:hash_balance/features/newsfeed/screen/containers/newsfeed_poll_container.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
+import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -26,9 +27,10 @@ class NewsfeedScreen extends ConsumerStatefulWidget {
 
 class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
     with AutomaticKeepAliveClientMixin {
+  List<PostDataModel> loadedPosts = [];
+
   Future<void> _refreshPosts() async {
-    final currentUser = ref.read(userProvider);
-    ref.invalidate(newsfeedStreamProvider(currentUser!.uid));
+    ref.invalidate(newsfeedInitPostsProvider);
   }
 
   void _navigateToCreatePostScreen() {
@@ -59,9 +61,10 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
               ),
               //MARK: - NEWSFEED
               SliverToBoxAdapter(
-                child: ref.watch(newsfeedStreamProvider(currentUser.uid)).when(
+                child: ref.watch(newsfeedInitPostsProvider).when(
                       data: (posts) {
-                        if (posts.isEmpty) {
+                        loadedPosts = posts;
+                        if (loadedPosts.isEmpty) {
                           return const Center(
                             child: Text(
                               'No posts available.',
@@ -75,9 +78,9 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
                         return ListView.builder(
                           physics: const ScrollPhysics(),
                           shrinkWrap: true,
-                          itemCount: posts.length,
+                          itemCount: loadedPosts.length,
                           itemBuilder: (context, index) {
-                            final postData = posts[index];
+                            final postData = loadedPosts[index];
                             if (!postData.post.isPoll) {
                               return PostContainer(
                                 author: postData.author!,

@@ -3,7 +3,6 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -137,12 +136,10 @@ class AuthController extends StateNotifier<bool> {
     }
   }
 
-  Future<void> signOut(BuildContext context) async {
+  Future<void> signOut() async {
     state = true;
     try {
       await _authRepository.signOut();
-      _ref.invalidate(userProvider);
-      _ref.read(userProvider.notifier).update((state) => null);
     } catch (e) {
       throw Exception(e.toString());
     } finally {
