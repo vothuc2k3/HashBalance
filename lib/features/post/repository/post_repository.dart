@@ -117,54 +117,6 @@ class PostRepository {
     }
   }
 
-  Stream<Map<String, dynamic>> getPostVoteCountAndStatus(
-      Post post, String uid) async* {
-    try {
-      final upvoteDataStream = _posts
-          .doc(post.id)
-          .collection(FirebaseConstants.postVoteCollection)
-          .where('isUpvoted', isEqualTo: true)
-          .snapshots();
-
-      final downvoteDataStream = _posts
-          .doc(post.id)
-          .collection(FirebaseConstants.postVoteCollection)
-          .where('isUpvoted', isEqualTo: false)
-          .snapshots();
-
-      final userVoteStatusStream = _posts
-          .doc(post.id)
-          .collection(FirebaseConstants.postVoteCollection)
-          .where('uid', isEqualTo: uid)
-          .snapshots();
-
-      await for (final upvoteSnapshot in upvoteDataStream) {
-        final downvoteSnapshot = await downvoteDataStream.first;
-        final voteStatusSnapshot = await userVoteStatusStream.first;
-
-        final upvote = upvoteSnapshot.size;
-        final downvote = downvoteSnapshot.size;
-
-        String? userVoteStatus;
-        if (voteStatusSnapshot.docs.isNotEmpty) {
-          final voteData = voteStatusSnapshot.docs.first.data();
-          userVoteStatus =
-              voteData['isUpvoted'] == true ? 'upvoted' : 'downvoted';
-        } else {
-          userVoteStatus = null;
-        }
-
-        yield {
-          'upvotes': upvote,
-          'downvotes': downvote,
-          'userVoteStatus': userVoteStatus,
-        };
-      }
-    } catch (e) {
-      throw Failures(e.toString());
-    }
-  }
-
   Stream<Map<String, dynamic>> getPostVoteCountAndStatusStream(
       Post post, String uid) {
     return _posts.doc(post.id).snapshots().asyncMap(

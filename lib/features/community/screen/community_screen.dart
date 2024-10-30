@@ -448,70 +448,6 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     );
   }
 
-  _showImage(String imageUrl) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.all(10),
-          child: GestureDetector(
-            onTap: () => Navigator.of(context).pop(),
-            child: Center(
-              child: Container(
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.9,
-                  maxHeight: MediaQuery.of(context).size.height * 0.9,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.5),
-                      spreadRadius: 5,
-                      blurRadius: 7,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: CachedNetworkImage(
-                          imageUrl: imageUrl,
-                          fit: BoxFit.contain,
-                          placeholder: (context, url) => Container(
-                            color: Colors.black,
-                            child: const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                          ),
-                          errorWidget: (context, url, error) =>
-                              const Icon(Icons.error),
-                        ),
-                      ),
-                    ),
-                    const Positioned(
-                      top: 16,
-                      right: 16,
-                      child: Icon(
-                        Icons.close,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   void _uploadProfileImage(Community community, XFile profileImageFile) async {
     final result = await ref
         .read(moderationControllerProvider.notifier)
@@ -546,11 +482,11 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
               onTap: () async {
                 Navigator.pop(context);
                 final XFile? image = await ImagePicker().pickImage(
-                  source: ImageSource.gallery, // Chọn từ bộ nhớ
-                  imageQuality: 100, // Giảm chất lượng ảnh để giảm dung lượng
+                  source: ImageSource.gallery,
+                  imageQuality: 100,
                 );
                 if (image != null) {
-                  _uploadProfileImage(community, image); // Xử lý ảnh
+                  _uploadProfileImage(community, image);
                 }
               },
             ),
@@ -558,7 +494,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
               leading: const Icon(Icons.cancel),
               title: const Text('Cancel'),
               onTap: () {
-                Navigator.pop(context); // Đóng modal
+                Navigator.pop(context);
               },
             ),
           ],
@@ -623,7 +559,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                 title: const Text('View Profile Image'),
                 onTap: () {
                   Navigator.pop(context);
-                  _showImage(community.profileImage);
+                  showImage(context, community.profileImage);
                 },
               ),
               if (role == 'moderator')
@@ -668,7 +604,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                 title: const Text('View Banner Image'),
                 onTap: () {
                   Navigator.pop(context);
-                  _showImage(community.bannerImage);
+                  showImage(context, community.bannerImage);
                 },
               ),
               if (role == 'moderator')

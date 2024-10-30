@@ -28,7 +28,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => MessageScreen(
+        builder: (context) => PrivateMessageScreen(
           targetUser: targetUser,
         ),
       ),

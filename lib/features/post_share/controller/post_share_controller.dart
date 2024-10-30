@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/features/post_share/post_share_repository/post_share_repository.dart';
+import 'package:hash_balance/features/post_share/repository/post_share_repository.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/post_share_model.dart';
 import 'package:uuid/uuid.dart';

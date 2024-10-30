@@ -157,11 +157,12 @@ class MyAppState extends ConsumerState<MyApp> {
                 builder: (context) => const SplashScreen(),
               ),
             );
+            
             final targetUser = await _fetchUserByUid(payloadData['uid']);
 
             navigatorKey.currentState?.pushReplacement(
               MaterialPageRoute(
-                builder: (context) => MessageScreen(
+                builder: (context) => PrivateMessageScreen(
                   targetUser: targetUser,
                 ),
               ),
@@ -180,9 +181,7 @@ class MyAppState extends ConsumerState<MyApp> {
                 .watch(moderationControllerProvider.notifier)
                 .fetchMembershipStatus(
                   getMembershipId(
-                    uid: currentUser.uid,
-                    communityId: communityId,
-                  ),
+                      uid: currentUser.uid, communityId: communityId),
                 );
 
             result.fold(

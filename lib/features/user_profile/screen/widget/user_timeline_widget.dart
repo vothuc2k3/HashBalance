@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
+import 'package:hash_balance/features/newsfeed/screen/containers/newsfeed_poll_container.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/widget/timeline_post_container.dart';
@@ -66,6 +67,13 @@ class _UserTimelineWidgetState extends ConsumerState<UserTimelineWidget>
                         itemCount: posts.length,
                         itemBuilder: (context, index) {
                           final postData = posts[index];
+                          if (postData.post.isPoll) {
+                            return NewsfeedPollContainer(
+                              author: widget.user,
+                              poll: postData.post,
+                              community: postData.community!,
+                            ).animate().fadeIn();
+                          }
                           return TimelinePostContainer(
                             author: widget.user,
                             post: postData.post,

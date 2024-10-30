@@ -15,12 +15,12 @@ import 'package:hash_balance/models/poll_option_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
-class PollContainer extends ConsumerStatefulWidget {
+class NewsfeedPollContainer extends ConsumerStatefulWidget {
   final UserModel author;
   final Post poll;
   final Community community;
 
-  const PollContainer({
+  const NewsfeedPollContainer({
     super.key,
     required this.author,
     required this.poll,
@@ -28,11 +28,11 @@ class PollContainer extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<PollContainer> createState() => _PollContainerState();
+  ConsumerState<NewsfeedPollContainer> createState() =>
+      _NewsfeedPollContainerState();
 }
 
-class _PollContainerState extends ConsumerState<PollContainer> {
-  bool isLoading = false;
+class _NewsfeedPollContainerState extends ConsumerState<NewsfeedPollContainer> {
   UserModel? currentUser;
 
   @override
@@ -40,6 +40,9 @@ class _PollContainerState extends ConsumerState<PollContainer> {
     currentUser = ref.read(userProvider)!;
     super.didChangeDependencies();
   }
+
+  String? previousVotedOptionId;
+  List<PollOption>? previousOptions;
 
   @override
   Widget build(BuildContext context) {
@@ -58,63 +61,117 @@ class _PollContainerState extends ConsumerState<PollContainer> {
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
-          ref.watch(getUserPollOptionVoteProvider(pollId)).when(
-                data: (votedOptionId) {
-                  return Column(
-                      children: ref.watch(getPollOptionsProvider(pollId)).when(
-                            data: (options) => options.map((option) {
-                              final isSelected = votedOptionId == option.id;
-                              return InkWell(
-                                onTap: () =>
-                                    _handleOptionTap(optionId: option.id),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? Colors.green
-                                        : ref
-                                            .watch(preferredThemeProvider)
-                                            .third,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 8, horizontal: 12),
-                                  margin:
-                                      const EdgeInsets.symmetric(vertical: 5),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          option.option,
-                                          style: const TextStyle(
-                                              color: Colors.white),
-                                        ),
-                                      ),
-                                      if (isSelected)
-                                        const Icon(
-                                          Icons.check,
-                                          color: Colors.white,
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                            error: (error, stackTrace) {
-                              return [
-                                Text('Error: $error',
-                                    style: const TextStyle(color: Colors.red))
-                              ];
-                            },
-                            loading: () => [const Loading()],
-                          ));
-                },
-                loading: () => const Loading(),
-                error: (error, stackTrace) => Text('Error: $error',
-                    style: const TextStyle(color: Colors.red)),
-              ),
+          ref.watch(getUserPollOptionVoteProvider(pollId)).whenOrNull(
+                    data: (votedOptionId) {
+                      previousVotedOptionId = votedOptionId;
+                      return _buildPollOptions(pollId, votedOptionId);
+                    },
+                    loading: () {
+                      if (previousVotedOptionId != null) {
+                        return _buildPollOptions(pollId, previousVotedOptionId);
+                      } else {
+                        return const Loading();
+                      }
+                    },
+                    error: (error, stackTrace) => Text('Error: $error',
+                        style: const TextStyle(color: Colors.red)),
+                  ) ??
+              const SizedBox.shrink(),
         ],
       ),
+    );
+  }
+
+  Widget _buildPollOptions(String pollId, String? votedOptionId) {
+    final asyncValue = ref.watch(getPollOptionsProvider(pollId));
+
+    return asyncValue.when(
+      data: (options) {
+        previousOptions = options;
+        return Column(
+          children: options.map((option) {
+            final isSelected = votedOptionId == option.id;
+            return InkWell(
+              onTap: () => _handleOptionTap(optionId: option.id),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Colors.green
+                      : ref.watch(preferredThemeProvider).third,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                margin: const EdgeInsets.symmetric(vertical: 5),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        option.option,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    if (isSelected)
+                      const Icon(
+                        Icons.check,
+                        color: Colors.white,
+                      ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        );
+      },
+      error: (error, stackTrace) {
+        return Column(
+          children: [
+            Text('Error: $error', style: const TextStyle(color: Colors.red))
+          ],
+        );
+      },
+      loading: () {
+        if (previousOptions != null) {
+          return Column(
+            children: previousOptions!.map((option) {
+              final isSelected = votedOptionId == option.id;
+              return InkWell(
+                onTap: () => _handleOptionTap(optionId: option.id),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? Colors.green
+                        : ref.watch(preferredThemeProvider).third,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  margin: const EdgeInsets.symmetric(vertical: 5),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          option.option,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      if (isSelected)
+                        const Icon(
+                          Icons.check,
+                          color: Colors.white,
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          );
+        } else {
+          return const Loading();
+        }
+      },
     );
   }
 

@@ -82,13 +82,13 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
                           itemBuilder: (context, index) {
                             final postData = loadedPosts[index];
                             if (!postData.post.isPoll) {
-                              return PostContainer(
+                              return NewsfeedPostContainer(
                                 author: postData.author!,
                                 post: postData.post,
                                 community: postData.community!,
                               ).animate().fadeIn();
                             } else if (postData.post.isPoll) {
-                              return PollContainer(
+                              return NewsfeedPollContainer(
                                 author: postData.author!,
                                 poll: postData.post,
                                 community: postData.community!,

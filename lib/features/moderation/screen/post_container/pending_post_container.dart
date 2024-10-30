@@ -1,12 +1,11 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/widgets/post_header_widget.dart';
 import 'package:hash_balance/core/widgets/post_images_grid.dart';
 import 'package:hash_balance/core/widgets/video_player_widget.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 
-import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
@@ -79,7 +78,13 @@ class _PendingPostContainerState extends ConsumerState<PendingPostContainer> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildPostHeader(widget._post, widget._author),
+                PostHeaderWidget.author(
+                  author: widget._author,
+                  createdAt: widget._post.createdAt,
+                  onAuthorTap: () =>
+                      _navigateToOtherUserScreen(widget._author.uid),
+                  onOptionsTap: () {},
+                ),
                 const SizedBox(height: 4),
                 Text(widget._post.content),
                 widget._post.images != null && widget._post.images!.isNotEmpty
@@ -113,54 +118,6 @@ class _PendingPostContainerState extends ConsumerState<PendingPostContainer> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildPostHeader(
-    Post post,
-    UserModel author,
-  ) {
-    return Row(
-      children: [
-        InkWell(
-          onTap: () => _navigateToOtherUserScreen(author.uid),
-          child: CircleAvatar(
-            backgroundImage: CachedNetworkImageProvider(
-              author.profileImage,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '#${author.name}',
-                style:
-                    const TextStyle(fontWeight: FontWeight.w600, fontSize: 11),
-              ),
-              Row(
-                children: [
-                  Text(
-                    formatTime(post.createdAt),
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(width: 3),
-                  const Icon(
-                    Icons.public,
-                    color: Colors.grey,
-                    size: 12,
-                  ),
-                ],
-              )
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

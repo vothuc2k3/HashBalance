@@ -59,12 +59,6 @@ final getPostCommentCountProvider = FutureProvider.family((ref, String postId) {
   return ref.read(postControllerProvider.notifier).getPostCommentCount(postId);
 });
 
-final getPostVoteCountProvider = FutureProvider.family((ref, Post post) {
-  return ref
-      .watch(postControllerProvider.notifier)
-      .getPostVoteCountAndStatus(post);
-});
-
 final postControllerProvider = StateNotifierProvider<PostController, bool>(
   (ref) => PostController(
       commentController: ref.watch(commentControllerProvider.notifier),
@@ -150,11 +144,6 @@ class PostController extends StateNotifier<bool> {
       Logger().d('state = false');
       state = false;
     }
-  }
-
-  Stream<Map<String, dynamic>> getPostVoteCountAndStatus(Post post) {
-    final currentUser = _ref.read(userProvider)!;
-    return _postRepository.getPostVoteCountAndStatus(post, currentUser.uid);
   }
 
   Stream<Map<String, dynamic>> getPostVoteCountAndStatusStream(Post post) {

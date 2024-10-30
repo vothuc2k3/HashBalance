@@ -15,19 +15,20 @@ import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/message_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
-class MessageScreen extends ConsumerStatefulWidget {
+class PrivateMessageScreen extends ConsumerStatefulWidget {
   final UserModel _targetUser;
 
-  const MessageScreen({
+  const PrivateMessageScreen({
     super.key,
     required UserModel targetUser,
   }) : _targetUser = targetUser;
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _MessageScreenState();
+  ConsumerState<ConsumerStatefulWidget> createState() =>
+      _PrivateMessageScreenState();
 }
 
-class _MessageScreenState extends ConsumerState<MessageScreen> {
+class _PrivateMessageScreenState extends ConsumerState<PrivateMessageScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _isEmojiVisible = false;
@@ -61,10 +62,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
     ).then(
       (value) {
         if (value == 'block') {
-          // Implement block functionality
-        } else if (value == 'report') {
-          // Implement report functionality
-        }
+        } else if (value == 'report') {}
       },
     );
   }
