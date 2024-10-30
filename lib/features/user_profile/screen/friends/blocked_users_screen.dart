@@ -96,7 +96,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                 if (blockedModels == null || blockedModels.isEmpty) {
                   return Center(
                     child: const Text(
-                      'You have no blocked users',
+                      'You have not block anyone...',
                       style: TextStyle(
                         fontSize: 18,
                         color: Colors.white70,

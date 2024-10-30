@@ -94,6 +94,7 @@ class CommentController extends StateNotifier<bool> {
               title: Constants.commentMentionTitle,
               message: Constants.getCommentMentionContent(user.name),
               type: Constants.commentMentionType,
+              postId: post.id,
               senderUid: comment.uid,
               createdAt: Timestamp.now(),
               isRead: false,
@@ -101,13 +102,10 @@ class CommentController extends StateNotifier<bool> {
             for (var uid in comment.mentionedUser!.keys) {
               await _notificationController.addNotification(uid, notification);
             }
-
-
             await _pushNotificationController.sendMultipleFCMNotifications(
               comment.mentionedUser!.keys.toList(),
               Constants.getCommentMentionContent(user.name),
               Constants.commentMentionTitle,
-
               {
                 'type': Constants.commentMentionType,
                 'commentId': comment.id,

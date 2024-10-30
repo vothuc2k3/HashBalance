@@ -57,19 +57,36 @@ class VoteButtonState extends State<VoteButton>
       scale: _animation,
       child: InkWell(
         onTap: _handleTap,
+        borderRadius: BorderRadius.circular(20),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.black,
+            color: widget.color ?? Colors.blueAccent,
             borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                spreadRadius: 2,
+                blurRadius: 6,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(widget.icon, color: widget.color, size: 20),
-              const SizedBox(width: 4),
+              Icon(
+                widget.icon,
+                color: Colors.white,
+                size: 22,
+              ),
+              const SizedBox(width: 6),
               Text(
                 widget.count == null ? '0' : widget.count.toString(),
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
               ),
             ],
           ),

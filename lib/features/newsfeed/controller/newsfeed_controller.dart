@@ -36,9 +36,13 @@ class NewsfeedController extends StateNotifier<bool> {
     final user = _ref.read(userProvider)!;
     final sharedPreferences = await SharedPreferences.getInstance();
     final communityIds = sharedPreferences
-            .getStringList('userJoinedCommunities_${user.uid}')
-            ?.cast<String>() ??
-        [];
-    yield* _newsfeedRepository.getNewsfeedInitPosts(communityIds: communityIds);
+        .getStringList('userJoinedCommunities_${user.uid}')
+        ?.cast<String>();
+    if (communityIds != null && communityIds.isNotEmpty) {
+      yield* _newsfeedRepository.getNewsfeedInitPosts(
+          communityIds: communityIds);
+    } else {
+      yield* _newsfeedRepository.getNewsfeedRandomPosts();
+    }
   }
 }

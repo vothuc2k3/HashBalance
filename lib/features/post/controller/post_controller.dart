@@ -337,4 +337,15 @@ class PostController extends StateNotifier<bool> {
     final currentUser = _ref.read(userProvider)!;
     return _postRepository.getPostVoteCountAndStatus(post, currentUser.uid);
   }
+
+  Future<Either<Failures, PostDataModel?>> getPostDataByPostId(
+      {required String postId}) async {
+    try {
+      return right(await _postRepository.getPostDataByPostId(postId: postId));
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
 }

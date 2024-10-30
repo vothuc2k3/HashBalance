@@ -86,7 +86,6 @@ class _CreatePollWidgetState extends ConsumerState<CreatePollWidget> {
                               ? Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    const Spacer(),
                                     Icon(
                                       Icons.add_circle_outline,
                                       color: Colors.white.withOpacity(0.7),
@@ -100,20 +99,10 @@ class _CreatePollWidgetState extends ConsumerState<CreatePollWidget> {
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    const Spacer(),
-                                    Switch(
-                                      value: isCreatingPoll,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          isCreatingPoll = value;
-                                        });
-                                      },
-                                    ),
                                   ],
                                 )
                               : Row(
                                   children: [
-                                    const Spacer(),
                                     CircleAvatar(
                                       backgroundImage:
                                           CachedNetworkImageProvider(
@@ -126,15 +115,6 @@ class _CreatePollWidgetState extends ConsumerState<CreatePollWidget> {
                                         color: Colors.white,
                                         fontSize: 16,
                                       ),
-                                    ),
-                                    const Spacer(),
-                                    Switch(
-                                      value: isCreatingPoll,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          isCreatingPoll = value;
-                                        });
-                                      },
                                     ),
                                   ],
                                 ),

@@ -66,4 +66,33 @@ class NewsfeedRepository {
       return postDataList;
     });
   }
+
+  Stream<List<PostDataModel>> getNewsfeedRandomPosts() {
+    return _posts
+        .where('status', isEqualTo: 'Approved')
+        .orderBy(FieldPath.documentId)
+        .limit(100)
+        .snapshots()
+        .asyncMap((querySnapshot) async {
+      final randomPosts = (querySnapshot.docs..shuffle()).take(10);
+
+      final List<PostDataModel> postDataList = await Future.wait(
+        randomPosts.map((doc) async {
+          final post = Post.fromMap(doc.data() as Map<String, dynamic>);
+
+          final authorDoc = await _users.doc(post.uid).get();
+          final author =
+              UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
+          final communityDoc = await _communities.doc(post.communityId).get();
+          final community =
+              Community.fromMap(communityDoc.data() as Map<String, dynamic>);
+
+          return PostDataModel(
+              post: post, author: author, community: community);
+        }).toList(),
+      );
+
+      return postDataList;
+    });
+  }
 }

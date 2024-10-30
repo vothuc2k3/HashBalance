@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/splash/splash_screen.dart';
 import 'package:hash_balance/core/widgets/post_images_grid.dart';
+import 'package:hash_balance/core/widgets/post_static_button.dart';
 import 'package:hash_balance/core/widgets/video_player_widget.dart';
 import 'package:hash_balance/core/widgets/vote_button.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
@@ -380,12 +381,12 @@ class _PostActionsState extends ConsumerState<PostActions> {
               onTap: (isUpvote) => widget.onVote(isUpvote),
               isUpvote: false,
             ),
-            _buildActionButton(
+            PostStaticButton(
               icon: Mdi.commentOutline,
               label: 'Comments',
               onTap: widget.onComment,
             ),
-            _buildActionButton(
+            PostStaticButton(
               icon: Mdi.shareOutline,
               label: 'Share',
               onTap: widget.onShare,
@@ -415,12 +416,12 @@ class _PostActionsState extends ConsumerState<PostActions> {
                 onTap: (isUpvote) => widget.onVote(isUpvote),
                 isUpvote: false,
               ),
-              _buildActionButton(
+              PostStaticButton(
                 icon: Mdi.commentOutline,
                 label: 'Comments',
                 onTap: widget.onComment,
               ),
-              _buildActionButton(
+              PostStaticButton(
                 icon: Mdi.shareOutline,
                 label: 'Share',
                 onTap: widget.onShare,
@@ -432,33 +433,6 @@ class _PostActionsState extends ConsumerState<PostActions> {
         }
       },
       error: (error, stack) => Text('Error: $error'),
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required Function onTap,
-  }) {
-    return InkWell(
-      onTap: () => onTap(),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-        child: Row(
-          children: [
-            Icon(icon, color: Colors.white, size: 20),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: const TextStyle(color: Colors.white),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

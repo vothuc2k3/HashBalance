@@ -1,3 +1,4 @@
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -28,9 +29,30 @@ class OtherUserProfileScreen extends ConsumerStatefulWidget {
 
 class _OtherUserProfileScreenState
     extends ConsumerState<OtherUserProfileScreen> {
-  int selectedIndex = 0;
+  late PageController _pageController;
+  int _page = 0;
 
   String get _uid => widget.targetUid;
+
+  void _onPageChanged(int page) {
+    setState(() {
+      _page = page;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  void _onBottomNavTap(int index) {
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
 
   void _blockUser(String blockUid, String currentUid) async {
     final result = await ref.read(userControllerProvider.notifier).blockUser(
@@ -53,12 +75,6 @@ class _OtherUserProfileScreenState
       showToast(false, l.message);
     }, (_) {
       showToast(true, 'User unblocked');
-    });
-  }
-
-  void _onBottomNavTapped(int index) {
-    setState(() {
-      selectedIndex = index;
     });
   }
 
@@ -157,26 +173,32 @@ class _OtherUserProfileScreenState
       ),
       body: ref.watch(getUserDataProvider(_uid)).when(
             data: (user) {
-              return selectedIndex == 0
-                  ? OtherUserProfileWidget(user: user)
-                  : UserTimelineWidget(user: user);
+              return PageView(
+                controller: _pageController,
+                onPageChanged: _onPageChanged,
+                children: [
+                  OtherUserProfileWidget(user: user),
+                  UserTimelineWidget(user: user),
+                ],
+              );
             },
             error: (error, stack) => ErrorText(error: error.toString()),
             loading: () => const Loading(),
           ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: selectedIndex,
-        onTap: _onBottomNavTapped,
+      bottomNavigationBar: CurvedNavigationBar(
+        backgroundColor: ref.watch(preferredThemeProvider).third,
+        index: _page,
+        onTap: _onBottomNavTap,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'Timeline',
-          ),
+          Icon(Icons.person),
+          Icon(Icons.dynamic_feed),
         ],
+        color: ref.watch(preferredThemeProvider).first,
+        buttonBackgroundColor: ref.watch(preferredThemeProvider).second,
+        animationCurve: Curves.easeInOut,
+        animationDuration: const Duration(milliseconds: 600),
+        letIndexChange: (index) => true,
+        height: 60,
       ),
     );
   }

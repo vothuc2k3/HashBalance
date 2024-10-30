@@ -53,6 +53,9 @@ class PostRepository {
   //REFERENCE ALL THE POLL OPTION VOTES
   CollectionReference get _pollOptionVotes =>
       _firestore.collection(FirebaseConstants.pollOptionVotesCollection);
+  //REFERENCE ALL THE POLL OPTION VOTES
+  CollectionReference get _communities =>
+      _firestore.collection(FirebaseConstants.communitiesCollection);
 
   //CREATE A NEW POST
   Future<Either<Failures, void>> createPost(
@@ -485,5 +488,23 @@ class PostRepository {
     } catch (e) {
       throw Failures(e.toString());
     }
+  }
+
+  Future<PostDataModel?> getPostDataByPostId({required String postId}) async {
+    final postDoc = await _posts.doc(postId).get();
+    final post = Post.fromMap(postDoc.data() as Map<String, dynamic>);
+
+    final authorDoc = await _users.doc(post.uid).get();
+    final author = UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
+
+    final communityDoc = await _communities.doc(post.communityId).get();
+    final community =
+        Community.fromMap(communityDoc.data() as Map<String, dynamic>);
+
+    return PostDataModel(
+      post: post,
+      author: author,
+      community: community,
+    );
   }
 }

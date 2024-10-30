@@ -1,5 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +5,7 @@ import 'package:hash_balance/core/splash/splash_screen.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/features/post/screen/edit_post_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
@@ -178,18 +177,25 @@ class _NewsfeedPollContainerState extends ConsumerState<NewsfeedPollContainer> {
   Widget _buildPollHeader() {
     return Row(
       children: [
-        CircleAvatar(
-          backgroundImage:
-              CachedNetworkImageProvider(widget.community.profileImage),
-          radius: 20,
+        GestureDetector(
+          onTap: () => _navigateToCommunityScreen(),
+          child: CircleAvatar(
+            backgroundImage:
+                CachedNetworkImageProvider(widget.community.profileImage),
+            radius: 20,
+          ),
         ),
         const SizedBox(width: 10),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              widget.community.name,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            GestureDetector(
+              onTap: () => _navigateToCommunityScreen(),
+              child: Text(
+                widget.community.name,
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
             ),
             Text(
               formatTime(widget.poll.createdAt),
@@ -292,6 +298,17 @@ class _NewsfeedPollContainerState extends ConsumerState<NewsfeedPollContainer> {
         });
   }
 
+  void _navigateToCommunityScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CommunityScreen(
+          communityId: widget.community.id,
+        ),
+      ),
+    );
+  }
+
   void _handleOptionTap({
     required String optionId,
   }) async {
@@ -314,6 +331,7 @@ class _NewsfeedPollContainerState extends ConsumerState<NewsfeedPollContainer> {
         .first;
     if (widget.poll.uid == currentUser!.uid) {
       Navigator.pushReplacement(
+        // ignore: use_build_context_synchronously
         context,
         MaterialPageRoute(
           builder: (context) => EditPostScreen(

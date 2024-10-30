@@ -15,6 +15,8 @@ import 'package:hash_balance/features/community/controller/comunity_controller.d
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
+import 'package:hash_balance/features/post/controller/post_controller.dart';
+import 'package:hash_balance/features/post/screen/post_detail_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
@@ -76,6 +78,29 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
     setState(() {
       _isLoadingMoreNotifications = false;
     });
+  }
+
+  void _navigateToPostDetailScreen(String postId) async {
+    final result = await ref
+        .read(postControllerProvider.notifier)
+        .getPostDataByPostId(postId: postId);
+    result.fold(
+      (l) => showToast(false, l.message),
+      (postData) {
+        if (postData != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PostDetailScreen(
+                author: postData.author!,
+                community: postData.community!,
+                post: postData.post,
+              ),
+            ),
+          );
+        }
+      },
+    );
   }
 
   void _navigateToCommunityScreen(
@@ -355,6 +380,9 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
                                     case Constants.newFollowerType:
                                       _navigateToProfileScreen(notif.senderUid);
                                       break;
+                                    case Constants.commentMentionType:
+                                      _navigateToPostDetailScreen(
+                                          notif.postId!);
                                     default:
                                       break;
                                   }

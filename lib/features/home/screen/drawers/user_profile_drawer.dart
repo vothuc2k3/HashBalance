@@ -127,10 +127,10 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                 onTap: () => _navigateToBlockedUsersScreen(),
               ),
               ListTile(
-                leading: const Icon(Icons.archive),
+                leading: const Icon(Icons.receipt_long ),
                 onTap: () => _navigateToActivityLogScreen(),
                 title: const Text(
-                  'Archived Conversations',
+                  'Activity Logs',
                   style: TextStyle(
                     color: Pallete.whiteColor,
                     fontSize: 15,

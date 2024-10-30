@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/widgets/post_images_grid.dart';
+import 'package:hash_balance/core/widgets/post_static_button.dart';
 import 'package:hash_balance/core/widgets/video_player_widget.dart';
 import 'package:hash_balance/core/widgets/vote_button.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
@@ -585,12 +586,12 @@ class PostActions extends ConsumerWidget {
                 onTap: (isUpvote) => _onVote(isUpvote),
                 isUpvote: false,
               ),
-              _buildActionButton(
+              PostStaticButton(
                 icon: Icons.comment_rounded,
                 label: 'Comments',
                 onTap: _onComment,
               ),
-              _buildActionButton(
+              PostStaticButton(
                 icon: Icons.share_rounded,
                 label: 'Share',
                 onTap: _onShare,
@@ -601,33 +602,6 @@ class PostActions extends ConsumerWidget {
           return const SizedBox.shrink();
         }
       },
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required Function onTap,
-  }) {
-    return InkWell(
-      onTap: () => onTap(),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-        child: Row(
-          children: [
-            Icon(icon, color: Colors.white, size: 20),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: const TextStyle(color: Colors.white),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
