@@ -14,7 +14,11 @@ import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/user_profile_data_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/post_model.dart';
+import 'package:hash_balance/models/post_share_data_model.dart';
+import 'package:hash_balance/models/post_share_model.dart';
+import 'package:hash_balance/models/timeline_item_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 final userRepositoryProvider = Provider((ref) {
@@ -57,6 +61,9 @@ class UserRepository {
   //REFERENCE ALL THE BLOCKS
   CollectionReference get _blocks =>
       _firestore.collection(FirebaseConstants.blocksCollection);
+  //REFERENCE ALL THE BLOCKS
+  CollectionReference get _postShares =>
+      _firestore.collection(FirebaseConstants.postShareCollection);
 
   //EDIT USER PROFLE
   Future<Either<Failures, void>> editUserProfile(
@@ -292,7 +299,6 @@ class UserRepository {
       final followers = <UserModel>[];
       final following = <UserModel>[];
 
-      // Truy vấn bạn bè của người dùng dựa trên uid1 và uid2
       final query1 = _friendship.where('uid1', isEqualTo: uid).get();
       final query2 = _friendship.where('uid2', isEqualTo: uid).get();
       final results = await Future.wait([query1, query2]);
@@ -341,36 +347,67 @@ class UserRepository {
     });
   }
 
-  Stream<List<PostDataModel>> getUserPosts(UserModel user) {
+  Stream<List<TimelineItem>> getUserTimelineItems(UserModel user) {
     try {
-      return _posts
+      final userPostsStream = _posts
           .where('uid', isEqualTo: user.uid)
           .where('status', isEqualTo: 'Approved')
-          .snapshots() // Sử dụng snapshots để lắng nghe thay đổi
-          .asyncMap((userPosts) async {
-        final List<PostDataModel> postDataModels = [];
+          .snapshots();
 
+      final userSharesStream =
+          _postShares.where('uid', isEqualTo: user.uid).snapshots();
+
+      return CombineLatestStream.list([userPostsStream, userSharesStream])
+          .asyncMap((snapshots) async {
+        final timelineItems = <TimelineItem>[];
+
+        final userPosts = snapshots[0];
         for (final postDoc in userPosts.docs) {
+          final post = Post.fromMap(postDoc.data() as Map<String, dynamic>);
+
+          final communityDoc = await _communities.doc(post.communityId).get();
+          final community =
+              Community.fromMap(communityDoc.data() as Map<String, dynamic>);
+
+          final postData = PostDataModel(
+            post: post,
+            author: user,
+            community: community,
+          );
+          timelineItems.add(TimelineItem.fromPost(postData));
+        }
+
+        final userShares = snapshots[1];
+        for (final shareDoc in userShares.docs) {
+          final shareData =
+              PostShare.fromMap(shareDoc.data() as Map<String, dynamic>);
+
+          final postDoc = await _posts.doc(shareData.postId).get();
           final postData = Post.fromMap(postDoc.data() as Map<String, dynamic>);
+
+          final authorDoc = await _users.doc(postData.uid).get();
+          final authorData =
+              UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
 
           final communityDoc =
               await _communities.doc(postData.communityId).get();
           final communityData =
               Community.fromMap(communityDoc.data() as Map<String, dynamic>);
 
-          postDataModels.add(
-            PostDataModel(
-              post: postData,
-              community: communityData,
-            ),
+          final postShareData = PostShareDataModel(
+            postShare: shareData,
+            post: postData,
+            shareUser: user,
+            author: authorData,
+            community: communityData,
           );
+
+          timelineItems.add(TimelineItem.fromPostShare(postShareData));
         }
 
-        // Sắp xếp bài post theo createdAt
-        postDataModels
-            .sort((a, b) => b.post.createdAt.compareTo(a.post.createdAt));
+        timelineItems.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-        return postDataModels; // Trả về danh sách bài viết đã được sắp xếp
+        return timelineItems;
       });
     } on FirebaseException catch (e) {
       throw e.toString();

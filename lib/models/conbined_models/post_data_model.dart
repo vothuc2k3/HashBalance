@@ -14,8 +14,4 @@ class PostDataModel {
     this.community,
     this.options,
   });
-
-  @override
-  String toString() =>
-      'PostDataModel(post: $post, author: $author, communty: $community)';
 }

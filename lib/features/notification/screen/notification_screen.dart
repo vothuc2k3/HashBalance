@@ -133,13 +133,12 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
     }
   }
 
-  void _markAsRead(String notifId, UserModel user) {
-    // ref.read(notificationControllerProvider.notifier).markAsRead(notifId);
+  void _markAsRead(String notifId, UserModel user) async {
+    await ref.read(notificationControllerProvider.notifier).markAsRead(notifId);
   }
 
   void _deleteNotification(String notifId) async {
     ref.watch(deleteNotifProvider(notifId));
-    setState(() {});
   }
 
   Future<UserModel> _fetchUserByUid(String uid) async {
@@ -256,6 +255,7 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
                               ),
                         );
                       }
+
                       return ListView.builder(
                         controller: _scrollController,
                         itemCount: _notifications!.length + 1,
@@ -297,7 +297,7 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
                               padding: const EdgeInsets.all(15),
                               decoration: BoxDecoration(
                                 color: notif.isRead
-                                    ? ref.watch(preferredThemeProvider).first
+                                    ? ref.watch(preferredThemeProvider).second
                                     : ref.watch(preferredThemeProvider).third,
                                 borderRadius: BorderRadius.circular(10),
                                 boxShadow: const [

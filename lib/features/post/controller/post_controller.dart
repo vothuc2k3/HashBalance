@@ -20,12 +20,28 @@ import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 import 'package:hash_balance/models/poll_option_model.dart';
 
-final getPostVoteCountAndStatusStreamProvider =
+final getPostVoteCountAndStatusProvider =
     StreamProvider.family((ref, Post post) {
   return ref
       .watch(postControllerProvider.notifier)
-      .getPostVoteCountAndStatusStream(post);
+      .getPostVoteCountAndStatus(post);
 });
+
+final getPostVoteCountsProvider =
+    StreamProvider.family<Map<String, int>, Post>((ref, Post post) {
+  return ref
+      .watch(postControllerProvider.notifier)
+      .getPostVoteCountsStream(post);
+});
+
+final getUserVoteStatusProvider =
+    StreamProvider.family<Map<String, String?>, Post>(
+  (ref, Post post) {
+    return ref
+        .watch(postControllerProvider.notifier)
+        .getUserVoteStatusStream(post);
+  },
+);
 
 final getPollOptionsProvider = StreamProvider.family((ref, String pollId) {
   return ref
@@ -146,10 +162,13 @@ class PostController extends StateNotifier<bool> {
     }
   }
 
-  Stream<Map<String, dynamic>> getPostVoteCountAndStatusStream(Post post) {
-    final currentUser = _ref.read(userProvider)!;
-    return _postRepository.getPostVoteCountAndStatusStream(
-        post, currentUser.uid);
+  Stream<Map<String, int>> getPostVoteCountsStream(Post post) {
+    return _postRepository.getPostVoteCountsStream(post);
+  }
+
+  Stream<Map<String, String?>> getUserVoteStatusStream(Post post) {
+    final String uid = _ref.read(userProvider)!.uid;
+    return _postRepository.getUserVoteStatusStream(post, uid);
   }
 
   Future<Either<Failures, void>> deletePost(Post post) async {
@@ -312,5 +331,10 @@ class PostController extends StateNotifier<bool> {
       image,
       video,
     );
+  }
+
+  Stream<Map<String, dynamic>> getPostVoteCountAndStatus(Post post) {
+    final currentUser = _ref.read(userProvider)!;
+    return _postRepository.getPostVoteCountAndStatus(post, currentUser.uid);
   }
 }

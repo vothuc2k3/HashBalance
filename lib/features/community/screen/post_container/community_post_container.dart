@@ -1,13 +1,13 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/constants/constants.dart';
-import 'package:hash_balance/core/widgets/post_actions.dart';
-import 'package:hash_balance/core/widgets/post_header_widget.dart';
 import 'package:hash_balance/core/widgets/post_images_grid.dart';
 import 'package:hash_balance/core/widgets/video_player_widget.dart';
+import 'package:hash_balance/core/widgets/vote_button.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
-import 'package:hash_balance/features/post_share/controller/post_share_controller.dart';
+import 'package:hash_balance/features/post_share/screen/post_share_screen.dart';
 import 'package:hash_balance/features/report/controller/report_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
@@ -17,39 +17,54 @@ import 'package:hash_balance/features/vote_post/controller/vote_post_controller.
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/comment/screen/comment_screen.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
+import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/features/post/screen/edit_post_screen.dart';
 
-class PostContainer extends ConsumerStatefulWidget {
+class CommunityPostContainer extends ConsumerStatefulWidget {
   final bool isMod;
   final UserModel author;
   final Post post;
-  final String communityId;
-  final String communityName;
+  final Community community;
   final bool isPinnedPost;
   final Function(Post)? onPinPost;
   final Function(Post)? onUnPinPost;
 
-  const PostContainer({
+  const CommunityPostContainer({
     super.key,
     required this.isMod,
     required this.author,
     required this.post,
-    required this.communityId,
-    required this.communityName,
+    required this.community,
     required this.isPinnedPost,
     this.onPinPost,
     this.onUnPinPost,
   });
 
   @override
-  ConsumerState<PostContainer> createState() => _PostContainerState();
+  ConsumerState<CommunityPostContainer> createState() =>
+      _CommunityPostContainerState();
 }
 
-class _PostContainerState extends ConsumerState<PostContainer> {
+class _CommunityPostContainerState
+    extends ConsumerState<CommunityPostContainer> {
+  late Stream<Map<String, dynamic>> _postVoteCountAndStatus;
   TextEditingController commentTextController = TextEditingController();
   TextEditingController shareTextController = TextEditingController();
+
+  void _navigateToPostShareScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PostShareScreen(
+          post: widget.post,
+          author: widget.author,
+          community: widget.community,
+        ),
+      ),
+    );
+  }
 
   void _handleEditPost() {
     Navigator.push(
@@ -111,33 +126,34 @@ class _PostContainerState extends ConsumerState<PostContainer> {
             await ref.read(upvotePostControllerProvider.notifier).votePost(
                   post: widget.post,
                   postAuthorName: widget.author.name,
-                  communityName: widget.communityName,
+                  communityName: widget.community.name,
                 );
         result.fold((l) {
           showToast(false, l.toString());
-        }, (_) {});
+        }, (_) {
+          setState(() {});
+          _postVoteCountAndStatus = ref
+              .read(postControllerProvider.notifier)
+              .getPostVoteCountAndStatus(widget.post);
+        });
         break;
       case false:
         final result =
             await ref.read(downvotePostControllerProvider.notifier).votePost(
                   post: widget.post,
                   postAuthorName: widget.author.name,
-                  communityName: widget.communityName,
+                  communityName: widget.community.name,
                 );
         result.fold((l) {
           showToast(false, l.toString());
-        }, (_) {});
+        }, (_) {
+          setState(() {});
+          _postVoteCountAndStatus = ref
+              .read(postControllerProvider.notifier)
+              .getPostVoteCountAndStatus(widget.post);
+        });
         break;
     }
-  }
-
-  void _sharePost(String? content) async {
-    final result = await ref
-        .watch(postShareControllerProvider.notifier)
-        .sharePost(postId: widget.post.id, content: content);
-    result.fold((l) => showToast(false, l.message), (r) {
-      showToast(true, 'Share successfully...');
-    });
   }
 
   void _handleDeletePost(Post post) async {
@@ -202,39 +218,6 @@ class _PostContainerState extends ConsumerState<PostContainer> {
     }
   }
 
-  void _showShareDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Share Post'),
-          content: TextField(
-            controller: shareTextController,
-            decoration: const InputDecoration(
-              hintText: 'Add a message to your share...',
-            ),
-            maxLines: 3,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (shareTextController.text.isNotEmpty) {
-                  _sharePost(shareTextController.text);
-                  Navigator.of(context).pop();
-                }
-              },
-              child: const Text('Share'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   void _handleReportPost() {
     TextEditingController reasonController = TextEditingController();
     showDialog(
@@ -288,7 +271,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
           null,
           null,
           Constants.postReportType,
-          widget.communityId,
+          widget.community.id,
           reason,
         );
     result.fold((l) => showToast(false, l.message), (r) {
@@ -376,8 +359,15 @@ class _PostContainerState extends ConsumerState<PostContainer> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _postVoteCountAndStatus = ref
+        .read(postControllerProvider.notifier)
+        .getPostVoteCountAndStatus(widget.post);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final currentUser = ref.read(userProvider);
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       padding: const EdgeInsets.all(5),
@@ -402,16 +392,7 @@ class _PostContainerState extends ConsumerState<PostContainer> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                PostHeaderWidget.author(
-                  author: widget.author,
-                  createdAt: widget.post.createdAt,
-                  onAuthorTap: () =>
-                      _navigateToOtherUserScreen(widget.author.uid),
-                  onOptionsTap: () => _showPostOptionsMenu(
-                    currentUser!.uid,
-                    widget.author.name,
-                  ),
-                ),
+                _buildPostHeader(widget.post, widget.author),
                 const SizedBox(height: 4),
                 Text(widget.post.content),
                 widget.post.images != null && widget.post.images!.isNotEmpty
@@ -434,6 +415,59 @@ class _PostContainerState extends ConsumerState<PostContainer> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildPostHeader(
+    Post post,
+    UserModel author,
+  ) {
+    final currentUser = ref.watch(userProvider)!;
+    return Row(
+      children: [
+        InkWell(
+          onTap: () => _navigateToOtherUserScreen(currentUser.uid),
+          child: CircleAvatar(
+            backgroundImage: CachedNetworkImageProvider(author.profileImage),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                author.name,
+                style:
+                    const TextStyle(fontWeight: FontWeight.w600, fontSize: 11),
+              ),
+              Row(
+                children: [
+                  Text(
+                    formatTime(post.createdAt),
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(width: 3),
+                  const Icon(
+                    Icons.public,
+                    color: Colors.grey,
+                    size: 12,
+                  ),
+                ],
+              )
+            ],
+          ),
+        ),
+        IconButton(
+          onPressed: () {
+            _showPostOptionsMenu(currentUser.uid, widget.author.name);
+          },
+          icon: const Icon(Icons.more_horiz),
+        ),
+      ],
     );
   }
 
@@ -488,18 +522,112 @@ class _PostContainerState extends ConsumerState<PostContainer> {
           indent: 5,
         ),
         PostActions(
-          post: widget.post,
           onVote: _votePost,
           onComment: () {
             _navigateToCommentScreen();
           },
-          onShare: _showShareDialog,
+          onShare: _navigateToPostShareScreen,
+          postVoteCountAndStatus: _postVoteCountAndStatus,
         ),
         const Divider(
           thickness: 0.5,
           indent: 5,
         ),
       ],
+    );
+  }
+}
+
+class PostActions extends ConsumerWidget {
+  final Function _onVote;
+  final Function _onComment;
+  final Function _onShare;
+  final Stream<Map<String, dynamic>> _postVoteCountAndStatus;
+
+  const PostActions({
+    super.key,
+    required Function(bool) onVote,
+    required Function onComment,
+    required Function onShare,
+    required Stream<Map<String, dynamic>> postVoteCountAndStatus,
+  })  : _onVote = onVote,
+        _onComment = onComment,
+        _onShare = onShare,
+        _postVoteCountAndStatus = postVoteCountAndStatus;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return StreamBuilder<Map<String, dynamic>>(
+      stream: _postVoteCountAndStatus,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else if (snapshot.hasData) {
+          final data = snapshot.data!;
+          final upvotes = data['upvotes'] ?? 0;
+          final downvotes = data['downvotes'] ?? 0;
+          final status = data['userVoteStatus'];
+
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              VoteButton(
+                icon: Icons.arrow_upward_rounded,
+                count: upvotes,
+                color: status == 'upvoted' ? Colors.orange : Colors.grey[600],
+                onTap: (isUpvote) => _onVote(isUpvote),
+                isUpvote: true,
+              ),
+              VoteButton(
+                icon: Icons.arrow_downward_rounded,
+                count: downvotes,
+                color: status == 'downvoted' ? Colors.blue : Colors.grey[600],
+                onTap: (isUpvote) => _onVote(isUpvote),
+                isUpvote: false,
+              ),
+              _buildActionButton(
+                icon: Icons.comment_rounded,
+                label: 'Comments',
+                onTap: _onComment,
+              ),
+              _buildActionButton(
+                icon: Icons.share_rounded,
+                label: 'Share',
+                onTap: _onShare,
+              ),
+            ],
+          );
+        } else {
+          return const SizedBox.shrink();
+        }
+      },
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required Function onTap,
+  }) {
+    return InkWell(
+      onTap: () => onTap(),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.white, size: 20),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

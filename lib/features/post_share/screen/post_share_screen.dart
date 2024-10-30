@@ -7,6 +7,7 @@ import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:mdi/mdi.dart';
 
 class PostShareScreen extends ConsumerStatefulWidget {
   final Post post;
@@ -60,40 +61,38 @@ class _PostShareScreenState extends ConsumerState<PostShareScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                TextField(
-                  controller: shareTextController,
-                  maxLines: null,
-                  decoration: InputDecoration(
-                    hintText: 'Add a message to your share...',
-                    hintStyle: TextStyle(color: Colors.grey[400]),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: shareTextController,
+                        maxLines: null,
+                        decoration: InputDecoration(
+                          hintText: 'Add a message to your share...',
+                          hintStyle: TextStyle(color: Colors.grey[400]),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.blue.shade300),
+                          ),
+                        ),
+                      ),
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.blue.shade300),
+                    const SizedBox(width: 16),
+                    IconButton(
+                      onPressed: _sharePost,
+                      icon: const Icon(Mdi.sendCheck),
                     ),
-                  ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 PlainPostContainer(
                   post: widget.post,
                   author: widget.author,
                   community: widget.community,
-                ),
-                const SizedBox(height: 16),
-                // Nút Share
-                ElevatedButton(
-                  onPressed: _sharePost,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    backgroundColor: ref.watch(preferredThemeProvider).third,
-                  ),
-                  child: const Text(
-                    'Share',
-                    style: TextStyle(fontSize: 16, color: Colors.black),
-                  ),
                 ),
               ],
             ),

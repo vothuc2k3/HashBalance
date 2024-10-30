@@ -117,42 +117,51 @@ class PostRepository {
     }
   }
 
-  Stream<Map<String, dynamic>> getPostVoteCountAndStatusStream(
-      Post post, String uid) {
-    return _posts.doc(post.id).snapshots().asyncMap(
-      (event) async {
-        final upvoteDataQuery = await _posts
-            .doc(post.id)
-            .collection(FirebaseConstants.postVoteCollection)
-            .where('isUpvoted', isEqualTo: true)
-            .get();
-        final downvoteDataQuery = await _posts
-            .doc(post.id)
-            .collection(FirebaseConstants.postVoteCollection)
-            .where('isUpvoted', isEqualTo: false)
-            .get();
-        final upvote = upvoteDataQuery.size;
-        final downvote = downvoteDataQuery.size;
-        final voteStatusSnapshot = await _posts
-            .doc(post.id)
-            .collection(FirebaseConstants.postVoteCollection)
-            .where('uid', isEqualTo: uid)
-            .get();
-        String? userVoteStatus;
-        if (voteStatusSnapshot.docs.isNotEmpty) {
-          final voteData = voteStatusSnapshot.docs.first.data();
-          userVoteStatus =
-              voteData['isUpvoted'] == true ? 'upvoted' : 'downvoted';
-        } else {
-          userVoteStatus = null;
-        }
-        return {
-          'upvotes': upvote,
-          'downvotes': downvote,
-          'userVoteStatus': userVoteStatus,
-        };
-      },
-    );
+  Stream<Map<String, int>> getPostVoteCountsStream(Post post) {
+    return _firestore.runTransaction((transaction) async {
+      final postRef = _posts.doc(post.id);
+
+      final upvoteDataQuery = await postRef
+          .collection(FirebaseConstants.postVoteCollection)
+          .where('isUpvoted', isEqualTo: true)
+          .get();
+      final downvoteDataQuery = await postRef
+          .collection(FirebaseConstants.postVoteCollection)
+          .where('isUpvoted', isEqualTo: false)
+          .get();
+
+      final upvotes = upvoteDataQuery.size;
+      final downvotes = downvoteDataQuery.size;
+
+      return {
+        'upvotes': upvotes,
+        'downvotes': downvotes,
+      };
+    }).asStream();
+  }
+
+  Stream<Map<String, String?>> getUserVoteStatusStream(Post post, String uid) {
+    return _firestore.runTransaction((transaction) async {
+      final postRef = _posts.doc(post.id);
+
+      final userVoteQuery = await postRef
+          .collection(FirebaseConstants.postVoteCollection)
+          .where('uid', isEqualTo: uid)
+          .get();
+
+      String? userVoteStatus;
+      if (userVoteQuery.docs.isNotEmpty) {
+        final voteData = userVoteQuery.docs.first.data();
+        userVoteStatus =
+            voteData['isUpvoted'] == true ? 'upvoted' : 'downvoted';
+      } else {
+        userVoteStatus = null;
+      }
+
+      return {
+        'userVoteStatus': userVoteStatus,
+      };
+    }).asStream();
   }
 
   //DELETE THE POST
@@ -427,6 +436,54 @@ class PostRepository {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
+    }
+  }
+
+  Stream<Map<String, dynamic>> getPostVoteCountAndStatus(
+      Post post, String uid) async* {
+    try {
+      final upvoteDataStream = _posts
+          .doc(post.id)
+          .collection(FirebaseConstants.postVoteCollection)
+          .where('isUpvoted', isEqualTo: true)
+          .snapshots();
+
+      final downvoteDataStream = _posts
+          .doc(post.id)
+          .collection(FirebaseConstants.postVoteCollection)
+          .where('isUpvoted', isEqualTo: false)
+          .snapshots();
+
+      final userVoteStatusStream = _posts
+          .doc(post.id)
+          .collection(FirebaseConstants.postVoteCollection)
+          .where('uid', isEqualTo: uid)
+          .snapshots();
+
+      await for (final upvoteSnapshot in upvoteDataStream) {
+        final downvoteSnapshot = await downvoteDataStream.first;
+        final voteStatusSnapshot = await userVoteStatusStream.first;
+
+        final upvote = upvoteSnapshot.size;
+        final downvote = downvoteSnapshot.size;
+
+        String? userVoteStatus;
+        if (voteStatusSnapshot.docs.isNotEmpty) {
+          final voteData = voteStatusSnapshot.docs.first.data();
+          userVoteStatus =
+              voteData['isUpvoted'] == true ? 'upvoted' : 'downvoted';
+        } else {
+          userVoteStatus = null;
+        }
+
+        yield {
+          'upvotes': upvote,
+          'downvotes': downvote,
+          'userVoteStatus': userVoteStatus,
+        };
+      }
+    } catch (e) {
+      throw Failures(e.toString());
     }
   }
 }

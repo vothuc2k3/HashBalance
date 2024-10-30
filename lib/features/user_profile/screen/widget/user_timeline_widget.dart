@@ -3,6 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
+import 'package:hash_balance/core/widgets/post_share_container.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/newsfeed/screen/containers/newsfeed_poll_container.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
@@ -29,6 +31,7 @@ class _UserTimelineWidgetState extends ConsumerState<UserTimelineWidget>
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = ref.watch(userProvider)!;
     super.build(context);
     return Container(
       decoration: BoxDecoration(
@@ -39,15 +42,17 @@ class _UserTimelineWidgetState extends ConsumerState<UserTimelineWidget>
         child: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
-              child: ref.watch(userPostsProvider(widget.user)).when(
-                    data: (posts) {
-                      if (posts.isEmpty) {
+              child: ref.watch(userTimelineProvider(widget.user)).when(
+                    data: (timelineItems) {
+                      if (timelineItems.isEmpty) {
                         return SizedBox(
                           height: MediaQuery.of(context).size.height * 0.6,
                           child: Center(
-                            child: const Text(
-                              'You have no posts yet',
-                              style: TextStyle(
+                            child: Text(
+                              currentUser.uid == widget.user.uid
+                                  ? 'You have no posts yet...'
+                                  : 'This guy has no posts yet...',
+                              style: const TextStyle(
                                 fontSize: 18,
                                 color: Colors.white70,
                               ),
@@ -64,21 +69,27 @@ class _UserTimelineWidgetState extends ConsumerState<UserTimelineWidget>
                       return ListView.builder(
                         physics: const NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
-                        itemCount: posts.length,
+                        itemCount: timelineItems.length,
                         itemBuilder: (context, index) {
-                          final postData = posts[index];
-                          if (postData.post.isPoll) {
+                          final timelineItem = timelineItems[index];
+
+                          if (timelineItem.isShare) {
+                            return PostShareContainer(
+                              postShareData: timelineItem.postShareData!,
+                            ).animate().fadeIn();
+                          } else if (timelineItem.postData!.post.isPoll) {
                             return NewsfeedPollContainer(
                               author: widget.user,
-                              poll: postData.post,
-                              community: postData.community!,
+                              poll: timelineItem.postData!.post,
+                              community: timelineItem.postData!.community!,
+                            ).animate().fadeIn();
+                          } else {
+                            return TimelinePostContainer(
+                              author: widget.user,
+                              post: timelineItem.postData!.post,
+                              community: timelineItem.postData!.community!,
                             ).animate().fadeIn();
                           }
-                          return TimelinePostContainer(
-                            author: widget.user,
-                            post: postData.post,
-                            community: postData.community!,
-                          ).animate().fadeIn();
                         },
                       );
                     },
@@ -102,7 +113,7 @@ class _UserTimelineWidgetState extends ConsumerState<UserTimelineWidget>
                       ),
                     ),
                   ),
-            )
+            ),
           ],
         ),
       ),
@@ -110,6 +121,6 @@ class _UserTimelineWidgetState extends ConsumerState<UserTimelineWidget>
   }
 
   Future<void> _onRefresh() async {
-    ref.invalidate(userPostsProvider);
+    ref.invalidate(userTimelineProvider);
   }
 }

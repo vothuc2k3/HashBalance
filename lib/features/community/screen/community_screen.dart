@@ -28,10 +28,6 @@ import 'package:hash_balance/models/user_model.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:logger/logger.dart';
 
-final currentCommunityProvider = Provider<Community>((ref) {
-  throw UnimplementedError('currentCommunityProvider not overridden');
-});
-
 class CommunityScreen extends ConsumerStatefulWidget {
   final String _communityId;
 
@@ -58,14 +54,12 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
   @override
   void dispose() {
     super.dispose();
-    ref.invalidate(currentUserRoleProvider);
   }
 
   //MARK: - BUILD WIDGET
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(userProvider)!;
-
     return Scaffold(
       body: Container(
         color: ref.watch(preferredThemeProvider).first,
@@ -283,15 +277,13 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                             final post = posts[index];
 
                                             if (!post.post.isPoll) {
-                                              return PostContainer(
+                                              return CommunityPostContainer(
                                                 isMod: role == 'moderator',
                                                 isPinnedPost:
                                                     post.post.isPinned,
                                                 author: post.author!,
                                                 post: post.post,
-                                                communityId:
-                                                    widget._communityId,
-                                                communityName: community.name,
+                                                community: community,
                                                 onPinPost: _handlePinPost,
                                                 onUnPinPost: _handleUnpinPost,
                                               ).animate().fadeIn();

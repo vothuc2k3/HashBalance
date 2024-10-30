@@ -1,7 +1,10 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
+import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/theme/pallette.dart';
 
@@ -15,11 +18,10 @@ class SettingScreen extends ConsumerStatefulWidget {
 }
 
 class SettingScreenState extends ConsumerState<SettingScreen> {
-  
   void _changeTheme() async {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (context) {
         return AlertDialog(
           title: const Text('Choose a Theme Color'),
           content: Column(
@@ -52,6 +54,10 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
 
   void _signOut() async {
     await ref.watch(authControllerProvider.notifier).signOut();
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const AuthScreen()),
+      (route) => false,
+    );
   }
 
   void _testButton() async {}

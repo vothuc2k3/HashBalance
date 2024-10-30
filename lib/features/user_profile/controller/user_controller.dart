@@ -6,13 +6,13 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/features/user_profile/repository/user_repository.dart';
 import 'package:hash_balance/models/block_model.dart';
-import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/conbined_models/user_profile_data_model.dart';
+import 'package:hash_balance/models/timeline_item_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:uuid/uuid.dart';
 
-final userPostsProvider = StreamProvider.family((ref, UserModel user) {
-  return ref.watch(userControllerProvider.notifier).getUserPosts(user);
+final userTimelineProvider = StreamProvider.family((ref, UserModel user) {
+  return ref.watch(userControllerProvider.notifier).getUserTimelineItems(user);
 });
 
 final userProfileDataProvider =
@@ -144,8 +144,8 @@ class UserController extends StateNotifier<bool> {
     return _userRepository.getUserProfileData(uid);
   }
 
-  Stream<List<PostDataModel>> getUserPosts(UserModel user) {
-    return _userRepository.getUserPosts(user);
+  Stream<List<TimelineItem>> getUserTimelineItems(UserModel user) {
+    return _userRepository.getUserTimelineItems(user);
   }
 
   Future<Either<Failures, void>> blockUser({
