@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
-import 'package:hash_balance/models/post_share_data_model.dart';
+import 'package:hash_balance/models/conbined_models/post_share_data_model.dart';
 
 class TimelineItem {
   final String id;

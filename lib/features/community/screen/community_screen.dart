@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/splash/splash_screen.dart';
 
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
@@ -14,11 +15,12 @@ import 'package:hash_balance/features/community/controller/comunity_controller.d
 import 'package:hash_balance/features/community/screen/community_conversation_screen.dart';
 import 'package:hash_balance/features/community/screen/post_container/community_post_container.dart';
 import 'package:hash_balance/features/invitation/controller/invitation_controller.dart';
+import 'package:hash_balance/features/livestream/controller/livestream_controller.dart';
+import 'package:hash_balance/features/livestream/screen/livestream_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/invite_moderators_screen.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/mod_tools_screen.dart';
 import 'package:hash_balance/features/community/screen/post_container/community_poll_container.dart';
-import 'package:hash_balance/features/post/screen/create_post_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/invitation_model.dart';
@@ -137,13 +139,12 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                         ),
                                         IconButton(
                                           onPressed: () =>
-                                              _navigateToCreatePostScreen(
-                                                  community),
+                                              _onCreateLivestream(community),
                                           icon: const Icon(
                                             Icons.add,
                                             color: Colors.white,
                                           ),
-                                          tooltip: 'Create a new post',
+                                          tooltip: 'Create a new livestream',
                                         ),
                                       ],
                                     ),
@@ -431,13 +432,28 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     );
   }
 
-  _navigateToCreatePostScreen(Community community) {
+  void _onCreateLivestream(Community community) async {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const CreatePostScreen(),
+        builder: (context) => const SplashScreen(),
       ),
     );
+    final result = await ref
+        .read(livestreamControllerProvider)
+        .createLivestream(
+            communityId: community.id, content: '', uid: _currentUser!.uid);
+    result.fold((l) => showToast(false, l.message), (r) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => LivestreamScreen(
+            livestream: r,
+            isHost: true,
+          ),
+        ),
+      );
+    });
   }
 
   void _uploadProfileImage(Community community, XFile profileImageFile) async {

@@ -7,7 +7,7 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/features/user_profile/repository/user_repository.dart';
 import 'package:hash_balance/models/block_model.dart';
 import 'package:hash_balance/models/conbined_models/user_profile_data_model.dart';
-import 'package:hash_balance/models/timeline_item_model.dart';
+import 'package:hash_balance/models/conbined_models/timeline_item_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:uuid/uuid.dart';
 

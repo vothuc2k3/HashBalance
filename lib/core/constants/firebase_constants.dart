@@ -23,4 +23,6 @@ class FirebaseConstants {
   static const activityLogsCollection = 'activity_logs';
   static const archivedConversationCollection = 'archived_conversations';
   static const suspendedUsersCollection = 'suspended_users';
+  static const livestreamsCollection = 'livestreams';
+  static const livestreamCommentsCollection = 'livestream_comments';
 }

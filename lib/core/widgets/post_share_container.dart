@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:hash_balance/features/user_profile/screen/widget/timeline_post_container.dart';
-import 'package:hash_balance/models/post_share_data_model.dart';
+import 'package:hash_balance/models/conbined_models/post_share_data_model.dart';
 import 'package:hash_balance/core/utils.dart';
 
 class PostShareContainer extends StatelessWidget {

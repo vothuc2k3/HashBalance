@@ -1,6 +1,6 @@
-import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:agora_uikit/agora_uikit.dart';
 import 'package:agora_uikit/controllers/rtc_buttons.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/constants/constants.dart';
@@ -112,14 +112,13 @@ class CallScreenState extends ConsumerState<CallScreen> {
                     Center(
                       child: CircleAvatar(
                         radius: 60,
-                        backgroundImage: NetworkImage(
+                        backgroundImage: CachedNetworkImageProvider(
                           widget._caller.profileImage,
                         ),
                       ),
                     )
                   else
                     AgoraVideoViewer(client: agoraClient!),
-
                   Positioned(
                     bottom: 50,
                     right: 50,
@@ -127,13 +126,12 @@ class CallScreenState extends ConsumerState<CallScreen> {
                             .sessionController.value.isLocalVideoDisabled
                         ? CircleAvatar(
                             radius: 60,
-                            backgroundImage: NetworkImage(
+                            backgroundImage: CachedNetworkImageProvider(
                               widget._receiver.profileImage,
                             ),
                           )
                         : Container(),
                   ),
-
                   AgoraVideoButtons(
                     client: agoraClient!,
                     disconnectButtonChild: IconButton(
