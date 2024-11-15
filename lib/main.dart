@@ -24,7 +24,6 @@ import 'package:toastification/toastification.dart';
 import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/services/device_token_service.dart';
 import 'package:hash_balance/core/splash/splash_screen.dart';
-import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
@@ -336,47 +335,31 @@ class MyAppState extends ConsumerState<MyApp> {
       );
     });
 
-    return ref.watch(authStageChangeProvider).when(
-          data: (user) {
-            if (user != null) {
-              _getUserData(user);
-              return Portal(
-                child: MaterialApp(
-                  navigatorKey: navigatorKey,
-                  debugShowCheckedModeBanner: false,
-                  title: 'Hash Balance',
-                  theme: Pallete.darkModeAppTheme,
-                  home: ref.watch(userProvider) != null
-                      ? const HomeScreen()
-                      : const SplashScreen(),
-                ),
-              );
-            } else {
-              return Portal(
-                child: MaterialApp(
-                  navigatorKey: navigatorKey,
-                  debugShowCheckedModeBanner: false,
-                  title: 'Hash Balance',
-                  theme: Pallete.darkModeAppTheme,
-                  home: const AuthScreen(),
-                ),
-              );
-            }
-          },
-          error: (error, stackTrace) => Portal(
-            child: MaterialApp(
-              debugShowCheckedModeBanner: false,
-              title: 'Hash Balance',
-              home: ErrorText(error: error.toString()),
-            ),
-          ),
-          loading: () => const Portal(
-            child: MaterialApp(
-              debugShowCheckedModeBanner: false,
-              title: 'Hash Balance',
-              home: SplashScreen(),
-            ),
-          ),
-        );
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      _getUserData(user);
+      return Portal(
+        child: MaterialApp(
+          navigatorKey: navigatorKey,
+          debugShowCheckedModeBanner: false,
+          title: 'Hash Balance',
+          theme: Pallete.darkModeAppTheme,
+          home: ref.watch(userProvider) != null
+              ? const HomeScreen()
+              : const SplashScreen(),
+        ),
+      );
+    } else {
+      return Portal(
+        child: MaterialApp(
+          navigatorKey: navigatorKey,
+          debugShowCheckedModeBanner: false,
+          title: 'Hash Balance',
+          theme: Pallete.darkModeAppTheme,
+          home: const AuthScreen(),
+        ),
+      );
+    }
   }
 }

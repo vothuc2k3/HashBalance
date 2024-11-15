@@ -18,8 +18,8 @@ final fetchUserDataProvider = FutureProviderFamily((ref, String uid) {
 
 final authControllerProvider = StateNotifierProvider<AuthController, bool>(
   (ref) => AuthController(
-    authRepository: ref.watch(authRepositoryProvider),
-    userController: ref.watch(userControllerProvider.notifier),
+    authRepository: ref.read(authRepositoryProvider),
+    userController: ref.read(userControllerProvider.notifier),
     ref: ref,
   ),
 );
@@ -36,6 +36,7 @@ final getUserDataProvider = StreamProvider.family((ref, String uid) {
 
 class AuthController extends StateNotifier<bool> {
   final AuthRepository _authRepository;
+  final UserController _userController;
   final Ref _ref;
 
   AuthController({
@@ -43,6 +44,7 @@ class AuthController extends StateNotifier<bool> {
     required UserController userController,
     required Ref ref,
   })  : _authRepository = authRepository,
+        _userController = userController,
         _ref = ref,
         super(false);
 
@@ -136,10 +138,11 @@ class AuthController extends StateNotifier<bool> {
     }
   }
 
-  Future<void> signOut() async {
+  Future<void> signOut(String uid) async {
     state = true;
     try {
       await _authRepository.signOut();
+      await _userController.removeUserDeviceToken(uid);
     } catch (e) {
       throw Exception(e.toString());
     } finally {

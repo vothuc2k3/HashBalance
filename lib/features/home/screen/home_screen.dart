@@ -1,6 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -14,6 +14,7 @@ import 'package:hash_balance/features/home/screen/drawers/community_list_drawer.
 import 'package:hash_balance/features/home/screen/drawers/user_profile_drawer.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
+import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 
@@ -30,8 +31,20 @@ class HomeScreenState extends ConsumerState<HomeScreen>
   late PageController _pageController;
   bool _isIncomingCallScreenOpen = false;
 
+  Future<void> _updateUserDeviceToken() async {
+    final token = await ref.read(firebaseMessagingProvider).getToken();
+    final uid = ref.read(userProvider)!.uid;
+    ref
+        .read(userControllerProvider.notifier)
+        .updateUserDeviceToken(token: token ?? '', uid: uid);
+  }
+
   Future<void> _requestPushPermissions() async {
-    await ref.read(firebaseMessagingProvider).requestPermission();
+    final settings =
+        await ref.read(firebaseMessagingProvider).requestPermission();
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      await _updateUserDeviceToken();
+    }
   }
 
   void _displayCommunityListDrawer(BuildContext context) {

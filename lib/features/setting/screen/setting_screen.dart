@@ -1,9 +1,8 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/theme/pallette.dart';
@@ -52,12 +51,12 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
     );
   }
 
-  void _signOut() async {
-    await ref.watch(authControllerProvider.notifier).signOut();
+  void _signOut(String uid) async {
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => const AuthScreen()),
       (route) => false,
     );
+    await ref.watch(authControllerProvider.notifier).signOut(uid);
   }
 
   void _testButton() async {}
@@ -65,6 +64,7 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
   @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(authControllerProvider);
+    final currentUser = ref.read(userProvider)!;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: ref.watch(preferredThemeProvider).second,
@@ -108,7 +108,7 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              onTap: () => _signOut(),
+              onTap: () => _signOut(currentUser.uid),
             ),
             ListTile(
               leading: Icon(

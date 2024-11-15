@@ -52,12 +52,8 @@ class PushNotificationController extends StateNotifier<bool> {
       final token = await _userController.getUserDeviceTokens(uid);
       tokens.add(token);
     }
-    await _pushNotificationRepository.sendMultipleFCMNotifications(
-      tokens,
-      message,
-      title,
-      payload,
-      type,
-    );
+    for (var token in tokens) {
+      await sendPushNotification(token, message, title, payload, type);
+    }
   }
 }

@@ -8,6 +8,7 @@ import 'package:hash_balance/features/user_profile/repository/user_repository.da
 import 'package:hash_balance/models/block_model.dart';
 import 'package:hash_balance/models/conbined_models/user_profile_data_model.dart';
 import 'package:hash_balance/models/conbined_models/timeline_item_model.dart';
+import 'package:hash_balance/models/user_devices_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:uuid/uuid.dart';
 
@@ -65,6 +66,10 @@ class UserController extends StateNotifier<bool> {
 
   Future<String> getUserDeviceTokens(String uid) async {
     return await _userRepository.getUserDeviceTokens(uid);
+  }
+
+  Future<void> removeUserDeviceToken(String uid) async {
+    await _userRepository.removeUserDeviceToken(uid);
   }
 
   Future<UserModel> fetchUserByUidProvider(String uid) async {
@@ -169,5 +174,17 @@ class UserController extends StateNotifier<bool> {
       currentUid: currentUid,
       blockUid: blockUid,
     );
+  }
+
+  Future<void> updateUserDeviceToken({
+    required String token,
+    required String uid,
+  }) async {
+    final userDeviceModel = UserDevices(
+      uid: uid,
+      deviceToken: token,
+      createdAt: Timestamp.now(),
+    );
+    await _userRepository.updateUserDeviceToken(userDeviceModel);
   }
 }

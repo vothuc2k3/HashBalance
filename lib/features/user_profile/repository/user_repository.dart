@@ -17,6 +17,7 @@ import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/conbined_models/post_share_data_model.dart';
 import 'package:hash_balance/models/post_share_model.dart';
 import 'package:hash_balance/models/conbined_models/timeline_item_model.dart';
+import 'package:hash_balance/models/user_devices_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -159,6 +160,16 @@ class UserRepository {
       deviceToken = docData['deviceToken'];
     }
     return deviceToken ?? '';
+  }
+
+  Future<void> removeUserDeviceToken(String uid) async {
+    try {
+      await _userDevices.doc(uid).delete();
+    } on FirebaseException catch (e) {
+      throw e.message!;
+    } catch (e) {
+      throw e.toString();
+    }
   }
 
   Future<UserModel> fetchUserByUidProvider(String uid) async {
@@ -448,5 +459,13 @@ class UserRepository {
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     }
+  }
+
+  Future<void> updateUserDeviceToken(
+    UserDevices userDeviceModel,
+  ) async {
+    await _userDevices.doc(userDeviceModel.uid).set(
+          userDeviceModel.toMap(),
+        );
   }
 }
