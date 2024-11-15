@@ -13,7 +13,7 @@ final upvotePostControllerProvider =
     StateNotifierProvider<UpvotePostController, bool>((ref) {
   return UpvotePostController(
     votePostRepository: ref.read(votePostRepositoryProvider),
-    activityLogController: ref.read(activityLogControllerProvider),
+    activityLogController: ref.read(activityLogControllerProvider.notifier),
     ref: ref,
   );
 });
@@ -21,7 +21,7 @@ final downvotePostControllerProvider =
     StateNotifierProvider<DownvotePostController, bool>((ref) {
   return DownvotePostController(
     votePostRepository: ref.read(votePostRepositoryProvider),
-    activityLogController: ref.read(activityLogControllerProvider),
+    activityLogController: ref.read(activityLogControllerProvider.notifier),
     ref: ref,
   );
 });

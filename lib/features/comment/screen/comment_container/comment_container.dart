@@ -424,7 +424,6 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
         String? hashtag = match.group(0);
         if (hashtag != null && hashtag.startsWith('#')) {
           String taggedName = hashtag.substring(1);
-
           String? taggedUid = comment.mentionedUser!.entries
               .firstWhere(
                 (entry) => entry.value == taggedName,

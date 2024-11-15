@@ -58,7 +58,6 @@ class PostShareContainer extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          // Shared content message
           if (postShareData.postShare.content.isNotEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -68,7 +67,6 @@ class PostShareContainer extends StatelessWidget {
               ),
             ),
           const Divider(color: Colors.grey),
-          // Shared Post Container
           TimelinePostContainer(
             post: postShareData.post,
             author: postShareData.author,

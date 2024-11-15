@@ -210,3 +210,21 @@ void showImage(BuildContext context, String imageUrl) {
     },
   );
 }
+
+void showCustomAlertDialog({
+  required BuildContext context,
+  required String title,
+  required String content,
+  required Color backgroundColor,
+  required List<Widget> actions,
+}) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      backgroundColor: backgroundColor,
+      title: Text(title),
+      content: Text(content),
+      actions: actions,
+    ),
+  );
+}

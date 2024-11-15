@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/constants/constants.dart';
@@ -8,6 +9,7 @@ import 'package:hash_balance/core/widgets/video_player_widget.dart';
 import 'package:hash_balance/core/widgets/vote_button.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
+import 'package:hash_balance/features/post/screen/hashtag_posts_screen.dart';
 import 'package:hash_balance/features/post_share/screen/post_share_screen.dart';
 import 'package:hash_balance/features/report/controller/report_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
@@ -53,6 +55,15 @@ class _CommunityPostContainerState
   late Stream<Map<String, dynamic>> _postVoteCountAndStatus;
   TextEditingController commentTextController = TextEditingController();
   TextEditingController shareTextController = TextEditingController();
+
+  void _navigateToHashtagPostsScreen(String hashtag) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => HashtagPostsScreen(filter: hashtag),
+      ),
+    );
+  }
 
   void _navigateToPostShareScreen() {
     Navigator.push(
@@ -395,7 +406,7 @@ class _CommunityPostContainerState
               children: [
                 _buildPostHeader(widget.post, widget.author),
                 const SizedBox(height: 4),
-                Text(widget.post.content),
+                _buildContentWithHashtags(widget.post.content),
                 widget.post.images != null && widget.post.images!.isNotEmpty
                     ? const SizedBox.shrink()
                     : const SizedBox(height: 6),
@@ -535,6 +546,47 @@ class _CommunityPostContainerState
           indent: 5,
         ),
       ],
+    );
+  }
+
+  Widget _buildContentWithHashtags(String content) {
+    final hashtagRegExp = RegExp(r'#[a-zA-Z0-9_]+');
+    final matches = hashtagRegExp.allMatches(content);
+
+    if (matches.isEmpty) {
+      return Text(content);
+    }
+
+    List<TextSpan> spans = [];
+    int lastMatchEnd = 0;
+
+    for (var match in matches) {
+      if (match.start > lastMatchEnd) {
+        spans.add(
+          TextSpan(
+            text: content.substring(lastMatchEnd, match.start),
+            style: DefaultTextStyle.of(context).style,
+          ),
+        );
+      }
+      spans.add(TextSpan(
+        text: content.substring(match.start, match.end),
+        style: DefaultTextStyle.of(context).style.copyWith(color: Colors.blue),
+        recognizer: TapGestureRecognizer()
+          ..onTap = () => _navigateToHashtagPostsScreen(
+                content.substring(match.start, match.end),
+              ),
+      ));
+      lastMatchEnd = match.end;
+    }
+    if (lastMatchEnd < content.length) {
+      spans.add(TextSpan(
+        text: content.substring(lastMatchEnd),
+        style: DefaultTextStyle.of(context).style,
+      ));
+    }
+    return RichText(
+      text: TextSpan(children: spans),
     );
   }
 }

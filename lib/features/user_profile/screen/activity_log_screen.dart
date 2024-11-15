@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/activity_log/controller/activity_log_controller.dart';
@@ -15,12 +16,56 @@ class ActivityLogScreen extends ConsumerStatefulWidget {
 }
 
 class _ActivityLogScreenState extends ConsumerState<ActivityLogScreen> {
+  List<ActivityLogModel> _activityLogs = [];
+
+  void _clearActivityLogs() async {
+    showCustomAlertDialog(
+      context: context,
+      title: 'Clear Activity Logs',
+      content: 'Are you sure you want to clear all activity logs?',
+      backgroundColor: ref.watch(preferredThemeProvider).second,
+      actions: [
+        TextButton(
+          style: TextButton.styleFrom(
+            backgroundColor: Colors.greenAccent,
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          style: TextButton.styleFrom(
+            backgroundColor: Colors.redAccent,
+          ),
+          onPressed: () async {
+            Navigator.of(context).pop();
+            final result = await ref
+                .read(activityLogControllerProvider.notifier)
+                .clearActivityLogs();
+            result.fold((l) => showToast(false, l.message), (r) {
+              showToast(true, 'Activity logs cleared');
+              setState(() {
+                _activityLogs = [];
+              });
+            });
+          },
+          child: const Text('Clear'),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('User Activities'),
         backgroundColor: ref.watch(preferredThemeProvider).first,
+        actions: [
+          IconButton(
+            onPressed: _clearActivityLogs,
+            icon: const Icon(Icons.clear_all),
+          ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -30,15 +75,27 @@ class _ActivityLogScreenState extends ConsumerState<ActivityLogScreen> {
           padding: const EdgeInsets.all(16.0),
           child: ref.watch(activityLogStreamProvider).when(
                 data: (activityLogs) {
-                  if (activityLogs.isEmpty) {
-                    return const Center(
-                      child: Text('No activities yet.'),
-                    ).animate().fadeIn();
+                  _activityLogs = activityLogs;
+                  if (_activityLogs.isEmpty) {
+                    return Center(
+                      child: const Text(
+                        'You have no logs...',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white70,
+                        ),
+                      ).animate().fadeIn(duration: 600.ms).moveY(
+                            begin: 30,
+                            end: 0,
+                            duration: 600.ms,
+                            curve: Curves.easeOutBack,
+                          ),
+                    );
                   }
                   return ListView.builder(
-                    itemCount: activityLogs.length,
+                    itemCount: _activityLogs.length,
                     itemBuilder: (context, index) {
-                      final behavior = activityLogs[index];
+                      final behavior = _activityLogs[index];
                       return _buildBehaviorCard(behavior).animate().fadeIn();
                     },
                   );
@@ -93,19 +150,14 @@ class _ActivityLogScreenState extends ConsumerState<ActivityLogScreen> {
 
   IconData _getIconByType(String type) {
     switch (type) {
-      case 'like':
+      case Constants.activityLogTypeUpvote:
         return Icons.thumb_up;
-      case 'comment':
+      case Constants.activityLogTypeDownvote:
+        return Icons.thumb_down;
+      case Constants.activityLogTypeComment:
         return Icons.comment;
-      case 'share':
-        return Icons.share;
-      case 'favorite':
-        return Icons.star;
-      case 'join':
-        return Icons.group_add;
       default:
-        return Icons
-            .circle; // Biểu tượng mặc định nếu không khớp với các loại trên
+        return Icons.circle;
     }
   }
 }

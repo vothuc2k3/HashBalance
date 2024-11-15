@@ -6,8 +6,10 @@ import 'package:hash_balance/core/autocomplete_options.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/comment/screen/comment_container/comment_container.dart';
+import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/models/comment_model.dart';
@@ -41,8 +43,10 @@ class CommentScreen extends ConsumerStatefulWidget {
 class _CommentScreenState extends ConsumerState<CommentScreen> {
   bool _isEmojiVisible = false;
   String? _commentText;
+  UserModel? _currentUser;
   final List<UserModel> _selectedUsers = [];
   TextEditingController _internalController = TextEditingController();
+
   void _toggleEmojiPicker() {
     setState(() {
       _isEmojiVisible = !_isEmojiVisible;
@@ -74,6 +78,12 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
         builder: (context) => OtherUserProfileScreen(targetUid: uid),
       ),
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _currentUser = ref.read(userProvider)!;
   }
 
   @override
@@ -186,26 +196,35 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
                         trigger: '#',
                         optionsViewBuilder:
                             (context, autocompleteQuery, controller) {
-                          return MentionAutocompleteOptions(
-                            query: autocompleteQuery.query,
-                            onMentionUserTap: (user) {
-                              final autocomplete =
-                                  MultiTriggerAutocomplete.of(context);
-                              autocomplete.acceptAutocompleteOption(user.name);
-                              if (!_selectedUsers.contains(user)) {
-                                setState(() {
-                                  _selectedUsers.add(user);
-                                  _commentText = _internalController.text;
-                                });
-                              }
-                            },
-                          );
+                          return ref
+                              .watch(fetchFriendsProvider(_currentUser!.uid))
+                              .when(
+                                data: (friends) => MentionAutocompleteOptions(
+                                  query: autocompleteQuery.query,
+                                  friends: friends,
+                                  onMentionUserTap: (user) {
+                                    final autocomplete =
+                                        MultiTriggerAutocomplete.of(context);
+                                    autocomplete
+                                        .acceptAutocompleteOption(user.name);
+                                    if (!_selectedUsers.contains(user)) {
+                                      setState(() {
+                                        _selectedUsers.add(user);
+                                        _commentText = _internalController.text;
+                                      });
+                                    }
+                                  },
+                                ),
+                                error: (error, stackTrace) => ErrorText(
+                                  error: error.toString(),
+                                ),
+                                loading: () => const SizedBox.shrink(),
+                              );
                         },
                       ),
                     ],
                     fieldViewBuilder: (context, controller, focusNode) {
-                      _internalController =
-                          controller; // Lưu controller để có thể clear khi cần
+                      _internalController = controller;
                       return Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: TextField(

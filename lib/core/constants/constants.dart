@@ -4,7 +4,6 @@ import 'package:hash_balance/features/message/screen/conversations_screen.dart';
 import 'package:hash_balance/features/newsfeed/screen/newsfeed_screen.dart';
 import 'package:hash_balance/features/notification/screen/notification_screen.dart';
 import 'package:hash_balance/features/post/screen/create_post_screen.dart';
-import 'package:hash_balance/models/user_model.dart';
 
 class Constants {
   static const logoPath = 'assets/images/logo.png';
@@ -156,6 +155,4 @@ class Constants {
   static String agoraAppId = 'a9942d0368fc4cdf9e59df9df19899c9';
 
   static String domain = 'https://web-production-f331.up.railway.app';
-
-  static List<UserModel>? friends;
 }

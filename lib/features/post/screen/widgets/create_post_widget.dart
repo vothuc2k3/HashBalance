@@ -42,6 +42,7 @@ class _CreatePostWidgetState extends ConsumerState<CreatePostWidget> {
   @override
   void initState() {
     super.initState();
+    contentController.addListener(_onTextChanged);
   }
 
   Future<void> _selectImages() async {
@@ -100,6 +101,10 @@ class _CreatePostWidgetState extends ConsumerState<CreatePostWidget> {
         },
       );
     }
+  }
+
+  void _onTextChanged() {
+    setState(() {});
   }
 
   @override
@@ -190,7 +195,7 @@ class _CreatePostWidgetState extends ConsumerState<CreatePostWidget> {
                                       ),
                                     ],
                                   )
-                                : Row(
+                              : Row(
                                     children: [
                                       CircleAvatar(
                                         backgroundImage:
@@ -441,6 +446,38 @@ class _CreatePostWidgetState extends ConsumerState<CreatePostWidget> {
         selectedCommunity = chosenCommunity;
       });
     }
+  }
+
+  Widget _buildRichTextField() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: RichText(
+        text: TextSpan(
+          style: const TextStyle(color: Colors.white, fontSize: 16),
+          children: _highlightHashtags(contentController.text),
+        ),
+      ),
+    );
+  }
+
+  List<TextSpan> _highlightHashtags(String text) {
+    final words = text.split(' ');
+    return words.map((word) {
+      if (word.startsWith('#')) {
+        return TextSpan(
+          text: '$word ',
+          style: const TextStyle(color: Colors.blue), 
+        );
+      } else {
+        return TextSpan(
+          text: '$word ',
+        );
+      }
+    }).toList();
   }
 
   Widget _buildUserWidget({required UserModel user}) {

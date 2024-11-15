@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/splash/splash_screen.dart';
@@ -193,7 +194,7 @@ class _TimelinePostContainerState extends ConsumerState<TimelinePostContainer> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(widget.post.content),
+                _buildContentWithHashtags(widget.post.content),
                 widget.post.images != null && widget.post.video == ''
                     ? const SizedBox(height: 6)
                     : const SizedBox.shrink(),
@@ -332,6 +333,50 @@ class _TimelinePostContainerState extends ConsumerState<TimelinePostContainer> {
           indent: 5,
         ),
       ],
+    );
+  }
+
+  Widget _buildContentWithHashtags(String content) {
+    final hashtagRegExp = RegExp(r'#[a-zA-Z0-9_]+');
+    final matches = hashtagRegExp.allMatches(content);
+
+    if (matches.isEmpty) {
+      return Text(content);
+    }
+
+    List<TextSpan> spans = [];
+    int lastMatchEnd = 0;
+
+    for (var match in matches) {
+      if (match.start > lastMatchEnd) {
+        spans.add(TextSpan(
+          text: content.substring(lastMatchEnd, match.start),
+          style: DefaultTextStyle.of(context).style,
+        ));
+      }
+
+      spans.add(TextSpan(
+        text: content.substring(match.start, match.end),
+        style: DefaultTextStyle.of(context).style.copyWith(color: Colors.blue),
+        recognizer: TapGestureRecognizer()
+          ..onTap = () {
+            debugPrint(
+                'Tapped on hashtag: ${content.substring(match.start, match.end)}');
+          },
+      ));
+
+      lastMatchEnd = match.end;
+    }
+
+    if (lastMatchEnd < content.length) {
+      spans.add(TextSpan(
+        text: content.substring(lastMatchEnd),
+        style: DefaultTextStyle.of(context).style,
+      ));
+    }
+
+    return RichText(
+      text: TextSpan(children: spans),
     );
   }
 }

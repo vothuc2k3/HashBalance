@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/constants/constants.dart';
+import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/features/activity_log/repository/activity_log_repository.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/models/activity_log_model.dart';
@@ -7,17 +9,20 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 
 final activityLogStreamProvider = StreamProvider<List<ActivityLogModel>>((ref) {
-  return ref.watch(activityLogControllerProvider).getActivityLog();
+  return ref.watch(activityLogControllerProvider.notifier).getActivityLog();
 });
 
-final activityLogControllerProvider = Provider((ref) {
-  return ActivityLogController(
-    activityLogRepository: ref.read(activityLogRepositoryProvider),
-    ref: ref,
-  );
-});
+final activityLogControllerProvider =
+    StateNotifierProvider<ActivityLogController, bool>(
+  (ref) {
+    return ActivityLogController(
+      activityLogRepository: ref.read(activityLogRepositoryProvider),
+      ref: ref,
+    );
+  },
+);
 
-class ActivityLogController {
+class ActivityLogController extends StateNotifier<bool> {
   final ActivityLogRepository _activityLogRepository;
   final Ref _ref;
 
@@ -25,7 +30,15 @@ class ActivityLogController {
     required ActivityLogRepository activityLogRepository,
     required Ref ref,
   })  : _activityLogRepository = activityLogRepository,
-        _ref = ref;
+        _ref = ref,
+        super(false);
+
+  Future<Either<Failures, void>> clearActivityLogs() async {
+    state = true;
+    final result = await _activityLogRepository.clearActivityLogs();
+    state = false;
+    return result;
+  }
 
   void addUpvoteActivityLog({
     required String postAuthorName,

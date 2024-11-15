@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/services/community_service.dart';
-import 'package:hash_balance/core/services/user_friends_service.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/call/controller/call_controller.dart';
 import 'package:hash_balance/features/call/screen/incoming_call_screen.dart';
@@ -39,14 +38,11 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:hash_balance/firebase_options.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
-  await FirebaseMessaging.instance.getToken();
   await SentryFlutter.init(
     (options) {
       options.dsn =
@@ -79,7 +75,6 @@ class MyAppState extends ConsumerState<MyApp> {
   UserModel? userData;
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   late final DeviceTokenService _deviceTokenService;
-  late final UserFriendsService _userFriendsService;
   late final CommunityService _communityService;
 
   ConnectivityResult? lastStatus;
@@ -92,7 +87,6 @@ class MyAppState extends ConsumerState<MyApp> {
           .first;
       ref.read(userProvider.notifier).update((state) => userData);
       _deviceTokenService.updateUserDeviceToken(userData);
-      _userFriendsService.fetchFriendsByUser(userData);
       await _communityService.getUserJoinedCommunities(userData.uid);
     } else {
       ref.read(userProvider.notifier).update((state) => null);
@@ -318,7 +312,6 @@ class MyAppState extends ConsumerState<MyApp> {
     );
 
     _deviceTokenService = DeviceTokenService();
-    _userFriendsService = UserFriendsService();
     _communityService = CommunityService();
   }
 

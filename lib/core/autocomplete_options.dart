@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/user_model.dart';
 
@@ -9,12 +8,13 @@ class MentionAutocompleteOptions extends ConsumerWidget {
   final String query;
   final Function(UserModel) onMentionUserTap;
 
-  final List<UserModel>? friends = Constants.friends;
+  final List<UserModel>? friends;
 
-  MentionAutocompleteOptions({
+  const MentionAutocompleteOptions({
     super.key,
     required this.query,
     required this.onMentionUserTap,
+    required this.friends,
   });
 
   @override

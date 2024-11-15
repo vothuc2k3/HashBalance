@@ -1,12 +1,11 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:hash_balance/core/utils.dart';
-import 'package:hash_balance/core/widgets/loading.dart';
+import 'package:hash_balance/core/widgets/video_player_widget.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/models/post_model.dart';
-import 'package:video_player/video_player.dart';
 import 'package:image_picker/image_picker.dart';
 
 class EditPostWidget extends ConsumerStatefulWidget {
@@ -23,25 +22,27 @@ class EditPostWidget extends ConsumerStatefulWidget {
 
 class _EditPostWidgetState extends ConsumerState<EditPostWidget> {
   final TextEditingController _contentController = TextEditingController();
-
-  String? _imageUrl;
+  List<String> _imageUrls = [];
+  final List<File> _newImageFiles = [];
   String? _videoUrl;
-
-  File? _imageFile;
   File? _videoFile;
 
   @override
   void initState() {
     super.initState();
-    _imageUrl = widget.post.images?.first;
+    _imageUrls = List.from(widget.post.images ?? []);
     _videoUrl = widget.post.video;
     _contentController.text = widget.post.content;
   }
 
   void _savePost() async {
+    // Combine existing URLs with newly selected files for saving
     final result = await ref.read(postControllerProvider.notifier).updatePost(
-          widget.post.copyWith(content: _contentController.text),
-          _imageFile,
+          widget.post.copyWith(
+            content: _contentController.text,
+            images: _imageUrls, // Only existing URLs
+          ),
+          _newImageFiles.isNotEmpty ? _newImageFiles : null,
           _videoFile,
         );
     result.fold(
@@ -62,7 +63,7 @@ class _EditPostWidgetState extends ConsumerState<EditPostWidget> {
     }
     if (pickedFile != null) {
       setState(() {
-        _imageFile = File(pickedFile.path);
+        _newImageFiles.add(File(pickedFile.path));
       });
     }
   }
@@ -79,6 +80,16 @@ class _EditPostWidgetState extends ConsumerState<EditPostWidget> {
         _videoFile = File(pickedFile.path);
       });
     }
+  }
+
+  void _removeImage(int index) {
+    setState(() {
+      if (index < _imageUrls.length) {
+        _imageUrls.removeAt(index);
+      } else {
+        _newImageFiles.removeAt(index - _imageUrls.length);
+      }
+    });
   }
 
   @override
@@ -100,70 +111,50 @@ class _EditPostWidgetState extends ConsumerState<EditPostWidget> {
                 maxLines: 5,
               ),
               const SizedBox(height: 16),
-              _imageUrl != null && _imageUrl!.isNotEmpty
-                  ? Column(
+              if (_imageUrls.isNotEmpty || _newImageFiles.isNotEmpty)
+                Column(
+                  children: [
+                    StaggeredGrid.count(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 4.0,
+                      crossAxisSpacing: 4.0,
                       children: [
-                        Image.network(
-                          _imageUrl!,
-                          height: 200,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            setState(() => _imageUrl = null);
+                        ..._imageUrls.map(
+                          (image) {
+                            final index = _imageUrls.indexOf(image);
+                            return _buildImagePreview(
+                                image: image, index: index);
                           },
-                          child: const Text(
-                            'Remove Image',
-                            style: TextStyle(color: Colors.white),
-                          ),
+                        ),
+                        ..._newImageFiles.map(
+                          (file) {
+                            final index = _newImageFiles.indexOf(file) +
+                                _imageUrls.length;
+                            return _buildImagePreview(file: file, index: index);
+                          },
                         ),
                       ],
-                    )
-                  : _imageFile != null
-                      ? Column(
-                          children: [
-                            Image.file(
-                              _imageFile!,
-                              height: 200,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
-                            ElevatedButton(
-                              onPressed: () {
-                                setState(() => _imageFile = null);
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    Theme.of(context).colorScheme.error,
-                              ),
-                              child: const Text(
-                                'Remove Image',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      : ElevatedButton(
-                          onPressed: _pickImage,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                Theme.of(context).colorScheme.secondary,
-                          ),
-                          child: const Text(
-                            'Pick Image',
-                            style: TextStyle(
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
+                    ),
+                  ],
+                ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _pickImage,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.secondary,
+                ),
+                child: const Text(
+                  'Pick Image',
+                  style: TextStyle(
+                    color: Colors.white,
+                  ),
+                ),
+              ),
               const SizedBox(height: 16),
               _videoUrl != null && _videoUrl!.isNotEmpty
                   ? Column(
                       children: [
-                        VideoWidget(url: _videoUrl!),
+                        VideoPlayerWidget(videoUrl: _videoUrl!),
                         TextButton(
                           onPressed: () {
                             setState(() => _videoUrl = null);
@@ -180,7 +171,7 @@ class _EditPostWidgetState extends ConsumerState<EditPostWidget> {
                   : _videoFile != null
                       ? Column(
                           children: [
-                            VideoWidget(url: _videoFile!.path),
+                            VideoPlayerWidget(videoUrl: _videoFile!.path),
                             ElevatedButton(
                               onPressed: () {
                                 setState(() => _videoFile = null);
@@ -226,46 +217,33 @@ class _EditPostWidgetState extends ConsumerState<EditPostWidget> {
       ],
     );
   }
-}
 
-class VideoWidget extends StatefulWidget {
-  final String url;
-
-  const VideoWidget({
-    required this.url,
-    super.key,
-  });
-
-  @override
-  State<VideoWidget> createState() => _VideoWidgetState();
-}
-
-class _VideoWidgetState extends State<VideoWidget> {
-  late VideoPlayerController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url))
-      ..initialize().then((_) {
-        setState(() {});
-        _controller.play();
-      });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return _controller.value.isInitialized
-        ? AspectRatio(
-            aspectRatio: _controller.value.aspectRatio,
-            child: VideoPlayer(_controller),
-          )
-        : const Center(child: Loading());
+  Widget _buildImagePreview({String? image, File? file, required int index}) {
+    return Stack(
+      alignment: Alignment.topRight,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: AspectRatio(
+            aspectRatio: 1,
+            child: image != null
+                ? Image.network(
+                    image,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                  )
+                : Image.file(
+                    file!,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                  ),
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.close, color: Colors.red),
+          onPressed: () => _removeImage(index),
+        ),
+      ],
+    );
   }
 }

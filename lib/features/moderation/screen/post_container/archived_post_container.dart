@@ -12,6 +12,7 @@ import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
+
 class ArchivedPostContainer extends ConsumerStatefulWidget {
   final UserModel author;
   final Post post;
@@ -36,35 +37,30 @@ class _ArchivedPostContainerState extends ConsumerState<ArchivedPostContainer> {
   TextEditingController shareTextController = TextEditingController();
 
   void _handleUnarchivePost(String postId) async {
-    showDialog(
+    showCustomAlertDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: ref.watch(preferredThemeProvider).second,
-          title: const Text('Unarchive Post'),
-          content: const Text(
-              'Unarchiving will show this post in newsfeed, are you sure?'),
-          actions: [
-            TextButton(
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.greenAccent,
-              ),
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-              ),
-              onPressed: () {
-                widget.unarchivePost(widget.post);
-                Navigator.of(context).pop();
-              },
-              child: const Text('Unarchive'),
-            ),
-          ],
-        );
-      },
+      title: 'Unarchive Post',
+      content: 'Unarchiving will show this post in newsfeed, are you sure?',
+      backgroundColor: ref.watch(preferredThemeProvider).second,
+      actions: [
+        TextButton(
+          style: TextButton.styleFrom(
+            backgroundColor: Colors.greenAccent,
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          style: TextButton.styleFrom(
+            backgroundColor: Colors.redAccent,
+          ),
+          onPressed: () {
+            widget.unarchivePost(widget.post);
+            Navigator.of(context).pop();
+          },
+          child: const Text('Unarchive'),
+        ),
+      ],
     );
   }
 
@@ -73,14 +69,21 @@ class _ArchivedPostContainerState extends ConsumerState<ArchivedPostContainer> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: ref.watch(preferredThemeProvider).second,
           title: const Text('Confirm Delete'),
           content: const Text('Are you sure you want to delete this post?'),
           actions: [
             TextButton(
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.greenAccent,
+              ),
               onPressed: () => Navigator.of(context).pop(false),
               child: const Text('Cancel'),
             ),
             TextButton(
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+              ),
               onPressed: () => Navigator.of(context).pop(true),
               child: const Text('Delete'),
             ),

@@ -395,52 +395,86 @@ class PostRepository {
     }
   }
 
-  Future<Either<Failures, void>> updatePost(
-    Post post,
-    File? image,
-    File? video,
-  ) async {
-    try {
-      final batch = _firestore.batch();
+Future<Either<Failures, void>> updatePost(
+  Post post,
+  List<File>? newImages,
+  File? newVideo,
+) async {
+  try {
+    final batch = _firestore.batch();
 
-      Post updatedPost = post;
+    List<String> updatedImageUrls = [];
+    String? updatedVideoUrl;
 
-      if (image != null) {
-        await _storageRepository.storeFile(
-          path: 'posts/images',
-          id: post.id,
+    if (newImages != null && newImages.isNotEmpty) {
+      for (var oldImageUrl in post.images ?? []) {
+        try {
+          await _storageRepository.deleteFile(path: oldImageUrl);
+        } catch (e) {
+          Logger().e('Failed to delete old image: $e');
+        }
+      }
+      updatedImageUrls = [];
+
+      for (var image in newImages) {
+        final imagePath = 'posts/images/${post.id}_${DateTime.now().millisecondsSinceEpoch}';
+        final result = await _storageRepository.storeFile(
+          path: imagePath,
+          id: imagePath.split('/').last,
           file: image,
         );
-        String imageUrl = await FirebaseStorage.instance
-            .ref('posts/images/${post.id}')
-            .getDownloadURL();
-        updatedPost = updatedPost.copyWith(images: [imageUrl]);
-      }
 
-      if (video != null) {
-        await _storageRepository.storeFile(
-          path: 'posts/videos',
-          id: post.id,
-          file: video,
+        result.fold(
+          (l) => throw Exception('Failed to upload image: ${l.message}'),
+          (imageUrl) => updatedImageUrls.add(imageUrl),
         );
-        String videoUrl = await FirebaseStorage.instance
-            .ref('posts/videos/${post.id}')
-            .getDownloadURL();
-        updatedPost = updatedPost.copyWith(video: videoUrl);
       }
-
-      final postRef = _firestore.collection('posts').doc(post.id);
-      batch.update(postRef, updatedPost.toMap());
-
-      await batch.commit();
-
-      return right(null);
-    } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
-    } catch (e) {
-      return left(Failures(e.toString()));
+    } else {
+      updatedImageUrls = List.from(post.images ?? []);
     }
+
+    if (newVideo != null) {
+      if (post.video != null) {
+        try {
+          await FirebaseStorage.instance.refFromURL(post.video!).delete();
+        } catch (e) {
+          Logger().e('Failed to delete old video: $e');
+        }
+      }
+      final videoPath = 'posts/videos/${post.id}_${DateTime.now().millisecondsSinceEpoch}';
+      final result = await _storageRepository.storeFile(
+        path: videoPath,
+        id: videoPath.split('/').last,
+        file: newVideo,
+      );
+
+      result.fold(
+        (l) => throw Exception('Failed to upload video: ${l.message}'),
+        (videoUrl) => updatedVideoUrl = videoUrl,
+      );
+    } else {
+      updatedVideoUrl = post.video;
+    }
+
+    Post updatedPost = post.copyWith(
+      images: updatedImageUrls,
+      video: updatedVideoUrl,
+    );
+
+    final postRef = _firestore.collection('posts').doc(post.id);
+    batch.update(postRef, updatedPost.toMap());
+
+    await batch.commit();
+
+    return right(null);
+  } on FirebaseException catch (e) {
+    return left(Failures(e.message!));
+  } catch (e) {
+    return left(Failures(e.toString()));
   }
+}
+
+
 
   Stream<Map<String, dynamic>> getPostVoteCountAndStatus(
       Post post, String uid) async* {
@@ -506,5 +540,24 @@ class PostRepository {
       author: author,
       community: community,
     );
+  }
+
+  Stream<List<PostDataModel>> getHashtagPosts({required String hashtag}) async* {
+    final querySnapshot = await _posts.get();
+    final postsWithHashtag = querySnapshot.docs.where((doc) {
+      final postMap = doc.data() as Map<String, dynamic>;
+      final content = postMap['content'] as String;
+      return content.contains(hashtag);
+    }).toList();
+
+    List<PostDataModel> postDataModels = [];
+    for (var doc in postsWithHashtag) {
+      final postId = doc.id;
+      final postData = await getPostDataByPostId(postId: postId);
+      if (postData != null) {
+        postDataModels.add(postData);
+        yield postDataModels;
+      }
+    }
   }
 }

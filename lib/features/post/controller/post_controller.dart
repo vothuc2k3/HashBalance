@@ -20,6 +20,12 @@ import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 import 'package:hash_balance/models/poll_option_model.dart';
 
+final hashtagPostsProvider = StreamProvider.family((ref, String hashtag) {
+  return ref
+      .watch(postControllerProvider.notifier)
+      .getHashtagPosts(hashtag: hashtag);
+});
+
 final getPostVoteCountAndStatusProvider =
     StreamProvider.family((ref, Post post) {
   return ref
@@ -325,10 +331,10 @@ class PostController extends StateNotifier<bool> {
   }
 
   Future<Either<Failures, void>> updatePost(
-      Post post, File? image, File? video) async {
+      Post post, List<File>? images, File? video) async {
     return await _postRepository.updatePost(
       post,
-      image,
+      images,
       video,
     );
   }
@@ -338,8 +344,9 @@ class PostController extends StateNotifier<bool> {
     return _postRepository.getPostVoteCountAndStatus(post, currentUser.uid);
   }
 
-  Future<Either<Failures, PostDataModel?>> getPostDataByPostId(
-      {required String postId}) async {
+  Future<Either<Failures, PostDataModel?>> getPostDataByPostId({
+    required String postId,
+  }) async {
     try {
       return right(await _postRepository.getPostDataByPostId(postId: postId));
     } on FirebaseException catch (e) {
@@ -347,5 +354,9 @@ class PostController extends StateNotifier<bool> {
     } catch (e) {
       return left(Failures(e.toString()));
     }
+  }
+
+  Stream<List<PostDataModel>> getHashtagPosts({required String hashtag}) {
+    return _postRepository.getHashtagPosts(hashtag: hashtag);
   }
 }

@@ -22,6 +22,23 @@ class ActivityLogRepository {
   CollectionReference get _activityLogs =>
       _firestore.collection(FirebaseConstants.activityLogsCollection);
 
+  Future<Either<Failures, void>> clearActivityLogs() async {
+    try {
+      final batch = _firestore.batch();
+      await _activityLogs.get().then((value) {
+        for (var doc in value.docs) {
+          batch.delete(doc.reference);
+        }
+      });
+      await batch.commit();
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
   Future<Either<Failures, void>> addActivityLog(
       ActivityLogModel activityLog) async {
     try {
