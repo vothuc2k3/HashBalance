@@ -6,7 +6,7 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
-import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
+import 'package:hash_balance/features/user_devices/controller/user_device_controller.dart';
 import 'package:hash_balance/features/call/repository/call_repository.dart';
 import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/conbined_models/call_data_model.dart';
@@ -30,6 +30,7 @@ final callControllerProvider = StateNotifierProvider((ref) {
     callRepository: ref.read(callRepositoryProvider),
     pushNotificationController:
         ref.read(pushNotificationControllerProvider.notifier),
+    userDeviceController: ref.read(userDeviceControllerProvider),
     ref: ref,
   );
 });
@@ -37,15 +38,18 @@ final callControllerProvider = StateNotifierProvider((ref) {
 class CallController extends StateNotifier<CallDataModel?> {
   final CallRepository _callRepository;
   final PushNotificationController _pushNotificationController;
+  final UserDeviceController _userDeviceController;
   final Ref _ref;
   final Uuid _uuid = const Uuid();
 
   CallController({
     required CallRepository callRepository,
     required PushNotificationController pushNotificationController,
+    required UserDeviceController userDeviceController,
     required Ref ref,
   })  : _callRepository = callRepository,
         _pushNotificationController = pushNotificationController,
+        _userDeviceController = userDeviceController,
         _ref = ref,
         super(null);
 
@@ -59,19 +63,26 @@ class CallController extends StateNotifier<CallDataModel?> {
 
   Future<void> _notifyIncomingCall(UserModel targetUser, Call call) async {
     final currentUser = _ref.read(userProvider)!;
-    final userController = _ref.read(userControllerProvider.notifier);
-    final targetUserDeviceToken =
-        await userController.getUserDeviceTokens(targetUser.uid);
-    await _pushNotificationController.sendPushNotification(
-      targetUserDeviceToken,
-      '${currentUser.name} is calling....',
-      'Incoming Call',
-      {
-        'type': Constants.incomingCallType.toString(),
-        'callId': call.id.toString(),
-        'callerUid': call.callerUid.toString(),
+    final targetUserDeviceTokensResult =
+        await _userDeviceController.getUserDeviceTokens(targetUser.uid);
+    targetUserDeviceTokensResult.fold(
+      (l) => throw FirebaseException(
+        plugin: 'Firebase Exception',
+        message: l.message,
+      ),
+      (targetUserDeviceTokens) async {
+        await _pushNotificationController.sendPushNotification(
+          targetUserDeviceTokens,
+          '${currentUser.name} is calling....',
+          'Incoming Call',
+          {
+            'type': Constants.incomingCallType.toString(),
+            'callId': call.id.toString(),
+            'callerUid': call.callerUid.toString(),
+          },
+          Constants.incomingCallType,
+        );
       },
-      Constants.incomingCallType,
     );
   }
 

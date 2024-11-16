@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/splash/splash_screen.dart';
+import 'package:hash_balance/core/widgets/community_livestream_container.dart';
 
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
@@ -138,8 +139,8 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                           ),
                                         ),
                                         IconButton(
-                                          onPressed: () =>
-                                              _onCreateLivestream(community),
+                                          onPressed: () => _onCreateLivestream(
+                                              community, currentUser.uid),
                                           icon: const Icon(
                                             Icons.add,
                                             color: Colors.white,
@@ -242,7 +243,25 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                 ),
                               ),
                             ),
-
+                            SliverToBoxAdapter(
+                              child: ref
+                                  .watch(communityLivestreamProvider(
+                                      widget._communityId))
+                                  .when(
+                                    data: (livestream) {
+                                      if (livestream == null) {
+                                        return const SizedBox.shrink();
+                                      } else {
+                                        return CommunityLivestreamContainer(
+                                            livestream: livestream,
+                                            uid: currentUser.uid);
+                                      }
+                                    },
+                                    loading: () => const Loading(),
+                                    error: (error, stackTrace) =>
+                                        ErrorText(error: error.toString()),
+                                  ),
+                            ),
                             //MARK: - REGULAR POSTS
                             SliverToBoxAdapter(
                               child: ref
@@ -432,7 +451,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     );
   }
 
-  void _onCreateLivestream(Community community) async {
+  void _onCreateLivestream(Community community, String uid) async {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -449,7 +468,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
         MaterialPageRoute(
           builder: (context) => LivestreamScreen(
             livestream: r,
-            isHost: true,
+            uid: uid,
           ),
         ),
       );

@@ -22,7 +22,6 @@ import 'package:multi_trigger_autocomplete/multi_trigger_autocomplete.dart';
 import 'package:toastification/toastification.dart';
 
 import 'package:hash_balance/core/constants/constants.dart';
-import 'package:hash_balance/core/services/device_token_service.dart';
 import 'package:hash_balance/core/splash/splash_screen.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
@@ -73,7 +72,6 @@ class MyApp extends ConsumerStatefulWidget {
 class MyAppState extends ConsumerState<MyApp> {
   UserModel? userData;
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-  late final DeviceTokenService _deviceTokenService;
   late final CommunityService _communityService;
 
   ConnectivityResult? lastStatus;
@@ -85,7 +83,6 @@ class MyAppState extends ConsumerState<MyApp> {
           .getUserData(data.uid)
           .first;
       ref.read(userProvider.notifier).update((state) => userData);
-      _deviceTokenService.updateUserDeviceToken(userData);
       await _communityService.getUserJoinedCommunities(userData.uid);
     } else {
       ref.read(userProvider.notifier).update((state) => null);
@@ -309,8 +306,6 @@ class MyAppState extends ConsumerState<MyApp> {
         }
       },
     );
-
-    _deviceTokenService = DeviceTokenService();
     _communityService = CommunityService();
   }
 

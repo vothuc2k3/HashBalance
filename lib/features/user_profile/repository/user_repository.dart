@@ -17,7 +17,6 @@ import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/conbined_models/post_share_data_model.dart';
 import 'package:hash_balance/models/post_share_model.dart';
 import 'package:hash_balance/models/conbined_models/timeline_item_model.dart';
-import 'package:hash_balance/models/user_devices_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -41,9 +40,6 @@ class UserRepository {
   //REFERENCE ALL THE USERS
   CollectionReference get _user =>
       _firestore.collection(FirebaseConstants.usersCollection);
-  //REFERENCE ALL THE USERS
-  CollectionReference get _userDevices =>
-      _firestore.collection(FirebaseConstants.userDevicesCollection);
   //REFERENCE ALL THE FRIENDSHIPS
   CollectionReference get _friendship =>
       _firestore.collection(FirebaseConstants.friendshipCollection);
@@ -149,27 +145,6 @@ class UserRepository {
     return _user.doc(uid).snapshots().map((event) {
       return UserModel.fromMap(event.data() as Map<String, dynamic>);
     });
-  }
-
-  Future<String> getUserDeviceTokens(String uid) async {
-    final userDeviceDocs =
-        await _userDevices.where('uid', isEqualTo: uid).get();
-    String? deviceToken;
-    for (var doc in userDeviceDocs.docs) {
-      final docData = doc.data() as Map<String, dynamic>;
-      deviceToken = docData['deviceToken'];
-    }
-    return deviceToken ?? '';
-  }
-
-  Future<void> removeUserDeviceToken(String uid) async {
-    try {
-      await _userDevices.doc(uid).delete();
-    } on FirebaseException catch (e) {
-      throw e.message!;
-    } catch (e) {
-      throw e.toString();
-    }
   }
 
   Future<UserModel> fetchUserByUidProvider(String uid) async {
@@ -425,17 +400,6 @@ class UserRepository {
     }
   }
 
-  Future<Either<Failures, void>> clearUserDeviceToken(String uid) async {
-    try {
-      await _userDevices.doc(uid).delete();
-      return right(null);
-    } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
-    } catch (e) {
-      return left(Failures(e.toString()));
-    }
-  }
-
   Future<Either<Failures, void>> blockUser(BlockModel blockModel) async {
     try {
       await _blocks.doc(blockModel.id).set(blockModel.toMap());
@@ -459,13 +423,5 @@ class UserRepository {
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     }
-  }
-
-  Future<void> updateUserDeviceToken(
-    UserDevices userDeviceModel,
-  ) async {
-    await _userDevices.doc(userDeviceModel.uid).set(
-          userDeviceModel.toMap(),
-        );
   }
 }

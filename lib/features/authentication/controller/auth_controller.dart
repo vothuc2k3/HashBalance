@@ -8,8 +8,9 @@ import 'package:fpdart/fpdart.dart';
 
 import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/failures.dart';
+import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
+import 'package:hash_balance/features/user_devices/controller/user_device_controller.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 final fetchUserDataProvider = FutureProviderFamily((ref, String uid) {
@@ -19,7 +20,6 @@ final fetchUserDataProvider = FutureProviderFamily((ref, String uid) {
 final authControllerProvider = StateNotifierProvider<AuthController, bool>(
   (ref) => AuthController(
     authRepository: ref.read(authRepositoryProvider),
-    userController: ref.read(userControllerProvider.notifier),
     ref: ref,
   ),
 );
@@ -36,15 +36,12 @@ final getUserDataProvider = StreamProvider.family((ref, String uid) {
 
 class AuthController extends StateNotifier<bool> {
   final AuthRepository _authRepository;
-  final UserController _userController;
   final Ref _ref;
 
   AuthController({
     required AuthRepository authRepository,
-    required UserController userController,
     required Ref ref,
   })  : _authRepository = authRepository,
-        _userController = userController,
         _ref = ref,
         super(false);
 
@@ -142,7 +139,11 @@ class AuthController extends StateNotifier<bool> {
     state = true;
     try {
       await _authRepository.signOut();
-      await _userController.removeUserDeviceToken(uid);
+      final token = await _ref.read(firebaseMessagingProvider).getToken();
+      await _ref.read(userDeviceControllerProvider).removeUserDeviceToken(
+            uid: uid,
+            deviceToken: token ?? '',
+          );
     } catch (e) {
       throw Exception(e.toString());
     } finally {

@@ -7,7 +7,7 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/message/repository/message_repository.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
-import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
+import 'package:hash_balance/features/user_devices/controller/user_device_controller.dart';
 import 'package:hash_balance/models/archived_conversation_model.dart';
 import 'package:hash_balance/models/conbined_models/message_data_model.dart';
 import 'package:hash_balance/models/conversation_model.dart';
@@ -54,30 +54,27 @@ final messageControllerProvider =
     StateNotifierProvider<MessageController, bool>(
   (ref) => MessageController(
       messageRepository: ref.read(messageRepositoryProvider),
-      pushNotificationController: ref.watch(
-        pushNotificationControllerProvider.notifier,
-      ),
-      userController: ref.watch(
-        userControllerProvider.notifier,
-      ),
+      pushNotificationController:
+          ref.read(pushNotificationControllerProvider.notifier),
+      userDeviceController: ref.read(userDeviceControllerProvider),
       ref: ref),
 );
 
 class MessageController extends StateNotifier<bool> {
   final MessageRepository _messageRepository;
   final PushNotificationController _pushNotificationController;
-  final UserController _userController;
+  final UserDeviceController _userDeviceController;
   final Ref _ref;
   final Uuid _uuid = const Uuid();
 
   MessageController({
     required MessageRepository messageRepository,
     required PushNotificationController pushNotificationController,
-    required UserController userController,
+    required UserDeviceController userDeviceController,
     required Ref ref,
   })  : _messageRepository = messageRepository,
         _pushNotificationController = pushNotificationController,
-        _userController = userController,
+        _userDeviceController = userDeviceController,
         _ref = ref,
         super(false);
 
@@ -112,7 +109,7 @@ class MessageController extends StateNotifier<bool> {
       final currentUser = _ref.read(userProvider)!;
 
       final message = Message(
-        id: const Uuid().v4(),
+        id: _uuid.v4(),
         text: text,
         uid: currentUser.uid,
         createdAt: Timestamp.now(),
@@ -137,21 +134,27 @@ class MessageController extends StateNotifier<bool> {
           isRead: false,
         );
 
-        final targetUserDeviceIds =
-            await _userController.getUserDeviceTokens(targetUid);
-
-        await _pushNotificationController.sendPushNotification(
-          targetUserDeviceIds,
-          notif.message,
-          notif.title,
-          {
-            'type': Constants.incomingMessageType,
-            'uid': currentUser.uid,
+        final deviceTokensResult =
+            await _userDeviceController.getUserDeviceTokens(targetUid);
+        deviceTokensResult.fold(
+          (l) => throw FirebaseException(
+            plugin: 'Firebase Exception',
+            message: l.message,
+          ),
+          (tokens) async {
+            await _pushNotificationController.sendPushNotification(
+              tokens,
+              notif.message,
+              notif.title,
+              {
+                'type': Constants.incomingMessageType,
+                'uid': currentUser.uid,
+              },
+              Constants.incomingMessageType,
+            );
           },
-          Constants.incomingMessageType,
         );
       }
-
       return result;
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));

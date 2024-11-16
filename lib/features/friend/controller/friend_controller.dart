@@ -8,7 +8,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/friend/repository/friend_repository.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
-import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
+import 'package:hash_balance/features/user_devices/controller/user_device_controller.dart';
 import 'package:hash_balance/models/conbined_models/block_data_model.dart';
 import 'package:hash_balance/models/conbined_models/friend_requester_data_model.dart';
 import 'package:hash_balance/models/follower_model.dart';
@@ -71,7 +71,7 @@ final getFriendRequestStatusProvider =
 
 final friendControllerProvider =
     StateNotifierProvider<FriendController, bool>((ref) => FriendController(
-          userController: ref.read(userControllerProvider.notifier),
+          userDeviceController: ref.read(userDeviceControllerProvider),
           notificationController:
               ref.read(notificationControllerProvider.notifier),
           friendRepository: ref.read(friendRepositoryProvider),
@@ -84,19 +84,19 @@ class FriendController extends StateNotifier<bool> {
   final NotificationController _notificationController;
   final FriendRepository _friendRepository;
   final PushNotificationController _pushNotificationController;
-  final UserController _userController;
+  final UserDeviceController _userDeviceController;
   final Ref _ref;
   final Uuid _uuid = const Uuid();
 
   FriendController({
-    required UserController userController,
+    required UserDeviceController userDeviceController,
     required PushNotificationController pushNotificationController,
     required NotificationController notificationController,
     required FriendRepository friendRepository,
     required Ref ref,
   })  : _notificationController = notificationController,
         _friendRepository = friendRepository,
-        _userController = userController,
+        _userDeviceController = userDeviceController,
         _pushNotificationController = pushNotificationController,
         _ref = ref,
         super(false);
@@ -104,8 +104,7 @@ class FriendController extends StateNotifier<bool> {
   //SEND FRIEND REQUEST
   Future<Either<Failures, void>> sendFriendRequest(UserModel targetUser) async {
     try {
-      final sender = _ref.watch(userProvider)!;
-
+      final sender = _ref.read(userProvider)!;
       final request = FriendRequest(
         id: getUids(sender.uid, targetUser.uid),
         requestUid: sender.uid,
@@ -114,7 +113,6 @@ class FriendController extends StateNotifier<bool> {
         status: Constants.friendRequestStatusPending,
       );
       await _friendRepository.sendFriendRequest(request);
-
       final notif = NotificationModel(
         id: _uuid.v1(),
         title: Constants.friendRequestTitle,
@@ -127,18 +125,23 @@ class FriendController extends StateNotifier<bool> {
       );
 
       //SEND PUSH NOTIFICATION TO THE TARGET
-      final targetUserDeviceIds =
-          await _userController.getUserDeviceTokens(targetUser.uid);
-      await _pushNotificationController.sendPushNotification(
-        targetUserDeviceIds,
-        notif.message,
-        notif.title,
-        {
+      final result =
+          await _userDeviceController.getUserDeviceTokens(targetUser.uid);
+      result.fold((l) => throw FirebaseException(
+            plugin: 'Firebase Exception',
+            message: l.message,
+          ), (tokens) async {
+        await _pushNotificationController.sendPushNotification(
+          tokens,
+          notif.message,
+          notif.title,
+          {
           'type': Constants.friendRequestType,
           'uid': sender.uid,
         },
-        Constants.friendRequestType,
-      );
+          Constants.friendRequestType,
+        );
+      });
 
       //SEND A NOTIFICATION TO THE TARGET USER
       await _notificationController.addNotification(targetUser.uid, notif);
@@ -178,13 +181,15 @@ class FriendController extends StateNotifier<bool> {
       UserModel targetUser) async {
     try {
       final currentUser = _ref.watch(userProvider);
+      final requestId = getUids(currentUser!.uid, targetUser.uid);
       await _friendRepository.acceptFriendRequest(
         Friendship(
-          uid1: currentUser!.uid,
+          uid1: currentUser.uid,
           uid2: targetUser.uid,
           createdAt: Timestamp.now(),
         ),
       );
+      await _friendRepository.cancelFriendRequest(requestId);
       final notif = NotificationModel(
         id: _uuid.v1(),
         title: Constants.acceptRequestTitle,
@@ -196,18 +201,23 @@ class FriendController extends StateNotifier<bool> {
         isRead: false,
       );
       //SEND ACCEPT REQUEST PUSH NOTIFICATION
-      final targetUserDeviceId =
-          await _userController.getUserDeviceTokens(targetUser.uid);
-      await _pushNotificationController.sendPushNotification(
-        targetUserDeviceId,
-        notif.message,
-        notif.title,
-        {
+      final result =
+          await _userDeviceController.getUserDeviceTokens(targetUser.uid);
+      result.fold((l) => throw FirebaseException(
+            plugin: 'Firebase Exception',
+            message: l.message,
+          ), (tokens) async {
+        await _pushNotificationController.sendPushNotification(
+          tokens,
+          notif.message,
+          notif.title,
+          {
           'type': Constants.acceptRequestType,
           'uid': currentUser.uid,
         },
-        Constants.acceptRequestType,
-      );
+          Constants.acceptRequestType,
+        );
+      });
       //SEND ACCEPT FRIEND REQUEST NOTIFICATION
       await _ref
           .watch(notificationControllerProvider.notifier)
@@ -290,18 +300,23 @@ class FriendController extends StateNotifier<bool> {
       await _notificationController.addNotification(targetUid, notif);
 
       //SEND NEW FOLLOWER PUSH NOTIFICATION
-      final targetUserDeviceIds =
-          await _userController.getUserDeviceTokens(targetUid);
-      await _pushNotificationController.sendPushNotification(
-        targetUserDeviceIds,
-        notif.message,
-        notif.title,
-        {
+      final result =
+          await _userDeviceController.getUserDeviceTokens(targetUid);
+      result.fold((l) => throw FirebaseException(
+            plugin: 'Firebase Exception',
+            message: l.message,
+          ), (tokens) async {
+        await _pushNotificationController.sendPushNotification(
+          tokens,
+          notif.message,
+          notif.title,
+          {
           'type': Constants.newFollowerType,
           'uid': currentUser.uid,
         },
-        Constants.acceptRequestType,
-      );
+          Constants.newFollowerType,
+        );
+      });
 
       return right(null);
     } on FirebaseException catch (e) {

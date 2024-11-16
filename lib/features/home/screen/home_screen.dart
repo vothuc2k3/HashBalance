@@ -14,7 +14,7 @@ import 'package:hash_balance/features/home/screen/drawers/community_list_drawer.
 import 'package:hash_balance/features/home/screen/drawers/user_profile_drawer.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
-import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
+import 'package:hash_balance/features/user_devices/controller/user_device_controller.dart';
 import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 
@@ -35,8 +35,8 @@ class HomeScreenState extends ConsumerState<HomeScreen>
     final token = await ref.read(firebaseMessagingProvider).getToken();
     final uid = ref.read(userProvider)!.uid;
     ref
-        .read(userControllerProvider.notifier)
-        .updateUserDeviceToken(token: token ?? '', uid: uid);
+        .read(userDeviceControllerProvider)
+        .addUserDevice(uid: uid, deviceToken: token ?? '');
   }
 
   Future<void> _requestPushPermissions() async {

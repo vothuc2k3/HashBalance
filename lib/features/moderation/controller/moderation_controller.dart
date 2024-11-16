@@ -14,7 +14,7 @@ import 'package:hash_balance/features/invitation/controller/invitation_controlle
 import 'package:hash_balance/features/moderation/repository/moderation_repository.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
-import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
+import 'package:hash_balance/features/user_devices/controller/user_device_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/current_user_role_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
@@ -61,10 +61,10 @@ final moderationControllerProvider =
       storageRepository: ref.read(storageRepositoryProvider),
       invitationController: ref.read(invitationControllerProvider),
       notificationController: ref.read(notificationControllerProvider.notifier),
+      userDeviceController: ref.read(userDeviceControllerProvider),
       pushNotificationController:
           ref.read(pushNotificationControllerProvider.notifier),
       commentController: ref.read(commentControllerProvider.notifier),
-      userController: ref.read(userControllerProvider.notifier),
       ref: ref,
     );
   },
@@ -77,7 +77,7 @@ class ModerationController extends StateNotifier<bool> {
   final NotificationController _notificationController;
   final PushNotificationController _pushNotificationController;
   final CommentController _commentController;
-  final UserController _userController;
+  final UserDeviceController _userDeviceController;
   final Ref _ref;
   final Uuid _uuid = const Uuid();
 
@@ -88,7 +88,7 @@ class ModerationController extends StateNotifier<bool> {
     required NotificationController notificationController,
     required PushNotificationController pushNotificationController,
     required CommentController commentController,
-    required UserController userController,
+    required UserDeviceController userDeviceController,
     required Ref ref,
   })  : _moderationRepository = moderationRepository,
         _storageRepository = storageRepository,
@@ -96,14 +96,14 @@ class ModerationController extends StateNotifier<bool> {
         _notificationController = notificationController,
         _pushNotificationController = pushNotificationController,
         _commentController = commentController,
-        _userController = userController,
+        _userDeviceController = userDeviceController,
         _ref = ref,
         super(false);
 
   Stream<String> getMembershipStatus(String communityId) {
     final currentUser = _ref.watch(userProvider);
-    return _moderationRepository
-        .getMembershipStatus(getMembershipId(uid: currentUser!.uid, communityId: communityId));
+    return _moderationRepository.getMembershipStatus(
+        getMembershipId(uid: currentUser!.uid, communityId: communityId));
   }
 
   //EDIT COMMUNITY VISUAL
@@ -242,18 +242,25 @@ class ModerationController extends StateNotifier<bool> {
       await _notificationController.addNotification(uid, notif);
 
       //SEND PUSH NOTIFICATION TO THE TARGET
-      final targetUserDeviceIds =
-          await _userController.getUserDeviceTokens(uid);
-      await _pushNotificationController.sendPushNotification(
-        targetUserDeviceIds,
-        notif.message,
-        notif.title,
-        {
-          'type': Constants.moderatorInvitationType,
-          'uid': currentUser.uid,
-          'communityId': community.id,
+      final result = await _userDeviceController.getUserDeviceTokens(uid);
+      result.fold(
+        (l) => throw FirebaseException(
+          plugin: 'Firebase Exception',
+          message: l.message,
+        ),
+        (tokens) async {
+          await _pushNotificationController.sendPushNotification(
+            tokens,
+            notif.message,
+            notif.title,
+            {
+              'type': Constants.moderatorInvitationType,
+              'uid': currentUser.uid,
+              'communityId': community.id,
+            },
+            Constants.moderatorInvitationType,
+          );
         },
-        Constants.moderatorInvitationType,
       );
       return right(null);
     } on FirebaseException catch (e) {
@@ -410,7 +417,8 @@ class ModerationController extends StateNotifier<bool> {
         suspendUserModel: suspendUserModel);
   }
 
-  Stream<List<SuspendedUserCombinedModel>> fetchSuspendedUsers(String communityId) {
+  Stream<List<SuspendedUserCombinedModel>> fetchSuspendedUsers(
+      String communityId) {
     return _moderationRepository.fetchSuspendedUsers(communityId);
   }
 }

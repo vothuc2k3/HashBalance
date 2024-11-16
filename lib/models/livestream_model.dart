@@ -8,6 +8,7 @@ class Livestream {
   final String content;
   final String uid;
   final String communityId;
+  final String status;
   final String? agoraToken;
   final List<String>? viewers;
   final Timestamp createdAt;
@@ -16,6 +17,7 @@ class Livestream {
     required this.content,
     required this.uid,
     required this.communityId,
+    required this.status,
     this.agoraToken,
     this.viewers,
     required this.createdAt,
@@ -26,6 +28,7 @@ class Livestream {
     String? content,
     String? uid,
     String? communityId,
+    String? status,
     String? agoraToken,
     List<String>? viewers,
     Timestamp? createdAt,
@@ -35,6 +38,7 @@ class Livestream {
       content: content ?? this.content,
       uid: uid ?? this.uid,
       communityId: communityId ?? this.communityId,
+      status: status ?? this.status,
       agoraToken: agoraToken ?? this.agoraToken,
       viewers: viewers ?? this.viewers,
       createdAt: createdAt ?? this.createdAt,
@@ -47,6 +51,7 @@ class Livestream {
       'content': content,
       'uid': uid,
       'communityId': communityId,
+      'status': status,
       'agoraToken': agoraToken,
       'viewers': viewers,
       'createdAt': createdAt,
@@ -59,6 +64,7 @@ class Livestream {
       content: map['content'] as String,
       uid: map['uid'] as String,
       communityId: map['communityId'] as String,
+      status: map['status'] as String,
       agoraToken:
           map['agoraToken'] != null ? map['agoraToken'] as String : null,
       viewers: map['viewers'] != null
@@ -75,7 +81,7 @@ class Livestream {
 
   @override
   String toString() {
-    return 'Livestream(id: $id, content: $content, uid: $uid, communityId: $communityId, agoraToken: $agoraToken, viewers: $viewers, createdAt: $createdAt)';
+    return 'Livestream(id: $id, content: $content, uid: $uid, communityId: $communityId, status: $status, agoraToken: $agoraToken, viewers: $viewers, createdAt: $createdAt)';
   }
 
   @override
@@ -86,6 +92,7 @@ class Livestream {
         other.content == content &&
         other.uid == uid &&
         other.communityId == communityId &&
+        other.status == status &&
         other.agoraToken == agoraToken &&
         listEquals(other.viewers, viewers) &&
         other.createdAt == createdAt;
@@ -97,6 +104,7 @@ class Livestream {
         content.hashCode ^
         uid.hashCode ^
         communityId.hashCode ^
+        status.hashCode ^
         agoraToken.hashCode ^
         viewers.hashCode ^
         createdAt.hashCode;

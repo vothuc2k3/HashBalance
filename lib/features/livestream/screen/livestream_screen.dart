@@ -1,9 +1,11 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:agora_uikit/agora_uikit.dart';
 import 'package:hash_balance/core/constants/constants.dart';
+import 'package:hash_balance/features/livestream/controller/livestream_controller.dart';
 import 'package:hash_balance/features/livestream/screen/widget/live_comment_box.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/livestream_model.dart';
@@ -11,97 +13,97 @@ import 'package:logger/logger.dart';
 
 class LivestreamScreen extends ConsumerStatefulWidget {
   final Livestream livestream;
+  final String uid;
   final bool isHost;
 
-  const LivestreamScreen({
-    super.key,
+  LivestreamScreen({
     required this.livestream,
-    required this.isHost,
-  });
+    required this.uid,
+    super.key,
+  }) : isHost = livestream.uid == uid;
 
   @override
   LivestreamScreenState createState() => LivestreamScreenState();
 }
 
 class LivestreamScreenState extends ConsumerState<LivestreamScreen> {
-  late RtcEngine _engine;
-  bool _isMicOn = true;
-  bool _isCameraOn = true;
+  late AgoraClient agoraClient;
+  bool isScreenPopped = false;
 
   @override
   void initState() {
+    initializeAgoraClient();
     super.initState();
-    _initializeAgora();
   }
 
-  Future<void> _initializeAgora() async {
-    _engine = createAgoraRtcEngine();
-    await _engine.initialize(
-      RtcEngineContext(
+  Future<void> initializeAgoraClient() async {
+    if (widget.isHost) {
+      await [Permission.camera, Permission.microphone].request();
+    }
+    agoraClient = AgoraClient(
+      agoraConnectionData: AgoraConnectionData(
         appId: Constants.agoraAppId,
+        channelName: widget.livestream.id,
+        tempToken: widget.livestream.agoraToken!,
       ),
     );
-
-    _engine.registerEventHandler(
-      RtcEngineEventHandler(
-        onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
-          Logger().d('Joined channel: ${connection.channelId}');
-        },
-        onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
-          Logger().d('User joined: $remoteUid');
-        },
-        onUserOffline: (RtcConnection connection, int remoteUid,
-            UserOfflineReasonType reason) {
-          Logger().d('User offline: $remoteUid');
-        },
-      ),
+    await agoraClient.initialize();
+    ChannelMediaOptions options = ChannelMediaOptions(
+      channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
+      clientRoleType: widget.isHost
+          ? ClientRoleType.clientRoleBroadcaster
+          : ClientRoleType.clientRoleAudience,
+      publishCameraTrack: widget.isHost,
+      publishMicrophoneTrack: widget.isHost,
+      autoSubscribeAudio: true,
+      autoSubscribeVideo: true,
     );
-
-    await _engine.enableVideo();
-    await _engine.startPreview();
-
-    await _engine.setVideoEncoderConfiguration(
-      const VideoEncoderConfiguration(
-        dimensions: VideoDimensions(width: 1280, height: 720),
-        frameRate: 60,
-      ),
-    );
-
-    await _engine.joinChannel(
+    await agoraClient.engine.joinChannel(
       token: widget.livestream.agoraToken!,
       channelId: widget.livestream.id,
       uid: 0,
-      options: ChannelMediaOptions(
-        clientRoleType: widget.isHost
-            ? ClientRoleType.clientRoleBroadcaster
-            : ClientRoleType.clientRoleAudience,
-        channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
-      ),
+      options: options,
     );
+    Logger()
+        .d('Joined channel with role: ${widget.isHost ? 'Host' : 'Audience'}');
   }
 
-  void _toggleMic() {
-    setState(() {
-      _isMicOn = !_isMicOn;
-      _engine.muteLocalAudioStream(!_isMicOn);
-    });
-  }
-
-  void _toggleCamera() {
-    setState(() {
-      _isCameraOn = !_isCameraOn;
-      _engine.muteLocalVideoStream(!_isCameraOn);
-    });
-  }
-
-  Future<void> _onEndLivestream() async {
-    await _engine.leaveChannel();
-    await _engine.release();
+  Future<void> onEndLivestream() async {
+    if (widget.isHost) {
+      await ref
+          .read(livestreamControllerProvider)
+          .endLivestream(widget.livestream.id);
+    }
     Navigator.pop(context);
   }
 
   @override
+  void dispose() {
+    agoraClient.sessionController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<Livestream?>>(
+      listenToLivestreamProvider(widget.livestream.id),
+      (previous, next) {
+        next.when(
+          data: (livestream) {
+            if (livestream == null ||
+                livestream.status != Constants.callStatusOngoing) {
+              if (!isScreenPopped) {
+                isScreenPopped = true;
+                Navigator.pop(context);
+              }
+            }
+          },
+          error: (_, __) {},
+          loading: () {},
+        );
+      },
+    );
+
     return Scaffold(
       backgroundColor: ref.watch(preferredThemeProvider).first,
       extendBodyBehindAppBar: true,
@@ -109,54 +111,30 @@ class LivestreamScreenState extends ConsumerState<LivestreamScreen> {
         backgroundColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.close),
-          onPressed: _onEndLivestream,
+          onPressed: () async {
+            await agoraClient.engine.leaveChannel();
+            await onEndLivestream();
+          },
         ),
       ),
       body: Stack(
         children: [
-          AgoraVideoView(
-            controller: VideoViewController(
-              rtcEngine: _engine,
-              canvas: const VideoCanvas(uid: 0),
-            ),
+          AgoraVideoViewer(
+            client: agoraClient,
+            showNumberOfUsers: true,
+            renderModeType: RenderModeType.renderModeAdaptive,
           ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    icon: Icon(
-                      _isMicOn ? Icons.mic : Icons.mic_off,
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                    onPressed: _toggleMic,
-                  ),
-                  const SizedBox(width: 20),
-                  IconButton(
-                    icon: Icon(
-                      _isCameraOn ? Icons.videocam : Icons.videocam_off,
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                    onPressed: _toggleCamera,
-                  ),
-                  const SizedBox(width: 20),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.call_end,
-                      color: Colors.red,
-                      size: 30,
-                    ),
-                    onPressed: _onEndLivestream,
-                  ),
-                ],
+          if (widget.isHost)
+            AgoraVideoButtons(
+              client: agoraClient,
+              disconnectButtonChild: IconButton(
+                onPressed: () async {
+                  await agoraClient.engine.leaveChannel();
+                  await onEndLivestream();
+                },
+                icon: const Icon(Icons.call_end),
               ),
             ),
-          ),
           Align(
             alignment: Alignment.bottomRight,
             child: Padding(
@@ -164,7 +142,8 @@ class LivestreamScreenState extends ConsumerState<LivestreamScreen> {
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  color: ref.watch(preferredThemeProvider).second,
+                  color:
+                      ref.watch(preferredThemeProvider).second.withOpacity(0.1),
                 ),
                 width: MediaQuery.of(context).size.width * 0.3,
                 height: MediaQuery.of(context).size.height * 0.6,

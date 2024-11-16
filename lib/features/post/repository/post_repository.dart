@@ -108,10 +108,6 @@ class PostRepository {
       }
 
       await _posts.doc(post.id).set(updatedPost.toMap());
-      await _users.doc(post.uid).update({
-        'activityPoint': FieldValue.increment(1),
-      });
-
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));

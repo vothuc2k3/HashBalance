@@ -8,6 +8,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/comment/repository/comment_repository.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
+import 'package:hash_balance/features/user_devices/controller/user_device_controller.dart';
 import 'package:hash_balance/models/comment_model.dart';
 import 'package:hash_balance/models/conbined_models/comment_data_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
@@ -40,6 +41,7 @@ final commentControllerProvider =
     pushNotificationController:
         ref.read(pushNotificationControllerProvider.notifier),
     notificationController: ref.read(notificationControllerProvider.notifier),
+    userDeviceController: ref.read(userDeviceControllerProvider),
     ref: ref,
   ),
 );
@@ -48,6 +50,7 @@ class CommentController extends StateNotifier<bool> {
   final CommentRepository _commentRepository;
   final PushNotificationController _pushNotificationController;
   final NotificationController _notificationController;
+  final UserDeviceController _userDeviceController;
   final Ref _ref;
   final Uuid _uuid = const Uuid();
 
@@ -55,10 +58,12 @@ class CommentController extends StateNotifier<bool> {
     required CommentRepository commentRepository,
     required PushNotificationController pushNotificationController,
     required NotificationController notificationController,
+    required UserDeviceController userDeviceController,
     required Ref ref,
   })  : _commentRepository = commentRepository,
         _pushNotificationController = pushNotificationController,
         _notificationController = notificationController,
+          _userDeviceController = userDeviceController,
         _ref = ref,
         super(false);
 
@@ -101,20 +106,28 @@ class CommentController extends StateNotifier<bool> {
             );
             for (var uid in comment.mentionedUser!.keys) {
               await _notificationController.addNotification(uid, notification);
+              final deviceTokensResult = await _userDeviceController.getUserDeviceTokens(uid);
+              deviceTokensResult.fold(
+                (l) => throw FirebaseException(
+                  plugin: 'Firebase Exception',
+                  message: l.message,
+                ),
+                (tokens) async {
+                  await _pushNotificationController.sendPushNotification(
+                    tokens,
+                    Constants.getCommentMentionContent(user.name),
+                    Constants.commentMentionTitle,
+                    {
+                      'type': Constants.commentMentionType,
+                      'commentId': comment.id,
+                      'postId': post.id,
+                    },
+                    Constants.commentMentionType,
+                  );
+                },
+              );
             }
-            await _pushNotificationController.sendMultipleFCMNotifications(
-              comment.mentionedUser!.keys.toList(),
-              Constants.getCommentMentionContent(user.name),
-              Constants.commentMentionTitle,
-              {
-                'type': Constants.commentMentionType,
-                'commentId': comment.id,
-                'postId': post.id,
-              },
-              Constants.commentMentionType,
-            );
           }
-
           return right(null);
         },
       );

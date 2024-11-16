@@ -11,7 +11,7 @@ import 'package:hash_balance/models/livestream_comment_model.dart';
 import 'package:hash_balance/models/livestream_model.dart';
 import 'package:http/http.dart' as http;
 
-final livestreamRepositoryProvider = Provider<LivestreamRepository>((ref) {
+final livestreamRepositoryProvider = Provider((ref) {
   final firestore = ref.watch(firebaseFirestoreProvider);
   return LivestreamRepository(firestore: firestore);
 });
@@ -76,5 +76,35 @@ class LivestreamRepository {
     } catch (e) {
       return left(Failures(e.toString()));
     }
+  }
+
+  Stream<Livestream?> getCommunityLivestream(String communityId) {
+    return livestreams
+        .where('communityId', isEqualTo: communityId)
+        .where('status', isEqualTo: 'on_going')
+        .snapshots()
+        .map(
+      (event) {
+        if (event.docs.isNotEmpty) {
+          return Livestream.fromMap(
+              event.docs.first.data() as Map<String, dynamic>);
+        } else {
+          return null;
+        }
+      },
+    );
+  }
+
+  Future<Either<Failures, void>> endLivestream(String livestreamId) async {
+    try {
+      await livestreams.doc(livestreamId).update({'status': 'ended'});
+      return right(null);
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  Stream<Livestream> listenToLivestream(String livestreamId) {
+    return livestreams.doc(livestreamId).snapshots().map((event) => Livestream.fromMap(event.data() as Map<String, dynamic>));
   }
 }

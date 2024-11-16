@@ -8,6 +8,18 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/features/livestream/repository/livestream_repository.dart';
 import 'package:hash_balance/models/livestream_comment_model.dart';
 
+final listenToLivestreamProvider =
+    StreamProvider.family<Livestream, String>((ref, livestreamId) {
+  final livestreamController = ref.watch(livestreamControllerProvider);
+  return livestreamController.listenToLivestream(livestreamId);
+});
+
+final communityLivestreamProvider =
+    StreamProvider.family<Livestream?, String>((ref, communityId) {
+  final livestreamController = ref.watch(livestreamControllerProvider);
+  return livestreamController.getCommunityLivestream(communityId);
+});
+
 final getLivestreamCommentsProvider =
     StreamProvider.family<List<LivestreamComment>, String>((ref, streamId) {
   final livestreamController = ref.watch(livestreamControllerProvider);
@@ -59,6 +71,7 @@ class LivestreamController {
           communityId: communityId,
           content: content,
           uid: uid,
+          status: 'on_going',
           agoraToken: token,
           createdAt: Timestamp.now(),
         );
@@ -69,5 +82,17 @@ class LivestreamController {
         );
       },
     );
+  }
+
+  Stream<Livestream?> getCommunityLivestream(String communityId) {
+    return _livestreamRepository.getCommunityLivestream(communityId);
+  }
+
+  Future<Either<Failures, void>> endLivestream(String livestreamId) async {
+    return _livestreamRepository.endLivestream(livestreamId);
+  }
+
+  Stream<Livestream> listenToLivestream(String livestreamId) {
+    return _livestreamRepository.listenToLivestream(livestreamId);
   }
 }

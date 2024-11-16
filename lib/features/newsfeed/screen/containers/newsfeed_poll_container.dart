@@ -13,6 +13,7 @@ import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/poll_option_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:tuple/tuple.dart';
 
 class NewsfeedPollContainer extends ConsumerStatefulWidget {
   final UserModel author;
@@ -87,90 +88,132 @@ class _NewsfeedPollContainerState extends ConsumerState<NewsfeedPollContainer> {
     return asyncValue.when(
       data: (options) {
         previousOptions = options;
+
         return Column(
           children: options.map((option) {
             final isSelected = votedOptionId == option.id;
-            return InkWell(
-              onTap: () => _handleOptionTap(optionId: option.id),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? Colors.green
-                      : ref.watch(preferredThemeProvider).third,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                margin: const EdgeInsets.symmetric(vertical: 5),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        option.option,
-                        style: const TextStyle(color: Colors.white),
-                      ),
+            final optionVoteCountState = ref.watch(
+              getPollOptionVotesCountAndUserVoteStatusProvider(
+                Tuple2(pollId, option.id),
+              ),
+            );
+
+            return optionVoteCountState.when(
+              data: (voteData) {
+                final voteCount = voteData.item2;
+                return InkWell(
+                  onTap: () => _handleOptionTap(optionId: option.id),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? Colors.green
+                          : ref.watch(preferredThemeProvider).third,
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    if (isSelected)
-                      const Icon(
-                        Icons.check,
-                        color: Colors.white,
-                      ),
-                  ],
-                ),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                    margin: const EdgeInsets.symmetric(vertical: 5),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            option.option,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        Text(
+                          '$voteCount votes',
+                          style: const TextStyle(
+                              color: Colors.white70, fontSize: 12),
+                        ),
+                        if (isSelected)
+                          const Padding(
+                            padding: EdgeInsets.only(left: 8.0),
+                            child: Icon(
+                              Icons.check,
+                              color: Colors.white,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+              loading: () => _buildLoadingOption(option, isSelected),
+              error: (error, stackTrace) => Text(
+                'Error: $error',
+                style: const TextStyle(color: Colors.red),
               ),
             );
           }).toList(),
         );
       },
-      error: (error, stackTrace) {
-        return Column(
+      error: (error, stackTrace) =>
+          Text('Error: $error', style: const TextStyle(color: Colors.red)),
+      loading: () => previousOptions != null
+          ? _buildLoadingOptionsUI(previousOptions!, votedOptionId)
+          : const Loading(),
+    );
+  }
+
+  Widget _buildLoadingOptionsUI(List<PollOption> options, String? votedOptionId) {
+  return Column(
+    children: options.map((option) {
+      final isSelected = votedOptionId == option.id;
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.green : ref.watch(preferredThemeProvider).third,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        margin: const EdgeInsets.symmetric(vertical: 5),
+        child: Row(
           children: [
-            Text('Error: $error', style: const TextStyle(color: Colors.red))
+            Expanded(
+              child: Text(
+                option.option,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+            const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white70,
+              ),
+            ),
           ],
-        );
-      },
-      loading: () {
-        if (previousOptions != null) {
-          return Column(
-            children: previousOptions!.map((option) {
-              final isSelected = votedOptionId == option.id;
-              return InkWell(
-                onTap: () => _handleOptionTap(optionId: option.id),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? Colors.green
-                        : ref.watch(preferredThemeProvider).third,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                  margin: const EdgeInsets.symmetric(vertical: 5),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          option.option,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ),
-                      if (isSelected)
-                        const Icon(
-                          Icons.check,
-                          color: Colors.white,
-                        ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          );
-        } else {
-          return const Loading();
-        }
-      },
+        ),
+      );
+    }).toList(),
+  );
+}
+
+
+  Widget _buildLoadingOption(PollOption option, bool isSelected) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      decoration: BoxDecoration(
+        color:
+            isSelected ? Colors.green : ref.watch(preferredThemeProvider).third,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      margin: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              option.option,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+          const SizedBox(width: 16, height: 16, child: Loading()),
+        ],
+      ),
     );
   }
 

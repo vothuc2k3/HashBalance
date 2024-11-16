@@ -15,13 +15,13 @@ class PushNotificationRepository {
   final _logger = Logger();
 
   Future<void> sendFCMNotification(
-    String token,
+    List<String> tokens,
     String message,
     String title,
     Map<String, dynamic> data,
     String type,
   ) async {
-    _logger.d('TOKENS TO BE SENT: $token');
+    _logger.d('TOKENS TO BE SENT: $tokens');
     final url = Uri.parse('${Constants.domain}/sendPushNotification');
     final response = await http.post(
       url,
@@ -29,7 +29,7 @@ class PushNotificationRepository {
         'Content-Type': 'application/json',
       },
       body: json.encode({
-        'tokens': [token],
+        'tokens': tokens,
         'message': message,
         'title': title,
         'data': data,
