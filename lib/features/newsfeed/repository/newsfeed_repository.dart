@@ -4,21 +4,26 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
-import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/post_model.dart';
-import 'package:hash_balance/models/user_model.dart';
 
 final newsfeedRepositoryProvider = Provider((ref) {
-  return NewsfeedRepository(firestore: ref.watch(firebaseFirestoreProvider));
+  return NewsfeedRepository(
+    firestore: ref.read(firebaseFirestoreProvider),
+    postController: ref.read(postControllerProvider.notifier),
+  );
 });
 
 class NewsfeedRepository {
   final FirebaseFirestore _firestore;
+  final PostController _postController;
 
   NewsfeedRepository({
     required FirebaseFirestore firestore,
-  }) : _firestore = firestore;
+    required PostController postController,
+  })  : _firestore = firestore,
+        _postController = postController;
 
   //REFERENCE ALL THE USERS
   CollectionReference get _users =>
@@ -30,69 +35,79 @@ class NewsfeedRepository {
   CollectionReference get _posts =>
       _firestore.collection(FirebaseConstants.postsCollection);
 
-  Stream<List<PostDataModel>> getNewsfeedInitPosts({
+  Future<List<PostDataModel>> getNewsfeedInitPosts({
     required List<String>? communityIds,
-  }) {
-    if (communityIds == null) {
-      return Stream.value([]);
+  }) async {
+    if (communityIds == null || communityIds.isEmpty) {
+      return [];
     }
-    return _posts
-        .where('communityId', whereIn: communityIds)
-        .where('status', isEqualTo: 'Approved')
-        .orderBy('createdAt', descending: true)
-        .limit(10)
-        .snapshots()
-        .asyncMap((postsQuery) async {
-      final List<PostDataModel> postDataList = [];
 
-      List<Post> posts = postsQuery.docs
+    final List<PostDataModel> allPosts = [];
+
+    for (String communityId in communityIds) {
+      final querySnapshot = await _posts
+          .where('communityId', isEqualTo: communityId)
+          .where('status', isEqualTo: 'Approved')
+          .orderBy('createdAt', descending: true)
+          .limit(10)
+          .get();
+
+      List<Post> posts = querySnapshot.docs
           .map((doc) => Post.fromMap(doc.data() as Map<String, dynamic>))
           .toList();
 
       for (var post in posts) {
-        final authorDoc = await _users.doc(post.uid).get();
-        final author =
-            UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
-
-        final communityDoc = await _communities.doc(post.communityId).get();
-        final community =
-            Community.fromMap(communityDoc.data() as Map<String, dynamic>);
-
-        postDataList.add(
-          PostDataModel(post: post, author: author, community: community),
+        final postDataResult =
+            await _postController.getPostDataByPostId(postId: post.id);
+        postDataResult.fold(
+          (l) => allPosts
+              .add(PostDataModel(post: post, author: null, community: null)),
+          (r) => allPosts.add(r!),
         );
       }
+    }
 
-      return postDataList;
-    });
+    return allPosts;
   }
 
-  Stream<List<PostDataModel>> getNewsfeedRandomPosts() {
-    return _posts
-        .where('status', isEqualTo: 'Approved')
-        .orderBy(FieldPath.documentId)
-        .limit(100)
-        .snapshots()
-        .asyncMap((querySnapshot) async {
-      final randomPosts = (querySnapshot.docs..shuffle()).take(10);
+  Future<List<PostDataModel>> fetchMorePosts({
+    required List<String> communityIds,
+    required Timestamp? lastPostCreatedAt,
+  }) async {
+    try {
+      if (communityIds.isEmpty) {
+        return [];
+      }
 
-      final List<PostDataModel> postDataList = await Future.wait(
-        randomPosts.map((doc) async {
-          final post = Post.fromMap(doc.data() as Map<String, dynamic>);
+      final query = _posts
+          .where('communityId', whereIn: communityIds)
+          .where('status', isEqualTo: 'Approved')
+          .orderBy('createdAt', descending: true)
+          .startAfter([lastPostCreatedAt]).limit(10);
 
-          final authorDoc = await _users.doc(post.uid).get();
-          final author =
-              UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
-          final communityDoc = await _communities.doc(post.communityId).get();
-          final community =
-              Community.fromMap(communityDoc.data() as Map<String, dynamic>);
+      final postsQuerySnapshot = await query.get();
+      if (postsQuerySnapshot.docs.isEmpty) {
+        return [];
+      }
 
-          return PostDataModel(
-              post: post, author: author, community: community);
-        }).toList(),
-      );
+      List<PostDataModel> postDataList = [];
 
+      List<Post> posts = postsQuerySnapshot.docs
+          .map((doc) => Post.fromMap(doc.data() as Map<String, dynamic>))
+          .toList();
+
+      for (var post in posts) {
+        final postDataResult =
+            await _postController.getPostDataByPostId(postId: post.id);
+        postDataResult.fold(
+          (l) => postDataList
+              .add(PostDataModel(post: post, author: null, community: null)),
+          (r) => postDataList.add(r!),
+        );
+      }
       return postDataList;
-    });
+    } catch (e) {
+      return [];
+    }
   }
 }

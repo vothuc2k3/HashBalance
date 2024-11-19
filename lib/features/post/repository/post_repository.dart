@@ -175,13 +175,6 @@ class PostRepository {
         await postVote.reference.delete();
       }
       await _posts.doc(post.id).delete();
-
-      await _storageRepository.deleteFile(
-        path: 'posts/images/${post.id}',
-      );
-      await _storageRepository.deleteFile(
-        path: 'posts/videos/${post.id}',
-      );
       await batch.commit();
       return right(null);
     } on FirebaseException catch (e) {
@@ -391,86 +384,86 @@ class PostRepository {
     }
   }
 
-Future<Either<Failures, void>> updatePost(
-  Post post,
-  List<File>? newImages,
-  File? newVideo,
-) async {
-  try {
-    final batch = _firestore.batch();
+  Future<Either<Failures, void>> updatePost(
+    Post post,
+    List<File>? newImages,
+    File? newVideo,
+  ) async {
+    try {
+      final batch = _firestore.batch();
 
-    List<String> updatedImageUrls = [];
-    String? updatedVideoUrl;
+      List<String> updatedImageUrls = [];
+      String? updatedVideoUrl;
 
-    if (newImages != null && newImages.isNotEmpty) {
-      for (var oldImageUrl in post.images ?? []) {
-        try {
-          await _storageRepository.deleteFile(path: oldImageUrl);
-        } catch (e) {
-          Logger().e('Failed to delete old image: $e');
+      if (newImages != null && newImages.isNotEmpty) {
+        for (var oldImageUrl in post.images ?? []) {
+          try {
+            await _storageRepository.deleteFile(path: oldImageUrl);
+          } catch (e) {
+            Logger().e('Failed to delete old image: $e');
+          }
         }
-      }
-      updatedImageUrls = [];
+        updatedImageUrls = [];
 
-      for (var image in newImages) {
-        final imagePath = 'posts/images/${post.id}_${DateTime.now().millisecondsSinceEpoch}';
+        for (var image in newImages) {
+          final imagePath =
+              'posts/images/${post.id}_${DateTime.now().millisecondsSinceEpoch}';
+          final result = await _storageRepository.storeFile(
+            path: imagePath,
+            id: imagePath.split('/').last,
+            file: image,
+          );
+
+          result.fold(
+            (l) => throw Exception('Failed to upload image: ${l.message}'),
+            (imageUrl) => updatedImageUrls.add(imageUrl),
+          );
+        }
+      } else {
+        updatedImageUrls = List.from(post.images ?? []);
+      }
+
+      if (newVideo != null) {
+        if (post.video != null) {
+          try {
+            await FirebaseStorage.instance.refFromURL(post.video!).delete();
+          } catch (e) {
+            Logger().e('Failed to delete old video: $e');
+          }
+        }
+        final videoPath =
+            'posts/videos/${post.id}_${DateTime.now().millisecondsSinceEpoch}';
         final result = await _storageRepository.storeFile(
-          path: imagePath,
-          id: imagePath.split('/').last,
-          file: image,
+          path: videoPath,
+          id: videoPath.split('/').last,
+          file: newVideo,
         );
 
         result.fold(
-          (l) => throw Exception('Failed to upload image: ${l.message}'),
-          (imageUrl) => updatedImageUrls.add(imageUrl),
+          (l) => throw Exception('Failed to upload video: ${l.message}'),
+          (videoUrl) => updatedVideoUrl = videoUrl,
         );
+      } else {
+        updatedVideoUrl = post.video;
       }
-    } else {
-      updatedImageUrls = List.from(post.images ?? []);
-    }
 
-    if (newVideo != null) {
-      if (post.video != null) {
-        try {
-          await FirebaseStorage.instance.refFromURL(post.video!).delete();
-        } catch (e) {
-          Logger().e('Failed to delete old video: $e');
-        }
-      }
-      final videoPath = 'posts/videos/${post.id}_${DateTime.now().millisecondsSinceEpoch}';
-      final result = await _storageRepository.storeFile(
-        path: videoPath,
-        id: videoPath.split('/').last,
-        file: newVideo,
+      Post updatedPost = post.copyWith(
+        images: updatedImageUrls,
+        video: updatedVideoUrl,
       );
 
-      result.fold(
-        (l) => throw Exception('Failed to upload video: ${l.message}'),
-        (videoUrl) => updatedVideoUrl = videoUrl,
-      );
-    } else {
-      updatedVideoUrl = post.video;
+      final postRef = _firestore.collection('posts').doc(post.id);
+      batch.update(postRef, updatedPost.toMap());
+
+      await batch.commit();
+
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
     }
-
-    Post updatedPost = post.copyWith(
-      images: updatedImageUrls,
-      video: updatedVideoUrl,
-    );
-
-    final postRef = _firestore.collection('posts').doc(post.id);
-    batch.update(postRef, updatedPost.toMap());
-
-    await batch.commit();
-
-    return right(null);
-  } on FirebaseException catch (e) {
-    return left(Failures(e.message!));
-  } catch (e) {
-    return left(Failures(e.toString()));
   }
-}
-
-
 
   Stream<Map<String, dynamic>> getPostVoteCountAndStatus(
       Post post, String uid) async* {
@@ -538,7 +531,8 @@ Future<Either<Failures, void>> updatePost(
     );
   }
 
-  Stream<List<PostDataModel>> getHashtagPosts({required String hashtag}) async* {
+  Stream<List<PostDataModel>> getHashtagPosts(
+      {required String hashtag}) async* {
     final querySnapshot = await _posts.get();
     final postsWithHashtag = querySnapshot.docs.where((doc) {
       final postMap = doc.data() as Map<String, dynamic>;

@@ -12,6 +12,7 @@ import 'package:hash_balance/models/conbined_models/current_user_role_model.dart
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:tuple/tuple.dart';
 
 final communityRepositoryProvider = Provider((ref) {
   return CommunityRepository(firestore: ref.watch(firebaseFirestoreProvider));
@@ -119,7 +120,6 @@ class CommunityRepository {
   Future<Either<Failures, void>> leaveCommunity(String membershipId) async {
     try {
       await _communityMembership.doc(membershipId).delete();
-
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -129,33 +129,29 @@ class CommunityRepository {
   }
 
   //GET MOST JOINED COMMUNITIES
-  Stream<List<Community>?> getTopCommunitiesList() {
-    return _communities.snapshots().asyncMap((communitySnapshot) async {
-      final communities = <Community>[];
-      final communityCountMap = <String, int>{};
+  Future<List<Tuple2<Community, int>>> getTopCommunitiesList() async {
+    final communitySnapshot = await _communities.get();
+    final communityCountMap = <String, int>{};
 
-      final memberCountFutures = communitySnapshot.docs.map((doc) async {
-        final communityId = doc.id;
-        final communityData = doc.data() as Map<String, dynamic>;
+    final memberCountFutures = communitySnapshot.docs.map((doc) async {
+      final communityId = doc.id;
+      final communityData = doc.data() as Map<String, dynamic>;
 
-        final memberCountSnapshot = await _communityMembership
-            .where('communityId', isEqualTo: communityId)
-            .get();
-        final memberCount = memberCountSnapshot.size;
-        communityCountMap[communityId] = memberCount;
+      final memberCountSnapshot = await _communityMembership
+          .where('communityId', isEqualTo: communityId)
+          .get();
+      final memberCount = memberCountSnapshot.size;
+      communityCountMap[communityId] = memberCount;
 
-        communities.add(
-          Community.fromMap(communityData),
-        );
-      });
-
-      await Future.wait(memberCountFutures);
-
-      communities.sort((a, b) =>
-          communityCountMap[b.id]!.compareTo(communityCountMap[a.id]!));
-
-      return communities;
+      return Tuple2(Community.fromMap(communityData), memberCount);
     });
+
+    final communityTuples = await Future.wait(memberCountFutures);
+
+    communityTuples.sort(
+        (a, b) => b.item2.compareTo(a.item2));
+
+    return communityTuples;
   }
 
   //CHECK IF THE USER IS MEMBER OF COMMUNITY
@@ -296,8 +292,9 @@ class CommunityRepository {
     required String uid,
   }) async {
     try {
-      final snapshot =
-          await _suspendedUsers.doc(getMembershipId(uid: uid, communityId: communityId)).get();
+      final snapshot = await _suspendedUsers
+          .doc(getMembershipId(uid: uid, communityId: communityId))
+          .get();
       if (snapshot.exists) {
         return right(snapshot.data() as String?);
       } else {

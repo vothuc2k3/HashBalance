@@ -14,6 +14,7 @@ import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:tuple/tuple.dart';
 
 class CommunityListScreen extends ConsumerStatefulWidget {
   const CommunityListScreen({super.key});
@@ -26,7 +27,7 @@ class CommunityListScreen extends ConsumerStatefulWidget {
 class _CommunityListScreenState extends ConsumerState<CommunityListScreen>
     with AutomaticKeepAliveClientMixin {
   UserModel? currentUser;
-  late Stream<List<Community>?> communitiesStream;
+  List<Tuple2<Community, int>> _communities = <Tuple2<Community, int>>[];
 
   void _navigateToCommunityScreen(
     Community community,
@@ -62,11 +63,7 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen>
   }
 
   Future<void> _onRefresh() async {
-    setState(() {
-      communitiesStream = ref
-          .read(communityControllerProvider.notifier)
-          .getTopCommunitiesList();
-    });
+    ref.invalidate(getTopCommunityListProvider);
   }
 
   @override
@@ -76,8 +73,6 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen>
   void didChangeDependencies() {
     super.didChangeDependencies();
     currentUser = ref.read(userProvider)!;
-    communitiesStream =
-        ref.watch(communityControllerProvider.notifier).getTopCommunitiesList();
   }
 
   @override
@@ -88,83 +83,78 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen>
         onRefresh: _onRefresh,
         child: Container(
           color: ref.watch(preferredThemeProvider).first,
-          child: StreamBuilder(
-            stream: communitiesStream,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: Loading());
-              } else if (snapshot.hasError) {
-                return ErrorText(error: snapshot.error.toString());
-              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Center(
-                  child: const Text(
-                    'There\'s no any communities :(',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white70,
-                    ),
-                  ).animate().fadeIn(duration: 600.ms).moveY(
-                        begin: 30,
-                        end: 0,
-                        duration: 600.ms,
-                        curve: Curves.easeOutBack,
-                      ),
-                );
-              } else {
-                final communities = snapshot.data!;
-                return ListView.builder(
-                  padding: const EdgeInsets.all(10),
-                  itemCount: communities.length,
-                  itemBuilder: (context, index) {
-                    final community = communities[index];
-                    return Card(
-                      color: Colors.black,
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: ListTile(
-                        
-                        tileColor: ref.watch(preferredThemeProvider).second,
-                        leading: CircleAvatar(
-                          backgroundImage: CachedNetworkImageProvider(
-                            community.profileImage,
+          child: ref.watch(getTopCommunityListProvider).when(
+                data: (communities) {
+                  _communities = communities;
+                  if (_communities.isEmpty) {
+                    return Center(
+                      child: const Text(
+                        'There\'s no any communities :(',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white70,
+                        ),
+                      ).animate().fadeIn(duration: 600.ms).moveY(
+                            begin: 30,
+                            end: 0,
+                            duration: 600.ms,
+                            curve: Curves.easeOutBack,
                           ),
-                          radius: 30,
-                        ),
-                        title: Text(
-                          community.name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                    );
+                  } else {
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(10),
+                      itemCount: _communities.length,
+                      itemBuilder: (context, index) {
+                        final community = _communities[index];
+                        return Card(
+                          color: Colors.black,
+                          margin: const EdgeInsets.symmetric(vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
                           ),
-                        ),
-                        subtitle: Text(
-                          community.description,
-                          style: const TextStyle(color: Colors.white70),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing: const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.people, color: Colors.white70),
-                            SizedBox(height: 4),
-                            Text(
-                              '82964',
-                              style: TextStyle(color: Colors.white70),
+                          child: ListTile(
+                            tileColor: ref.watch(preferredThemeProvider).second,
+                            leading: CircleAvatar(
+                              backgroundImage: CachedNetworkImageProvider(
+                                community.item1.profileImage,
+                              ),
+                              radius: 30,
                             ),
-                          ],
-                        ),
-                        onTap: () => _navigateToCommunityScreen(
-                            community, currentUser!.uid),
-                      ),
-                    ).animate().fadeIn();
-                  },
-                );
-              }
-            },
-          ),
+                            title: Text(
+                              community.item1.name,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              community.item1.description,
+                              style: const TextStyle(color: Colors.white70),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            trailing: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.people, color: Colors.white70),
+                                Text(
+                                  community.item2.toString(),
+                                  style: const TextStyle(color: Colors.white70),
+                                ),
+                              ],
+                            ),
+                            onTap: () => _navigateToCommunityScreen(
+                                community.item1, currentUser!.uid),
+                          ),
+                        ).animate().fadeIn();
+                      },
+                    );
+                  }
+                },
+                error: (error, stack) => ErrorText(error: error.toString()),
+                loading: () => const Loading(),
+              ),
         ),
       ),
     );

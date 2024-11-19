@@ -140,32 +140,29 @@ class FriendRepository {
     });
   }
 
-  Stream<List<UserModel>> fetchFriendsByUser(String uid) {
-    return Stream.fromFuture(
-      Future.wait([
-        _friendship.where('uid1', isEqualTo: uid).get(),
-        _friendship.where('uid2', isEqualTo: uid).get(),
-      ]),
-    ).asyncMap((results) async {
-      final documents = results.expand((result) => result.docs).toList();
+  Future<List<UserModel>> fetchFriendsByUser(String uid) async {
+    final results = await Future.wait([
+      _friendship.where('uid1', isEqualTo: uid).get(),
+      _friendship.where('uid2', isEqualTo: uid).get(),
+    ]);
+    final documents = results.expand((result) => result.docs).toList();
 
-      final friendUids = documents.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        return data['uid1'] == uid ? data['uid2'] : data['uid1'];
-      }).toList();
+    final friendUids = documents.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      return data['uid1'] == uid ? data['uid2'] : data['uid1'];
+    }).toSet();
 
-      if (friendUids.isEmpty) {
-        return [];
+    List<UserModel> friends = [];
+
+    for (String friendUid in friendUids) {
+      final userDoc = await _users.doc(friendUid).get();
+      if (userDoc.exists) {
+        final data = userDoc.data() as Map<String, dynamic>;
+        friends.add(UserModel.fromMap(data));
       }
+    }
 
-      final friendQuery =
-          await _users.where(FieldPath.documentId, whereIn: friendUids).get();
-
-      return friendQuery.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        return UserModel.fromMap(data);
-      }).toList();
-    });
+    return friends;
   }
 
   Future<Either<Failures, void>> followUser(Follower followerModel) async {
@@ -314,5 +311,19 @@ class FriendRepository {
       }
       return blockDataModels;
     });
+  }
+
+  Future<int> getMutualFriendsCount(String uid1, String uid2) async {
+    final friends1 = await fetchFriendsByUser(uid1);
+    if (friends1.isEmpty) return 0;
+
+    final friendUids1 = friends1.map((friend) => friend.uid).toSet();
+
+    final friends2 = await fetchFriendsByUser(uid2);
+    if (friends2.isEmpty) return 0;
+
+    final mutualFriends =
+        friends2.where((friend) => friendUids1.contains(friend.uid)).length;
+    return mutualFriends;
   }
 }

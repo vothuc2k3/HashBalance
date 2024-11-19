@@ -106,7 +106,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                           height: 150,
                                           color: Colors.black,
                                           child: const Center(
-                                            child: CircularProgressIndicator(),
+                                            child: Loading(),
                                           ),
                                         ),
                                         errorWidget: (context, url, error) =>

@@ -11,6 +11,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/message/screen/private_message_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
+import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:tuple/tuple.dart';
 
@@ -282,6 +283,8 @@ class _OtherUserProfileWidgetState
                                 const SizedBox(height: 16),
                                 const Divider(),
                                 const SizedBox(height: 16),
+                                _buildAllFriendsWidget(
+                                    user.uid, currentUser.uid),
                               ],
                             ),
                           ),
@@ -299,6 +302,139 @@ class _OtherUserProfileWidgetState
     );
   }
 
+  Widget _buildAllFriendsWidget(String uid, String currentUserUid) {
+    return ref.watch(fetchFriendsProvider(uid)).when(
+          data: (friendList) {
+            if (friendList.isEmpty) {
+              return const SizedBox.shrink();
+            } else {
+              return Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: ref
+                        .watch(mutualFriendsCountProvider(
+                            Tuple2(currentUserUid, uid)))
+                        .whenOrNull(
+                          data: (mutualFriendsCount) => GestureDetector(
+                            onTap: () {},
+                            child: Text(
+                              'Mutual Friends: $mutualFriendsCount',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    offset: Offset(1.5, 1.5),
+                                    blurRadius: 3.0,
+                                    color: Colors.black26,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          error: (error, stackTrace) => ErrorText(
+                            error: error.toString(),
+                          ),
+                          loading: () => const Loading(),
+                        ),
+                  ),
+                  SizedBox(
+                    height: 250,
+                    child: GridView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
+                        childAspectRatio: 0.75,
+                      ),
+                      itemCount: friendList.length,
+                      itemBuilder: (context, index) {
+                        final friend = friendList[index];
+                        return Column(
+                          children: [
+                            InkWell(
+                              onTap: () => _navigateToFriendProfile(friend),
+                              child: CircleAvatar(
+                                radius: 30,
+                                backgroundImage: CachedNetworkImageProvider(
+                                  friend.profileImage,
+                                ),
+                                child: friend.profileImage.isEmpty
+                                    ? const Icon(Icons.error)
+                                    : null,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              friend.name,
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        elevation: 5,
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.black.withOpacity(0.25),
+                      ).copyWith(
+                        foregroundColor: WidgetStateProperty.all(Colors.white),
+                      ),
+                      onPressed: () {},
+                      child: Ink(
+                        decoration: BoxDecoration(
+                          color: Colors.blueAccent,
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Container(
+                          alignment: Alignment.center,
+                          constraints: const BoxConstraints(minHeight: 50),
+                          child: const Text(
+                            'See all friends',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.2,
+                              shadows: [
+                                Shadow(
+                                  offset: Offset(0, 3),
+                                  blurRadius: 6.0,
+                                  color: Colors.black26,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ).animate().fadeIn();
+            }
+          },
+          error: (error, stackTrace) => Center(
+            child: Text(
+              'Error: $error',
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+          loading: () => const Center(child: Loading()),
+        );
+  }
+
   Widget _buildFollowButton(
     bool isFollowing,
     dynamic followUser,
@@ -307,9 +443,7 @@ class _OtherUserProfileWidgetState
   ) {
     return isFollowing
         ? ElevatedButton.icon(
-            onPressed: () {
-              unfollowUser(targetUser);
-            },
+            onPressed: () => unfollowUser(targetUser),
             icon: const Icon(Icons.check, color: Colors.white),
             label: const Text('Following'),
             style: ElevatedButton.styleFrom(
@@ -559,7 +693,8 @@ class _OtherUserProfileWidgetState
               'Are you sure you want to cancel this friend request?'),
           actions: <Widget>[
             TextButton(
-              child: const Text('No', style: TextStyle(color: Colors.greenAccent)),
+              child:
+                  const Text('No', style: TextStyle(color: Colors.greenAccent)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -615,6 +750,15 @@ class _OtherUserProfileWidgetState
           ],
         );
       },
+    );
+  }
+
+  void _navigateToFriendProfile(UserModel friend) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OtherUserProfileScreen(targetUid: friend.uid),
+      ),
     );
   }
 }

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/user_profile/screen/widget/timeline_post_container.dart';
 import 'package:hash_balance/models/conbined_models/post_share_data_model.dart';
 import 'package:hash_balance/core/utils.dart';
 
-class PostShareContainer extends StatelessWidget {
+class PostShareContainer extends ConsumerWidget {
   final PostShareDataModel postShareData;
 
   const PostShareContainer({
@@ -13,7 +15,8 @@ class PostShareContainer extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentUser = ref.watch(userProvider)!;
     return Container(
       padding: const EdgeInsets.all(12.0),
       margin: const EdgeInsets.symmetric(vertical: 8.0),
@@ -51,10 +54,11 @@ class PostShareContainer extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.more_horiz, color: Colors.white),
-                onPressed: () {},
-              ),
+              if (postShareData.author.uid == currentUser.uid)
+                IconButton(
+                  icon: const Icon(Icons.more_horiz, color: Colors.white),
+                  onPressed: () => _showPostShareOptions(context),
+                ),
             ],
           ),
           const SizedBox(height: 8),
@@ -74,6 +78,43 @@ class PostShareContainer extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showPostShareOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.edit),
+                title: const Text('Edit Share Content'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  // Implement edit share content functionality here
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete),
+                title: const Text('Delete this Share'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  // Implement delete share functionality here
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.close),
+                title: const Text('Close'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

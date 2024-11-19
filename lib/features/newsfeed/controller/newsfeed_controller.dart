@@ -1,11 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 
 import 'package:hash_balance/features/newsfeed/repository/newsfeed_repository.dart';
+import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-final newsfeedInitPostsProvider = StreamProvider(
+final newsfeedInitPostsProvider = FutureProvider(
   (ref) =>
       ref.watch(newsfeedControllerProvider.notifier).getNewsfeedInitPosts(),
 );
@@ -16,6 +17,7 @@ final newsfeedControllerProvider =
     final newsfeedRepository = ref.read(newsfeedRepositoryProvider);
     return NewsfeedController(
       newsfeedRepository: newsfeedRepository,
+      userController: ref.read(userControllerProvider.notifier),
       ref: ref,
     );
   },
@@ -23,26 +25,34 @@ final newsfeedControllerProvider =
 
 class NewsfeedController extends StateNotifier<bool> {
   final NewsfeedRepository _newsfeedRepository;
+  final UserController _userController;
   final Ref _ref;
 
   NewsfeedController({
     required NewsfeedRepository newsfeedRepository,
+    required UserController userController,
     required Ref ref,
   })  : _newsfeedRepository = newsfeedRepository,
+        _userController = userController,
         _ref = ref,
         super(false);
 
-  Stream<List<PostDataModel>> getNewsfeedInitPosts() async* {
+  Future<List<PostDataModel>> getNewsfeedInitPosts() async {
     final user = _ref.read(userProvider)!;
-    final sharedPreferences = await SharedPreferences.getInstance();
-    final communityIds = sharedPreferences
-        .getStringList('userJoinedCommunities_${user.uid}')
-        ?.cast<String>();
-    if (communityIds != null && communityIds.isNotEmpty) {
-      yield* _newsfeedRepository.getNewsfeedInitPosts(
-          communityIds: communityIds);
-    } else {
-      yield* _newsfeedRepository.getNewsfeedRandomPosts();
-    }
+    final communityIds =
+        await _userController.getUserJoinedCommunitiesIds(user.uid);
+    return await _newsfeedRepository.getNewsfeedInitPosts(
+        communityIds: communityIds);
+  }
+
+  Future<List<PostDataModel>> fetchMorePosts(
+      Timestamp lastPostCreatedAt) async {
+    final user = _ref.read(userProvider)!;
+    final communityIds =
+        await _userController.getUserJoinedCommunitiesIds(user.uid);
+    return await _newsfeedRepository.fetchMorePosts(
+      communityIds: communityIds,
+      lastPostCreatedAt: lastPostCreatedAt,
+    );
   }
 }

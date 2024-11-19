@@ -1,20 +1,19 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/home/screen/home_screen.dart';
 import 'package:hash_balance/features/newsfeed/screen/containers/newsfeed_poll_container.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
-import 'package:icons_plus/icons_plus.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-
-import 'package:hash_balance/core/widgets/error_text.dart';
-import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
 import 'package:hash_balance/features/newsfeed/screen/containers/newsfeed_post_container.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
+import 'package:icons_plus/icons_plus.dart';
 
 class NewsfeedScreen extends ConsumerStatefulWidget {
   const NewsfeedScreen({
@@ -28,9 +27,50 @@ class NewsfeedScreen extends ConsumerStatefulWidget {
 class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
     with AutomaticKeepAliveClientMixin {
   List<PostDataModel> loadedPosts = [];
+  final ScrollController _scrollController = ScrollController();
+  bool _isLoadingMore = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   Future<void> _refreshPosts() async {
     ref.invalidate(newsfeedInitPostsProvider);
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels ==
+            _scrollController.position.maxScrollExtent &&
+        !_isLoadingMore) {
+      _loadMorePosts();
+    }
+  }
+
+  Future<void> _loadMorePosts() async {
+    setState(() {
+      _isLoadingMore = true;
+    });
+    final additionalPosts = await ref
+        .read(newsfeedControllerProvider.notifier)
+        .fetchMorePosts(loadedPosts.last.post.createdAt);
+
+    if (additionalPosts.isNotEmpty) {
+      setState(() {
+        loadedPosts.addAll(additionalPosts);
+      });
+    }
+
+    setState(() {
+      _isLoadingMore = false;
+    });
   }
 
   void _navigateToCreatePostScreen() {
@@ -43,7 +83,7 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final currentUser = ref.read(userProvider);
+    final currentUser = ref.read(userProvider)!;
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -52,14 +92,14 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
         child: RefreshIndicator(
           onRefresh: _refreshPosts,
           child: CustomScrollView(
+            controller: _scrollController,
             slivers: [
               SliverToBoxAdapter(
-                child: _buildCreatePostContainer(currentUser!),
+                child: _buildCreatePostContainer(currentUser),
               ),
               const SliverToBoxAdapter(
                 child: SizedBox(height: 20),
               ),
-              //MARK: - NEWSFEED
               SliverToBoxAdapter(
                 child: ref.watch(newsfeedInitPostsProvider).when(
                       data: (posts) {
@@ -76,10 +116,15 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
                           );
                         }
                         return ListView.builder(
-                          physics: const ScrollPhysics(),
+                          physics: const NeverScrollableScrollPhysics(),
                           shrinkWrap: true,
-                          itemCount: loadedPosts.length,
+                          itemCount: loadedPosts.length + 1,
                           itemBuilder: (context, index) {
+                            if (index == loadedPosts.length) {
+                              return _isLoadingMore
+                                  ? const Center(child: Loading())
+                                  : const SizedBox.shrink();
+                            }
                             final postData = loadedPosts[index];
                             if (!postData.post.isPoll) {
                               return NewsfeedPostContainer(

@@ -63,4 +63,14 @@ class PostShareController extends StateNotifier<bool> {
   Stream<List<Post>?> getFriendsSharePosts(List<String> friendUids) {
     return _postShareRepository.getFriendsSharePosts(friendUids);
   }
+
+  //DELETE POST SHARE BY POST ID
+  Future<Either<Failures, void>> deletePostShareByPostId(String postId) async {
+    return await _postShareRepository.deletePostShareByPostId(postId);
+  }
+
+  //DELETE POST SHARE BY POST SHARE ID
+  Future<Either<Failures, void>> deletePostShareById(String postShareId) async {
+    return await _postShareRepository.deletePostShareById(postShareId);
+  }
 }

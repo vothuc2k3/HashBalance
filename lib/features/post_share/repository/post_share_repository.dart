@@ -85,4 +85,30 @@ class PostShareRepository {
       return posts.isEmpty ? null : posts;
     });
   }
+
+  Future<Either<Failures, void>> deletePostShareByPostId(String postId) async {
+    try {
+      await _postShares.where('postId', isEqualTo: postId).get().then((value) {
+        for (final doc in value.docs) {
+          doc.reference.delete();
+        }
+      });
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  Future<Either<Failures, void>> deletePostShareById(String postShareId) async {
+    try {
+      await _postShares.doc(postShareId).delete();
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
 }

@@ -19,6 +19,14 @@ import 'package:hash_balance/models/user_model.dart';
 import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 
+final mutualFriendsCountProvider =
+    FutureProvider.family((ref, Tuple2<String, String> data) {
+  return ref.watch(friendControllerProvider.notifier).getMutualFriendsCount(
+        data.item1,
+        data.item2,
+      );
+});
+
 final blockedUsersProvider = StreamProvider((ref) {
   return ref.watch(friendControllerProvider.notifier).fetchBlockedUsers();
 });
@@ -44,7 +52,7 @@ final fetchFriendRequestsProvider = StreamProvider.family((ref, String uid) {
       .fetchFriendRequestsByUser(uid);
 });
 
-final fetchFriendsProvider = StreamProvider.family((ref, String uid) {
+final fetchFriendsProvider = FutureProvider.family((ref, String uid) {
   return ref.watch(friendControllerProvider.notifier).fetchFriendsByUser(uid);
 });
 
@@ -127,18 +135,19 @@ class FriendController extends StateNotifier<bool> {
       //SEND PUSH NOTIFICATION TO THE TARGET
       final result =
           await _userDeviceController.getUserDeviceTokens(targetUser.uid);
-      result.fold((l) => throw FirebaseException(
-            plugin: 'Firebase Exception',
-            message: l.message,
-          ), (tokens) async {
+      result.fold(
+          (l) => throw FirebaseException(
+                plugin: 'Firebase Exception',
+                message: l.message,
+              ), (tokens) async {
         await _pushNotificationController.sendPushNotification(
           tokens,
           notif.message,
           notif.title,
           {
-          'type': Constants.friendRequestType,
-          'uid': sender.uid,
-        },
+            'type': Constants.friendRequestType,
+            'uid': sender.uid,
+          },
           Constants.friendRequestType,
         );
       });
@@ -203,18 +212,19 @@ class FriendController extends StateNotifier<bool> {
       //SEND ACCEPT REQUEST PUSH NOTIFICATION
       final result =
           await _userDeviceController.getUserDeviceTokens(targetUser.uid);
-      result.fold((l) => throw FirebaseException(
-            plugin: 'Firebase Exception',
-            message: l.message,
-          ), (tokens) async {
+      result.fold(
+          (l) => throw FirebaseException(
+                plugin: 'Firebase Exception',
+                message: l.message,
+              ), (tokens) async {
         await _pushNotificationController.sendPushNotification(
           tokens,
           notif.message,
           notif.title,
           {
-          'type': Constants.acceptRequestType,
-          'uid': currentUser.uid,
-        },
+            'type': Constants.acceptRequestType,
+            'uid': currentUser.uid,
+          },
           Constants.acceptRequestType,
         );
       });
@@ -247,8 +257,7 @@ class FriendController extends StateNotifier<bool> {
   Future<Either<Failures, void>> unfriend(String targetUid) async {
     try {
       final currentUser = _ref.watch(userProvider);
-      await _friendRepository
-          .unfriend(getUids(targetUid, currentUser!.uid));
+      await _friendRepository.unfriend(getUids(targetUid, currentUser!.uid));
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -270,8 +279,8 @@ class FriendController extends StateNotifier<bool> {
     }
   }
 
-  Stream<List<UserModel>> fetchFriendsByUser(String uid) {
-    return _friendRepository.fetchFriendsByUser(uid);
+  Future<List<UserModel>> fetchFriendsByUser(String uid) async {
+    return await _friendRepository.fetchFriendsByUser(uid);
   }
 
   Future<Either<Failures, void>> followUser(String targetUid) async {
@@ -300,20 +309,20 @@ class FriendController extends StateNotifier<bool> {
       await _notificationController.addNotification(targetUid, notif);
 
       //SEND NEW FOLLOWER PUSH NOTIFICATION
-      final result =
-          await _userDeviceController.getUserDeviceTokens(targetUid);
-      result.fold((l) => throw FirebaseException(
-            plugin: 'Firebase Exception',
-            message: l.message,
-          ), (tokens) async {
+      final result = await _userDeviceController.getUserDeviceTokens(targetUid);
+      result.fold(
+          (l) => throw FirebaseException(
+                plugin: 'Firebase Exception',
+                message: l.message,
+              ), (tokens) async {
         await _pushNotificationController.sendPushNotification(
           tokens,
           notif.message,
           notif.title,
           {
-          'type': Constants.newFollowerType,
-          'uid': currentUser.uid,
-        },
+            'type': Constants.newFollowerType,
+            'uid': currentUser.uid,
+          },
           Constants.newFollowerType,
         );
       });
@@ -373,5 +382,9 @@ class FriendController extends StateNotifier<bool> {
   Stream<List<BlockDataModel>?> fetchBlockedUsers() {
     final currentUid = _ref.read(userProvider)!.uid;
     return _friendRepository.fetchBlockedUsers(currentUid);
+  }
+
+  Future<int> getMutualFriendsCount(String uid1, String uid2) async {
+    return _friendRepository.getMutualFriendsCount(uid1, uid2);
   }
 }

@@ -163,4 +163,8 @@ class UserController extends StateNotifier<bool> {
       blockUid: blockUid,
     );
   }
+
+  Future<List<String>> getUserJoinedCommunitiesIds(String uid) async {
+    return await _userRepository.getUserJoinedCommunitiesIds(uid);
+  }
 }

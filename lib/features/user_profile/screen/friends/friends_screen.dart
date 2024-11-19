@@ -7,6 +7,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
+import 'package:tuple/tuple.dart';
 
 class FriendsScreen extends ConsumerStatefulWidget {
   final String _uid;
@@ -80,6 +81,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     );
   }
 
+  Future<void> _onRefresh() async {
+    ref.invalidate(fetchFriendsProvider(widget._uid));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -91,101 +96,130 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         decoration: BoxDecoration(
           color: ref.watch(preferredThemeProvider).first,
         ),
-        child: ref.watch(fetchFriendsProvider(widget._uid)).whenOrNull(
-              data: (friends) {
-                if (friends.isEmpty) {
-                  return Center(
-                    child: const Text(
-                      'You have no friends yet',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white70,
-                      ),
-                    ).animate().fadeIn(duration: 600.ms).moveY(
-                          begin: 30,
-                          end: 0,
-                          duration: 600.ms,
-                          curve: Curves.easeOutBack,
-                        ),
-                  );
-                }
-                return Column(
-                  children: [
-                    const Divider(color: Colors.white54),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              const Text(
-                                'Your friends',
+        child: RefreshIndicator(
+          onRefresh: _onRefresh,
+          child: ref.watch(fetchFriendsProvider(widget._uid)).whenOrNull(
+                data: (friends) {
+                  if (friends.isEmpty) {
+                    return ListView(
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Center(
+                              child: const Text(
+                                'You have no friends yet',
                                 style: TextStyle(
                                   fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                                  color: Colors.white70,
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                '${friends.length}',
-                                style: const TextStyle(
-                                    fontSize: 18, color: Colors.greenAccent),
-                              ),
-                            ],
-                          ),
-                        ],
+                              ).animate().fadeIn(duration: 600.ms).moveY(
+                                    begin: 30,
+                                    end: 0,
+                                    duration: 600.ms,
+                                    curve: Curves.easeOutBack,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  }
+                  return Column(
+                    children: [
+                      const Divider(color: Colors.white54),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                const Text(
+                                  'Your friends',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${friends.length}',
+                                  style: const TextStyle(
+                                      fontSize: 18, color: Colors.greenAccent),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: friends.length,
-                        itemBuilder: (context, index) {
-                          final friend = friends[index];
-                          return ListTile(
-                            onTap: () =>
-                                _navigateToOtherUserProfile(friend.uid),
-                            leading: CircleAvatar(
-                              radius: 25,
-                              backgroundImage: CachedNetworkImageProvider(
-                                friend.profileImage,
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: friends.length,
+                          itemBuilder: (context, index) {
+                            final friend = friends[index];
+                            return Card(
+                              color: ref.watch(preferredThemeProvider).second,
+                              margin: const EdgeInsets.symmetric(
+                                  vertical: 6, horizontal: 10),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
                               ),
-                              backgroundColor: Colors.grey.shade700,
-                            ),
-                            title: Text(
-                              friend.name,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600),
-                            ),
-                            subtitle: const Text(
-                              'Friend',
-                              style: TextStyle(
-                                color: Colors.white70,
-                              ),
-                            ),
-                            trailing: IconButton(
-                              icon: const Icon(
-                                Icons.remove_circle_outline,
-                                color: Colors.redAccent,
-                              ),
-                              onPressed: () => _handleUnfriend(friend.uid),
-                            ),
-                          ).animate().fadeIn(duration: 600.ms).moveY(
-                                begin: 30,
-                                end: 0,
-                                duration: 600.ms,
-                                curve: Curves.easeOutBack,
-                              );
-                        },
+                              elevation: 3,
+                              child: ref
+                                  .watch(mutualFriendsCountProvider(
+                                      Tuple2(widget._uid, friend.uid)))
+                                  .whenOrNull(
+                                    data: (mutualFriendsCount) => ListTile(
+                                      onTap: () => _navigateToOtherUserProfile(
+                                          friend.uid),
+                                      leading: CircleAvatar(
+                                        radius: 30,
+                                        backgroundImage:
+                                            CachedNetworkImageProvider(
+                                          friend.profileImage,
+                                        ),
+                                        backgroundColor: Colors.grey.shade700,
+                                      ),
+                                      title: Text(
+                                        friend.name,
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      subtitle: Text(
+                                        'Mutual friends: $mutualFriendsCount',
+                                        style: const TextStyle(
+                                          color: Colors.white70,
+                                        ),
+                                      ),
+                                      trailing: IconButton(
+                                        icon: const Icon(
+                                          Icons.remove_circle_outline,
+                                          color: Colors.redAccent,
+                                        ),
+                                        onPressed: () =>
+                                            _handleUnfriend(friend.uid),
+                                      ),
+                                    ).animate().fadeIn(duration: 600.ms).moveY(
+                                          begin: 30,
+                                          end: 0,
+                                          duration: 600.ms,
+                                          curve: Curves.easeOutBack,
+                                        ),
+                                  ),
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              },
-            ) ??
-            const Loading().animate(),
+                    ],
+                  );
+                },
+              ) ??
+              const Loading().animate(),
+        ),
       ),
     );
   }

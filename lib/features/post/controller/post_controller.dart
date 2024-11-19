@@ -11,6 +11,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/post/repository/post_repository.dart';
+import 'package:hash_balance/features/post_share/controller/post_share_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/poll_option_vote_model.dart';
@@ -85,6 +86,7 @@ final postControllerProvider = StateNotifierProvider<PostController, bool>(
   (ref) => PostController(
       commentController: ref.read(commentControllerProvider.notifier),
       postRepository: ref.read(postRepositoryProvider),
+      postShareController: ref.read(postShareControllerProvider.notifier),
       pushNotificationController:
           ref.read(pushNotificationControllerProvider.notifier),
       moderationController: ref.read(moderationControllerProvider.notifier),
@@ -95,9 +97,9 @@ final postControllerProvider = StateNotifierProvider<PostController, bool>(
 class PostController extends StateNotifier<bool> {
   final PostRepository _postRepository;
   final StorageRepository _storageRepository;
-  // ignore: unused_field
   final PushNotificationController _pushNotificationController;
   final ModerationController _moderationController;
+  final PostShareController _postShareController;
   final Ref _ref;
   final CommentController _commentController;
   final Uuid _uuid = const Uuid();
@@ -107,12 +109,14 @@ class PostController extends StateNotifier<bool> {
     required StorageRepository storageRepository,
     required PushNotificationController pushNotificationController,
     required ModerationController moderationController,
+    required PostShareController postShareController,
     required CommentController commentController,
     required Ref ref,
   })  : _postRepository = postRepository,
         _storageRepository = storageRepository,
         _pushNotificationController = pushNotificationController,
         _moderationController = moderationController,
+        _postShareController = postShareController,
         _commentController = commentController,
         _ref = ref,
         super(false);
@@ -208,6 +212,7 @@ class PostController extends StateNotifier<bool> {
             );
           }
           await _commentController.clearPostComments(post.id);
+          await _postShareController.deletePostShareByPostId(post.id);
         });
       } else {
         return left(Failures('You are not the author of the post'));

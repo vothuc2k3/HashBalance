@@ -61,6 +61,9 @@ class UserRepository {
   //REFERENCE ALL THE BLOCKS
   CollectionReference get _postShares =>
       _firestore.collection(FirebaseConstants.postShareCollection);
+  //REFERENCE ALL THE COMMUNITY MEMBERSHIP
+  CollectionReference get _communityMembership =>
+      _firestore.collection(FirebaseConstants.communityMembershipCollection);
 
   //EDIT USER PROFLE
   Future<Either<Failures, void>> editUserProfile(
@@ -422,6 +425,22 @@ class UserRepository {
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
+    }
+  }
+
+  Future<List<String>> getUserJoinedCommunitiesIds(String uid) async {
+    try {
+      final querySnapshot =
+          await _communityMembership.where('uid', isEqualTo: uid).get();
+
+      final communityIds = querySnapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return data['communityId'] as String;
+      }).toList();
+
+      return communityIds;
+    } catch (e) {
+      return [];
     }
   }
 }

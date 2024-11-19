@@ -14,6 +14,7 @@ import 'package:hash_balance/models/community_membership_model.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/current_user_role_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
+import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 
 final currentUserRoleProvider =
@@ -53,7 +54,7 @@ final getMemberStatusProvider =
       .getMemberStatus(communityId);
 });
 
-final getTopCommunityListProvider = StreamProvider((ref) {
+final getTopCommunityListProvider = FutureProvider((ref) {
   return ref
       .watch(communityControllerProvider.notifier)
       .getTopCommunitiesList();
@@ -236,8 +237,8 @@ class CommunityController extends StateNotifier<bool> {
     }
   }
 
-  Stream<List<Community>?> getTopCommunitiesList() {
-    return _communityRepository.getTopCommunitiesList();
+  Future<List<Tuple2<Community, int>>> getTopCommunitiesList() async {
+    return await _communityRepository.getTopCommunitiesList();
   }
 
   Stream<int> getCommunityMemberCount(String communityId) {

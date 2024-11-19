@@ -50,22 +50,16 @@ class StorageRepository {
     }
   }
 
-  Future<String> getDownloadURL({
+  Future<Either<Failures, String>> getDownloadURL({
     required String path,
   }) async {
     try {
       final url = await _firebaseStorage.ref(path).getDownloadURL();
-      return url;
+      return right(url);
     } on FirebaseException catch (e) {
-      throw FirebaseException(
-        plugin: 'Firebase Exception',
-        message: e.message,
-      );
+      return left(Failures(e.message!));
     } catch (e) {
-      throw FirebaseException(
-        plugin: 'Firebase Exception',
-        message: e.toString(),
-      );
+      return left(Failures(e.toString()));
     }
   }
 }
