@@ -12,6 +12,7 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:uuid/uuid.dart';
+import 'package:logger/logger.dart';
 
 final userProvider = StateProvider<UserModel?>((ref) => null);
 
@@ -51,10 +52,13 @@ class AuthRepository {
   Future<Either<Failures, UserModel>> signInWithGoogle() async {
     try {
       final googleUser = await _googleSignIn.signIn();
-      final googleAuth = await googleUser?.authentication;
+      if (googleUser == null) {
+        return left(Failures('Sign-in process was canceled by the user.'));
+      }
+      final googleAuth = await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth?.accessToken,
-        idToken: googleAuth?.idToken,
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
       );
 
       final userCredential =
@@ -81,10 +85,28 @@ class AuthRepository {
         user = await getUserData(userCredential.user!.uid).first;
       }
       return right(user);
-    } on FirebaseException catch (e) {
-      throw e.message!;
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      switch (e.code) {
+        case 'account-exists-with-different-credential':
+          errorMessage =
+              'An account already exists with a different sign-in method. Please use the correct method.';
+          break;
+        case 'invalid-credential':
+          errorMessage = 'The credential data is invalid or has expired.';
+          break;
+        case 'operation-not-allowed':
+          errorMessage = 'This sign-in method is not allowed.';
+          break;
+        case 'user-disabled':
+          errorMessage = 'This user account has been disabled.';
+          break;
+        default:
+          errorMessage = 'An unknown error occurred. Please try again later.';
+      }
+      return left(Failures(errorMessage));
     } catch (e) {
-      return left(Failures(e.toString()));
+      return left(Failures('An unexpected error occurred. Please try again.'));
     }
   }
 
@@ -106,9 +128,28 @@ class AuthRepository {
 
       return right(user);
     } on FirebaseAuthException catch (e) {
-      return left(Failures(e.message!));
+      String errorMessage;
+      switch (e.code) {
+        case 'email-already-in-use':
+          errorMessage =
+              'The email address is already in use by another account.';
+          break;
+        case 'invalid-email':
+          errorMessage = 'The email address is not valid.';
+          break;
+        case 'weak-password':
+          errorMessage =
+              'The password is too weak. Please choose a stronger password.';
+          break;
+        case 'operation-not-allowed':
+          errorMessage = 'Email/password accounts are not enabled.';
+          break;
+        default:
+          errorMessage = 'An unknown error occurred. Please try again later.';
+      }
+      return left(Failures(errorMessage));
     } catch (e) {
-      return left(Failures(e.toString()));
+      return left(Failures('An unexpected error occurred. Please try again.'));
     }
   }
 
@@ -124,9 +165,29 @@ class AuthRepository {
       final user = await getUserData(userCredential.user!.uid).first;
       return right(user);
     } on FirebaseAuthException catch (e) {
-      return left(Failures(e.message ?? 'Unknown error occurred?'));
+      String errorMessage;
+      Logger().e(e.code);
+      switch (e.code) {
+        case 'invalid-email':
+          errorMessage = 'The email address is not valid.';
+          break;
+        case 'user-disabled':
+          errorMessage = 'This user account has been disabled.';
+          break;
+        case 'too-many-requests':
+          errorMessage =
+              'Too many unsuccessful login attempts. Please try again later.';
+          break;
+        case 'invalid-credential':
+          errorMessage =
+              'Wrong Email or Password. Please check and try again....';
+          break;
+        default:
+          errorMessage = 'An error occurred. Please try again.';
+      }
+      return left(Failures(errorMessage));
     } catch (e) {
-      return left(Failures(e.toString()));
+      return left(Failures('An unexpected error occurred. Please try again.'));
     }
   }
 

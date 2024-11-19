@@ -12,6 +12,7 @@ import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/message/screen/private_message_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
+import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:tuple/tuple.dart';
 
@@ -358,7 +359,10 @@ class _OtherUserProfileWidgetState
                         return Column(
                           children: [
                             InkWell(
-                              onTap: () => _navigateToFriendProfile(friend),
+                              onTap: () => _navigateToFriendProfile(
+                                friend,
+                                currentUserUid,
+                              ),
                               child: CircleAvatar(
                                 radius: 30,
                                 backgroundImage: CachedNetworkImageProvider(
@@ -753,12 +757,21 @@ class _OtherUserProfileWidgetState
     );
   }
 
-  void _navigateToFriendProfile(UserModel friend) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => OtherUserProfileScreen(targetUid: friend.uid),
-      ),
-    );
+  void _navigateToFriendProfile(UserModel friend, String currentUserUid) {
+    if (friend.uid == currentUserUid) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const UserProfileScreen(),
+        ),
+      );
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OtherUserProfileScreen(targetUid: friend.uid),
+        ),
+      );
+    }
   }
 }
