@@ -91,10 +91,47 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
   }
 
   void _handleDeleteComment(CommentModel comment) async {
-    final result = await ref
-        .read(commentControllerProvider.notifier)
-        .deleteComment(comment.id);
-    result.fold((l) => showToast(false, l.message), (_) {});
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: ref.watch(preferredThemeProvider).first,
+          title: const Text('Confirm Delete'),
+          content: const Text('Are you sure you want to delete this comment?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.greenAccent,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                final result = await ref
+                    .read(commentControllerProvider.notifier)
+                    .deleteComment(comment.id);
+                result.fold(
+                  (l) => showToast(false, l.message),
+                  (_) {},
+                );
+              },
+              child: const Text(
+                'Delete',
+                style: TextStyle(
+                  color: Colors.red,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showEditDialog(CommentModel comment) {

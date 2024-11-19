@@ -2,6 +2,7 @@ import 'package:animated_icon/animated_icon.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/splash/splash_screen.dart';
@@ -10,6 +11,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/community/screen/create_community_screen.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
+import 'package:hash_balance/features/moderation/screen/mod_tools/mod_tools_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
@@ -34,6 +36,15 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
       context,
       MaterialPageRoute(
         builder: (context) => const CreateCommunityScreen(),
+      ),
+    );
+  }
+
+  void _navigateToModeratorScreen(Community community) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ModToolsScreen(community: community),
       ),
     );
   }
@@ -259,10 +270,7 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
                                 ],
                               ),
                               onTap: () {
-                                _navigateToCommunityScreen(
-                                  community,
-                                  currentUser.uid,
-                                );
+                                _navigateToModeratorScreen(community);
                               },
                             );
                           },

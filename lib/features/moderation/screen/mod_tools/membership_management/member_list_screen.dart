@@ -3,22 +3,24 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fuzzy/fuzzy.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/conbined_models/current_user_role_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:logger/logger.dart';
 
 class MemberListScreen extends ConsumerStatefulWidget {
-  final Community _community;
+  final Community community;
 
   const MemberListScreen({
     super.key,
-    required Community community,
-  }) : _community = community;
+    required this.community,
+  });
 
   @override
   ConsumerState<MemberListScreen> createState() => _MemberListScreenState();
@@ -26,10 +28,69 @@ class MemberListScreen extends ConsumerStatefulWidget {
 
 class _MemberListScreenState extends ConsumerState<MemberListScreen> {
   String? suspendedUserReason;
+  static List<CurrentUserRoleModel> memberList = [];
+  bool isSearching = false;
+  final TextEditingController searchController = TextEditingController();
+  List<CurrentUserRoleModel> filteredUsers = [];
+
+  List<CurrentUserRoleModel> searchUsers(String query) {
+    final fuse = Fuzzy(
+      memberList.map((e) => e.user.name).toList(),
+      options: FuzzyOptions(
+        findAllMatches: true,
+        tokenize: true,
+        threshold: 0.4,
+      ),
+    );
+    final result = fuse.search(query);
+    return result
+        .map((r) => memberList.firstWhere((e) => e.user.name == r.item))
+        .toList();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    filteredUsers = List.from(memberList);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: ref.watch(preferredThemeProvider).second,
+        title: isSearching
+            ? TextField(
+                controller: searchController,
+                decoration: const InputDecoration(
+                  hintText: 'Search users...',
+                  border: InputBorder.none,
+                ),
+                style: const TextStyle(color: Colors.white),
+                onChanged: (query) {
+                  setState(() {
+                    filteredUsers = query.isEmpty
+                        ? List.from(memberList)
+                        : searchUsers(query);
+                  });
+                },
+              )
+            : const Text('Memberships Management'),
+        actions: [
+          IconButton(
+            icon: Icon(isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                isSearching = !isSearching;
+                if (!isSearching) {
+                  searchController.clear();
+                  filteredUsers = List.from(memberList);
+                }
+              });
+            },
+          ),
+        ],
+      ),
       body: Container(
         decoration: BoxDecoration(
           color: ref.watch(preferredThemeProvider).first,
@@ -37,117 +98,126 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
         child: Column(
           children: [
             Expanded(
-              child: ref
-                  .watch(fetchInitialCommunityMembersProvider(
-                      widget._community.id))
-                  .when(
-                    data: (members) {
-                      return ListView.builder(
-                        itemCount: members.length,
-                        itemBuilder: (context, index) {
-                          final member = members[index];
-                          final currentUser = ref.read(userProvider)!;
-                          final isCurrentUser =
-                              member.user.uid == currentUser.uid;
-                          return Card(
-                            margin: const EdgeInsets.symmetric(
-                                vertical: 6, horizontal: 16),
-                            elevation: 3,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            color: member.status == 'suspended'
-                                ? Colors.grey
-                                : ref.watch(preferredThemeProvider).third,
-                            child: ExpansionTile(
-                              leading: CircleAvatar(
-                                backgroundImage: CachedNetworkImageProvider(
-                                    member.user.profileImage),
+              child: RefreshIndicator(
+                onRefresh: _onRefresh,
+                child: ref
+                    .watch(
+                        fetchInitialCommunityMembersProvider(widget.community.id))
+                    .when(
+                      data: (members) {
+                        memberList = members;
+                        filteredUsers = isSearching ? filteredUsers : members;
+                        return ListView.builder(
+                          itemCount: filteredUsers.length,
+                          itemBuilder: (context, index) {
+                            final member = filteredUsers[index];
+                            final currentUser = ref.read(userProvider)!;
+                            final isCurrentUser =
+                                member.user.uid == currentUser.uid;
+                            return Card(
+                              margin: const EdgeInsets.symmetric(
+                                vertical: 6,
+                                horizontal: 16,
                               ),
-                              title: Text(
-                                isCurrentUser
-                                    ? '${member.user.name} (You)'
-                                    : member.user.name,
-                                style: TextStyle(
-                                  fontWeight: isCurrentUser
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
+                              elevation: 3,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              color: member.status == 'suspended'
+                                  ? Colors.grey
+                                  : ref.watch(preferredThemeProvider).third,
+                              child: ExpansionTile(
+                                leading: CircleAvatar(
+                                  backgroundImage: CachedNetworkImageProvider(
+                                      member.user.profileImage),
                                 ),
-                              ),
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16.0, vertical: 8.0),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      if (!isCurrentUser &&
-                                          member.status != 'suspended')
-                                        ElevatedButton(
-                                          onPressed: () =>
-                                              _inviteUserAsModerator(
-                                                  member.user),
-                                          style: ElevatedButton.styleFrom(
-                                            foregroundColor: Colors.white,
-                                            backgroundColor: Colors.teal,
-                                          ),
-                                          child: const Text('Send Invite'),
-                                        ),
-                                      const SizedBox(width: 10),
-                                      if (!isCurrentUser &&
-                                          member.status != 'suspended')
-                                        ElevatedButton(
-                                          onPressed: () =>
-                                              _showSuspendOptionsBottomSheet(
-                                                  member.user),
-                                          style: ElevatedButton.styleFrom(
-                                            foregroundColor: Colors.white,
-                                            backgroundColor: const Color.fromARGB(255, 131, 21, 21),
-                                          ),
-                                          child: const Text('Suspend'),
-                                        ),
-                                      if (isCurrentUser)
-                                        ElevatedButton(
-                                          onPressed: () =>
-                                              _handleLeaveCommunity(
-                                                  currentUser),
-                                          style: ElevatedButton.styleFrom(
-                                            foregroundColor: Colors.white,
-                                            backgroundColor: Colors.redAccent,
-                                          ),
-                                          child: const Text('Leave'),
-                                        ),
-                                      const SizedBox(width: 10),
-                                      if (!isCurrentUser)
-                                        ElevatedButton(
-                                          onPressed: () {},
-                                          style: ElevatedButton.styleFrom(
-                                            foregroundColor: Colors.white,
-                                            backgroundColor: Colors.redAccent,
-                                          ),
-                                          child: const Text('Kick'),
-                                        ),
-                                    ],
+                                title: Text(
+                                  isCurrentUser
+                                      ? '${member.user.name} (You)'
+                                      : member.user.name,
+                                  style: TextStyle(
+                                    fontWeight: isCurrentUser
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
                                   ),
                                 ),
-                              ],
-                            ),
-                          ).animate().fadeIn(duration: 300.ms).scale(
-                                begin: const Offset(0.9, 0.9),
-                                curve: Curves.easeOutBack,
-                              );
-                        },
-                      );
-                    },
-                    error: (error, stack) => Center(
-                      child: Text(error.toString())
-                          .animate()
-                          .shimmer(colors: [Colors.grey, Colors.white]),
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16.0, vertical: 8.0),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        if (!isCurrentUser &&
+                                            member.status != 'suspended')
+                                          ElevatedButton(
+                                            onPressed: () =>
+                                                _inviteUserAsModerator(
+                                                    member.user),
+                                            style: ElevatedButton.styleFrom(
+                                              foregroundColor: Colors.white,
+                                              backgroundColor: Colors.teal,
+                                            ),
+                                            child: const Text('Send Invite'),
+                                          ),
+                                        const SizedBox(width: 10),
+                                        if (!isCurrentUser &&
+                                            member.status != 'suspended')
+                                          ElevatedButton(
+                                            onPressed: () =>
+                                                _showSuspendOptionsBottomSheet(
+                                                    member.user),
+                                            style: ElevatedButton.styleFrom(
+                                              foregroundColor: Colors.white,
+                                              backgroundColor:
+                                                  const Color.fromARGB(
+                                                      255, 131, 21, 21),
+                                            ),
+                                            child: const Text('Suspend'),
+                                          ),
+                                        if (isCurrentUser)
+                                          ElevatedButton(
+                                            onPressed: () =>
+                                                _handleLeaveCommunity(
+                                                    currentUser),
+                                            style: ElevatedButton.styleFrom(
+                                              foregroundColor: Colors.white,
+                                              backgroundColor: Colors.redAccent,
+                                            ),
+                                            child: const Text('Leave'),
+                                          ),
+                                        const SizedBox(width: 10),
+                                        if (!isCurrentUser)
+                                          ElevatedButton(
+                                            onPressed: () {},
+                                            style: ElevatedButton.styleFrom(
+                                              foregroundColor: Colors.white,
+                                              backgroundColor: Colors.redAccent,
+                                            ),
+                                            child: const Text('Kick'),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ).animate().fadeIn(duration: 300.ms).scale(
+                                  begin: const Offset(0.9, 0.9),
+                                  curve: Curves.easeOutBack,
+                                );
+                          },
+                        );
+                      },
+                      error: (error, stack) => Center(
+                        child: Text(error.toString())
+                            .animate()
+                            .shimmer(colors: [Colors.grey, Colors.white]),
+                      ),
+                      loading: () => const Center(
+                        child: Loading(),
+                      ),
                     ),
-                    loading: () => const Center(
-                      child: Loading(),
-                    ),
-                  ),
+              ),
             ),
           ],
         ),
@@ -191,7 +261,7 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
                 title:
                     const Text('1 Day', style: TextStyle(color: Colors.white)),
                 onTap: () =>
-                    _handleTemporarySuspension(user, const Duration(days: 1)),
+                    _handleTemporarySuspension(user, const Duration(minutes: 5)),
               ),
               ListTile(
                 title:
@@ -240,6 +310,10 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
         );
       },
     );
+  }
+
+  Future<void> _onRefresh()async{
+    ref.invalidate(fetchInitialCommunityMembersProvider);
   }
 
   void _handleTemporarySuspension(UserModel user, Duration duration) async {
@@ -385,7 +459,7 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
       final result =
           await ref.read(moderationControllerProvider.notifier).suspendUser(
                 uid: user.uid,
-                communityId: widget._community.id,
+                communityId: widget.community.id,
                 isPermanent: isPermanent,
                 reason: reason,
                 expiresAt: Timestamp.fromDate(
@@ -402,7 +476,7 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
       final result =
           await ref.read(moderationControllerProvider.notifier).suspendUser(
                 uid: user.uid,
-                communityId: widget._community.id,
+                communityId: widget.community.id,
                 isPermanent: isPermanent,
                 reason: reason,
                 expiresAt: Timestamp.fromDate(
@@ -427,7 +501,7 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
     final result =
         await ref.read(moderationControllerProvider.notifier).suspendUser(
               uid: user.uid,
-              communityId: widget._community.id,
+              communityId: widget.community.id,
               isPermanent: false,
               reason: reason,
               expiresAt: Timestamp.fromDate(
@@ -444,7 +518,7 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
   void _inviteUserAsModerator(UserModel friend) async {
     final result = await ref
         .read(moderationControllerProvider.notifier)
-        .inviteAsModerator(friend.uid, widget._community);
+        .inviteAsModerator(friend.uid, widget.community);
     result.fold(
       (l) => showToast(false, l.message),
       (r) {

@@ -173,16 +173,27 @@ class _CommunityPostContainerState
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: ref.watch(preferredThemeProvider).first,
           title: const Text('Confirm Delete'),
           content: const Text('Are you sure you want to delete this post?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.greenAccent,
+                ),
+              ),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Delete'),
+              child: const Text(
+                'Delete',
+                style: TextStyle(
+                  color: Colors.red,
+                ),
+              ),
             ),
           ],
         );

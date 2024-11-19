@@ -45,7 +45,7 @@ class _OutgoingCallScreenState extends ConsumerState<OutgoingCallScreen> {
   void initState() {
     super.initState();
     _timeLeft = 30;
-
+    
     _timer = Timer.periodic(
       const Duration(seconds: 1),
       (timer) {

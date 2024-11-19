@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Invitation {
-  final String id;
+  final String id;  
   final String senderUid;
   final String receiverUid;
   final String type;

@@ -16,18 +16,17 @@ class PostStaticButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () => onTap(),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(15), // Giảm kích thước borderRadius
       child: Container(
         decoration: BoxDecoration(
-          // Màu tím tối
           color: Colors.purple[800],
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(15), // Giảm kích thước borderRadius
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.5),
-              spreadRadius: 2,
-              blurRadius: 6,
-              offset: const Offset(0, 3),
+              color: Colors.black.withOpacity(0.4),
+              spreadRadius: 1.5,
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
           ],
           gradient: const LinearGradient(
@@ -39,21 +38,21 @@ class PostStaticButton extends StatelessWidget {
             end: Alignment.bottomRight,
           ),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0), // Giảm padding
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
               color: Colors.white,
-              size: 22,
+              size: 18, // Giảm kích thước icon
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 4), // Giảm khoảng cách giữa icon và label
             Text(
               label,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 16,
+                fontSize: 14, // Giảm kích thước font
                 fontWeight: FontWeight.w500,
               ),
             ),

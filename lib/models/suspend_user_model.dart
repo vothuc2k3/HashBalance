@@ -7,20 +7,21 @@ class SuspendUserModel {
   final String uid;
   final String communityId;
   final String reason;
-  final bool
-      isPermanent; // true if the suspension is permanent, false if it's temporary
+  final bool isPermanent;
   final int? days;
   final Timestamp suspendedAt;
   final Timestamp? expiresAt;
+  final Timestamp createdAt;
   SuspendUserModel({
     required this.id,
     required this.uid,
     required this.communityId,
     required this.reason,
     required this.isPermanent,
+    this.days,
     required this.suspendedAt,
     this.expiresAt,
-    this.days,
+    required this.createdAt,
   });
 
   SuspendUserModel copyWith({
@@ -29,9 +30,10 @@ class SuspendUserModel {
     String? communityId,
     String? reason,
     bool? isPermanent,
+    int? days,
     Timestamp? suspendedAt,
     Timestamp? expiresAt,
-    int? days,
+    Timestamp? createdAt,
   }) {
     return SuspendUserModel(
       id: id ?? this.id,
@@ -39,9 +41,10 @@ class SuspendUserModel {
       communityId: communityId ?? this.communityId,
       reason: reason ?? this.reason,
       isPermanent: isPermanent ?? this.isPermanent,
+      days: days ?? this.days,
       suspendedAt: suspendedAt ?? this.suspendedAt,
       expiresAt: expiresAt ?? this.expiresAt,
-      days: days ?? this.days,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 
@@ -52,9 +55,10 @@ class SuspendUserModel {
       'communityId': communityId,
       'reason': reason,
       'isPermanent': isPermanent,
+      'days': days,
       'suspendedAt': suspendedAt,
       'expiresAt': expiresAt,
-      'days': days,
+      'createdAt': createdAt,
     };
   }
 
@@ -65,19 +69,21 @@ class SuspendUserModel {
       communityId: map['communityId'] as String,
       reason: map['reason'] as String,
       isPermanent: map['isPermanent'] as bool,
+      days: map['days'] != null ? map['days'] as int : null,
       suspendedAt: map['suspendedAt'] as Timestamp,
       expiresAt: map['expiresAt'] != null ? map['expiresAt'] as Timestamp : null,
-      days: map['days'] != null ? map['days'] as int : null,
+      createdAt: map['createdAt'] as Timestamp,
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory SuspendUserModel.fromJson(String source) => SuspendUserModel.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory SuspendUserModel.fromJson(String source) =>
+      SuspendUserModel.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
-    return 'SuspendUserModel(id: $id, uid: $uid, communityId: $communityId, reason: $reason, isPermanent: $isPermanent, suspendedAt: $suspendedAt, expiresAt: $expiresAt)';
+    return 'SuspendUserModel(id: $id, uid: $uid, communityId: $communityId, reason: $reason, isPermanent: $isPermanent, days: $days, suspendedAt: $suspendedAt, expiresAt: $expiresAt, createdAt: $createdAt)';
   }
 
   @override
@@ -90,9 +96,10 @@ class SuspendUserModel {
       other.communityId == communityId &&
       other.reason == reason &&
       other.isPermanent == isPermanent &&
+      other.days == days &&
       other.suspendedAt == suspendedAt &&
       other.expiresAt == expiresAt &&
-      other.days == days;
+      other.createdAt == createdAt;
   }
 
   @override
@@ -102,8 +109,9 @@ class SuspendUserModel {
       communityId.hashCode ^
       reason.hashCode ^
       isPermanent.hashCode ^
+      days.hashCode ^
       suspendedAt.hashCode ^
       expiresAt.hashCode ^
-      days.hashCode;
+      createdAt.hashCode;
   }
 }

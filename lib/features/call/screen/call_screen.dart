@@ -62,7 +62,7 @@ class CallScreenState extends ConsumerState<CallScreen> {
     );
   }
 
-  @override
+  @override 
   void didChangeDependencies() {
     super.didChangeDependencies();
     initAgora();

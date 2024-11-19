@@ -6,7 +6,7 @@ class Report {
   final String id;
   final String type;
   final String reporterUid;
-  final String communityId;
+  final String? communityId;
   final String? reportedPostId;
   final String? reportedCommentId;
   final String? reportedUid;
@@ -16,7 +16,7 @@ class Report {
     required this.id,
     required this.type,
     required this.reporterUid,
-    required this.communityId,
+    this.communityId,
     this.reportedPostId,
     this.reportedCommentId,
     this.reportedUid,
@@ -67,7 +67,8 @@ class Report {
       id: map['id'] as String,
       type: map['type'] as String,
       reporterUid: map['reporterUid'] as String,
-      communityId: map['communityId'] as String,
+      communityId:
+          map['communityId'] != null ? map['communityId'] as String : null,
       reportedPostId: map['reportedPostId'] != null
           ? map['reportedPostId'] as String
           : null,

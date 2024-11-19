@@ -40,7 +40,7 @@ final getArchivedPostsProvider =
 });
 
 final fetchInitialCommunityMembersProvider =
-    StreamProvider.family((ref, String communityId) {
+    StreamProvider.family.autoDispose((ref, String communityId) {
   return ref
       .read(moderationControllerProvider.notifier)
       .fetchInitialCommunityMembers(communityId);
@@ -412,6 +412,7 @@ class ModerationController extends StateNotifier<bool> {
       isPermanent: isPermanent,
       suspendedAt: Timestamp.now(),
       expiresAt: expiresAt,
+      createdAt: Timestamp.now(),
     );
     return await _moderationRepository.suspendUser(
         suspendUserModel: suspendUserModel);
@@ -420,5 +421,11 @@ class ModerationController extends StateNotifier<bool> {
   Stream<List<SuspendedUserCombinedModel>> fetchSuspendedUsers(
       String communityId) {
     return _moderationRepository.fetchSuspendedUsers(communityId);
+  }
+
+  Future<String> getMemberRole(
+      String uid, String communityId) async {
+    String membershipId = getMembershipId(uid: uid, communityId: communityId);
+    return await _moderationRepository.getMemberRole(membershipId);
   }
 }

@@ -9,13 +9,13 @@ import 'package:hash_balance/core/providers/storage_repository.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
+import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/post/repository/post_repository.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/poll_option_vote_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
-import 'package:logger/logger.dart';
 import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 import 'package:hash_balance/models/poll_option_model.dart';
@@ -83,11 +83,12 @@ final getPostCommentCountProvider = FutureProvider.family((ref, String postId) {
 
 final postControllerProvider = StateNotifierProvider<PostController, bool>(
   (ref) => PostController(
-      commentController: ref.watch(commentControllerProvider.notifier),
-      postRepository: ref.watch(postRepositoryProvider),
+      commentController: ref.read(commentControllerProvider.notifier),
+      postRepository: ref.read(postRepositoryProvider),
       pushNotificationController:
-          ref.watch(pushNotificationControllerProvider.notifier),
-      storageRepository: ref.watch(storageRepositoryProvider),
+          ref.read(pushNotificationControllerProvider.notifier),
+      moderationController: ref.read(moderationControllerProvider.notifier),
+      storageRepository: ref.read(storageRepositoryProvider),
       ref: ref),
 );
 
@@ -96,6 +97,7 @@ class PostController extends StateNotifier<bool> {
   final StorageRepository _storageRepository;
   // ignore: unused_field
   final PushNotificationController _pushNotificationController;
+  final ModerationController _moderationController;
   final Ref _ref;
   final CommentController _commentController;
   final Uuid _uuid = const Uuid();
@@ -104,11 +106,13 @@ class PostController extends StateNotifier<bool> {
     required PostRepository postRepository,
     required StorageRepository storageRepository,
     required PushNotificationController pushNotificationController,
+    required ModerationController moderationController,
     required CommentController commentController,
     required Ref ref,
   })  : _postRepository = postRepository,
         _storageRepository = storageRepository,
         _pushNotificationController = pushNotificationController,
+        _moderationController = moderationController,
         _commentController = commentController,
         _ref = ref,
         super(false);
@@ -122,17 +126,24 @@ class PostController extends StateNotifier<bool> {
   }) async {
     state = true;
     try {
+      late String postStatus;
       if (content.isEmpty && images == null && video == null) {
         return left(Failures('Post cannot be empty'));
       }
       final uid = _ref.read(userProvider)!.uid;
+      final role = await _moderationController.getMemberRole(uid, community.id);
+      if (role == 'suspended') {
+        return left(Failures('You are suspended from this community'));
+      }
+
       switch (community.type) {
         case 'Public':
+          postStatus = 'Approved';
           final post = Post(
             communityId: community.id,
             uid: uid,
             content: content,
-            status: 'Approved',
+            status: postStatus,
             isEdited: false,
             isPinned: false,
             isPoll: false,
@@ -142,11 +153,14 @@ class PostController extends StateNotifier<bool> {
           final result = await _postRepository.createPost(post, images, video);
           return result;
         default:
+          role == 'moderator'
+              ? postStatus = 'Approved'
+              : postStatus = 'Pending';
           final post = Post(
             communityId: community.id,
             uid: uid,
             content: content,
-            status: 'Pending',
+            status: postStatus,
             isEdited: false,
             isPinned: false,
             isPoll: false,
@@ -157,13 +171,10 @@ class PostController extends StateNotifier<bool> {
           return result;
       }
     } on FirebaseException catch (e) {
-      Logger().d(e.message!);
       return left(Failures(e.message!));
     } catch (e) {
-      Logger().d(e.toString());
       return left(Failures(e.toString()));
     } finally {
-      Logger().d('state = false');
       state = false;
     }
   }
@@ -178,7 +189,6 @@ class PostController extends StateNotifier<bool> {
   }
 
   Future<Either<Failures, void>> deletePost(Post post) async {
-    state = true;
     try {
       final user = _ref.watch(userProvider)!;
       Either<Failures, void> result;
@@ -207,8 +217,6 @@ class PostController extends StateNotifier<bool> {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
-    } finally {
-      state = false;
     }
   }
 

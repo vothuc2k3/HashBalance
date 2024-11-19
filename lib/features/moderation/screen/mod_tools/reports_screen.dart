@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/report_detail_screen.dart';
 import 'package:hash_balance/features/report/controller/report_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/report_model.dart';
 
@@ -22,24 +25,30 @@ class ReportsScreenState extends ConsumerState<ReportsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: ref.watch(preferredThemeProvider).second,
         title: const Text('User Reports'),
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF000000),
-              Color(0xFF0D47A1),
-              Color(0xFF1976D2),
-            ],
-          ),
+        decoration: BoxDecoration(
+          color: ref.watch(preferredThemeProvider).first,
         ),
         child: ref.watch(communityReportsProvider(widget.community.id)).when(
               data: (reports) {
                 if (reports.isEmpty) {
-                  return const Center(child: Text('No reports available.'));
+                  return Center(
+                    child: const Text(
+                      'You have no new notifications',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white70,
+                      ),
+                    ).animate().fadeIn(duration: 600.ms).moveY(
+                          begin: 30,
+                          end: 0,
+                          duration: 600.ms,
+                          curve: Curves.easeOutBack,
+                        ),
+                  );
                 }
                 return ListView.builder(
                   itemCount: reports.length,
@@ -49,7 +58,9 @@ class ReportsScreenState extends ConsumerState<ReportsScreen> {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const Center(
+                child: Loading(),
+              ),
               error: (error, stackTrace) =>
                   Center(child: Text('Error: $error')),
             ),

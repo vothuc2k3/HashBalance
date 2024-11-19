@@ -48,57 +48,67 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
   void _showCommunityTypeModal() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Pallete.blackColor,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
       builder: (BuildContext context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              height: 3,
-              width: 40,
-              color: Colors.grey,
-              margin: const EdgeInsets.symmetric(vertical: 8),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Community type',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                color: Colors.white,
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                height: 4,
+                width: 50,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                margin: const EdgeInsets.symmetric(vertical: 8),
               ),
-            ),
-            ...Constants.communityTypes.map<Widget>(
-              (String value) {
-                return ListTile(
-                  leading: Icon(
-                    Constants.communityTypeIcons[value],
-                    color: Colors.white,
-                  ),
-                  title: Text(
-                    value,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  subtitle: Text(
-                    Constants.communityTypesDescMap[value]!,
-                    style: const TextStyle(color: Colors.white70),
-                  ),
-                  onTap: () {
-                    setState(() {
-                      selectedCommunityType = value;
-                      selectedCommunityTypeDesc =
-                          Constants.communityTypesDescMap[value]!;
-                    });
-                    Navigator.pop(context);
-                  },
-                );
-              },
-            ),
-          ],
-        ).animate().fadeIn();
+              const SizedBox(height: 10),
+              const Text(
+                'Community Type',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 20),
+              ...Constants.communityTypes.map<Widget>(
+                (String value) {
+                  return ListTile(
+                    leading: Icon(
+                      Constants.communityTypeIcons[value],
+                      color: Pallete.blueColor,
+                    ),
+                    title: Text(
+                      value,
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text(
+                      Constants.communityTypesDescMap[value]!,
+                      style: const TextStyle(color: Colors.black54),
+                    ),
+                    onTap: () {
+                      setState(() {
+                        selectedCommunityType = value;
+                        selectedCommunityTypeDesc =
+                            Constants.communityTypesDescMap[value]!;
+                      });
+                      Navigator.pop(context);
+                    },
+                  );
+                },
+              ),
+            ],
+          ).animate().fadeIn(),
+        );
       },
     );
   }
@@ -112,79 +122,79 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text(
-            'Create your new Community',
+            'Create Your New Community',
             style: TextStyle(
               color: Colors.white,
             ),
           ),
           backgroundColor: ref.watch(preferredThemeProvider).second,
+          elevation: 0,
         ),
         body: Container(
-          color: ref.watch(preferredThemeProvider).first,
+          decoration: BoxDecoration(
+            color: ref.watch(preferredThemeProvider).first,
+          ),
           child: Column(
             children: [
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(10.0),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Your Community name',
+                        'Community Name',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      TextFormField(
-                        style: const TextStyle(
-                          color: Colors.white,
+                      const SizedBox(height: 8),
+                      Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        controller: communityNameController,
-                        decoration: const InputDecoration(
-                          prefixText: '#=',
-                          prefixStyle: TextStyle(color: Colors.grey),
-                          hintText: 'Community_name',
-                          hintStyle: TextStyle(color: Colors.white54),
-                          filled: true,
-                          fillColor: Pallete.greyColor,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(20)),
-                            borderSide: BorderSide.none,
+                        color: Colors.white.withOpacity(0.1),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: TextFormField(
+                            style: const TextStyle(
+                              color: Colors.white,
+                            ),
+                            controller: communityNameController,
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              prefixText: '# ',
+                              prefixStyle: TextStyle(color: Colors.white54),
+                              hintText: 'Enter community name',
+                              hintStyle: TextStyle(color: Colors.white38),
+                            ),
+                            maxLength: 21,
                           ),
-                          contentPadding: EdgeInsets.symmetric(
-                              vertical: 15, horizontal: 20),
                         ),
-                        validator: (value) {
-                          if (value!.isEmpty) {
-                            return 'Community name cannot be empty';
-                          }
-                          return null;
-                        },
-                        maxLength: 21,
                       ),
                       const SizedBox(height: 20),
                       const Text(
-                        'Your Community type',
+                        'Community Type',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
                         ),
                       ).animate().fadeIn(),
+                      const SizedBox(height: 10),
                       InkWell(
                         onTap: _showCommunityTypeModal,
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 15, bottom: 10),
-                          child: Container(
+                        child: Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          color: Colors.white.withOpacity(0.1),
+                          child: Padding(
                             padding: const EdgeInsets.symmetric(
-                                vertical: 15, horizontal: 20),
-                            decoration: BoxDecoration(
-                              color: Pallete.greyColor,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
+                                vertical: 15, horizontal: 16),
                             child: Row(
                               children: [
                                 Expanded(
@@ -192,7 +202,7 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
                                     selectedCommunityType,
                                     style: const TextStyle(
                                       color: Colors.white,
-                                      fontSize: 18,
+                                      fontSize: 16,
                                     ),
                                   ),
                                 ),
@@ -207,7 +217,7 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
                       ),
                       if (selectedCommunityTypeDesc != null)
                         Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Text(
                             selectedCommunityTypeDesc!,
                             style: const TextStyle(color: Colors.white70),
@@ -222,32 +232,34 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
                           fontSize: 18,
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      TextFormField(
-                        style: const TextStyle(
-                          color: Colors.white,
+                      const SizedBox(height: 8),
+                      Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        controller: descController,
-                        decoration: const InputDecoration(
-                          hintText: 'Describe your community...',
-                          hintStyle: TextStyle(color: Colors.white54),
-                          filled: true,
-                          fillColor: Pallete.greyColor,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(20)),
-                            borderSide: BorderSide.none,
+                        color: Colors.white.withOpacity(0.1),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: TextFormField(
+                            style: const TextStyle(
+                              color: Colors.white,
+                            ),
+                            controller: descController,
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              hintText: 'Describe your community...',
+                              hintStyle: TextStyle(color: Colors.white38),
+                            ),
+                            maxLines: 3,
                           ),
-                          contentPadding: EdgeInsets.symmetric(
-                              vertical: 15, horizontal: 20),
                         ),
-                        maxLines: 3,
                       ),
                       const SizedBox(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            'Exposure contents?',
+                            'Contains Sensitive Content?',
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -270,27 +282,28 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
                 ),
               ).animate().fadeIn(),
               Padding(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(16),
                 child: ElevatedButton(
                   onPressed: !isLoading ? createCommunity : null,
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(25),
                     ),
-                    backgroundColor: Pallete.blueColor,
+                    backgroundColor: Colors.lightBlueAccent,
                   ),
                   child: isLoading
                       ? const Loading().animate().fadeIn()
                       : const Text(
-                          'Create community',
+                          'Create Community',
                           style: TextStyle(
-                            fontSize: 17,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
                         ).animate().fadeIn(),
                 ),
-              ).animate().fadeIn(),
+              ),
             ],
           ),
         ),

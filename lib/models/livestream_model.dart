@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 
 class Livestream {
   final String id;
@@ -10,7 +9,6 @@ class Livestream {
   final String communityId;
   final String status;
   final String? agoraToken;
-  final List<String>? viewers;
   final Timestamp createdAt;
   Livestream({
     required this.id,
@@ -19,7 +17,6 @@ class Livestream {
     required this.communityId,
     required this.status,
     this.agoraToken,
-    this.viewers,
     required this.createdAt,
   });
 
@@ -30,7 +27,6 @@ class Livestream {
     String? communityId,
     String? status,
     String? agoraToken,
-    List<String>? viewers,
     Timestamp? createdAt,
   }) {
     return Livestream(
@@ -40,7 +36,6 @@ class Livestream {
       communityId: communityId ?? this.communityId,
       status: status ?? this.status,
       agoraToken: agoraToken ?? this.agoraToken,
-      viewers: viewers ?? this.viewers,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -53,7 +48,6 @@ class Livestream {
       'communityId': communityId,
       'status': status,
       'agoraToken': agoraToken,
-      'viewers': viewers,
       'createdAt': createdAt,
     };
   }
@@ -67,9 +61,6 @@ class Livestream {
       status: map['status'] as String,
       agoraToken:
           map['agoraToken'] != null ? map['agoraToken'] as String : null,
-      viewers: map['viewers'] != null
-          ? List<String>.from((map['viewers'] as List<dynamic>))
-          : null,
       createdAt: map['createdAt'] as Timestamp,
     );
   }
@@ -81,7 +72,7 @@ class Livestream {
 
   @override
   String toString() {
-    return 'Livestream(id: $id, content: $content, uid: $uid, communityId: $communityId, status: $status, agoraToken: $agoraToken, viewers: $viewers, createdAt: $createdAt)';
+    return 'Livestream(id: $id, content: $content, uid: $uid, communityId: $communityId, status: $status, agoraToken: $agoraToken, createdAt: $createdAt)';
   }
 
   @override
@@ -94,7 +85,6 @@ class Livestream {
         other.communityId == communityId &&
         other.status == status &&
         other.agoraToken == agoraToken &&
-        listEquals(other.viewers, viewers) &&
         other.createdAt == createdAt;
   }
 
@@ -106,7 +96,6 @@ class Livestream {
         communityId.hashCode ^
         status.hashCode ^
         agoraToken.hashCode ^
-        viewers.hashCode ^
         createdAt.hashCode;
   }
 }

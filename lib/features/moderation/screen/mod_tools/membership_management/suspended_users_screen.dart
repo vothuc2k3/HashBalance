@@ -1,9 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fuzzy/fuzzy.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/conbined_models/suspended_user_combined_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -21,17 +23,74 @@ class SuspendedUsersScreen extends ConsumerStatefulWidget {
 }
 
 class _SuspendedUsersScreenState extends ConsumerState<SuspendedUsersScreen> {
+  bool isSearching = false;
+  final searchController = TextEditingController();
+  static List<SuspendedUserCombinedModel> memberList = [];
+  List<SuspendedUserCombinedModel> filteredUsers = [];
+
+  List<SuspendedUserCombinedModel> searchUsers(String query) {
+    final fuse = Fuzzy(
+      memberList.map((e) => e.user.name).toList(),
+      options: FuzzyOptions(
+        findAllMatches: true,
+        tokenize: true,
+        threshold: 0.4,
+      ),
+    );
+
+    final result = fuse.search(query);
+
+    return result
+        .map((r) => memberList.firstWhere((e) => e.user.name == r.item))
+        .toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final suspendedUsers =
         ref.watch(fetchSuspendedUsersProvider(widget.community.id));
-
     return Scaffold(
       backgroundColor: ref.watch(preferredThemeProvider).first,
+      appBar: AppBar(
+        backgroundColor: ref.watch(preferredThemeProvider).second,
+        title: isSearching
+            ? TextField(
+                controller: searchController,
+                decoration: const InputDecoration(
+                  hintText: 'Search users...',
+                  border: InputBorder.none,
+                ),
+                style: const TextStyle(color: Colors.white),
+                onChanged: (query) {
+                  setState(() {
+                    filteredUsers = query.isEmpty
+                        ? List.from(memberList)
+                        : searchUsers(query);
+                  });
+                },
+              )
+            :const Text('Suspended Users'),
+        actions: [
+          IconButton(
+            icon: Icon(isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                isSearching = !isSearching;
+                if (!isSearching) {
+                  searchController.clear();
+                  filteredUsers = List.from(memberList);
+                }
+              });
+            },
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: suspendedUsers.when(
           data: (users) {
+            memberList = users;
+            filteredUsers = isSearching ? filteredUsers : users;
             if (users.isEmpty) {
               return Center(
                 child: const Text(

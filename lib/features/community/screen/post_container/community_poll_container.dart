@@ -13,6 +13,7 @@ import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/poll_option_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:tuple/tuple.dart';
 
 class PollContainer extends ConsumerStatefulWidget {
   final UserModel author;
@@ -33,6 +34,8 @@ class PollContainer extends ConsumerStatefulWidget {
 class _PollContainerState extends ConsumerState<PollContainer> {
   bool isLoading = false;
   UserModel? currentUser;
+  List<PollOption>? previousOptions;
+  String? previousVotedOptionId;
 
   void _deletePoll() async {
     await ref
@@ -142,6 +145,7 @@ class _PollContainerState extends ConsumerState<PollContainer> {
 
   @override
   Widget build(BuildContext context) {
+    final pollId = widget.poll.id;
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       padding: const EdgeInsets.all(10),
@@ -166,65 +170,161 @@ class _PollContainerState extends ConsumerState<PollContainer> {
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
-          ref.watch(getUserPollOptionVoteProvider(widget.poll.id)).when(
-                data: (votedOptionId) {
-                  return Column(
-                      children: ref
-                          .watch(getPollOptionsProvider(widget.poll.id))
-                          .when(
-                            data: (options) => options.map((option) {
-                              final isSelected = votedOptionId == option.id;
-                              return InkWell(
-                                onTap: () =>
-                                    _handleOptionTap(optionId: option.id),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? Colors.green
-                                        : ref
-                                            .watch(preferredThemeProvider)
-                                            .third,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 8, horizontal: 12),
-                                  margin:
-                                      const EdgeInsets.symmetric(vertical: 5),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          option.option,
-                                          style: const TextStyle(
-                                              color: Colors.white),
-                                        ),
-                                      ),
-                                      if (isSelected)
-                                        const Icon(
-                                          Icons.check,
-                                          color: Colors.white,
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                            error: (Object error, StackTrace stackTrace) {
-                              return [
-                                Text('Error: $error',
-                                    style: const TextStyle(color: Colors.red))
-                              ];
-                            },
-                            loading: () => [const Loading()],
-                          ));
-                },
-                loading: () => const Loading(),
-                error: (error, stackTrace) => Text('Error: $error',
-                    style: const TextStyle(color: Colors.red)),
-              ),
+          ref.watch(getUserPollOptionVoteProvider(pollId)).whenOrNull(
+                    data: (votedOptionId) {
+                      previousVotedOptionId = votedOptionId;
+                      return _buildPollOptions(pollId, votedOptionId);
+                    },
+                    loading: () {
+                      if (previousVotedOptionId != null) {
+                        return _buildPollOptions(pollId, previousVotedOptionId);
+                      } else {
+                        return const Loading();
+                      }
+                    },
+                    error: (error, stackTrace) => Text('Error: $error',
+                        style: const TextStyle(color: Colors.red)),
+                  ) ??
+              const SizedBox.shrink(),
         ],
       ),
+    );
+  }
+
+  Widget _buildPollOptions(String pollId, String? votedOptionId) {
+    final asyncValue = ref.watch(getPollOptionsProvider(pollId));
+
+    return asyncValue.when(
+      data: (options) {
+        previousOptions = options;
+
+        return Column(
+          children: options.map((option) {
+            final isSelected = votedOptionId == option.id;
+            final optionVoteCountState = ref.watch(
+              getPollOptionVotesCountAndUserVoteStatusProvider(
+                Tuple2(pollId, option.id),
+              ),
+            );
+
+            return optionVoteCountState.when(
+              data: (voteData) {
+                final voteCount = voteData.item2;
+                return InkWell(
+                  onTap: () => _handleOptionTap(optionId: option.id),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? Colors.green
+                          : ref.watch(preferredThemeProvider).third,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                    margin: const EdgeInsets.symmetric(vertical: 5),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            option.option,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        Text(
+                          '$voteCount votes',
+                          style: const TextStyle(
+                              color: Colors.white70, fontSize: 12),
+                        ),
+                        if (isSelected)
+                          const Padding(
+                            padding: EdgeInsets.only(left: 8.0),
+                            child: Icon(
+                              Icons.check,
+                              color: Colors.white,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+              loading: () => _buildLoadingOption(option, isSelected),
+              error: (error, stackTrace) => Text(
+                'Error: $error',
+                style: const TextStyle(color: Colors.red),
+              ),
+            );
+          }).toList(),
+        );
+      },
+      error: (error, stackTrace) =>
+          Text('Error: $error', style: const TextStyle(color: Colors.red)),
+      loading: () => previousOptions != null
+          ? _buildLoadingOptionsUI(previousOptions!, votedOptionId)
+          : const Loading(),
+    );
+  }
+
+  Widget _buildLoadingOption(PollOption option, bool isSelected) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      decoration: BoxDecoration(
+        color:
+            isSelected ? Colors.green : ref.watch(preferredThemeProvider).third,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      margin: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              option.option,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+          const SizedBox(width: 16, height: 16, child: Loading()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingOptionsUI(
+      List<PollOption> options, String? votedOptionId) {
+    return Column(
+      children: options.map((option) {
+        final isSelected = votedOptionId == option.id;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? Colors.green
+                : ref.watch(preferredThemeProvider).third,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          margin: const EdgeInsets.symmetric(vertical: 5),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  option.option,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 

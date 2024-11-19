@@ -99,6 +99,7 @@ class HomeScreenState extends ConsumerState<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    
     ref.listen<AsyncValue<CallDataModel?>>(
       listenToIncomingCallsProvider,
       (previous, next) {
@@ -112,6 +113,7 @@ class HomeScreenState extends ConsumerState<HomeScreen>
         );
       },
     );
+
     final user = ref.watch(userProvider);
 
     GlobalAnimationController.initialize(this);

@@ -250,11 +250,13 @@ class _OtherUserProfileWidgetState
                                             ),
                                     //BUILD MESSAGE USER
                                     const SizedBox(height: 8, width: 8),
-                                    _buildMessageButton(
-                                      onPressed: _messageUser,
-                                      targetUser: user,
-                                      isBlocked: data.item2,
-                                    ),
+                                    data.item4
+                                        ? _buildMessageButton(
+                                            onPressed: _messageUser,
+                                            targetUser: user,
+                                            isBlocked: data.item2,
+                                          )
+                                        : const SizedBox.shrink(),
                                   ],
                                 ),
                                 const SizedBox(height: 16),
@@ -326,7 +328,7 @@ class _OtherUserProfileWidgetState
             onPressed: () {
               followUser(targetUser);
             },
-            icon: const Icon(Icons.person_add_alt_1, color: Colors.white),
+            icon: const Icon(Icons.person_pin, color: Colors.white),
             label: const Text('Follow'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,
@@ -551,18 +553,19 @@ class _OtherUserProfileWidgetState
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: ref.watch(preferredThemeProvider).first,
           title: const Text('Cancel Friend Request'),
           content: const Text(
               'Are you sure you want to cancel this friend request?'),
           actions: <Widget>[
             TextButton(
-              child: const Text('No'),
+              child: const Text('No', style: TextStyle(color: Colors.greenAccent)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: const Text('Yes'),
+              child: const Text('Yes', style: TextStyle(color: Colors.red)),
               onPressed: () {
                 cancel(requestId);
                 Navigator.of(context).pop();
@@ -583,17 +586,28 @@ class _OtherUserProfileWidgetState
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: ref.watch(preferredThemeProvider).first,
           title: const Text('Unfriend'),
           content: const Text('Do you want to unfriend this user?'),
           actions: <Widget>[
             TextButton(
-              child: const Text('No'),
+              child: const Text(
+                'No',
+                style: TextStyle(
+                  color: Colors.green,
+                ),
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-                child: const Text('Yes'),
+                child: const Text(
+                  'Yes',
+                  style: TextStyle(
+                    color: Colors.red,
+                  ),
+                ),
                 onPressed: () {
                   unfriend(targetUser);
                   Navigator.of(context).pop();

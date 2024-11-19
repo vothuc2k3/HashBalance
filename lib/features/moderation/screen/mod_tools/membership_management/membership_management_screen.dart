@@ -36,10 +36,6 @@ class _MembershipManagementScreenState
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: ref.watch(preferredThemeProvider).second,
-        title: const Text('Membership Management'),
-      ),
       body: screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,

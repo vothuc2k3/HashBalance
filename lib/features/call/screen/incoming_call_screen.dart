@@ -86,7 +86,6 @@ class _IncomingCallScreenState extends ConsumerState<IncomingCallScreen> {
         next.when(
           data: (call) {
             if (call == null) {
-              // Cuộc gọi đã kết thúc hoặc không còn cuộc gọi nào
               if (!_isScreenPopped) {
                 _isScreenPopped = true;
                 if (Navigator.canPop(context)) {
@@ -102,7 +101,6 @@ class _IncomingCallScreenState extends ConsumerState<IncomingCallScreen> {
               }
             } else {
               if (call.status == Constants.callStatusOngoing) {
-                // Cuộc gọi đang diễn ra
                 if (!_isScreenPopped) {
                   _isScreenPopped = true;
                   Navigator.pushReplacement(

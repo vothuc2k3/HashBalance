@@ -409,7 +409,9 @@ class ModerationRepository {
   }) async {
     try {
       await _communityMembership
-          .doc(getMembershipId(uid: suspendUserModel.uid, communityId: suspendUserModel.communityId))
+          .doc(getMembershipId(
+              uid: suspendUserModel.uid,
+              communityId: suspendUserModel.communityId))
           .update({
         'status': 'suspended',
       });
@@ -449,5 +451,20 @@ class ModerationRepository {
       }
       return users;
     });
+  }
+  Future<String> getMemberRole(String membershipId) async {
+    try {
+      final membershipDoc = await _communityMembership.doc(membershipId).get();
+      if (!membershipDoc.exists) {
+        throw Exception('Membership does not exist');
+      }
+      final data = membershipDoc.data() as Map<String, dynamic>;
+      final role = data['role'] as String;
+      return role;
+    } on FirebaseException catch (e) {
+      throw Exception(e.message);
+    } catch (e) {
+      throw Exception(e.toString());
+    }
   }
 }
