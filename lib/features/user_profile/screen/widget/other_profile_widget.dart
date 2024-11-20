@@ -11,6 +11,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/message/screen/private_message_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
+import 'package:hash_balance/features/user_profile/screen/friends/mutual_friends_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -318,7 +319,7 @@ class _OtherUserProfileWidgetState
                             Tuple2(currentUserUid, uid)))
                         .whenOrNull(
                           data: (mutualFriendsCount) => GestureDetector(
-                            onTap: () {},
+                            onTap: () => _navigateToMutualFriendsScreen(uid),
                             child: Text(
                               'Mutual Friends: $mutualFriendsCount',
                               style: const TextStyle(
@@ -437,6 +438,13 @@ class _OtherUserProfileWidgetState
           ),
           loading: () => const Center(child: Loading()),
         );
+  }
+
+  void _navigateToMutualFriendsScreen(String uid) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => MutualFriendsScreen(uid: uid)),
+    );
   }
 
   Widget _buildFollowButton(

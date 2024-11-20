@@ -105,14 +105,25 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
                       data: (posts) {
                         loadedPosts = posts;
                         if (loadedPosts.isEmpty) {
-                          return const Center(
-                            child: Text(
-                              'No posts available.',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                          return ListView(
+                            children: [
+                              Center(
+                                child: Container(
+                                  constraints: BoxConstraints(
+                                    minHeight: MediaQuery.of(context).size.height,
+                                  ),
+                                  child: const Center(
+                                    child: Text(
+                                      'No posts available.',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
+                            ],
                           );
                         }
                         return ListView.builder(

@@ -9,6 +9,7 @@ import 'package:hash_balance/core/providers/storage_repository.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
+import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/post/repository/post_repository.dart';
 import 'package:hash_balance/features/post_share/controller/post_share_controller.dart';
@@ -90,6 +91,7 @@ final postControllerProvider = StateNotifierProvider<PostController, bool>(
       pushNotificationController:
           ref.read(pushNotificationControllerProvider.notifier),
       moderationController: ref.read(moderationControllerProvider.notifier),
+      communityController: ref.read(communityControllerProvider.notifier),
       storageRepository: ref.read(storageRepositoryProvider),
       ref: ref),
 );
@@ -99,6 +101,7 @@ class PostController extends StateNotifier<bool> {
   final StorageRepository _storageRepository;
   final PushNotificationController _pushNotificationController;
   final ModerationController _moderationController;
+  final CommunityController _communityController;
   final PostShareController _postShareController;
   final Ref _ref;
   final CommentController _commentController;
@@ -109,6 +112,7 @@ class PostController extends StateNotifier<bool> {
     required StorageRepository storageRepository,
     required PushNotificationController pushNotificationController,
     required ModerationController moderationController,
+    required CommunityController communityController,
     required PostShareController postShareController,
     required CommentController commentController,
     required Ref ref,
@@ -116,6 +120,7 @@ class PostController extends StateNotifier<bool> {
         _storageRepository = storageRepository,
         _pushNotificationController = pushNotificationController,
         _moderationController = moderationController,
+        _communityController = communityController,
         _postShareController = postShareController,
         _commentController = commentController,
         _ref = ref,
@@ -194,8 +199,9 @@ class PostController extends StateNotifier<bool> {
 
   Future<Either<Failures, void>> deletePost(Post post) async {
     try {
-      final user = _ref.watch(userProvider)!;
+      final user = _ref.read(userProvider)!;
       Either<Failures, void> result;
+
       if (user.uid == post.uid) {
         result = await _postRepository.deletePost(post, user.uid);
         result.fold((l) => left(l), (r) async {
@@ -214,15 +220,40 @@ class PostController extends StateNotifier<bool> {
           await _commentController.clearPostComments(post.id);
           await _postShareController.deletePostShareByPostId(post.id);
         });
+      } else if (await _isUserModerator(user.uid, post.communityId)) {
+        result = await _postRepository.deletePost(post, user.uid);
+        result.fold((l) => left(l), (r) async {
+          if (post.images != null || post.images!.isNotEmpty) {
+            for (var image in post.images!) {
+              await _storageRepository.deleteFile(
+                path: 'posts/images/${post.id}/$image',
+              );
+            }
+          }
+          if (post.video != '' || post.video != null) {
+            await _storageRepository.deleteFile(
+              path: 'posts/videos/${post.id}',
+            );
+          }
+          await _commentController.clearPostComments(post.id);
+          await _postShareController.deletePostShareByPostId(post.id);
+        });
       } else {
-        return left(Failures('You are not the author of the post'));
+        return left(Failures('You are not authorized to delete this post'));
       }
+
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {
       return left(Failures(e.toString()));
     }
+  }
+
+  Future<bool> _isUserModerator(String userId, String communityId) async {
+    final userRole =
+        await _communityController.getMemberRole(userId, communityId);
+    return userRole == 'moderator';
   }
 
   Stream<List<PostDataModel>> getPendingPosts(String communityId) {

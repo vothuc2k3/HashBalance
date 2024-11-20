@@ -11,6 +11,7 @@ import 'package:hash_balance/features/push_notification/controller/push_notifica
 import 'package:hash_balance/features/user_devices/controller/user_device_controller.dart';
 import 'package:hash_balance/models/conbined_models/block_data_model.dart';
 import 'package:hash_balance/models/conbined_models/friend_requester_data_model.dart';
+import 'package:hash_balance/models/conbined_models/mutual_friend_model.dart';
 import 'package:hash_balance/models/follower_model.dart';
 import 'package:hash_balance/models/friendship_model.dart';
 import 'package:hash_balance/models/friendship_request_model.dart';
@@ -18,6 +19,14 @@ import 'package:hash_balance/models/notification_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
+
+final mutualFriendsProvider =
+    FutureProvider.family((ref, Tuple2<String, String> data) {
+  return ref.watch(friendControllerProvider.notifier).getMutualFriends(
+        data.item1,
+        data.item2,
+      );
+});
 
 final mutualFriendsCountProvider =
     FutureProvider.family((ref, Tuple2<String, String> data) {
@@ -386,5 +395,9 @@ class FriendController extends StateNotifier<bool> {
 
   Future<int> getMutualFriendsCount(String uid1, String uid2) async {
     return _friendRepository.getMutualFriendsCount(uid1, uid2);
+  }
+
+  Future<List<MutualFriend>> getMutualFriends(String uid1, String uid2) async {
+    return await _friendRepository.getMutualFriends(uid1, uid2);
   }
 }

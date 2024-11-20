@@ -22,6 +22,7 @@ class VotePostRepository {
       _firestore.collection(FirebaseConstants.postsCollection);
 
 // VOTE THE POST
+  //This method is implemented in the VotePostController class
   Future<Either<Failures, void>> votePost(
       PostVote postVoteModel, Post post) async {
     final batch = _firestore.batch();

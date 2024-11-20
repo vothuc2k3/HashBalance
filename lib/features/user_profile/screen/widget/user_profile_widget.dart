@@ -35,7 +35,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
     var userProfileData = ref.watch(userProfileDataProvider(widget.user.uid));
     return RefreshIndicator(
       onRefresh: () async {
-        userProfileData = ref.refresh(userProfileDataProvider(widget.user.uid));
+        ref.invalidate(userProfileDataProvider);
       },
       child: Container(
         decoration: BoxDecoration(

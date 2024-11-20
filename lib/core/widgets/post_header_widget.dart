@@ -18,7 +18,6 @@ class PostHeaderWidget extends StatelessWidget {
     required this.createdAt,
     required this.onTap,
     required this.onOptionsTap,
-    super.key,
   });
 
   factory PostHeaderWidget.author({

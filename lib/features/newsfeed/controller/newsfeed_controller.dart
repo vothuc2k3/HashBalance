@@ -39,10 +39,14 @@ class NewsfeedController extends StateNotifier<bool> {
 
   Future<List<PostDataModel>> getNewsfeedInitPosts() async {
     final user = _ref.read(userProvider)!;
-    final communityIds =
+    final userJoinedCommunitiesIds =
         await _userController.getUserJoinedCommunitiesIds(user.uid);
+    if (userJoinedCommunitiesIds.isEmpty) {
+      return await _newsfeedRepository.getRandomPosts();
+    }
     return await _newsfeedRepository.getNewsfeedInitPosts(
-        communityIds: communityIds);
+      communityIds: userJoinedCommunitiesIds,
+    );
   }
 
   Future<List<PostDataModel>> fetchMorePosts(

@@ -1,5 +1,6 @@
 import 'package:hash_balance/models/block_model.dart';
 import 'package:hash_balance/models/conbined_models/block_data_model.dart';
+import 'package:hash_balance/models/conbined_models/mutual_friend_model.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -324,6 +325,25 @@ class FriendRepository {
 
     final mutualFriends =
         friends2.where((friend) => friendUids1.contains(friend.uid)).length;
+    return mutualFriends;
+  }
+
+  Future<List<MutualFriend>> getMutualFriends(String uid1, String uid2) async {
+    final friends1 = await fetchFriendsByUser(uid1);
+    if (friends1.isEmpty) return [];
+
+  final friendUids1 = friends1.map((friend) => friend.uid).toSet();
+
+  final friends2 = await fetchFriendsByUser(uid2);
+  if (friends2.isEmpty) return [];
+
+  final mutualFriends = friends2
+      .where((friend) => friendUids1.contains(friend.uid))
+      .map((friend) {
+        final isFriend = friends1.any((f) => f.uid == friend.uid);
+        return MutualFriend(user: friend, isFriend: isFriend);
+      }).toList();
+
     return mutualFriends;
   }
 }

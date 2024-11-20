@@ -53,7 +53,7 @@ class AuthController extends StateNotifier<bool> {
     try {
       final result = await _authRepository.signInWithGoogle();
       return result.fold((l) => left(Failures(l.message)), (userModel) {
-        _ref.watch(userProvider.notifier).update((state) => userModel);
+        _ref.read(userProvider.notifier).update((state) => userModel);
         return right(userModel);
       });
     } on FirebaseException catch (e) {

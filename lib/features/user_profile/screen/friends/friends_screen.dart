@@ -103,25 +103,22 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                   if (friends.isEmpty) {
                     return ListView(
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Center(
-                              child: const Text(
-                                'You have no friends yet',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white70,
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.8,
+                          child: Center(
+                            child: const Text(
+                              'You have no friends yet',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.white70,
+                              ),
+                            ).animate().fadeIn(duration: 600.ms).moveY(
+                                  begin: 30,
+                                  end: 0,
+                                  duration: 600.ms,
+                                  curve: Curves.easeOutBack,
                                 ),
-                              ).animate().fadeIn(duration: 600.ms).moveY(
-                                    begin: 30,
-                                    end: 0,
-                                    duration: 600.ms,
-                                    curve: Curves.easeOutBack,
-                                  ),
-                            ),
-                          ],
+                          ),
                         ),
                       ],
                     );

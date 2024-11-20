@@ -3,19 +3,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
+import 'package:hash_balance/features/home/screen/home_screen.dart';
 
 class GoogleSignInButton extends ConsumerWidget {
-  const GoogleSignInButton({
-    super.key,
-  }) ;
+  final BuildContext parentContext;
 
+  const GoogleSignInButton({
+    required this.parentContext,
+    super.key,
+  });
 
   void signInWithGoogle(WidgetRef ref) async {
     final result =
-        await ref.watch(authControllerProvider.notifier).signInWithGoogle();
+        await ref.read(authControllerProvider.notifier).signInWithGoogle();
     result.fold((l) {
       showToast(false, l.message);
-    }, (r) {});
+    }, (r) {
+      Navigator.of(parentContext).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        (Route<dynamic> route) => false,
+      );
+    });
   }
 
   @override

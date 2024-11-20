@@ -57,19 +57,27 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            user.name,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                              fontStyle: FontStyle.italic,
+                          Container(
+                            constraints: const BoxConstraints(maxWidth: 150),
+                            child: Text(
+                              user.name,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                fontStyle: FontStyle.italic,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          Text(
-                            user.email,
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontStyle: FontStyle.italic,
+                          Container(
+                            constraints: const BoxConstraints(maxWidth: 150),
+                            child: Text(
+                              user.email,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontStyle: FontStyle.italic,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -127,7 +135,7 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                 onTap: () => _navigateToBlockedUsersScreen(),
               ),
               ListTile(
-                leading: const Icon(Icons.receipt_long ),
+                leading: const Icon(Icons.receipt_long),
                 onTap: () => _navigateToActivityLogScreen(),
                 title: const Text(
                   'Activity Logs',

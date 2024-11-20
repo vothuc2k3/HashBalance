@@ -280,4 +280,9 @@ class CommunityController extends StateNotifier<bool> {
     return await _communityRepository.fetchSuspendStatus(
         communityId: communityId, uid: uid);
   }
+
+  Future<String> getMemberRole(String uid, String communityId) async {
+    return await _communityRepository
+        .getMemberRole(getMembershipId(uid: uid, communityId: communityId));
+  }
 }

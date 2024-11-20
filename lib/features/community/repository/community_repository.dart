@@ -148,8 +148,7 @@ class CommunityRepository {
 
     final communityTuples = await Future.wait(memberCountFutures);
 
-    communityTuples.sort(
-        (a, b) => b.item2.compareTo(a.item2));
+    communityTuples.sort((a, b) => b.item2.compareTo(a.item2));
 
     return communityTuples;
   }
@@ -303,5 +302,11 @@ class CommunityRepository {
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     }
+  }
+
+  Future<String> getMemberRole(String membershipId) async {
+    final snapshot = await _communityMembership.doc(membershipId).get();
+    final data = snapshot.data() as Map<String, dynamic>;
+    return data['role'] as String;
   }
 }
