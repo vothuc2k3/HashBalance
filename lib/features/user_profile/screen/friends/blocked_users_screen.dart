@@ -22,10 +22,13 @@ class BlockedUsersScreen extends ConsumerStatefulWidget {
 
 class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
   void _navigateToOtherUserProfile(String uid) {
-    Navigator.of(context).push(MaterialPageRoute(
+    Navigator.of(context).push(
+      MaterialPageRoute(
         builder: (context) => OtherUserProfileScreen(
-              targetUid: uid,
-            )));
+          targetUid: uid,
+        ),
+      ),
+    );
   }
 
   void _handleUnblockUser(UserModel blockedUser) async {
@@ -83,10 +86,6 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Blocked Users'),
-        backgroundColor: ref.watch(preferredThemeProvider).second,
-      ),
       body: Container(
         decoration: BoxDecoration(
           color: ref.watch(preferredThemeProvider).first,

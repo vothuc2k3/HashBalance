@@ -10,6 +10,7 @@ import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
 import 'package:hash_balance/features/user_devices/controller/user_device_controller.dart';
 import 'package:hash_balance/models/user_model.dart';
 
@@ -140,6 +141,7 @@ class AuthController extends StateNotifier<bool> {
     try {
       await _authRepository.signOut();
       final token = await _ref.read(firebaseMessagingProvider).getToken();
+      _ref.invalidate(newsfeedInitPostsProvider);
       await _ref.read(userDeviceControllerProvider).removeUserDeviceToken(
             uid: uid,
             deviceToken: token ?? '',
@@ -162,6 +164,11 @@ class AuthController extends StateNotifier<bool> {
   Future<Either<Failures, void>> sendResetPasswordLink(String email) async {
     state = true;
     try {
+      if (email.isEmpty || email == '') {
+        return left(Failures('Email cannot be empty'));
+      } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)) {
+        return left(Failures('Invalid email format'));
+      }
       await _authRepository.sendResetPasswordLink(email);
       return right(null);
     } on FirebaseException catch (e) {

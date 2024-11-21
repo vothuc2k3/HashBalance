@@ -19,6 +19,7 @@ class GoogleSignInButton extends ConsumerWidget {
     result.fold((l) {
       showToast(false, l.message);
     }, (r) {
+      showToast(true, 'Welcome ${r.name}');
       Navigator.of(parentContext).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const HomeScreen()),
         (Route<dynamic> route) => false,

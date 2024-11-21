@@ -85,7 +85,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                     } else if (role == 'member') {
                                       _showMemberMoreOptions(community);
                                     } else {
-                                      _showStrangerMoreOptions();
+                                      _showStrangerMoreOptions(community);
                                     }
                                   },
                                 ),
@@ -344,17 +344,77 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     );
   }
 
-  void _onJoinCommunity() async {
-    final result = await ref
-        .read(communityControllerProvider.notifier)
-        .joinCommunity(_currentUser!.uid, widget._communityId);
-    result.fold(
-        (l) => showToast(
-              false,
-              l.toString(),
-            ), (r) {
-      showToast(true, r.toString());
-    });
+  void _onJoinCommunity(Community community) async {
+    if (community.containsExposureContents) {
+      final bool? shouldJoin = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: ref.watch(preferredThemeProvider).first,
+          title: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.orange),
+              SizedBox(width: 8),
+              Text(
+                '18+ Contents Warning',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          content: const Text(
+            'This community contains 18+ contents. Are you sure you want to join?',
+            style: TextStyle(
+              fontSize: 16,
+              height: 1.5,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text(
+                'No',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.redAccent,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text(
+                'Yes',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldJoin == false) {
+        return;
+      } else {
+        final result = await ref
+            .read(communityControllerProvider.notifier)
+            .joinCommunity(_currentUser!.uid, widget._communityId);
+
+        result.fold(
+          (l) => showToast(false, l.toString()),
+          (r) => showToast(true, r.toString()),
+        );
+      }
+    }
   }
 
   void _leaveCommunity(String communityId) async {
@@ -657,7 +717,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     );
   }
 
-  void _showStrangerMoreOptions() {
+  void _showStrangerMoreOptions(Community community) {
     showMenu<int>(
       context: context,
       position: const RelativeRect.fromLTRB(100, 40, 0, 0),
@@ -689,7 +749,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
         if (value != null) {
           switch (value) {
             case 0:
-              _onJoinCommunity();
+              _onJoinCommunity(community);
               break;
             case 1:
               break;
@@ -822,6 +882,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
               context: context,
               builder: (context) {
                 return AlertDialog(
+                  backgroundColor: ref.watch(preferredThemeProvider).first,
                   title: const Text('Invitation Details'),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -835,13 +896,12 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                           ElevatedButton(
                             onPressed: () {
                               _handleInvitation(false, null, invitation);
-
                               Navigator.of(context).pop();
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red, // Refuse colord
+                              backgroundColor: Colors.red,
                             ),
-                            child: const Text('Refuse'),
+                            child: const Text('Refuse', style: TextStyle(color: Colors.white),),
                           ),
                           ElevatedButton(
                             onPressed: () {
@@ -849,9 +909,9 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                               Navigator.of(context).pop();
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green, // Confirm color
+                              backgroundColor: Colors.green,
                             ),
-                            child: const Text('Confirm'),
+                            child: const Text('Confirm', style: TextStyle(color: Colors.white),),
                           ),
                         ],
                       ),

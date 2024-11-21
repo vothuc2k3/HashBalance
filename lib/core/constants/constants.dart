@@ -71,6 +71,7 @@ class Constants {
   static const String incomingMessageType = 'incoming_message';
   static const String conversationInvitationType = 'conversation_invitation';
   static const String newFollowerType = 'new_follower';
+  static const String newPostType = 'new_post';
   static const String incomingCallType = 'incoming_call';
   static const String userReportType = 'user_report';
   static const String postReportType = 'post_report';

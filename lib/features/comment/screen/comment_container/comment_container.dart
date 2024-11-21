@@ -8,6 +8,7 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
+import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/reply_comment/controller/reply_comment_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
@@ -244,13 +245,38 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
                 CachedNetworkImageProvider(widget.author.profileImage),
           ),
         ),
-        contentRoot: (context, data) =>
-            _buildContent(widget.author, widget.comment),
+        contentRoot: (context, data) => ref
+            .watch(
+              userRoleProvider(
+                getMembershipId(
+                  uid: currentUser!.uid,
+                  communityId: widget.post.communityId,
+                ),
+              ),
+            )
+            .when(
+              data: (communityRole) =>
+                  _buildContent(widget.author, widget.comment, communityRole),
+              error: (e, s) => ErrorText(error: e.toString()),
+              loading: () => const Loading(),
+            ),
         contentChild: (context, data) =>
             ref.watch(getUserDataProvider(data.uid)).when(
-                  data: (replyAuthor) {
-                    return _buildContent(replyAuthor, data);
-                  },
+                  data: (replyAuthor) => ref
+                      .read(
+                        userRoleProvider(
+                          getMembershipId(
+                            uid: currentUser!.uid,
+                            communityId: widget.post.communityId,
+                          ),
+                        ),
+                      )
+                      .when(
+                        data: (communityRole) =>
+                            _buildContent(replyAuthor, data, communityRole),
+                        error: (e, s) => ErrorText(error: e.toString()),
+                        loading: () => const Loading(),
+                      ),
                   error: (e, s) => ErrorText(error: e.toString()),
                   loading: () => const Loading(),
                 ),
@@ -258,7 +284,11 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
     );
   }
 
-  Widget _buildContent(UserModel author, CommentModel comment) {
+  Widget _buildContent(
+    UserModel author,
+    CommentModel comment,
+    String role,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: Column(
@@ -312,7 +342,7 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
                         value: 'edit',
                         child: Text('Edit'),
                       ),
-                    if (currentUser!.uid == comment.uid)
+                    if (currentUser!.uid == comment.uid || role == 'moderator')
                       const PopupMenuItem(
                         value: 'delete',
                         child: Text('Delete'),

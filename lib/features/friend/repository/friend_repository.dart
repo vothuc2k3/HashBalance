@@ -332,18 +332,28 @@ class FriendRepository {
     final friends1 = await fetchFriendsByUser(uid1);
     if (friends1.isEmpty) return [];
 
-  final friendUids1 = friends1.map((friend) => friend.uid).toSet();
+    final friendUids1 = friends1.map((friend) => friend.uid).toSet();
 
-  final friends2 = await fetchFriendsByUser(uid2);
-  if (friends2.isEmpty) return [];
+    final friends2 = await fetchFriendsByUser(uid2);
+    if (friends2.isEmpty) return [];
 
-  final mutualFriends = friends2
-      .where((friend) => friendUids1.contains(friend.uid))
-      .map((friend) {
-        final isFriend = friends1.any((f) => f.uid == friend.uid);
-        return MutualFriend(user: friend, isFriend: isFriend);
-      }).toList();
+    final mutualFriends = friends2
+        .where((friend) => friendUids1.contains(friend.uid))
+        .map((friend) {
+      final isFriend = friends1.any((f) => f.uid == friend.uid);
+      return MutualFriend(user: friend, isFriend: isFriend);
+    }).toList();
 
     return mutualFriends;
   }
+
+  Future<List<String>> getUserFollowerUids(String uid) async {
+    final docs = await _follower.where('targetUid', isEqualTo: uid).get();
+    return docs.docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      return data['followerUid'] as String;
+    }).toList();
+  }
+
+  
 }

@@ -36,10 +36,6 @@ class _FriendRequestsScreenState extends ConsumerState<FriendRequestsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Friend Requests'),
-        backgroundColor: ref.watch(preferredThemeProvider).second,
-      ),
       body: Container(
         decoration: BoxDecoration(
           color: ref.watch(preferredThemeProvider).first,

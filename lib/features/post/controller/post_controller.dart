@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:hash_balance/core/constants/constants.dart';
 
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/storage_repository.dart';
@@ -10,6 +11,7 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
+import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/post/repository/post_repository.dart';
 import 'package:hash_balance/features/post_share/controller/post_share_controller.dart';
@@ -17,7 +19,6 @@ import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/poll_option_vote_model.dart';
 import 'package:hash_balance/models/post_model.dart';
-import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
 import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 import 'package:hash_balance/models/poll_option_model.dart';
@@ -88,8 +89,7 @@ final postControllerProvider = StateNotifierProvider<PostController, bool>(
       commentController: ref.read(commentControllerProvider.notifier),
       postRepository: ref.read(postRepositoryProvider),
       postShareController: ref.read(postShareControllerProvider.notifier),
-      pushNotificationController:
-          ref.read(pushNotificationControllerProvider.notifier),
+      friendController: ref.read(friendControllerProvider.notifier),
       moderationController: ref.read(moderationControllerProvider.notifier),
       communityController: ref.read(communityControllerProvider.notifier),
       storageRepository: ref.read(storageRepositoryProvider),
@@ -99,9 +99,9 @@ final postControllerProvider = StateNotifierProvider<PostController, bool>(
 class PostController extends StateNotifier<bool> {
   final PostRepository _postRepository;
   final StorageRepository _storageRepository;
-  final PushNotificationController _pushNotificationController;
   final ModerationController _moderationController;
   final CommunityController _communityController;
+  final FriendController _friendController;
   final PostShareController _postShareController;
   final Ref _ref;
   final CommentController _commentController;
@@ -110,17 +110,17 @@ class PostController extends StateNotifier<bool> {
   PostController({
     required PostRepository postRepository,
     required StorageRepository storageRepository,
-    required PushNotificationController pushNotificationController,
     required ModerationController moderationController,
     required CommunityController communityController,
+    required FriendController friendController,
     required PostShareController postShareController,
     required CommentController commentController,
     required Ref ref,
   })  : _postRepository = postRepository,
         _storageRepository = storageRepository,
-        _pushNotificationController = pushNotificationController,
         _moderationController = moderationController,
         _communityController = communityController,
+        _friendController = friendController,
         _postShareController = postShareController,
         _commentController = commentController,
         _ref = ref,
@@ -139,8 +139,11 @@ class PostController extends StateNotifier<bool> {
       if (content.isEmpty && images == null && video == null) {
         return left(Failures('Post cannot be empty'));
       }
-      final uid = _ref.read(userProvider)!.uid;
-      final role = await _moderationController.getMemberRole(uid, community.id);
+      final user = _ref.read(userProvider)!;
+      final role = await _moderationController
+          .getMemberRole(
+              getMembershipId(uid: user.uid, communityId: community.id))
+          .first;
       if (role == 'suspended') {
         return left(Failures('You are suspended from this community'));
       }
@@ -150,7 +153,7 @@ class PostController extends StateNotifier<bool> {
           postStatus = 'Approved';
           final post = Post(
             communityId: community.id,
-            uid: uid,
+            uid: user.uid,
             content: content,
             status: postStatus,
             isEdited: false,
@@ -160,6 +163,18 @@ class PostController extends StateNotifier<bool> {
             id: _uuid.v1(),
           );
           final result = await _postRepository.createPost(post, images, video);
+          result.fold(
+            (l) => left(l),
+            (r) async {
+              await _friendController.notifyFollowers(
+                uid: user.uid,
+                message:
+                    '$user.username has posted a new post in ${community.name}',
+                title: 'New Post',
+                type: Constants.newPostType,
+              );
+            },
+          );
           return result;
         default:
           role == 'moderator'
@@ -167,7 +182,7 @@ class PostController extends StateNotifier<bool> {
               : postStatus = 'Pending';
           final post = Post(
             communityId: community.id,
-            uid: uid,
+            uid: user.uid,
             content: content,
             status: postStatus,
             isEdited: false,

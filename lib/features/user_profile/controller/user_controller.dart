@@ -167,4 +167,8 @@ class UserController extends StateNotifier<bool> {
   Future<List<String>> getUserJoinedCommunitiesIds(String uid) async {
     return await _userRepository.getUserJoinedCommunitiesIds(uid);
   }
+
+  Future<Either<Failures, void>> updateUserPrivacy(UserModel user) async {
+    return await _userRepository.updateUserPrivacy(user);
+  }
 }

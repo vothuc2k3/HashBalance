@@ -1,3 +1,4 @@
+import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -6,8 +7,7 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/screen/email_sign_up_screen.dart';
 import 'package:hash_balance/features/authentication/screen/email_sign_in_screen.dart';
-import 'package:hash_balance/theme/pallette.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -18,7 +18,6 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
 
 class ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   late TextEditingController _emailController;
-  bool? isEmailExists = true;
 
   void sendResetLink() async {
     final result = await ref
@@ -26,26 +25,31 @@ class ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         .sendResetPasswordLink(_emailController.text.trim().toLowerCase());
     result.fold(
       (l) {
-        showToast(false, l.toString());
+        showToast(false, l.message);
       },
       (_) {
         showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
+              backgroundColor: ref.watch(preferredThemeProvider).first,
               title: const Text('Success'),
               content: const Text(
-                  'If your email matches the email you entered, you will the reset password link!'),
+                  'If your email matches the email you entered, you will receive the reset password link!'),
               actions: [
                 TextButton(
-                  child: const Text('Open to Gmail'),
+                  child: const Text(
+                    'Open Gmail',
+                    style: TextStyle(color: Colors.greenAccent),
+                  ),
                   onPressed: () async {
-                    String gmailUrl = "com.google.android.gm";
-                    if (await canLaunchUrl(Uri.parse(gmailUrl))) {
-                      await launchUrl(Uri.parse(gmailUrl)); 
-                    } else {
-                      throw 'Could not launch Gmail';
-                    }
+                    const intent = AndroidIntent(
+                      action: 'android.intent.action.VIEW',
+                      package: 'com.google.android.gm',
+                    );
+                    await intent.launch().catchError((e) {
+                      showToast(false, 'Gmail app not found!');
+                    });
                   },
                 ),
               ],
@@ -57,7 +61,7 @@ class ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   void navigateToSignUpScreen(BuildContext context) {
-    Navigator.push(
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (context) => const EmailSignUpScreen(),
@@ -66,7 +70,7 @@ class ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   void navigateToSignInScreen() {
-    Navigator.push(
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (context) => const EmailSignInScreen(),
@@ -83,153 +87,157 @@ class ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(authControllerProvider);
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Reset Password'),
         centerTitle: true,
-        backgroundColor: Pallete.greyColor,
+        backgroundColor: const Color(0xFF8c336b),
       ),
       body: isLoading
           ? const Loading()
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    'Type in your email!',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      prefixIcon:
-                          const Icon(Icons.email, color: Pallete.greyColor),
-                      labelText: 'Email Address',
-                      labelStyle: const TextStyle(color: Colors.white),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.0),
-                        borderSide: const BorderSide(color: Pallete.greyColor),
+          : Container(
+              width: double.infinity,
+              height: screenHeight,
+              decoration: const BoxDecoration(
+                color: Color(0xFF8c336b),
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(height: screenHeight * 0.1),
+                    const Text(
+                      'Forgot Your Password?',
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.0),
-                        borderSide: const BorderSide(color: Pallete.greyColor),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Enter your email address below to reset your password.',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white70,
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.0),
-                        borderSide: const BorderSide(color: Pallete.greyColor),
-                      ),
-                      filled: true,
-                      fillColor: Pallete.greyColor.withOpacity(0.1),
+                      textAlign: TextAlign.center,
                     ),
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      sendResetLink();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Pallete.greyColor,
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
+                    SizedBox(height: screenHeight * 0.05),
+                    _buildEmailTextField(),
+                    const SizedBox(height: 20),
+                    _buildSendEmailButton(),
+                    SizedBox(height: screenHeight * 0.03),
+                    _buildSignUpSection(),
+                    const Divider(
+                      color: Colors.white70,
+                      thickness: 0.8,
                     ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('Send Email',
-                            style: TextStyle(color: Colors.white)),
-                        SizedBox(width: 10),
-                        Icon(Icons.arrow_forward, color: Colors.white),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    "Don't Have An Account?",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontStyle: FontStyle.italic,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 10),
-                  OutlinedButton(
-                    onPressed: () {
-                      navigateToSignUpScreen(context);
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Pallete.greyColor,
-                      side: const BorderSide(color: Pallete.greyColor),
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('Signup', style: TextStyle(color: Colors.white)),
-                        SizedBox(width: 10),
-                        Icon(Icons.arrow_forward, color: Colors.white),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  const Divider(
-                    thickness: 1,
-                    indent: 10,
-                    endIndent: 10,
-                    color: Pallete.greyColor,
-                  ),
-                  const Text(
-                    'OR',
-                    style: TextStyle(fontSize: 16, color: Colors.white),
-                    textAlign: TextAlign.center,
-                  ),
-                  const Divider(
-                    thickness: 1,
-                    indent: 10,
-                    endIndent: 10,
-                    color: Pallete.greyColor,
-                  ),
-                  const SizedBox(height: 10),
-                  OutlinedButton(
-                    onPressed: () {
-                      navigateToSignInScreen();
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Pallete.greyColor,
-                      side: const BorderSide(color: Pallete.greyColor),
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('Login', style: TextStyle(color: Colors.white)),
-                        SizedBox(width: 10),
-                        Icon(Icons.arrow_forward, color: Colors.white),
-                      ],
-                    ),
-                  ),
-                ],
+                    const SizedBox(height: 10),
+                    _buildSignInButton(),
+                    SizedBox(height: screenHeight * 0.03),
+                  ],
+                ),
               ),
             ),
-      backgroundColor: Pallete.blackColor,
+    );
+  }
+
+  Widget _buildEmailTextField() {
+    return TextField(
+      controller: _emailController,
+      keyboardType: TextInputType.emailAddress,
+      decoration: InputDecoration(
+        prefixIcon: const Icon(Icons.email, color: Colors.white70),
+        hintText: 'Enter your email',
+        hintStyle: const TextStyle(color: Colors.white54),
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.1),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.white54),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.white),
+        ),
+      ),
+      style: const TextStyle(color: Colors.white),
+    );
+  }
+
+  Widget _buildSendEmailButton() {
+    return ElevatedButton(
+      onPressed: sendResetLink,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF592044),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 15),
+      ),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.send, color: Colors.white),
+          SizedBox(width: 10),
+          Text(
+            'Send Reset Link',
+            style: TextStyle(fontSize: 18, color: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSignUpSection() {
+    return Column(
+      children: [
+        const Text(
+          'Don’t have an account?',
+          style: TextStyle(color: Colors.white70, fontSize: 16),
+        ),
+        const SizedBox(height: 10),
+        OutlinedButton(
+          onPressed: () {
+            navigateToSignUpScreen(context);
+          },
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.white,
+            side: const BorderSide(color: Colors.white),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+          ),
+          child: const Text(
+            'Sign Up',
+            style: TextStyle(fontSize: 18),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSignInButton() {
+    return OutlinedButton(
+      onPressed: navigateToSignInScreen,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: Colors.white,
+        side: const BorderSide(color: Colors.white),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+      ),
+      child: const Text(
+        'Back to Login',
+        style: TextStyle(fontSize: 18),
+      ),
     );
   }
 

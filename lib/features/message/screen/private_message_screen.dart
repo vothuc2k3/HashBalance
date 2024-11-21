@@ -9,11 +9,13 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/call/controller/call_controller.dart';
 import 'package:hash_balance/features/call/screen/outgoing_call_screen.dart';
+import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/message/controller/message_controller.dart';
 import 'package:hash_balance/features/message/screen/widget/message_bubble.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/message_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:tuple/tuple.dart';
 
 class PrivateMessageScreen extends ConsumerStatefulWidget {
   final UserModel _targetUser;
@@ -36,6 +38,7 @@ class _PrivateMessageScreenState extends ConsumerState<PrivateMessageScreen> {
   List<Message> _messages = [];
   Message? _lastMessage;
   UserModel? currentUser;
+  bool _isBlocked = false;
 
   void _showPrivateMessageOptions() {
     final RenderBox overlay =
@@ -190,11 +193,9 @@ class _PrivateMessageScreenState extends ConsumerState<PrivateMessageScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.call),
-            onPressed: () => _onStartVoiceCall(),
-          ),
-          IconButton(
-            icon: const Icon(Icons.videocam),
-            onPressed: () {},
+            onPressed: () => _isBlocked
+                ? showToast(false, 'You are blocked by this user....')
+                : _onStartVoiceCall(),
           ),
           IconButton(
             icon: const Icon(Icons.more_vert),
@@ -285,95 +286,122 @@ class _PrivateMessageScreenState extends ConsumerState<PrivateMessageScreen> {
                 vertical: 10,
                 horizontal: 15,
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey[800],
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        children: [
-                          if (_messageController.text.isEmpty)
-                            Row(
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.image,
-                                      color: Colors.white),
-                                  onPressed: () {
-                                    // Implement image picker
-                                  },
+              child: ref
+                  .watch(isBlockedByTargetUserProvider(Tuple2(
+                    currentUser.uid,
+                    widget._targetUser.uid,
+                  )))
+                  .when(
+                    data: (isBlocked) {
+                      _isBlocked = isBlocked;
+                      if (_isBlocked) {
+                        return const Center(
+                          child: Text(
+                            'You are blocked by this user',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        );
+                      } else {
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[800],
+                                  borderRadius: BorderRadius.circular(20),
                                 ),
-                                IconButton(
-                                  icon: const Icon(Icons.videocam,
-                                      color: Colors.white),
-                                  onPressed: () {
-                                    // Implement video picker
-                                  },
+                                child: Row(
+                                  children: [
+                                    if (_messageController.text.isEmpty)
+                                      Row(
+                                        children: [
+                                          IconButton(
+                                            icon: const Icon(Icons.image,
+                                                color: Colors.white),
+                                            onPressed: () {
+                                              // Implement image picker
+                                            },
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.videocam,
+                                                color: Colors.white),
+                                            onPressed: () {
+                                              // Implement video picker
+                                            },
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(
+                                                Icons.insert_emoticon,
+                                                color: Colors.white),
+                                            onPressed: () {
+                                              setState(() {
+                                                _isEmojiVisible =
+                                                    !_isEmojiVisible;
+                                              });
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 15.0),
+                                        child: TextField(
+                                          controller: _messageController,
+                                          textCapitalization:
+                                              TextCapitalization.sentences,
+                                          autocorrect: true,
+                                          enableSuggestions: true,
+                                          style: const TextStyle(
+                                              color: Colors.white),
+                                          decoration: const InputDecoration(
+                                            hintText: 'Send a message...',
+                                            hintStyle:
+                                                TextStyle(color: Colors.grey),
+                                            border: InputBorder.none,
+                                          ),
+                                          onTap: () {
+                                            if (_isEmojiVisible) {
+                                              setState(() {
+                                                _isEmojiVisible = false;
+                                              });
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                IconButton(
-                                  icon: const Icon(Icons.insert_emoticon,
-                                      color: Colors.white),
-                                  onPressed: () {
-                                    setState(() {
-                                      _isEmojiVisible = !_isEmojiVisible;
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
-                          Expanded(
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 15.0),
-                              child: TextField(
-                                controller: _messageController,
-                                textCapitalization:
-                                    TextCapitalization.sentences,
-                                autocorrect: true,
-                                enableSuggestions: true,
-                                style: const TextStyle(color: Colors.white),
-                                decoration: const InputDecoration(
-                                  hintText: 'Send a message...',
-                                  hintStyle: TextStyle(color: Colors.grey),
-                                  border: InputBorder.none,
-                                ),
-                                onTap: () {
-                                  if (_isEmojiVisible) {
-                                    setState(() {
-                                      _isEmojiVisible = false;
-                                    });
-                                  }
-                                },
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  GestureDetector(
-                    onTap: () {
-                      _onSendMessage(widget._targetUser.uid);
-                      _messageController.clear();
-                      FocusManager.instance.primaryFocus?.unfocus();
+                            const SizedBox(width: 10),
+                            GestureDetector(
+                              onTap: () {
+                                _onSendMessage(widget._targetUser.uid);
+                                _messageController.clear();
+                                FocusManager.instance.primaryFocus?.unfocus();
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: const BoxDecoration(
+                                  color: Colors.teal,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.send,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      }
                     },
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: const BoxDecoration(
-                        color: Colors.teal,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.send,
-                        color: Colors.white,
-                      ),
+                    loading: () => const CircularProgressIndicator(),
+                    error: (error, stackTrace) => ErrorText(
+                      error: error.toString(),
                     ),
                   ),
-                ],
-              ),
             ),
           ],
         ),

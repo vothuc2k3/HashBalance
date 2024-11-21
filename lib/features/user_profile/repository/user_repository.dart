@@ -443,4 +443,17 @@ class UserRepository {
       return [];
     }
   }
+
+  Future<Either<Failures, void>> updateUserPrivacy(UserModel user) async {
+    try {
+      await _user.doc(user.uid).update({
+        'isRestricted': user.isRestricted,
+      });
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
 }

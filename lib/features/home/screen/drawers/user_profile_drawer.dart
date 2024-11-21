@@ -3,13 +3,10 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/setting/screen/setting_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/activity_log_screen.dart';
-import 'package:hash_balance/features/user_profile/screen/friends/blocked_users_screen.dart';
-import 'package:hash_balance/features/user_profile/screen/friends/friend_requests_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/friends/friends_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -41,7 +38,7 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
               InkWell(
                 onTap: () {
                   Timer(const Duration(milliseconds: 200), () {
-                    navigateToProfileScreen(user);
+                    _navigateToProfileScreen(user);
                   });
                 },
                 child: Padding(
@@ -88,17 +85,6 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
               ),
               const Divider(),
               ListTile(
-                  title: const Text(
-                    'Change Privacy Settings',
-                    style: TextStyle(
-                      color: Pallete.whiteColor,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  leading: const Icon(Icons.privacy_tip),
-                  onTap: () {}),
-              ListTile(
                 title: const Text(
                   'My Friends',
                   style: TextStyle(
@@ -108,31 +94,7 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                   ),
                 ),
                 leading: const Icon(Icons.people),
-                onTap: () => navigateToFriendsScreen(),
-              ),
-              ListTile(
-                title: const Text(
-                  'Pending Friend Requests',
-                  style: TextStyle(
-                    color: Pallete.whiteColor,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                leading: const Icon(Icons.pending_actions),
-                onTap: () => _navigateToFriendRequestsScreen(),
-              ),
-              ListTile(
-                title: const Text(
-                  'Blocked Users',
-                  style: TextStyle(
-                    color: Pallete.whiteColor,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                leading: const Icon(Icons.block),
-                onTap: () => _navigateToBlockedUsersScreen(),
+                onTap: () => _navigateToFriendsScreen(),
               ),
               ListTile(
                 leading: const Icon(Icons.receipt_long),
@@ -157,7 +119,7 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                   ),
                 ),
                 leading: const Icon(Icons.settings),
-                onTap: () => navigateToSettingScreen(),
+                onTap: () => _navigateToSettingScreen(),
               ),
             ],
           ),
@@ -166,32 +128,12 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
     );
   }
 
-  void _navigateToBlockedUsersScreen() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const BlockedUsersScreen(),
-      ),
-    );
-  }
-
-  void _navigateToFriendRequestsScreen() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => FriendRequestsScreen(
-          uid: ref.read(userProvider)!.uid,
-        ),
-      ),
-    );
-  }
-
-  void navigateToProfileScreen(UserModel user) {
+  void _navigateToProfileScreen(UserModel user) {
     Navigator.push(context,
         MaterialPageRoute(builder: (context) => const UserProfileScreen()));
   }
 
-  void navigateToFriendsScreen() {
+  void _navigateToFriendsScreen() {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -202,90 +144,11 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
     );
   }
 
-  void navigateToSettingScreen() {
+  void _navigateToSettingScreen() {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => const SettingScreen(),
-      ),
-    );
-  }
-
-  void showChangePrivacyModal(
-    BuildContext homeScreenContext,
-    BuildContext drawerContext,
-  ) {
-    final user = ref.watch(userProvider);
-    bool userIsRestricted = user!.isRestricted;
-    int isLoading = 0;
-
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext bottomSheetContext) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            height: 3,
-            width: 40,
-            color: Colors.grey,
-            margin: const EdgeInsets.symmetric(vertical: 8),
-          ),
-          ListTile(
-            leading:
-                isLoading == 1 ? const Loading() : const Icon(Icons.public),
-            title: !userIsRestricted
-                ? const Text(
-                    'Current: Public',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                : const Text('Public'),
-            subtitle: const Text('Everybody can send you friend requests'),
-            onTap: !userIsRestricted
-                ? () {}
-                : () {
-                    setState(() {
-                      isLoading = 1;
-                    });
-                    Timer(
-                      const Duration(seconds: 1),
-                      () {
-                        Navigator.pop(bottomSheetContext);
-                        Scaffold.of(homeScreenContext).closeEndDrawer();
-                      },
-                    );
-                  },
-          ),
-          ListTile(
-            leading: isLoading == 2
-                ? const Loading()
-                : const Icon(Icons.privacy_tip),
-            title: userIsRestricted
-                ? const Text(
-                    'Current: Private',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                : const Text('Private'),
-            subtitle: const Text('Only you can send friend requests to others'),
-            onTap: userIsRestricted
-                ? () {}
-                : () {
-                    setState(() {
-                      isLoading = 2;
-                    });
-                    Timer(
-                      const Duration(seconds: 1),
-                      () {
-                        Navigator.pop(bottomSheetContext);
-                        Scaffold.of(homeScreenContext).closeEndDrawer();
-                      },
-                    );
-                  },
-          ),
-        ],
       ),
     );
   }

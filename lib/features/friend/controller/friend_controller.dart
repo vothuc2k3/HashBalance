@@ -48,6 +48,13 @@ final isBlockedByCurrentUserProvider =
       );
 });
 
+final isBlockedByTargetUserProvider = StreamProvider.family((ref, Tuple2 data) {
+  return ref.watch(friendControllerProvider.notifier).isBlockedByTargetUser(
+        currentUid: data.item1,
+        targetUid: data.item2,
+      );
+});
+
 final getCombinedStatusProvider = StreamProvider.family((ref, Tuple2 data) {
   return ref.watch(friendControllerProvider.notifier).getCombinedStatus(
         currentUid: data.item1,
@@ -399,5 +406,49 @@ class FriendController extends StateNotifier<bool> {
 
   Future<List<MutualFriend>> getMutualFriends(String uid1, String uid2) async {
     return await _friendRepository.getMutualFriends(uid1, uid2);
+  }
+
+  Future<List<String>> getUserFollowerUids(String uid) async {
+    return await _friendRepository.getUserFollowerUids(uid);
+  }
+
+  Future<void> notifyFollowers({
+    required String uid,
+    required String message,
+    required String title,
+    required String type,
+  }) async {
+    final followerUids = await getUserFollowerUids(uid);
+    final tokens = <String>[];
+    for (final followerUid in followerUids) {
+      final result =
+          await _userDeviceController.getUserDeviceTokens(followerUid);
+      result.fold(
+          (l) => throw FirebaseException(
+                plugin: 'Firebase Exception',
+                message: l.message,
+              ),
+          (tokens) => tokens.addAll(tokens));
+    }
+    await _pushNotificationController.sendPushNotification(
+      tokens,
+      message,
+      title,
+      {
+        'type': type,
+        'uid': uid,
+      },
+      type,
+    );
+  }
+
+  Stream<bool> isBlockedByTargetUser({
+    required String currentUid,
+    required String targetUid,
+  }) {
+    return _friendRepository.isBlockedByTargetUser(
+      currentUid: currentUid,
+      targetUid: targetUid,
+    );
   }
 }

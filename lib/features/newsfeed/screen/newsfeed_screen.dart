@@ -12,8 +12,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
 import 'package:hash_balance/features/newsfeed/screen/containers/newsfeed_post_container.dart';
 import 'package:hash_balance/models/user_model.dart';
-import 'package:hash_balance/theme/pallette.dart';
-import 'package:icons_plus/icons_plus.dart';
 
 class NewsfeedScreen extends ConsumerStatefulWidget {
   const NewsfeedScreen({
@@ -110,7 +108,8 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
                               Center(
                                 child: Container(
                                   constraints: BoxConstraints(
-                                    minHeight: MediaQuery.of(context).size.height,
+                                    minHeight:
+                                        MediaQuery.of(context).size.height,
                                   ),
                                   child: const Center(
                                     child: Text(
@@ -225,43 +224,6 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
             const Divider(
               height: 10,
               thickness: 0.5,
-            ),
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.videocam),
-                  ),
-                  const SizedBox(width: 4),
-                  const Text(
-                    'Live',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    color: Pallete.whiteColor,
-                    onPressed: () {},
-                    icon: const Icon(BoxIcons.bx_git_branch),
-                  ),
-                  const SizedBox(width: 4),
-                  const Text(
-                    'Room',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.gamepad),
-                  ),
-                  const SizedBox(width: 4),
-                  const Text(
-                    'Game',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
             ),
           ],
         ),

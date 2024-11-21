@@ -25,6 +25,12 @@ import 'package:hash_balance/models/suspend_user_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:uuid/uuid.dart';
 
+final userRoleProvider = StreamProvider.family((ref, String membershipId) {
+  return ref
+      .watch(moderationControllerProvider.notifier)
+      .getMemberRole(membershipId);
+});
+
 final fetchSuspendedUsersProvider =
     StreamProvider.family((ref, String communityId) {
   return ref
@@ -423,9 +429,7 @@ class ModerationController extends StateNotifier<bool> {
     return _moderationRepository.fetchSuspendedUsers(communityId);
   }
 
-  Future<String> getMemberRole(
-      String uid, String communityId) async {
-    String membershipId = getMembershipId(uid: uid, communityId: communityId);
-    return await _moderationRepository.getMemberRole(membershipId);
+  Stream<String> getMemberRole(String membershipId) {
+    return _moderationRepository.getMemberRole(membershipId);
   }
 }

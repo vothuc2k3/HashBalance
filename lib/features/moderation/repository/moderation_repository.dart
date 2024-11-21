@@ -452,19 +452,20 @@ class ModerationRepository {
       return users;
     });
   }
-  Future<String> getMemberRole(String membershipId) async {
-    try {
-      final membershipDoc = await _communityMembership.doc(membershipId).get();
-      if (!membershipDoc.exists) {
+  Stream<String> getMemberRole(String membershipId) {
+    return _communityMembership.doc(membershipId).snapshots().map((snapshot) {
+      if (!snapshot.exists) {
         throw Exception('Membership does not exist');
       }
-      final data = membershipDoc.data() as Map<String, dynamic>;
+      final data = snapshot.data() as Map<String, dynamic>;
       final role = data['role'] as String;
       return role;
-    } on FirebaseException catch (e) {
-      throw Exception(e.message);
-    } catch (e) {
-      throw Exception(e.toString());
-    }
+    }).handleError((error) {
+      if (error is FirebaseException) {
+        throw Exception(error.message);
+      } else {
+        throw Exception(error.toString());
+      }
+    });
   }
 }

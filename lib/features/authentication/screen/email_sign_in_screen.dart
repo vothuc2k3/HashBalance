@@ -49,7 +49,8 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
       if (context.mounted) {
         showToast(false, l.message);
       }
-    }, (_) {
+    }, (r) {
+      showToast(true, 'Welcome ${r.name}');
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const HomeScreen()),
         (Route<dynamic> route) => false,
