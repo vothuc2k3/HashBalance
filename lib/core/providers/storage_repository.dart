@@ -62,4 +62,29 @@ class StorageRepository {
       return left(Failures(e.toString()));
     }
   }
+
+  Future<Either<Failures, void>> deletePostImagesAndVideo({
+    required String postId,
+  }) async {
+    try {
+      final imagesRef = _firebaseStorage.ref().child('posts/images/$postId');
+      final videoRef = _firebaseStorage.ref().child('posts/videos/$postId');
+
+      final imagesListResult = await imagesRef.listAll();
+      for (var imageRef in imagesListResult.items) {
+        await imageRef.delete();
+      }
+
+      final videoListResult = await videoRef.listAll();
+      if (videoListResult.items.isNotEmpty) {
+        await videoRef.delete();
+      }
+
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
 }

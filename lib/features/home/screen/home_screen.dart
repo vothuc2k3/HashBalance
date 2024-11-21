@@ -24,8 +24,7 @@ class HomeScreen extends ConsumerStatefulWidget {
   HomeScreenState createState() => HomeScreenState();
 }
 
-class HomeScreenState extends ConsumerState<HomeScreen>
-    with TickerProviderStateMixin {
+class HomeScreenState extends ConsumerState<HomeScreen> {
   int _page = 0;
   late PageController _pageController;
   bool _isIncomingCallScreenOpen = false;
@@ -114,8 +113,6 @@ class HomeScreenState extends ConsumerState<HomeScreen>
 
     final user = ref.watch(userProvider);
 
-    GlobalAnimationController.initialize(this);
-
     return Scaffold(
       body: Container(
         color: ref.watch(preferredThemeProvider).first,
@@ -123,21 +120,9 @@ class HomeScreenState extends ConsumerState<HomeScreen>
           backgroundColor: Colors.transparent,
           appBar: AppBar(
             backgroundColor: ref.watch(preferredThemeProvider).third,
-            title: AnimatedBuilder(
-              animation: GlobalAnimationController.animationController!,
-              builder: (context, child) {
-                return Transform.scale(
-                  scale: GlobalAnimationController.animationController!.value,
-                  child: child,
-                );
-              },
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: Text(
-                  Constants.titles[_page],
-                  key: ValueKey(_page),
-                ),
-              ),
+            title: Text(
+              Constants.titles[_page],
+              key: ValueKey(_page),
             ),
             centerTitle: false,
             leading: Builder(
@@ -310,23 +295,3 @@ class HomeScreenState extends ConsumerState<HomeScreen>
 //     ],
 //   );
 // }
-
-class GlobalAnimationController {
-  static AnimationController? animationController;
-
-  static void initialize(TickerProvider vsync) {
-    animationController ??= AnimationController(
-      vsync: vsync,
-      duration: const Duration(seconds: 2),
-    );
-  }
-
-  static void start() {
-    animationController?.forward();
-  }
-
-  static void dispose() {
-    animationController?.dispose();
-    animationController = null;
-  }
-}

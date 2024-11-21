@@ -99,7 +99,7 @@ Future<Either<Failures, bool>> checkExistingUserNameWhenSignUp(
 Future<FilePickerResult?> pickImage() async {
   return await FilePicker.platform.pickFiles(
     type: FileType.custom,
-    allowedExtensions: ['jpg', 'jpeg', 'png', 'webp'],
+    allowedExtensions: ['jpg', 'jpeg', 'png'],
   );
 }
 

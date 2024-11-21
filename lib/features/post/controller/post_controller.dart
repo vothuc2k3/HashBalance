@@ -9,6 +9,7 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/storage_repository.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/cloud_vision/controller/cloud_vision_controller.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
@@ -93,6 +94,7 @@ final postControllerProvider = StateNotifierProvider<PostController, bool>(
       moderationController: ref.read(moderationControllerProvider.notifier),
       communityController: ref.read(communityControllerProvider.notifier),
       storageRepository: ref.read(storageRepositoryProvider),
+      cloudVisionController: ref.read(cloudVisionControllerProvider),
       ref: ref),
 );
 
@@ -103,6 +105,7 @@ class PostController extends StateNotifier<bool> {
   final CommunityController _communityController;
   final FriendController _friendController;
   final PostShareController _postShareController;
+  final CloudVisionController _cloudVisionController;
   final Ref _ref;
   final CommentController _commentController;
   final Uuid _uuid = const Uuid();
@@ -115,6 +118,7 @@ class PostController extends StateNotifier<bool> {
     required FriendController friendController,
     required PostShareController postShareController,
     required CommentController commentController,
+    required CloudVisionController cloudVisionController,
     required Ref ref,
   })  : _postRepository = postRepository,
         _storageRepository = storageRepository,
@@ -123,6 +127,7 @@ class PostController extends StateNotifier<bool> {
         _friendController = friendController,
         _postShareController = postShareController,
         _commentController = commentController,
+        _cloudVisionController = cloudVisionController,
         _ref = ref,
         super(false);
 
@@ -139,6 +144,21 @@ class PostController extends StateNotifier<bool> {
       if (content.isEmpty && images == null && video == null) {
         return left(Failures('Post cannot be empty'));
       }
+
+      if (images != null && images.isNotEmpty) {
+        final result = await _cloudVisionController.areImagesSafe(images);
+
+        final isSafe = result.fold(
+          (failure) => left(failure),
+          (isSafe) => right(isSafe),
+        );
+
+        if (isSafe.isLeft()) return isSafe as Either<Failures, void>;
+        if (isSafe.isRight() && !isSafe.getOrElse((_) => false)) {
+          return left(Failures('Your post contains inappropriate content...'));
+        }
+      }
+
       final user = _ref.read(userProvider)!;
       final role = await _moderationController
           .getMemberRole(
@@ -215,49 +235,30 @@ class PostController extends StateNotifier<bool> {
   Future<Either<Failures, void>> deletePost(Post post) async {
     try {
       final user = _ref.read(userProvider)!;
-      Either<Failures, void> result;
 
-      if (user.uid == post.uid) {
-        result = await _postRepository.deletePost(post, user.uid);
-        result.fold((l) => left(l), (r) async {
-          if (post.images != null || post.images!.isNotEmpty) {
-            for (var image in post.images!) {
-              await _storageRepository.deleteFile(
-                path: 'posts/images/${post.id}/$image',
-              );
-            }
-          }
-          if (post.video != '' || post.video != null) {
-            await _storageRepository.deleteFile(
-              path: 'posts/videos/${post.id}',
+      if (user.uid == post.uid ||
+          await _isUserModerator(user.uid, post.communityId)) {
+        final result = await _postRepository.deletePost(post, user.uid);
+
+        return await result.fold(
+          (l) => left(l),
+          (r) async {
+            final deleteResult = await _storageRepository
+                .deletePostImagesAndVideo(postId: post.id);
+            deleteResult.fold(
+              (failure) => left(failure),
+              (_) async {
+                await _commentController.clearPostComments(post.id);
+                await _postShareController.deletePostShareByPostId(post.id);
+              },
             );
-          }
-          await _commentController.clearPostComments(post.id);
-          await _postShareController.deletePostShareByPostId(post.id);
-        });
-      } else if (await _isUserModerator(user.uid, post.communityId)) {
-        result = await _postRepository.deletePost(post, user.uid);
-        result.fold((l) => left(l), (r) async {
-          if (post.images != null || post.images!.isNotEmpty) {
-            for (var image in post.images!) {
-              await _storageRepository.deleteFile(
-                path: 'posts/images/${post.id}/$image',
-              );
-            }
-          }
-          if (post.video != '' || post.video != null) {
-            await _storageRepository.deleteFile(
-              path: 'posts/videos/${post.id}',
-            );
-          }
-          await _commentController.clearPostComments(post.id);
-          await _postShareController.deletePostShareByPostId(post.id);
-        });
+
+            return right(null);
+          },
+        );
       } else {
         return left(Failures('You are not authorized to delete this post'));
       }
-
-      return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {

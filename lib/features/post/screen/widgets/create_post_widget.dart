@@ -85,7 +85,7 @@ class _CreatePostWidgetState extends ConsumerState<CreatePostWidget> {
           );
       result.fold(
         (l) {
-          showToast(false, l.toString());
+          showToast(false, l.message);
         },
         (r) {
           showToast(true, 'Post created successfully');

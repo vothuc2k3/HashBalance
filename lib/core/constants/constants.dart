@@ -155,5 +155,8 @@ class Constants {
 
   static String agoraAppId = 'a9942d0368fc4cdf9e59df9df19899c9';
 
+  static String cloudVisionApiKey =
+      'AIzaSyCcuD4SG5Kw7r13jqDFwR5Plp4hJedqD7I';
+
   static String domain = 'https://web-production-f331.up.railway.app';
 }
