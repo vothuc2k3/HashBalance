@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
@@ -10,6 +11,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/reply_comment/controller/reply_comment_controller.dart';
+import 'package:hash_balance/features/report/controller/report_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
@@ -89,6 +91,74 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
         }, (_) {});
         break;
     }
+  }
+
+  void _handleReportComment(CommentModel comment) async {
+    TextEditingController reportReasonController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: ref.watch(preferredThemeProvider).first,
+          title: const Text('Report Comment'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Please enter the reason for reporting this comment:'),
+              const SizedBox(height: 8),
+              TextField(
+                controller: reportReasonController,
+                decoration: const InputDecoration(
+                  hintText: 'Reason',
+                ),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.greenAccent,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                final reason = reportReasonController.text;
+                if (reason.isNotEmpty) {
+                  Navigator.of(context).pop();
+                  final result =
+                      await ref.read(reportControllerProvider).addReport(
+                            null,
+                            widget.comment.id,
+                            null,
+                            Constants.commentReportType,
+                            widget.post.communityId,
+                            reason,
+                          );
+                  result.fold(
+                    (l) => showToast(false, l.message),
+                    (_) => showToast(true, 'Report submitted successfully'),
+                  );
+                } else {
+                  showToast(false, 'Please enter a reason for reporting');
+                }
+              },
+              child: const Text(
+                'Submit',
+                style: TextStyle(
+                  color: Colors.red,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _handleDeleteComment(CommentModel comment) async {
@@ -330,6 +400,9 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
                     case 'view_profile':
                       _navigateToOtherUserScreen(ref.read(userProvider)!.uid);
                       break;
+                    case 'report':
+                      _handleReportComment(comment);
+                      break;
                     case 'cancel':
                       Navigator.of(context).pop();
                       break;
@@ -352,6 +425,10 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
                         value: 'view_profile',
                         child: Text('View ${widget.author.name} Profile'),
                       ),
+                    const PopupMenuItem(
+                      value: 'report',
+                      child: Text('Report'),
+                    ),
                     const PopupMenuItem(
                       value: 'cancel',
                       child: Text('Cancel'),

@@ -5,9 +5,14 @@ import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/report/repository/report_repository.dart';
+import 'package:hash_balance/models/conbined_models/comment_report_model.dart';
 import 'package:hash_balance/models/conbined_models/post_report_model.dart';
 import 'package:hash_balance/models/report_model.dart';
 import 'package:uuid/uuid.dart';
+
+final commentReportDataProvider = StreamProviderFamily((ref, Report report) {
+  return ref.watch(reportControllerProvider).fetchCommentReportData(report);
+});
 
 final postReportDataProvider = StreamProviderFamily((ref, Report report) {
   return ref.watch(reportControllerProvider).fetchPostReportData(report);
@@ -18,14 +23,16 @@ final communityReportsProvider =
   return ref.watch(reportControllerProvider).fetchCommunityReports(communityId);
 });
 
-final reportControllerProvider = Provider((ref) => ReportController(
-    reportRepository: ref.read(reportRepositoryProvider), ref: ref));
+final reportControllerProvider = Provider(
+  (ref) => ReportController(
+      reportRepository: ref.read(reportRepositoryProvider), ref: ref),
+);
 
 class ReportController {
   final ReportRepository _reportRepository;
   final Ref _ref;
   final Uuid _uuid = const Uuid();
-  
+
   const ReportController({
     required ReportRepository reportRepository,
     required Ref ref,
@@ -53,6 +60,7 @@ class ReportController {
             reportedUid: reportedUserId,
             message: message,
             createdAt: Timestamp.now(),
+            isResolved: false,
           );
           break;
         case Constants.postReportType:
@@ -64,6 +72,7 @@ class ReportController {
             reportedPostId: reportedPostId,
             message: message,
             createdAt: Timestamp.now(),
+            isResolved: false,
           );
           break;
         case Constants.commentReportType:
@@ -75,23 +84,17 @@ class ReportController {
             reportedCommentId: reportedCommentId,
             message: message,
             createdAt: Timestamp.now(),
+            isResolved: false,
           );
           break;
         default:
-          return left(Failures('Invalid report type'));
+          return left(
+            Failures(
+              'Invalid report type',
+            ),
+          );
       }
       await _reportRepository.addReport(report);
-      return right(null);
-    } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
-    } catch (e) {
-      return left(Failures(e.toString()));
-    }
-  }
-
-  Future<Either<Failures, void>> deleteReport(String reportId) async {
-    try {
-      await _reportRepository.deleteReport(reportId);
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -106,5 +109,20 @@ class ReportController {
 
   Stream<PostReportModel> fetchPostReportData(Report report) {
     return _reportRepository.fetchPostReportData(report);
+  }
+
+  Stream<CommentReportModel> fetchCommentReportData(Report report) {
+    return _reportRepository.fetchCommentReportData(report);
+  }
+
+  Future<Either<Failures, void>> resolveReport(String reportId) async {
+    try {
+      await _reportRepository.resolveReport(reportId);
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
   }
 }

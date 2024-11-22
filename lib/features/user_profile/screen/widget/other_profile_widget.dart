@@ -308,126 +308,141 @@ class _OtherUserProfileWidgetState
     return ref.watch(fetchFriendsProvider(uid)).when(
           data: (friendList) {
             if (friendList.isEmpty) {
-              return const SizedBox.shrink();
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.group_off,
+                      size: 60,
+                      color: Colors.grey[400],
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "No Friends Yet",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              );
             } else {
               return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
+                  Container(
+                    width: double.infinity,
                     padding: const EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: ref
                         .watch(mutualFriendsCountProvider(
                             Tuple2(currentUserUid, uid)))
                         .whenOrNull(
                           data: (mutualFriendsCount) => GestureDetector(
                             onTap: () => _navigateToMutualFriendsScreen(uid),
-                            child: Text(
-                              'Mutual Friends: $mutualFriendsCount',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                shadows: [
-                                  Shadow(
-                                    offset: Offset(1.5, 1.5),
-                                    blurRadius: 3.0,
-                                    color: Colors.black26,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          error: (error, stackTrace) => ErrorText(
-                            error: error.toString(),
-                          ),
-                          loading: () => const Loading(),
-                        ),
-                  ),
-                  SizedBox(
-                    height: 250,
-                    child: GridView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
-                        childAspectRatio: 0.75,
-                      ),
-                      itemCount: friendList.length,
-                      itemBuilder: (context, index) {
-                        final friend = friendList[index];
-                        return Column(
-                          children: [
-                            InkWell(
-                              onTap: () => _navigateToFriendProfile(
-                                friend,
-                                currentUserUid,
-                              ),
-                              child: CircleAvatar(
-                                radius: 30,
-                                backgroundImage: CachedNetworkImageProvider(
-                                  friend.profileImage,
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.group,
+                                  size: 28,
+                                  color: Colors.white,
                                 ),
-                                child: friend.profileImage.isEmpty
-                                    ? const Icon(Icons.error)
-                                    : null,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              friend.name,
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        elevation: 5,
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.black.withOpacity(0.25),
-                      ).copyWith(
-                        foregroundColor: WidgetStateProperty.all(Colors.white),
-                      ),
-                      onPressed: () {},
-                      child: Ink(
-                        decoration: BoxDecoration(
-                          color: Colors.blueAccent,
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: Container(
-                          alignment: Alignment.center,
-                          constraints: const BoxConstraints(minHeight: 50),
-                          child: const Text(
-                            'See all friends',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.2,
-                              shadows: [
-                                Shadow(
-                                  offset: Offset(0, 3),
-                                  blurRadius: 6.0,
-                                  color: Colors.black26,
+                                const SizedBox(width: 10),
+                                Text(
+                                  '$mutualFriendsCount Mutual Friends',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const Spacer(),
+                                const Icon(
+                                  Icons.chevron_right,
+                                  color: Colors.white,
                                 ),
                               ],
                             ),
                           ),
+                          error: (error, stackTrace) => const Center(
+                            child: Text(
+                              'Error loading mutual friends',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                          loading: () => const Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
-                      ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    height: 220,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final screenWidth = constraints.maxWidth;
+                        final crossAxisCount = screenWidth > 600 ? 5 : 3;
+                        final childAspectRatio = screenWidth > 600 ? 0.9 : 0.8;
+                        return GridView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          physics: const BouncingScrollPhysics(),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: crossAxisCount,
+                            crossAxisSpacing: 8, // Reduced spacing
+                            mainAxisSpacing: 8, // Reduced spacing
+                            childAspectRatio: childAspectRatio,
+                          ),
+                          itemCount: friendList.length,
+                          itemBuilder: (context, index) {
+                            final friend = friendList[index];
+                            return GestureDetector(
+                              onTap: () => _navigateToFriendProfile(
+                                  friend, currentUserUid),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CircleAvatar(
+                                    radius: 28, // Reduced radius
+                                    backgroundImage: CachedNetworkImageProvider(
+                                        friend.profileImage),
+                                    child: friend.profileImage.isEmpty
+                                        ? const Icon(Icons.person, size: 26) // Reduced icon size
+                                        : null,
+                                  ),
+                                  const SizedBox(height: 2), // Reduced spacing
+                                  Text(
+                                    friend.name,
+                                    style: const TextStyle(
+                                      fontSize: 13, // Reduced font size
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
                     ),
                   )
                 ],
-              ).animate().fadeIn();
+              ).animate().slideY();
             }
           },
           error: (error, stackTrace) => Center(
@@ -436,7 +451,7 @@ class _OtherUserProfileWidgetState
               style: const TextStyle(color: Colors.red),
             ),
           ),
-          loading: () => const Center(child: Loading()),
+          loading: () => const Center(child: CircularProgressIndicator()),
         );
   }
 

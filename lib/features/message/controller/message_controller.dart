@@ -104,10 +104,11 @@ class MessageController extends StateNotifier<bool> {
   }
 
   Future<Either<Failures, void>> sendPrivateMessage(
-      String text, String targetUid) async {
+    String text,
+    String targetUid,
+  ) async {
     try {
       final currentUser = _ref.read(userProvider)!;
-
       final message = Message(
         id: _uuid.v4(),
         text: text,

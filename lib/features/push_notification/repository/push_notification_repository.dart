@@ -21,7 +21,6 @@ class PushNotificationRepository {
     Map<String, dynamic> data,
     String type,
   ) async {
-    _logger.d('TOKENS TO BE SENT: $tokens');
     final url = Uri.parse('${Constants.domain}/sendPushNotification');
     final response = await http.post(
       url,

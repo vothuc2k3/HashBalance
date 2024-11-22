@@ -18,10 +18,10 @@ import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 
 final currentUserRoleProvider =
-    StreamProvider.family((ref, String communityId) {
+    StreamProvider.family.autoDispose((ref, Tuple2<String, String> data) {
   return ref
       .watch(communityControllerProvider.notifier)
-      .getCurrentUserRole(communityId);
+      .getCurrentUserRole(data);
 });
 
 final communityPostsProvider = StreamProvider.family((ref, String communityId) {
@@ -267,10 +267,9 @@ class CommunityController extends StateNotifier<bool> {
   }
 
   Stream<CurrentUserRoleModel?> getCurrentUserRole(
-    String communityId,
+    Tuple2<String, String> data,
   ) {
-    final uid = _ref.read(userProvider)!.uid;
-    return _communityRepository.getCurrentUserRole(communityId, uid);
+    return _communityRepository.getCurrentUserRole(data.item1, data.item2);
   }
 
   Future<Either<Failures, String?>> fetchSuspendStatus({

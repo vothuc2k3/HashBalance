@@ -48,9 +48,11 @@ class _CreatePostWidgetState extends ConsumerState<CreatePostWidget> {
   Future<void> _selectImages() async {
     final pickedFiles = await ImagePicker().pickMultiImage();
     if (pickedFiles.isNotEmpty) {
-      setState(() {
-        images.addAll(pickedFiles.map((pickedFile) => File(pickedFile.path)));
-      });
+      for (var pickedFile in pickedFiles) {
+        setState(() {
+          images.add(File(pickedFile.path));
+        });
+      }
     }
   }
 
@@ -195,7 +197,7 @@ class _CreatePostWidgetState extends ConsumerState<CreatePostWidget> {
                                       ),
                                     ],
                                   )
-                              : Row(
+                                : Row(
                                     children: [
                                       CircleAvatar(
                                         backgroundImage:

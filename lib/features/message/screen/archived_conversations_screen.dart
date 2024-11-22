@@ -95,39 +95,65 @@ class _ArchivedConversationsScreenState
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
       ),
-      child: ListTile(
-        onLongPress: () => _showMessageOptions(messageData, conversationId),
-        tileColor: ref.watch(preferredThemeProvider).second,
-        leading: CircleAvatar(
-          backgroundImage: CachedNetworkImageProvider(
-            conversationType == 'Community'
-                ? messageData.community!.profileImage
-                : messageData.targetUser!.profileImage,
+      child: Stack(
+        children: [
+          ListTile(
+            onLongPress: () => _showMessageOptions(messageData, conversationId),
+            tileColor: ref.watch(preferredThemeProvider).second,
+            leading: CircleAvatar(
+              backgroundImage: CachedNetworkImageProvider(
+                conversationType == 'Community'
+                    ? messageData.community!.profileImage
+                    : messageData.targetUser!.profileImage,
+              ),
+              radius: 30,
+            ),
+            title: Text(
+              conversationType == 'Community'
+                  ? messageData.community!.name
+                  : messageData.targetUser!.name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                decoration: TextDecoration.lineThrough,
+              ),
+            ),
+            subtitle: Text(
+              messageData.message.uid == currentUser.uid
+                  ? 'You: ${messageData.message.text ?? ''}'
+                  : messageData.message.text ?? '',
+              style: const TextStyle(color: Colors.white70),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: Text(
+              formatTime(messageData.message.createdAt),
+              style: const TextStyle(color: Colors.white70),
+            ),
           ),
-          radius: 30,
-        ),
-        title: Text(
-          conversationType == 'Community'
-              ? messageData.community!.name
-              : messageData.targetUser!.name,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            decoration: TextDecoration.lineThrough,
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.redAccent,
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(15),
+                  bottomLeft: Radius.circular(15),
+                ),
+              ),
+              child: const Text(
+                'Archived',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ),
-        ),
-        subtitle: Text(
-          messageData.message.uid == currentUser.uid
-              ? 'You: ${messageData.message.text ?? ''}'
-              : messageData.message.text ?? '',
-          style: const TextStyle(color: Colors.white70),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: Text(
-          formatTime(messageData.message.createdAt),
-          style: const TextStyle(color: Colors.white70),
-        ),
+        ],
       ),
     ).animate().fadeIn();
   }

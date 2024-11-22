@@ -10,6 +10,7 @@ import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
 import 'package:hash_balance/features/user_devices/controller/user_device_controller.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -137,20 +138,18 @@ class AuthController extends StateNotifier<bool> {
   }
 
   Future<void> signOut(String uid) async {
-    state = true;
     try {
       await _authRepository.signOut();
       final token = await _ref.read(firebaseMessagingProvider).getToken();
       _ref.invalidate(newsfeedInitPostsProvider);
+      _ref.invalidate(currentUserRoleProvider);
       await _ref.read(userDeviceControllerProvider).removeUserDeviceToken(
             uid: uid,
             deviceToken: token ?? '',
           );
     } catch (e) {
       throw Exception(e.toString());
-    } finally {
-      state = false;
-    }
+    } 
   }
 
   Stream<UserModel> getUserData(String uid) {

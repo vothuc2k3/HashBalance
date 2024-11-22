@@ -36,16 +36,29 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: ref.watch(preferredThemeProvider).first,
-        title: const Text('Privacy Settings'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.lock, color: Colors.blue),
+            SizedBox(width: 8),
+            Text('Privacy Settings'),
+          ],
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
+            RadioListTile<bool>(
+              value: true,
+              groupValue: currentUser.isRestricted,
+              activeColor: Colors.blue,
               title: const Text('Restricted'),
-              tileColor: currentUser.isRestricted ? Colors.grey[300] : null,
-              onTap: () async {
+              subtitle: const Text(
+                  'Only approved followers can see your posts and profile.'),
+              onChanged: (value) async {
                 Navigator.of(context).pop();
-                UserModel newUser = currentUser.copyWith(isRestricted: true);
+                UserModel newUser = currentUser.copyWith(isRestricted: value!);
                 final result = await ref
                     .read(userControllerProvider.notifier)
                     .updateUserPrivacy(newUser);
@@ -55,12 +68,20 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
                 );
               },
             ),
-            ListTile(
+            const Divider(
+                height: 1,
+                thickness: 1,
+                color: Colors.grey), // Dòng kẻ phân cách
+            RadioListTile<bool>(
+              value: false,
+              groupValue: currentUser.isRestricted,
+              activeColor: Colors.blue,
               title: const Text('Open'),
-              tileColor: !currentUser.isRestricted ? Colors.grey[300] : null,
-              onTap: () async {
+              subtitle: const Text(
+                  'Anyone can see your posts and profile without approval.'),
+              onChanged: (value) async {
                 Navigator.of(context).pop();
-                UserModel newUser = currentUser.copyWith(isRestricted: false);
+                UserModel newUser = currentUser.copyWith(isRestricted: value!);
                 final result = await ref
                     .read(userControllerProvider.notifier)
                     .updateUserPrivacy(newUser);
@@ -158,15 +179,17 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
     );
   }
 
-  void _signOut(String uid) async {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const AuthScreen()),
-      (route) => false,
-    );
-    await ref.watch(authControllerProvider.notifier).signOut(uid);
+  void _navigateToSupport() {
+    // TODO: Implement support and feedback navigation
   }
 
-  void _testButton() async {}
+  void _signOut(String uid) async {
+    await ref.watch(authControllerProvider.notifier).signOut(uid);
+    // ignore: use_build_context_synchronously
+    Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const AuthScreen()),
+        (route) => false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -230,32 +253,35 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
               onTap: _changeTheme,
             ),
             ListTile(
+              leading: const Icon(
+                Icons.help,
+                color: Pallete.whiteColor,
+              ),
+              title: const Text(
+                'Support & Feedback',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onTap: _navigateToSupport,
+            ),
+            const Spacer(),
+            ListTile(
               leading: isLoading
                   ? const Loading()
-                  : const Icon(
+                  : Icon(
                       Icons.logout,
-                      color: Pallete.whiteColor,
+                      color:
+                          ref.watch(preferredThemeProvider).declineButtonColor,
                     ),
-              title: const Text(
+              title: Text(
                 'Sign Out',
                 style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
+                    fontWeight: FontWeight.bold,
+                    color:
+                        ref.watch(preferredThemeProvider).declineButtonColor),
               ),
               onTap: () => _signOut(currentUser.uid),
-            ),
-            ListTile(
-              leading: Icon(
-                Icons.logout,
-                color: Pallete.redColor,
-              ),
-              title: const Text(
-                'TEST BUTTON',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              onTap: _testButton,
             ),
           ],
         ),

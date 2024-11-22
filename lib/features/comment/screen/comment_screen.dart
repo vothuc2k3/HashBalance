@@ -58,10 +58,11 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
       final result = await ref
           .read(commentControllerProvider.notifier)
           .comment(widget._post, _commentText!, _selectedUsers);
-      _selectedUsers.clear();
-      _internalController.clear();
-      _commentText = null;
+
       result.fold((l) => showToast(false, l.message), (r) {
+        _selectedUsers.clear();
+        _internalController.clear();
+        _commentText = null;
         setState(() {
           _isEmojiVisible = false;
         });

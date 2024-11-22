@@ -4,6 +4,8 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
+import 'package:hash_balance/models/comment_model.dart';
+import 'package:hash_balance/models/conbined_models/comment_report_model.dart';
 import 'package:hash_balance/models/conbined_models/post_report_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/report_model.dart';
@@ -28,21 +30,13 @@ class ReportRepository {
   //REFERENCE ALL THE POSTS
   CollectionReference get _posts =>
       _firestore.collection(FirebaseConstants.postsCollection);
+  //REFERENCE ALL THE COMMENTS
+  CollectionReference get _comments =>
+      _firestore.collection(FirebaseConstants.commentsCollection);
 
   Future<Either<Failures, void>> addReport(Report report) async {
     try {
       await _reports.doc(report.id).set(report.toMap());
-      return right(null);
-    } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
-    } catch (e) {
-      return left(Failures(e.toString()));
-    }
-  }
-
-  Future<Either<Failures, void>> deleteReport(String reportId) async {
-    try {
-      await _reports.doc(reportId).delete();
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -77,5 +71,33 @@ class ReportRepository {
       return PostReportModel(
           post: reportedPost, reporter: reporter, postOwner: postOwner);
     });
+  }
+
+  Stream<CommentReportModel> fetchCommentReportData(Report report) {
+    return _users.doc(report.reporterUid).snapshots().asyncMap((event) async {
+      final reporter = UserModel.fromMap(event.data() as Map<String, dynamic>);
+      final reportedCommentDoc =
+          await _comments.doc(report.reportedCommentId).get();
+      final reportedComment = CommentModel.fromMap(
+          reportedCommentDoc.data() as Map<String, dynamic>);
+      final commentOwnerDoc = await _users.doc(reportedComment.uid).get();
+      final commentOwner =
+          UserModel.fromMap(commentOwnerDoc.data() as Map<String, dynamic>);
+      return CommentReportModel(
+          comment: reportedComment,
+          reporter: reporter,
+          commentOwner: commentOwner);
+    });
+  }
+
+  Future<Either<Failures, void>> resolveReport(String reportId) async {
+    try {
+      await _reports.doc(reportId).update({'isResolved': true});
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
   }
 }

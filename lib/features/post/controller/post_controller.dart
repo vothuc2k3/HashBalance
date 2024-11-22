@@ -14,6 +14,7 @@ import 'package:hash_balance/features/comment/controller/comment_controller.dart
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
+import 'package:hash_balance/features/perspective_api/controller/perspective_api_controller.dart';
 import 'package:hash_balance/features/post/repository/post_repository.dart';
 import 'package:hash_balance/features/post_share/controller/post_share_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
@@ -95,6 +96,7 @@ final postControllerProvider = StateNotifierProvider<PostController, bool>(
       communityController: ref.read(communityControllerProvider.notifier),
       storageRepository: ref.read(storageRepositoryProvider),
       cloudVisionController: ref.read(cloudVisionControllerProvider),
+      perspectiveApiController: ref.read(perspectiveApiControllerProvider),
       ref: ref),
 );
 
@@ -108,6 +110,7 @@ class PostController extends StateNotifier<bool> {
   final CloudVisionController _cloudVisionController;
   final Ref _ref;
   final CommentController _commentController;
+  final PerspectiveApiController _perspectiveApiController;
   final Uuid _uuid = const Uuid();
 
   PostController({
@@ -119,6 +122,7 @@ class PostController extends StateNotifier<bool> {
     required PostShareController postShareController,
     required CommentController commentController,
     required CloudVisionController cloudVisionController,
+    required PerspectiveApiController perspectiveApiController,
     required Ref ref,
   })  : _postRepository = postRepository,
         _storageRepository = storageRepository,
@@ -128,6 +132,7 @@ class PostController extends StateNotifier<bool> {
         _postShareController = postShareController,
         _commentController = commentController,
         _cloudVisionController = cloudVisionController,
+        _perspectiveApiController = perspectiveApiController,
         _ref = ref,
         super(false);
 
@@ -143,6 +148,17 @@ class PostController extends StateNotifier<bool> {
       late String postStatus;
       if (content.isEmpty && images == null && video == null) {
         return left(Failures('Post cannot be empty'));
+      } else {
+        final errorMessage =
+            await _perspectiveApiController.isCommentSafe(content);
+        if (errorMessage.isLeft()) {
+          return errorMessage as Either<Failures, void>;
+        }
+
+        if (errorMessage.isRight() &&
+            errorMessage.getOrElse((_) => null) != null) {
+          return left(Failures(errorMessage.getOrElse((_) => '')!));
+        }
       }
 
       if (images != null && images.isNotEmpty) {
@@ -155,7 +171,8 @@ class PostController extends StateNotifier<bool> {
 
         if (isSafe.isLeft()) return isSafe as Either<Failures, void>;
         if (isSafe.isRight() && !isSafe.getOrElse((_) => false)) {
-          return left(Failures('Your post contains inappropriate content...'));
+          return left(
+              Failures('Your images contains inappropriate content...'));
         }
       }
 
@@ -317,6 +334,20 @@ class PostController extends StateNotifier<bool> {
   }) async {
     List<PollOption> pollOptions = [];
 
+    if (question.isEmpty) {
+      return left(Failures('Question cannot be empty'));
+    } else {
+      final errorMessage =
+          await _perspectiveApiController.isCommentSafe(question);
+      if (errorMessage.isLeft()) {
+        return errorMessage as Either<Failures, void>;
+      }
+
+      if (errorMessage.isRight() &&
+          errorMessage.getOrElse((_) => null) != null) {
+        return left(Failures(errorMessage.getOrElse((_) => '')!));
+      }
+    }
     final poll = Post(
       id: _uuid.v1(),
       uid: _ref.read(userProvider)!.uid,
@@ -387,16 +418,40 @@ class PostController extends StateNotifier<bool> {
     Post poll,
     List<PollOption> pollOptions,
   ) async {
+    if (poll.content.isEmpty) {
+      return left(Failures('Question cannot be empty'));
+    } else {
+      final errorMessage =
+          await _perspectiveApiController.isCommentSafe(poll.content);
+      if (errorMessage.isLeft()) {
+        return errorMessage as Either<Failures, void>;
+      }
+
+      if (errorMessage.isRight() &&
+          errorMessage.getOrElse((_) => null) != null) {
+        return left(Failures(errorMessage.getOrElse((_) => '')!));
+      }
+    }
     return await _postRepository.updatePoll(poll, pollOptions);
   }
 
   Future<Either<Failures, void>> updatePost(
       Post post, List<File>? images, File? video) async {
-    return await _postRepository.updatePost(
-      post,
-      images,
-      video,
-    );
+    if (post.content.isEmpty) {
+      return left(Failures('Post cannot be empty'));
+    } else {
+      final errorMessage =
+          await _perspectiveApiController.isCommentSafe(post.content);
+      if (errorMessage.isLeft()) {
+        return errorMessage as Either<Failures, void>;
+      }
+
+      if (errorMessage.isRight() &&
+          errorMessage.getOrElse((_) => null) != null) {
+        return left(Failures(errorMessage.getOrElse((_) => '')!));
+      }
+    }
+    return await _postRepository.updatePost(post, images, video);
   }
 
   Stream<Map<String, dynamic>> getPostVoteCountAndStatus(Post post) {

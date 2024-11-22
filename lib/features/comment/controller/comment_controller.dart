@@ -9,6 +9,7 @@ import 'package:hash_balance/features/comment/repository/comment_repository.dart
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
 import 'package:hash_balance/features/user_devices/controller/user_device_controller.dart';
+import 'package:hash_balance/features/perspective_api/controller/perspective_api_controller.dart';
 import 'package:hash_balance/models/comment_model.dart';
 import 'package:hash_balance/models/conbined_models/comment_data_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
@@ -42,6 +43,7 @@ final commentControllerProvider =
         ref.read(pushNotificationControllerProvider.notifier),
     notificationController: ref.read(notificationControllerProvider.notifier),
     userDeviceController: ref.read(userDeviceControllerProvider),
+    perspectiveApiController: ref.read(perspectiveApiControllerProvider),
     ref: ref,
   ),
 );
@@ -51,6 +53,7 @@ class CommentController extends StateNotifier<bool> {
   final PushNotificationController _pushNotificationController;
   final NotificationController _notificationController;
   final UserDeviceController _userDeviceController;
+  final PerspectiveApiController _perspectiveApiController;
   final Ref _ref;
   final Uuid _uuid = const Uuid();
 
@@ -59,11 +62,13 @@ class CommentController extends StateNotifier<bool> {
     required PushNotificationController pushNotificationController,
     required NotificationController notificationController,
     required UserDeviceController userDeviceController,
+    required PerspectiveApiController perspectiveApiController,
     required Ref ref,
   })  : _commentRepository = commentRepository,
         _pushNotificationController = pushNotificationController,
         _notificationController = notificationController,
-          _userDeviceController = userDeviceController,
+        _userDeviceController = userDeviceController,
+        _perspectiveApiController = perspectiveApiController,
         _ref = ref,
         super(false);
 
@@ -75,6 +80,22 @@ class CommentController extends StateNotifier<bool> {
   ) async {
     try {
       final user = _ref.read(userProvider)!;
+
+      if (content != null && content.isNotEmpty) {
+        final errorMessage =
+            await _perspectiveApiController.isCommentSafe(content);
+        if (errorMessage.isLeft()) {
+          return errorMessage as Either<Failures, void>;
+        }
+
+        if (errorMessage.isRight() &&
+            errorMessage.getOrElse((_) => null) != null) {
+          return left(Failures(errorMessage.getOrElse((_) => '')!));
+        }
+      } else {
+        return left(Failures('Comment cannot be empty'));
+      }
+
       final comment = CommentModel(
         id: _uuid.v4(),
         uid: user.uid,
@@ -106,7 +127,8 @@ class CommentController extends StateNotifier<bool> {
             );
             for (var uid in comment.mentionedUser!.keys) {
               await _notificationController.addNotification(uid, notification);
-              final deviceTokensResult = await _userDeviceController.getUserDeviceTokens(uid);
+              final deviceTokensResult =
+                  await _userDeviceController.getUserDeviceTokens(uid);
               deviceTokensResult.fold(
                 (l) => throw FirebaseException(
                   plugin: 'Firebase Exception',

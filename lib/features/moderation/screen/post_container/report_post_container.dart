@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/post_header_widget.dart';
 import 'package:hash_balance/core/widgets/post_images_grid.dart';
 import 'package:hash_balance/core/widgets/video_player_widget.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 
@@ -57,7 +58,7 @@ class _ReportPostContainerState extends ConsumerState<ReportPostContainer> {
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-        color: Colors.black,
+        color: ref.watch(preferredThemeProvider).third,
         borderRadius: BorderRadius.circular(8),
         boxShadow: const [
           BoxShadow(

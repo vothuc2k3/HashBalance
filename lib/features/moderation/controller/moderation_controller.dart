@@ -25,6 +25,13 @@ import 'package:hash_balance/models/suspend_user_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:uuid/uuid.dart';
 
+final unresolvedReportCountProvider =
+    StreamProvider.family((ref, String communityId) {
+  return ref
+      .watch(moderationControllerProvider.notifier)
+      .getUnresolvedReportsCount(communityId);
+});
+
 final userRoleProvider = StreamProvider.family((ref, String membershipId) {
   return ref
       .watch(moderationControllerProvider.notifier)
@@ -105,6 +112,10 @@ class ModerationController extends StateNotifier<bool> {
         _userDeviceController = userDeviceController,
         _ref = ref,
         super(false);
+
+  Stream<int> getUnresolvedReportsCount(String communityId) {
+    return _moderationRepository.getUnresolvedReportsCount(communityId);
+  }
 
   Stream<String> getMembershipStatus(String communityId) {
     final currentUser = _ref.watch(userProvider);

@@ -234,7 +234,44 @@ class _ModToolsScreenState extends ConsumerState<ModToolsScreen> {
               onTap: () => _navigateToMembershipManagementScreen(),
             ),
             ListTile(
-              leading: const Icon(Icons.warning),
+              leading: Stack(
+                children: [
+                  const Icon(Icons.warning),
+                  ref
+                      .watch(unresolvedReportCountProvider(widget.community.id))
+                      .when(
+                        data: (data) {
+                          if (data == 0) {
+                            return const SizedBox.shrink();
+                          }
+                          return Positioned(
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(1),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 12,
+                                minHeight: 12,
+                              ),
+                              child: Text(
+                                '$data',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 8,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          );
+                        },
+                        loading: () => const SizedBox.shrink(),
+                        error: (_, __) => const SizedBox.shrink(),
+                      )
+                ],
+              ),
               title: const Text('Reports Management'),
               onTap: () => _navigateToReportScreen(),
             ),

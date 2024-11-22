@@ -1,5 +1,4 @@
 import 'package:agora_uikit/agora_uikit.dart';
-import 'package:agora_uikit/controllers/rtc_buttons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -49,10 +48,7 @@ class CallScreenState extends ConsumerState<CallScreen> {
   @override
   void initState() {
     super.initState();
-    channelName = getUids(
-      widget._caller.uid,
-      widget._receiver.uid,
-    );
+    channelName = getUids(widget._caller.uid, widget._receiver.uid);
     agoraClient = AgoraClient(
       agoraConnectionData: AgoraConnectionData(
         appId: Constants.agoraAppId,
@@ -62,18 +58,25 @@ class CallScreenState extends ConsumerState<CallScreen> {
     );
   }
 
-  @override 
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     initAgora();
   }
 
-  void initAgora() async {
+  Future<void> initAgora() async {
     await agoraClient!.initialize();
+
     agoraClient!.engine.setChannelProfile(
       ChannelProfileType.channelProfileCommunication,
     );
-    toggleCamera(sessionController: agoraClient!.sessionController);
+
+    // Đồng bộ trạng thái ban đầu
+    agoraClient!.sessionController.value =
+        agoraClient!.sessionController.value.copyWith(
+      isLocalUserMuted: false,
+      isLocalVideoDisabled: false,
+    );
   }
 
   @override
@@ -83,17 +86,10 @@ class CallScreenState extends ConsumerState<CallScreen> {
       (previous, next) {
         next.when(
           data: (call) {
-            if (call == null) {
+            if (call == null || call.status != Constants.callStatusOngoing) {
               if (!_isScreenPopped) {
                 _isScreenPopped = true;
                 Navigator.pop(context);
-              }
-            } else {
-              if (call.status != Constants.callStatusOngoing) {
-                if (!_isScreenPopped) {
-                  _isScreenPopped = true;
-                  Navigator.pop(context);
-                }
               }
             }
           },
@@ -102,50 +98,219 @@ class CallScreenState extends ConsumerState<CallScreen> {
         );
       },
     );
+
+    final isLocalVideoDisabled =
+        agoraClient?.sessionController.value.isLocalVideoDisabled ?? true;
+    final isRemoteVideoDisabled =
+        agoraClient?.sessionController.value.users.every(
+              (user) => user.videoDisabled,
+            ) ??
+            true;
+
     return Scaffold(
       body: agoraClient == null
           ? const Loading()
           : SafeArea(
               child: Stack(
                 children: [
-                  if (agoraClient!.sessionController.value.isLocalVideoDisabled)
-                    Center(
-                      child: CircleAvatar(
-                        radius: 60,
-                        backgroundImage: CachedNetworkImageProvider(
-                          widget._caller.profileImage,
-                        ),
-                      ),
-                    )
-                  else
+                  if (isLocalVideoDisabled && isRemoteVideoDisabled)
+                    _buildBothCamerasDisabledView(),
+                  if (!isLocalVideoDisabled && !isRemoteVideoDisabled)
                     AgoraVideoViewer(client: agoraClient!),
+                  if (isLocalVideoDisabled && !isRemoteVideoDisabled)
+                    _buildSingleUserDisabledView(
+                      avatar: widget._caller.profileImage,
+                      name: widget._caller.name,
+                      message: "Your camera is disabled",
+                    ),
+                  if (!isLocalVideoDisabled && isRemoteVideoDisabled)
+                    _buildSingleUserDisabledView(
+                      avatar: widget._receiver.profileImage,
+                      name: widget._receiver.name,
+                      message: "Receiver's camera is disabled",
+                    ),
+                  // Action Buttons
                   Positioned(
-                    bottom: 50,
-                    right: 50,
-                    child: agoraClient!
-                            .sessionController.value.isLocalVideoDisabled
-                        ? CircleAvatar(
-                            radius: 60,
-                            backgroundImage: CachedNetworkImageProvider(
-                              widget._receiver.profileImage,
-                            ),
-                          )
-                        : Container(),
-                  ),
-                  AgoraVideoButtons(
-                    client: agoraClient!,
-                    disconnectButtonChild: IconButton(
-                      onPressed: () async {
-                        Navigator.pop(context);
-                        await agoraClient!.engine.leaveChannel();
-                        await _onEndCall();
-                      },
-                      icon: const Icon(Icons.call_end),
+                    bottom: 30,
+                    left: 20,
+                    right: 20,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildActionButton(
+                          icon: agoraClient!
+                                  .sessionController.value.isLocalUserMuted
+                              ? Icons.mic_off
+                              : Icons.mic,
+                          color: agoraClient!
+                                  .sessionController.value.isLocalUserMuted
+                              ? Colors.red
+                              : Colors.green,
+                          onPressed: () {
+                            final isMuted = agoraClient!
+                                .sessionController.value.isLocalUserMuted;
+                            agoraClient!.engine.muteLocalAudioStream(!isMuted);
+                            agoraClient!.sessionController.updateUserAudio(
+                              uid:
+                                  agoraClient!.sessionController.value.localUid,
+                              muted: !isMuted,
+                            );
+                            setState(() {});
+                          },
+                        ),
+                        _buildActionButton(
+                          icon: Icons.call_end,
+                          color: Colors.redAccent,
+                          onPressed: () async {
+                            await agoraClient!.engine.leaveChannel();
+                            await _onEndCall();
+                          },
+                        ),
+                        _buildActionButton(
+                          icon: agoraClient!
+                                  .sessionController.value.isLocalVideoDisabled
+                              ? Icons.videocam_off
+                              : Icons.videocam,
+                          color: agoraClient!
+                                  .sessionController.value.isLocalVideoDisabled
+                              ? Colors.blue
+                              : Colors.green,
+                          onPressed: () {
+                            final isVideoDisabled = agoraClient!
+                                .sessionController.value.isLocalVideoDisabled;
+
+                            agoraClient!.engine
+                                .muteLocalVideoStream(!isVideoDisabled);
+                            agoraClient!.sessionController.updateUserVideo(
+                              uid:
+                                  agoraClient!.sessionController.value.localUid,
+                              videoDisabled: !isVideoDisabled,
+                            );
+
+                            setState(() {});
+                          },
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildBothCamerasDisabledView() {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.deepPurple, Colors.black],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            radius: 70,
+            backgroundImage:
+                CachedNetworkImageProvider(widget._caller.profileImage),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            widget._caller.name,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 30),
+          const Text(
+            "Both Cameras Disabled",
+            style: TextStyle(color: Colors.white70, fontSize: 16),
+          ),
+          const SizedBox(height: 30),
+          CircleAvatar(
+            radius: 70,
+            backgroundImage:
+                CachedNetworkImageProvider(widget._receiver.profileImage),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            widget._receiver.name,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSingleUserDisabledView({
+    required String avatar,
+    required String name,
+    required String message,
+  }) {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.deepPurple, Colors.black],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            radius: 70,
+            backgroundImage: CachedNetworkImageProvider(avatar),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            name,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 30),
+          Text(
+            message,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color.withOpacity(0.8),
+        ),
+        child: Icon(icon, color: Colors.white, size: 30),
+      ),
     );
   }
 }

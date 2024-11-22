@@ -53,6 +53,10 @@ class _PostShareScreenState extends ConsumerState<PostShareScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: ref.watch(preferredThemeProvider).second,
+        title: const Text('Share Post'),
+      ),
       backgroundColor: ref.watch(preferredThemeProvider).first,
       body: SafeArea(
         child: SingleChildScrollView(

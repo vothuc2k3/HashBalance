@@ -48,6 +48,8 @@ class ModerationRepository {
       _firestore.collection(FirebaseConstants.usersCollection);
   CollectionReference get _suspendedUsers =>
       _firestore.collection(FirebaseConstants.suspendedUsersCollection);
+  CollectionReference get _reports =>
+      _firestore.collection(FirebaseConstants.reportCollection);
 
   //GET MODERATOR STATUS
   Stream<String> getMembershipStatus(String membershipId) {
@@ -455,7 +457,7 @@ class ModerationRepository {
   Stream<String> getMemberRole(String membershipId) {
     return _communityMembership.doc(membershipId).snapshots().map((snapshot) {
       if (!snapshot.exists) {
-        throw Exception('Membership does not exist');
+        return '';
       }
       final data = snapshot.data() as Map<String, dynamic>;
       final role = data['role'] as String;
@@ -467,5 +469,13 @@ class ModerationRepository {
         throw Exception(error.toString());
       }
     });
+  }
+
+  Stream<int> getUnresolvedReportsCount(String communityId) {
+    return _reports
+        .where('communityId', isEqualTo: communityId)
+        .where('isResolved', isEqualTo: false)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length);
   }
 }

@@ -30,6 +30,7 @@ import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:logger/logger.dart';
+import 'package:tuple/tuple.dart';
 
 class CommunityScreen extends ConsumerStatefulWidget {
   final String _communityId;
@@ -46,6 +47,7 @@ class CommunityScreen extends ConsumerStatefulWidget {
 class CommunityScreenState extends ConsumerState<CommunityScreen> {
   Future<PostDataModel?>? pinnedPost;
   UserModel? _currentUser;
+  String _role = '';
 
   @override
   void didChangeDependencies() {
@@ -69,10 +71,11 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
         child: ref.watch(communityByIdProvider(widget._communityId)).when(
               data: (community) {
                 return ref
-                    .watch(currentUserRoleProvider(widget._communityId))
+                    .watch(currentUserRoleProvider(
+                        Tuple2(currentUser.uid, widget._communityId)))
                     .when(
                       data: (memberModel) {
-                        final role = memberModel?.role ?? '';
+                        _role = memberModel?.role ?? '';
                         return CustomScrollView(
                           slivers: [
                             SliverAppBar(
@@ -80,9 +83,9 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                 IconButton(
                                   icon: const Icon(Icons.more_vert),
                                   onPressed: () {
-                                    if (role == 'moderator') {
+                                    if (_role == 'moderator') {
                                       _showModeratorMoreOptions(community);
-                                    } else if (role == 'member') {
+                                    } else if (_role == 'member') {
                                       _showMemberMoreOptions(community);
                                     } else {
                                       _showStrangerMoreOptions(community);
@@ -93,7 +96,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                               expandedHeight: 150,
                               flexibleSpace: InkWell(
                                 onTap: () =>
-                                    _handleBannerImageAction(community, role),
+                                    _handleBannerImageAction(community, _role),
                                 child: Stack(
                                   children: [
                                     Positioned.fill(
@@ -129,7 +132,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                         InkWell(
                                           onTap: () =>
                                               _handleProfileImageAction(
-                                                  community, role),
+                                                  community, _role),
                                           child: CircleAvatar(
                                             backgroundImage:
                                                 CachedNetworkImageProvider(
@@ -298,7 +301,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
 
                                             if (!post.post.isPoll) {
                                               return CommunityPostContainer(
-                                                isMod: role == 'moderator',
+                                                isMod: _role == 'moderator',
                                                 isPinnedPost:
                                                     post.post.isPinned,
                                                 author: post.author!,
@@ -901,7 +904,10 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red,
                             ),
-                            child: const Text('Refuse', style: TextStyle(color: Colors.white),),
+                            child: const Text(
+                              'Refuse',
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ),
                           ElevatedButton(
                             onPressed: () {
@@ -911,7 +917,10 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green,
                             ),
-                            child: const Text('Confirm', style: TextStyle(color: Colors.white),),
+                            child: const Text(
+                              'Confirm',
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ),
                         ],
                       ),

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:image/image.dart' as img;
@@ -25,7 +26,21 @@ class CloudVisionController {
     List<String> base64Images = [];
 
     for (final image in images) {
-      final bytes = image.readAsBytesSync();
+      final originalSize = image.lengthSync();
+
+      if (originalSize < 500 * 1024) {
+        base64Images.add(base64Encode(image.readAsBytesSync()));
+        continue;
+      }
+
+      final compressedBytes = await FlutterImageCompress.compressWithFile(
+        image.absolute.path,
+        quality: 50,
+      );
+
+      if (compressedBytes == null) {
+        continue;
+      }
 
       final format = _getImageExtension(image);
       if (format == null) {
@@ -33,9 +48,9 @@ class CloudVisionController {
       }
 
       if (format == 'png' || format == 'jpg' || format == 'jpeg') {
-        base64Images.add(base64Encode(bytes));
+        base64Images.add(base64Encode(compressedBytes));
       } else if (format == 'webp') {
-        final convertedImage = _convertToPng(bytes);
+        final convertedImage = _convertToPng(compressedBytes);
         base64Images.add(base64Encode(convertedImage));
       }
     }

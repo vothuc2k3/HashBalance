@@ -68,6 +68,7 @@ class _MutualFriendsScreenState extends ConsumerState<MutualFriendsScreen> {
                         borderRadius: BorderRadius.circular(15),
                       ),
                       child: ListTile(
+                        tileColor: ref.watch(preferredThemeProvider).third,
                         onTap: () => _navigateToProfile(friend.user),
                         leading: CircleAvatar(
                           radius: 30,
@@ -198,5 +199,4 @@ class _MutualFriendsScreenState extends ConsumerState<MutualFriendsScreen> {
     );
   }
 
-  void _addFriend(UserModel user) {}
 }

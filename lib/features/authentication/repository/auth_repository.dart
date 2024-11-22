@@ -83,17 +83,12 @@ class AuthRepository {
       }
       return right(user);
     } on FirebaseAuthException catch (e) {
+      Logger().d(e.code);
       String errorMessage;
       switch (e.code) {
         case 'account-exists-with-different-credential':
           errorMessage =
-              'An account already exists with a different sign-in method. Please use the correct method.';
-          break;
-        case 'invalid-credential':
-          errorMessage = 'The credential data is invalid or has expired.';
-          break;
-        case 'operation-not-allowed':
-          errorMessage = 'This sign-in method is not allowed.';
+              'An account already exists with the same email address but different sign-in credentials. Sign in using a provider associated with this email address.';
           break;
         case 'user-disabled':
           errorMessage = 'This user account has been disabled.';
@@ -103,6 +98,7 @@ class AuthRepository {
       }
       return left(Failures(errorMessage));
     } catch (e) {
+      Logger().d(e.toString());
       return left(Failures('An unexpected error occurred. Please try again.'));
     }
   }

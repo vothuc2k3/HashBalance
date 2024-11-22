@@ -16,6 +16,7 @@ import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/message_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:tuple/tuple.dart';
+import 'package:profanity_filter/profanity_filter.dart';
 
 class PrivateMessageScreen extends ConsumerStatefulWidget {
   final UserModel _targetUser;
@@ -39,6 +40,36 @@ class _PrivateMessageScreenState extends ConsumerState<PrivateMessageScreen> {
   Message? _lastMessage;
   UserModel? currentUser;
   bool _isBlocked = false;
+  final _profanityFilter = ProfanityFilter();
+
+  void _onSendMessage(String targetUid) async {
+    String originalMessage = _messageController.text;
+
+    String cleanMessage = _profanityFilter.censor(originalMessage);
+
+    if (originalMessage != cleanMessage) {
+      showToast(
+        false,
+        "Your message contained inappropriate words and was sanitized.",
+      );
+    }
+
+    final result = await ref
+        .read(messageControllerProvider.notifier)
+        .sendPrivateMessage(cleanMessage, targetUid);
+
+    result.fold(
+      (l) {
+        showToast(false, l.message);
+      },
+      (_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _messageController.clear();
+          FocusManager.instance.primaryFocus?.unfocus();
+        });
+      },
+    );
+  }
 
   void _showPrivateMessageOptions() {
     final RenderBox overlay =
@@ -101,23 +132,6 @@ class _PrivateMessageScreenState extends ConsumerState<PrivateMessageScreen> {
     setState(() {
       _isLoadingMoreMessages = false;
     });
-  }
-
-  void _onSendMessage(String targetUid) async {
-    final result = await ref
-        .read(messageControllerProvider.notifier)
-        .sendPrivateMessage(_messageController.text, targetUid);
-    result.fold(
-      (l) {
-        showToast(false, l.message);
-      },
-      (_) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _messageController.clear();
-          FocusManager.instance.primaryFocus?.unfocus();
-        });
-      },
-    );
   }
 
   void _onStartVoiceCall() async {
@@ -397,7 +411,7 @@ class _PrivateMessageScreenState extends ConsumerState<PrivateMessageScreen> {
                         );
                       }
                     },
-                    loading: () => const CircularProgressIndicator(),
+                    loading: () => const Loading(),
                     error: (error, stackTrace) => ErrorText(
                       error: error.toString(),
                     ),

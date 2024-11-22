@@ -34,17 +34,23 @@ class CallRepository {
   //FETCH AGORA TOKEN
   Future<Either<Failures, String>> fetchAgoraToken(String channelName) async {
     try {
-      final response = await http.get(
-        Uri.parse('${Constants.domain}/access_token?channelName=$channelName'),
-      );
+      final response = await http.get(Uri.parse(
+          '${Constants.domain}/agoraAccessToken?channelName=$channelName'));
+
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
         return right(data['token']);
+      } else if (response.statusCode == 400) {
+        throw Exception(
+            'Bad Request: The server could not understand the request. Check if the channel name is provided correctly.');
+      } else if (response.statusCode == 500) {
+        throw Exception(
+            'Server Error: Something went wrong on the server while generating the token.');
       } else {
-        throw Exception('Failed to load token');
+        throw Exception('${response.statusCode}');
       }
     } catch (e) {
-      return left(Failures(e.toString()));
+      return left(Failures('Error fetching Agora token: ${e.toString()}'));
     }
   }
 

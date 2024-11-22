@@ -392,22 +392,13 @@ class PostRepository {
     try {
       final batch = _firestore.batch();
 
-      List<String> updatedImageUrls = [];
+      List<String> updatedImageUrls = List.from(post.images ?? []);
       String? updatedVideoUrl;
 
       if (newImages != null && newImages.isNotEmpty) {
-        for (var oldImageUrl in post.images ?? []) {
-          try {
-            await _storageRepository.deleteFile(path: oldImageUrl);
-          } catch (e) {
-            Logger().e('Failed to delete old image: $e');
-          }
-        }
-        updatedImageUrls = [];
-
         for (var image in newImages) {
           final imagePath =
-              'posts/images/${post.id}_${DateTime.now().millisecondsSinceEpoch}';
+              'posts/images/${post.id}/${DateTime.now().millisecondsSinceEpoch}';
           final result = await _storageRepository.storeFile(
             path: imagePath,
             id: imagePath.split('/').last,
@@ -419,8 +410,6 @@ class PostRepository {
             (imageUrl) => updatedImageUrls.add(imageUrl),
           );
         }
-      } else {
-        updatedImageUrls = List.from(post.images ?? []);
       }
 
       if (newVideo != null) {
@@ -447,6 +436,7 @@ class PostRepository {
         updatedVideoUrl = post.video;
       }
 
+      // Cập nhật bài đăng
       Post updatedPost = post.copyWith(
         images: updatedImageUrls,
         video: updatedVideoUrl,
@@ -550,6 +540,4 @@ class PostRepository {
       }
     }
   }
-
-  
 }

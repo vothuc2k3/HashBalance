@@ -22,15 +22,9 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
         return windows;
       case TargetPlatform.linux:
@@ -46,8 +40,8 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCQjMV8-_CYvonMp3RMdNMEDTDg3r48ckI',
-    appId: '1:456581070342:web:52a99891dc873688c5cd87',
+    apiKey: 'AIzaSyDZW61kV4ihYpNozlZwwonwcjGRJQx1HpM',
+    appId: '1:456581070342:web:74e087d395043ef1c5cd87',
     messagingSenderId: '456581070342',
     projectId: 'hash-balance-official-2',
     authDomain: 'hash-balance-official-2.firebaseapp.com',
@@ -63,11 +57,34 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyCQjMV8-_CYvonMp3RMdNMEDTDg3r48ckI',
-    appId: '1:456581070342:web:3ce6579e9a707231c5cd87',
+    apiKey: 'AIzaSyDZW61kV4ihYpNozlZwwonwcjGRJQx1HpM',
+    appId: '1:456581070342:web:6cea3d8fd055736ac5cd87',
     messagingSenderId: '456581070342',
     projectId: 'hash-balance-official-2',
     authDomain: 'hash-balance-official-2.firebaseapp.com',
     storageBucket: 'hash-balance-official-2.appspot.com',
   );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyB2OyMVJH_iN8sBUu_CiecUVmjMAsyJjEA',
+    appId: '1:456581070342:ios:e71db67fe6380ee9c5cd87',
+    messagingSenderId: '456581070342',
+    projectId: 'hash-balance-official-2',
+    storageBucket: 'hash-balance-official-2.appspot.com',
+    androidClientId: '456581070342-ususd04c7e8sb8glti18l240v29e0i9p.apps.googleusercontent.com',
+    iosClientId: '456581070342-lutie0chntsav1o4euh5sebgbfvpbgu1.apps.googleusercontent.com',
+    iosBundleId: 'com.example.hashBalance',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyB2OyMVJH_iN8sBUu_CiecUVmjMAsyJjEA',
+    appId: '1:456581070342:ios:e71db67fe6380ee9c5cd87',
+    messagingSenderId: '456581070342',
+    projectId: 'hash-balance-official-2',
+    storageBucket: 'hash-balance-official-2.appspot.com',
+    androidClientId: '456581070342-ususd04c7e8sb8glti18l240v29e0i9p.apps.googleusercontent.com',
+    iosClientId: '456581070342-lutie0chntsav1o4euh5sebgbfvpbgu1.apps.googleusercontent.com',
+    iosBundleId: 'com.example.hashBalance',
+  );
+
 }

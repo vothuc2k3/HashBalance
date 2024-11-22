@@ -10,6 +10,7 @@ class Report {
   final String? reportedPostId;
   final String? reportedCommentId;
   final String? reportedUid;
+  final bool isResolved;
   final String message;
   final Timestamp createdAt;
   Report({
@@ -20,6 +21,7 @@ class Report {
     this.reportedPostId,
     this.reportedCommentId,
     this.reportedUid,
+    required this.isResolved,
     required this.message,
     required this.createdAt,
   });
@@ -32,6 +34,7 @@ class Report {
     String? reportedPostId,
     String? reportedCommentId,
     String? reportedUid,
+    bool? isResolved,
     String? message,
     Timestamp? createdAt,
   }) {
@@ -43,6 +46,7 @@ class Report {
       reportedPostId: reportedPostId ?? this.reportedPostId,
       reportedCommentId: reportedCommentId ?? this.reportedCommentId,
       reportedUid: reportedUid ?? this.reportedUid,
+      isResolved: isResolved ?? this.isResolved,
       message: message ?? this.message,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -57,6 +61,7 @@ class Report {
       'reportedPostId': reportedPostId,
       'reportedCommentId': reportedCommentId,
       'reportedUid': reportedUid,
+      'isResolved': isResolved,
       'message': message,
       'createdAt': createdAt,
     };
@@ -77,6 +82,7 @@ class Report {
           : null,
       reportedUid:
           map['reportedUid'] != null ? map['reportedUid'] as String : null,
+      isResolved: map['isResolved'] as bool,
       message: map['message'] as String,
       createdAt: map['createdAt'] as Timestamp,
     );
@@ -89,7 +95,7 @@ class Report {
 
   @override
   String toString() {
-    return 'Report(id: $id, type: $type, reporterUid: $reporterUid, communityId: $communityId, reportedPostId: $reportedPostId, reportedCommentId: $reportedCommentId, reportedUid: $reportedUid, message: $message, createdAt: $createdAt)';
+    return 'Report(id: $id, type: $type, reporterUid: $reporterUid, communityId: $communityId, reportedPostId: $reportedPostId, reportedCommentId: $reportedCommentId, reportedUid: $reportedUid, isResolved: $isResolved, message: $message, createdAt: $createdAt)';
   }
 
   @override
@@ -103,6 +109,7 @@ class Report {
         other.reportedPostId == reportedPostId &&
         other.reportedCommentId == reportedCommentId &&
         other.reportedUid == reportedUid &&
+        other.isResolved == isResolved &&
         other.message == message &&
         other.createdAt == createdAt;
   }
@@ -116,6 +123,7 @@ class Report {
         reportedPostId.hashCode ^
         reportedCommentId.hashCode ^
         reportedUid.hashCode ^
+        isResolved.hashCode ^
         message.hashCode ^
         createdAt.hashCode;
   }
