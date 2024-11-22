@@ -92,6 +92,7 @@ dependencies:
   android_intent_plus: ^5.2.0
   profanity_filter: ^2.0.0
   flutter_image_compress: ^2.3.0
+  dio: ^5.7.0
 
 dependency_overrides:
   lints: ^3.0.0

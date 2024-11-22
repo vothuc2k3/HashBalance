@@ -9,9 +9,9 @@ import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/call/controller/call_controller.dart';
 import 'package:hash_balance/features/call/screen/incoming_call_screen.dart';
-import 'package:hash_balance/features/home/delegates/search_delegate.dart';
 import 'package:hash_balance/features/home/screen/drawers/community_list_drawer.dart';
 import 'package:hash_balance/features/home/screen/drawers/user_profile_drawer.dart';
+import 'package:hash_balance/features/home/screen/search_screen.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_devices/controller/user_device_controller.dart';
@@ -78,6 +78,15 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
+  _navigateToSearchScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SearchSuggestionsScreen(),
+      ),
+    );
+  }
+
   @override
   void initState() {
     _pageController = PageController();
@@ -136,12 +145,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
             actions: [
               //MARK: - SEARCH
               IconButton(
-                onPressed: () {
-                  showSearch(
-                    context: context,
-                    delegate: SearchCommunityDelegate(ref),
-                  );
-                },
+                onPressed: () => _navigateToSearchScreen(),
                 icon: const Icon(
                   Icons.search,
                 ),

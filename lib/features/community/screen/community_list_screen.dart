@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:hash_balance/core/splash/splash_screen.dart';
+import 'package:hash_balance/core/widgets/community_card.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
@@ -107,46 +107,13 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen>
                       itemCount: _communities.length,
                       itemBuilder: (context, index) {
                         final community = _communities[index];
-                        return Card(
-                          color: Colors.black,
-                          margin: const EdgeInsets.symmetric(vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: ListTile(
-                            tileColor: ref.watch(preferredThemeProvider).second,
-                            leading: CircleAvatar(
-                              backgroundImage: CachedNetworkImageProvider(
-                                community.item1.profileImage,
-                              ),
-                              radius: 30,
-                            ),
-                            title: Text(
-                              community.item1.name,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Text(
-                              community.item1.description,
-                              style: const TextStyle(color: Colors.white70),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            trailing: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.people, color: Colors.white70),
-                                Text(
-                                  community.item2.toString(),
-                                  style: const TextStyle(color: Colors.white70),
-                                ),
-                              ],
-                            ),
-                            onTap: () => _navigateToCommunityScreen(
-                                community.item1, currentUser!.uid),
-                          ),
+                        return CommunityCard(
+                          community: community.item1,
+                          memberCount: community.item2,
+                          onTap: () => _navigateToCommunityScreen(
+                              community.item1, currentUser!.uid),
+                          themeProvider:
+                              ref.watch(preferredThemeProvider).third,
                         ).animate().fadeIn();
                       },
                     );

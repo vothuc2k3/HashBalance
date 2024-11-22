@@ -93,16 +93,16 @@ final getFriendRequestStatusProvider =
       .getFriendRequestStatus(requestId);
 });
 
-final friendControllerProvider =
-    StateNotifierProvider<FriendController, bool>((ref) => FriendController(
-          userDeviceController: ref.read(userDeviceControllerProvider),
-          notificationController:
-              ref.read(notificationControllerProvider.notifier),
-          friendRepository: ref.read(friendRepositoryProvider),
-          ref: ref,
-          pushNotificationController:
-              ref.read(pushNotificationControllerProvider.notifier),
-        ));
+final friendControllerProvider = StateNotifierProvider<FriendController, bool>(
+  (ref) => FriendController(
+    userDeviceController: ref.read(userDeviceControllerProvider),
+    notificationController: ref.read(notificationControllerProvider.notifier),
+    friendRepository: ref.read(friendRepositoryProvider),
+    pushNotificationController:
+        ref.read(pushNotificationControllerProvider.notifier),
+    ref: ref,
+  ),
+);
 
 class FriendController extends StateNotifier<bool> {
   final NotificationController _notificationController;
@@ -424,11 +424,9 @@ class FriendController extends StateNotifier<bool> {
       final result =
           await _userDeviceController.getUserDeviceTokens(followerUid);
       result.fold(
-          (l) => throw FirebaseException(
-                plugin: 'Firebase Exception',
-                message: l.message,
-              ),
-          (tokens) => tokens.addAll(tokens));
+        (l) {},
+        (tokens) => tokens.addAll(tokens),
+      );
     }
     await _pushNotificationController.sendPushNotification(
       tokens,
@@ -439,6 +437,18 @@ class FriendController extends StateNotifier<bool> {
         'uid': uid,
       },
       type,
+    );
+    await _notificationController.addNotification(
+      uid,
+      NotificationModel(
+        id: _uuid.v1(),
+        title: title,
+        message: message,
+        type: type,
+        senderUid: uid,
+        createdAt: Timestamp.now(),
+        isRead: false,
+      ),
     );
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
+import 'package:hash_balance/features/admin_dashboard/screen/admin_dashboard.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
@@ -28,6 +29,11 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
   void initState() {
     super.initState();
     _loadNotificationSetting();
+  }
+
+  void _navigateToAdminDashboard() {
+    Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) => const AdminDashboardScreen()));
   }
 
   void _showPrivacySettings() {
@@ -68,10 +74,7 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
                 );
               },
             ),
-            const Divider(
-                height: 1,
-                thickness: 1,
-                color: Colors.grey), // Dòng kẻ phân cách
+            const Divider(height: 1, thickness: 1, color: Colors.grey),
             RadioListTile<bool>(
               value: false,
               groupValue: currentUser.isRestricted,
@@ -264,6 +267,19 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
                 ),
               ),
               onTap: _navigateToSupport,
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.help,
+                color: Pallete.whiteColor,
+              ),
+              title: const Text(
+                'Admin Dashboard',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onTap: _navigateToAdminDashboard,
             ),
             const Spacer(),
             ListTile(
