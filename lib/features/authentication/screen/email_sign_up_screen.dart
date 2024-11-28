@@ -221,7 +221,7 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
                       decoration: InputDecoration(
                         labelText: 'Email',
                         labelStyle: const TextStyle(
-                          color: Color(0xFF8C336B),
+                          color: Colors.white70,
                         ),
                         hintText: 'johndoe@example.com',
                         hintStyle: const TextStyle(color: Colors.grey),
@@ -256,7 +256,7 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
                       decoration: InputDecoration(
                         labelText: 'Username',
                         labelStyle: const TextStyle(
-                          color: Color(0xFF8C336B),
+                          color: Colors.white70,
                         ),
                         hintText: 'JohnDoe',
                         hintStyle: const TextStyle(color: Colors.grey),
@@ -291,7 +291,7 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
                       decoration: InputDecoration(
                         labelText: 'Password',
                         labelStyle: const TextStyle(
-                          color: Color(0xFF8C336B),
+                          color: Colors.white70,
                         ),
                         hintText: '********',
                         hintStyle: const TextStyle(color: Colors.grey),
@@ -313,7 +313,7 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
                             isPasswordObscured
                                 ? Icons.visibility
                                 : Icons.visibility_off,
-                            color: const Color(0xFF8C336B),
+                            color: Colors.white70,
                           ),
                           onPressed: () {
                             setState(() {
@@ -337,7 +337,7 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
                       decoration: InputDecoration(
                         labelText: 'Confirm Password',
                         labelStyle: const TextStyle(
-                          color: Color(0xFF8C336B),
+                          color: Colors.white70,
                         ),
                         hintText: '********',
                         hintStyle: const TextStyle(color: Colors.grey),
@@ -359,7 +359,7 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
                             isConfirmPasswordObscured
                                 ? Icons.visibility
                                 : Icons.visibility_off,
-                            color: const Color(0xFF8C336B),
+                            color: Colors.white70,
                           ),
                           onPressed: () {
                             setState(() {

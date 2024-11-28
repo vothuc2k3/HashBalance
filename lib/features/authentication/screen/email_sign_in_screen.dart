@@ -148,7 +148,7 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
                     decoration: InputDecoration(
                       labelText: 'Email',
                       labelStyle: const TextStyle(
-                        color: Color(0xFF8C336B),
+                        color: Colors.white70,
                       ),
                       hintText: 'johndoe@example.com',
                       hintStyle: const TextStyle(color: Colors.grey),
@@ -183,7 +183,7 @@ class EmailSignInScreenState extends ConsumerState<EmailSignInScreen> {
                     decoration: InputDecoration(
                       labelText: 'Password',
                       labelStyle: const TextStyle(
-                        color: Color(0xFF8C336B),
+                        color: Colors.white70,
                       ),
                       hintText: '********',
                       hintStyle: const TextStyle(color: Colors.grey),

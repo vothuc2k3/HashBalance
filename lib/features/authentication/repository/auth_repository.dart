@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -13,6 +14,7 @@ import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:uuid/uuid.dart';
 import 'package:logger/logger.dart';
+import 'package:http/http.dart' as http;
 
 final userProvider = StateProvider<UserModel?>((ref) => null);
 
@@ -214,5 +216,29 @@ class AuthRepository {
 
   Future<void> signOut() async {
     await _firebaseAuth.signOut();
+  }
+
+  Future<Either<Failures, bool>> isAdmin(String uid) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${Constants.domain}/isAdmin'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'uid': uid}),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        final isAdmin = responseData['isAdmin'] as bool;
+        Logger().d('isAdmin: $isAdmin');
+        return right(isAdmin);
+      } else {
+        final responseData = jsonDecode(response.body);
+        return left(
+          Failures(responseData['error'] ?? 'Failed to verify admin role'),
+        );
+      }
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
   }
 }

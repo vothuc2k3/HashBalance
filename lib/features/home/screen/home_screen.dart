@@ -89,8 +89,8 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   void initState() {
-    _pageController = PageController();
     super.initState();
+    _pageController = PageController();
     WidgetsBinding.instance.addPostFrameCallback(
       (_) async {
         await _requestPushPermissions();

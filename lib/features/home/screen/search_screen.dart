@@ -13,6 +13,7 @@ import 'package:hash_balance/features/user_profile/screen/other_user_profile_scr
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:logger/logger.dart';
+import 'package:hash_balance/core/widgets/search_bar.dart' as search_bar;
 
 class SearchSuggestionsScreen extends ConsumerStatefulWidget {
   const SearchSuggestionsScreen({super.key});
@@ -49,21 +50,9 @@ class _SearchSuggestionsScreenState
       appBar: AppBar(
         backgroundColor: ref.watch(preferredThemeProvider).second,
         elevation: 1,
-        title: TextField(
-          decoration: InputDecoration(
-            hintText: 'Search...',
-            hintStyle: const TextStyle(color: Colors.white70),
-            filled: true,
-            fillColor: ref.watch(preferredThemeProvider).first,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30),
-              borderSide: BorderSide.none,
-            ),
-          ),
-          onChanged: _onQueryChanged,
-          onSubmitted: (query) {},
-          style: const TextStyle(color: Colors.white70),
+        title: search_bar.SearchBar(
+          onQueryChanged: _onQueryChanged,
+          color: ref.watch(preferredThemeProvider).first,
         ),
       ),
       body: Container(
@@ -167,6 +156,7 @@ class _SearchSuggestionsScreenState
                                         const EdgeInsets.symmetric(vertical: 8),
                                     child: UserCard(
                                       user: user,
+                                      isAdmin: true,
                                       theme: ref
                                           .watch(preferredThemeProvider)
                                           .third,

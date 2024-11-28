@@ -7,15 +7,14 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/services/community_service.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/call/controller/call_controller.dart';
 import 'package:hash_balance/features/call/screen/incoming_call_screen.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/network/controller/network_controller.dart';
-import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 import 'package:logger/logger.dart';
 import 'package:multi_trigger_autocomplete/multi_trigger_autocomplete.dart';
@@ -23,7 +22,6 @@ import 'package:toastification/toastification.dart';
 
 import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/splash/splash_screen.dart';
-import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
 import 'package:hash_balance/features/home/screen/home_screen.dart';
@@ -72,22 +70,7 @@ class MyApp extends ConsumerStatefulWidget {
 class MyAppState extends ConsumerState<MyApp> {
   UserModel? userData;
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-  late final CommunityService _communityService;
-
   ConnectivityResult? lastStatus;
-
-  void _getUserData(User? data) async {
-    if (data != null) {
-      final userData = await ref
-          .watch(authControllerProvider.notifier)
-          .getUserData(data.uid)
-          .first;
-      ref.read(userProvider.notifier).update((state) => userData);
-      await _communityService.getUserJoinedCommunities(userData.uid);
-    } else {
-      ref.read(userProvider.notifier).update((state) => null);
-    }
-  }
 
   void _setupLocalNotifications() async {
     const initializationSettingsAndroid =
@@ -117,7 +100,9 @@ class MyAppState extends ConsumerState<MyApp> {
               ),
             );
 
-            final targetUser = await _fetchUserByUid(payloadData['uid']);
+            final targetUser = await ref
+                .read(userControllerProvider.notifier)
+                .fetchUserByUidProvider(payloadData['uid']);
             navigatorKey.currentState?.pushReplacement(
               MaterialPageRoute(
                 builder: (context) =>
@@ -132,7 +117,9 @@ class MyAppState extends ConsumerState<MyApp> {
                 builder: (context) => const SplashScreen(),
               ),
             );
-            final targetUser = await _fetchUserByUid(payloadData['uid']);
+            final targetUser = await ref
+                .read(userControllerProvider.notifier)
+                .fetchUserByUidProvider(payloadData['uid']);
 
             navigatorKey.currentState?.pushReplacement(
               MaterialPageRoute(
@@ -147,8 +134,10 @@ class MyAppState extends ConsumerState<MyApp> {
                 builder: (context) => const SplashScreen(),
               ),
             );
-            
-            final targetUser = await _fetchUserByUid(payloadData['uid']);
+
+            final targetUser = await ref
+                .read(userControllerProvider.notifier)
+                .fetchUserByUidProvider(payloadData['uid']);
 
             navigatorKey.currentState?.pushReplacement(
               MaterialPageRoute(
@@ -202,7 +191,9 @@ class MyAppState extends ConsumerState<MyApp> {
                 builder: (context) => const SplashScreen(),
               ),
             );
-            final targetUser = await _fetchUserByUid(payloadData['uid']);
+            final targetUser = await ref
+                .read(userControllerProvider.notifier)
+                .fetchUserByUidProvider(payloadData['uid']);
             navigatorKey.currentState?.pushReplacement(
               MaterialPageRoute(
                 builder: (context) =>
@@ -211,8 +202,13 @@ class MyAppState extends ConsumerState<MyApp> {
             );
             break;
           case Constants.incomingCallType:
-            final caller = await _fetchUserByUid(payloadData['callerUid']);
-            final call = await _fetchCallById(payloadData['callId']);
+            final caller = await ref
+                .read(userControllerProvider.notifier)
+                .fetchUserByUidProvider(payloadData['callerUid']);
+            final call = await ref
+                .read(callControllerProvider.notifier)
+                .listenToCall(payloadData['callId'])
+                .first;
             final callData = CallDataModel(
               call: call!,
               caller: caller,
@@ -235,18 +231,6 @@ class MyAppState extends ConsumerState<MyApp> {
     } else {
       Logger().e('No payload found');
     }
-  }
-
-  Future<UserModel> _fetchUserByUid(String uid) {
-    return ref
-        .watch(userControllerProvider.notifier)
-        .fetchUserByUidProvider(uid);
-  }
-
-  Future<Call?> _fetchCallById(String callId) {
-    final call =
-        ref.watch(callControllerProvider.notifier).listenToCall(callId).first;
-    return call;
   }
 
   Future<void> _showLocalNotification(RemoteMessage message) async {
@@ -293,6 +277,14 @@ class MyAppState extends ConsumerState<MyApp> {
     }
   }
 
+  void _loadUserData(String uid) async {
+    Logger().d('Loading user data for uid: $uid');
+    final userData = await ref
+        .read(userControllerProvider.notifier)
+        .fetchUserByUidProvider(uid);
+    ref.read(userProvider.notifier).update((state) => userData);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -306,34 +298,47 @@ class MyAppState extends ConsumerState<MyApp> {
         }
       },
     );
-    _communityService = CommunityService();
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<AsyncValue<List<ConnectivityResult>>>(connectivityProvider,
-        (previous, next) {
-      next.when(
-        data: (statuses) {
-          if (statuses.isNotEmpty) {
-            final lastConnectivity = statuses.last;
-            if (lastConnectivity != lastStatus) {
-              lastStatus = lastConnectivity;
-              showToast(true, _connectivityStatusMessage(lastConnectivity));
+    ref.listen(
+      connectivityProvider,
+      (previous, next) {
+        next.when(
+          data: (statuses) {
+            if (statuses.isNotEmpty) {
+              final lastConnectivity = statuses.last;
+              if (lastConnectivity != lastStatus) {
+                lastStatus = lastConnectivity;
+                showToast(true, _connectivityStatusMessage(lastConnectivity));
+              }
             }
-          }
-        },
-        loading: () {},
-        error: (error, stack) {
-          showToast(false, error.toString());
-        },
-      );
-    });
+          },
+          loading: () {},
+          error: (error, stack) {
+            showToast(false, error.toString());
+          },
+        );
+      },
+    );
+    ref.listen(
+      authStageChangeProvider,
+      (previous, next) {
+        next.when(
+          data: (user) {
+            if (user != null) {
+              _loadUserData(user.uid);
+            }
+          },
+          loading: () {},
+          error: (error, stack) {},
+        );
+      },
+    );
 
     final user = FirebaseAuth.instance.currentUser;
-
     if (user != null) {
-      _getUserData(user);
       return Portal(
         child: MaterialApp(
           navigatorKey: navigatorKey,

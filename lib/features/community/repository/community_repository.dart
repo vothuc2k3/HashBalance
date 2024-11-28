@@ -306,7 +306,11 @@ class CommunityRepository {
 
   Future<String> getMemberRole(String membershipId) async {
     final snapshot = await _communityMembership.doc(membershipId).get();
-    final data = snapshot.data() as Map<String, dynamic>;
-    return data['role'] as String;
+    if (snapshot.exists) {
+      final data = snapshot.data() as Map<String, dynamic>;
+      return data['role'] as String;
+    } else {
+      return '';
+    }
   }
 }

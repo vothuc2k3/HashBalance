@@ -9,6 +9,7 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/storage_repository.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/cloud_vision/controller/cloud_vision_controller.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/invitation/controller/invitation_controller.dart';
 import 'package:hash_balance/features/moderation/repository/moderation_repository.dart';
@@ -75,6 +76,7 @@ final moderationControllerProvider =
       invitationController: ref.read(invitationControllerProvider),
       notificationController: ref.read(notificationControllerProvider.notifier),
       userDeviceController: ref.read(userDeviceControllerProvider),
+      cloudVisionController: ref.read(cloudVisionControllerProvider),
       pushNotificationController:
           ref.read(pushNotificationControllerProvider.notifier),
       commentController: ref.read(commentControllerProvider.notifier),
@@ -91,6 +93,7 @@ class ModerationController extends StateNotifier<bool> {
   final PushNotificationController _pushNotificationController;
   final CommentController _commentController;
   final UserDeviceController _userDeviceController;
+  final CloudVisionController _cloudVisionController;
   final Ref _ref;
   final Uuid _uuid = const Uuid();
 
@@ -102,6 +105,7 @@ class ModerationController extends StateNotifier<bool> {
     required PushNotificationController pushNotificationController,
     required CommentController commentController,
     required UserDeviceController userDeviceController,
+    required CloudVisionController cloudVisionController,
     required Ref ref,
   })  : _moderationRepository = moderationRepository,
         _storageRepository = storageRepository,
@@ -110,6 +114,7 @@ class ModerationController extends StateNotifier<bool> {
         _pushNotificationController = pushNotificationController,
         _commentController = commentController,
         _userDeviceController = userDeviceController,
+        _cloudVisionController = cloudVisionController,
         _ref = ref,
         super(false);
 
@@ -134,9 +139,20 @@ class ModerationController extends StateNotifier<bool> {
       Community updatedCommunity = community;
 
       if (profileImage != null) {
-        final result = await _storageRepository.storeFile(
+        final result =
+            await _cloudVisionController.areImagesSafe([profileImage]);
+        final isSafe = result.fold(
+          (failure) => left(failure),
+          (isSafe) => right(isSafe),
+        );
+        if (isSafe.isLeft()) return isSafe as Either<Failures, String>;
+        if (isSafe.isRight() && !isSafe.getOrElse((_) => false)) {
+          return left(Failures('Your image contains inappropriate content...'));
+        }
+
+        final result2 = await _storageRepository.storeFile(
             path: 'communities/profile', id: community.id, file: profileImage);
-        await result.fold(
+        await result2.fold(
           (error) => throw FirebaseException(
             plugin: 'Firebase Exception',
             message: error.message,
@@ -152,12 +168,22 @@ class ModerationController extends StateNotifier<bool> {
       }
 
       if (bannerImage != null) {
-        final result = await _storageRepository.storeFile(
+        final result =
+            await _cloudVisionController.areImagesSafe([bannerImage]);
+        final isSafe = result.fold(
+          (failure) => left(failure),
+          (isSafe) => right(isSafe),
+        );
+        if (isSafe.isLeft()) return isSafe as Either<Failures, String>;
+        if (isSafe.isRight() && !isSafe.getOrElse((_) => false)) {
+          return left(Failures('Your image contains inappropriate content...'));
+        }
+        final result2 = await _storageRepository.storeFile(
           path: 'communities/banner',
           id: community.id,
           file: bannerImage,
         );
-        await result.fold(
+        await result2.fold(
           (error) => throw FirebaseException(
             plugin: 'Firebase Exception',
             message: error.message,

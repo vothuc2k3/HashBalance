@@ -15,6 +15,8 @@ import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.da
 import 'package:hash_balance/features/user_devices/controller/user_device_controller.dart';
 import 'package:hash_balance/models/user_model.dart';
 
+final isAdminProvider = StateProvider<bool>((ref) => false);
+
 final fetchUserDataProvider = FutureProviderFamily((ref, String uid) {
   return ref.watch(authControllerProvider.notifier).fetchUserData(uid);
 });
@@ -56,6 +58,7 @@ class AuthController extends StateNotifier<bool> {
       final result = await _authRepository.signInWithGoogle();
       return result.fold((l) => left(Failures(l.message)), (userModel) {
         _ref.read(userProvider.notifier).update((state) => userModel);
+
         return right(userModel);
       });
     } on FirebaseException catch (e) {
@@ -125,7 +128,8 @@ class AuthController extends StateNotifier<bool> {
       final result =
           await _authRepository.signInWithEmailAndPassword(email, password);
       return result.fold((l) => left(Failures(l.message)), (userModel) async {
-        _ref.watch(userProvider.notifier).update((state) => userModel);
+        _ref.read(userProvider.notifier).update((state) => userModel);
+        await isAdmin(userModel.uid);
         return right(userModel);
       });
     } on FirebaseAuthException catch (e) {
@@ -149,7 +153,7 @@ class AuthController extends StateNotifier<bool> {
           );
     } catch (e) {
       throw Exception(e.toString());
-    } 
+    }
   }
 
   Stream<UserModel> getUserData(String uid) {
@@ -177,5 +181,12 @@ class AuthController extends StateNotifier<bool> {
     } finally {
       state = false;
     }
+  }
+
+  Future<void> isAdmin(String uid) async {
+    final result = await _authRepository.isAdmin(uid);
+    result.fold((l) => null, (r) {
+      _ref.read(isAdminProvider.notifier).update((state) => r);
+    });
   }
 }

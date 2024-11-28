@@ -82,6 +82,7 @@ class SearchRepository {
       final querySnapshot = await _communities
           .where('name', isGreaterThanOrEqualTo: communityQuery)
           .where('name', isLessThanOrEqualTo: '$communityQuery\uf8ff')
+          .where('type', isNotEqualTo: 'Private')
           .limit(50)
           .get();
 

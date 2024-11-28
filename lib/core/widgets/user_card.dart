@@ -6,12 +6,14 @@ class UserCard extends StatelessWidget {
   final UserModel user;
   final Color theme;
   final VoidCallback onTap;
+  final bool isAdmin;
 
   const UserCard({
     super.key,
     required this.user,
     required this.theme,
     required this.onTap,
+    required this.isAdmin,
   });
 
   @override
@@ -61,6 +63,33 @@ class UserCard extends StatelessWidget {
                     ],
                   ],
                 ),
+              ),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_horiz, color: Colors.white70),
+                onSelected: (String value) {},
+                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                  const PopupMenuItem<String>(
+                    value: 'view',
+                    child: Text('View Profile'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'add_friend',
+                    child: Text('Add Friend'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'report',
+                    child: Text('Report'),
+                  ),
+                  if (isAdmin)
+                    const PopupMenuItem<String>(
+                      value: 'suspend',
+                      child: Text('Suspend This Account'),
+                    ),
+                  const PopupMenuItem<String>(
+                    value: 'cancel',
+                    child: Text('Cancel'),
+                  ),
+                ],
               ),
             ],
           ),

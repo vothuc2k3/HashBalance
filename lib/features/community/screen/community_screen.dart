@@ -29,8 +29,9 @@ import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:logger/logger.dart';
 import 'package:tuple/tuple.dart';
+
+final currentMembershipProvider = StateProvider<String?>((ref) => null);
 
 class CommunityScreen extends ConsumerStatefulWidget {
   final String _communityId;
@@ -47,13 +48,13 @@ class CommunityScreen extends ConsumerStatefulWidget {
 class CommunityScreenState extends ConsumerState<CommunityScreen> {
   Future<PostDataModel?>? pinnedPost;
   UserModel? _currentUser;
-  String _role = '';
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _currentUser = ref.watch(userProvider);
     _fetchSuspendStatus();
+    _loadMembership();
   }
 
   @override
@@ -65,6 +66,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(userProvider)!;
+    final role = ref.watch(currentMembershipProvider);
     return Scaffold(
       body: Container(
         color: ref.watch(preferredThemeProvider).first,
@@ -75,7 +77,6 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                         Tuple2(currentUser.uid, widget._communityId)))
                     .when(
                       data: (memberModel) {
-                        _role = memberModel?.role ?? '';
                         return CustomScrollView(
                           slivers: [
                             SliverAppBar(
@@ -83,9 +84,9 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                 IconButton(
                                   icon: const Icon(Icons.more_vert),
                                   onPressed: () {
-                                    if (_role == 'moderator') {
+                                    if (role == 'moderator') {
                                       _showModeratorMoreOptions(community);
-                                    } else if (_role == 'member') {
+                                    } else if (role == 'member') {
                                       _showMemberMoreOptions(community);
                                     } else {
                                       _showStrangerMoreOptions(community);
@@ -95,8 +96,8 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                               ],
                               expandedHeight: 150,
                               flexibleSpace: InkWell(
-                                onTap: () =>
-                                    _handleBannerImageAction(community, _role),
+                                onTap: () => _handleBannerImageAction(
+                                    community, role ?? ''),
                                 child: Stack(
                                   children: [
                                     Positioned.fill(
@@ -132,7 +133,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                         InkWell(
                                           onTap: () =>
                                               _handleProfileImageAction(
-                                                  community, _role),
+                                                  community, role ?? ''),
                                           child: CircleAvatar(
                                             backgroundImage:
                                                 CachedNetworkImageProvider(
@@ -301,7 +302,9 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
 
                                             if (!post.post.isPoll) {
                                               return CommunityPostContainer(
-                                                isMod: _role == 'moderator',
+                                                isMod: ref.watch(
+                                                        currentMembershipProvider) ==
+                                                    'moderator',
                                                 isPinnedPost:
                                                     post.post.isPinned,
                                                 author: post.author!,
@@ -414,7 +417,10 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
 
         result.fold(
           (l) => showToast(false, l.toString()),
-          (r) => showToast(true, r.toString()),
+          (r) {
+            showToast(true, r);
+            _loadMembership();
+          },
         );
       }
     }
@@ -456,7 +462,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
         (l) => showToast(false, l.toString()),
         (r) {
           showToast(true, r);
-          Navigator.pop(context);
+          _loadMembership();
         },
       );
     }
@@ -722,6 +728,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
 
   void _showStrangerMoreOptions(Community community) {
     showMenu<int>(
+      color: ref.watch(preferredThemeProvider).second,
       context: context,
       position: const RelativeRect.fromLTRB(100, 40, 0, 0),
       items: [
@@ -962,7 +969,6 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
   void _blockCommunity() {}
 
   void _fetchSuspendStatus() async {
-    Logger().d('Fetching suspend status');
     final result = await ref
         .read(communityControllerProvider.notifier)
         .fetchSuspendStatus(
@@ -970,9 +976,14 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     result.fold((l) => null, (r) {
       if (r == 'suspended') {
         showToast(false, 'You are suspended from this community');
-      } else {
-        Logger().d('Not suspended');
       }
     });
+  }
+
+  void _loadMembership() async {
+    final role = await ref
+        .read(communityControllerProvider.notifier)
+        .getMemberRole(_currentUser!.uid, widget._communityId);
+    ref.read(currentMembershipProvider.notifier).update((state) => role);
   }
 }

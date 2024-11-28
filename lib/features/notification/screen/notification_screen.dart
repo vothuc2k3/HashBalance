@@ -179,6 +179,24 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
   }
 
   @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    super.dispose();
+  }
+
+  @override
+  void deactivate() {
+    _scrollController.removeListener(_onScroll);
+    super.deactivate();
+  }
+
+  @override
+  void reassemble() {
+    _scrollController.addListener(_onScroll);
+    super.reassemble();
+  }
+
+  @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
@@ -311,6 +329,7 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
                                   foregroundColor: Colors.white,
                                   icon: Icons.delete,
                                   label: 'Delete',
+                                  spacing: 8,
                                 ),
                               ],
                             ),

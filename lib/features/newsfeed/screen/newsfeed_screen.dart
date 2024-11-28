@@ -79,6 +79,24 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
   bool get wantKeepAlive => true;
 
   @override
+  void deactivate() {
+    super.deactivate();
+    _scrollController.removeListener(_onScroll);
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    ref.invalidate(newsfeedInitPostsProvider);
+  }
+
+  @override
   Widget build(BuildContext context) {
     super.build(context);
     final currentUser = ref.read(userProvider)!;

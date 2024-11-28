@@ -56,7 +56,7 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.read(userProvider)!;
+    final currentUser = ref.watch(userProvider)!;
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -103,8 +103,8 @@ class _UserProfileScreenScreenState extends ConsumerState<UserProfileScreen>
         controller: _pageController,
         onPageChanged: _onPageChanged,
         children: [
-          UserProfileWidget(user: user),
-          UserTimelineWidget(user: user),
+          const UserProfileWidget(),
+          UserTimelineWidget(user: currentUser),
         ],
       ),
       bottomNavigationBar: CurvedNavigationBar(

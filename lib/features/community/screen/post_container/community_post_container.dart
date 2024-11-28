@@ -307,74 +307,77 @@ class _CommunityPostContainerState
       context: context,
       builder: (context) {
         return SafeArea(
-          child: Wrap(
-            children: [
-              if (!widget.post.isPoll && widget.post.uid == currentUid)
+          child: Container(
+            color: ref.watch(preferredThemeProvider).second,
+            child: Wrap(
+              children: [
+                if (!widget.post.isPoll && widget.post.uid == currentUid)
+                  ListTile(
+                    leading: const Icon(Icons.edit),
+                    title: const Text('Edit post'),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      _handleEditPost();
+                    },
+                  ),
+                if (widget.isMod && !widget.isPinnedPost)
+                  ListTile(
+                    leading: const Icon(Icons.person_remove),
+                    title: const Text('Pin this post'),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      if (widget.onPinPost != null) {
+                        widget.onPinPost!(widget.post);
+                      }
+                    },
+                  ),
+                if (widget.isMod && widget.isPinnedPost)
+                  ListTile(
+                    leading: const Icon(Icons.person_remove),
+                    title: const Text('Unpin this post'),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      if (widget.onUnPinPost != null) {
+                        widget.onUnPinPost!(widget.post);
+                      }
+                    },
+                  ),
+                if (currentUid == widget.post.uid || widget.isMod)
+                  ListTile(
+                    leading: const Icon(Icons.delete),
+                    title: const Text('Delete'),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      _handleDeletePost(widget.post);
+                    },
+                  ),
+                if (widget.isMod)
+                  ListTile(
+                    leading: const Icon(Icons.archive),
+                    title: const Text('Archive'),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      _handleArchivePost(widget.post.id);
+                    },
+                  ),
+                if (!widget.isMod || currentUid != widget.post.uid)
+                  ListTile(
+                    leading: const Icon(Icons.warning),
+                    title: const Text('Report this post'),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      _handleReportPost();
+                    },
+                  ),
                 ListTile(
-                  leading: const Icon(Icons.edit),
-                  title: const Text('Edit post'),
+                  leading: const Icon(Icons.cancel),
+                  title: const Text('Cancel'),
                   onTap: () {
                     Navigator.of(context).pop();
-                    _handleEditPost();
                   },
                 ),
-              if (widget.isMod && !widget.isPinnedPost)
-                ListTile(
-                  leading: const Icon(Icons.person_remove),
-                  title: const Text('Pin this post'),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    if (widget.onPinPost != null) {
-                      widget.onPinPost!(widget.post);
-                    }
-                  },
-                ),
-              if (widget.isMod && widget.isPinnedPost)
-                ListTile(
-                  leading: const Icon(Icons.person_remove),
-                  title: const Text('Unpin this post'),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    if (widget.onUnPinPost != null) {
-                      widget.onUnPinPost!(widget.post);
-                    }
-                  },
-                ),
-              if (currentUid == widget.post.uid || widget.isMod)
-                ListTile(
-                  leading: const Icon(Icons.delete),
-                  title: const Text('Delete'),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    _handleDeletePost(widget.post);
-                  },
-                ),
-              if (widget.isMod)
-                ListTile(
-                  leading: const Icon(Icons.archive),
-                  title: const Text('Archive'),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    _handleArchivePost(widget.post.id);
-                  },
-                ),
-              if (!widget.isMod || currentUid != widget.post.uid)
-                ListTile(
-                  leading: const Icon(Icons.warning),
-                  title: const Text('Report this post'),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    _handleReportPost();
-                  },
-                ),
-              ListTile(
-                leading: const Icon(Icons.cancel),
-                title: const Text('Cancel'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

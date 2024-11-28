@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
@@ -14,7 +15,9 @@ import 'package:hash_balance/theme/pallette.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 class SettingScreen extends ConsumerStatefulWidget {
-  const SettingScreen({super.key});
+  const SettingScreen({
+    super.key,
+  });
 
   @override
   ConsumerState<SettingScreen> createState() {
@@ -24,11 +27,13 @@ class SettingScreen extends ConsumerStatefulWidget {
 
 class SettingScreenState extends ConsumerState<SettingScreen> {
   bool _isNotificationsEnabled = true;
+  bool _isTryLoggingOut = false;
 
   @override
   void initState() {
     super.initState();
     _loadNotificationSetting();
+    _loadAdminStatus();
   }
 
   void _navigateToAdminDashboard() {
@@ -109,6 +114,11 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
     });
   }
 
+  void _loadAdminStatus() async {
+    final currentUser = ref.read(userProvider)!;
+    await ref.read(authControllerProvider.notifier).isAdmin(currentUser.uid);
+  }
+
   void _toggleNotifications(bool value) async {
     setState(() {
       _isNotificationsEnabled = value;
@@ -187,6 +197,9 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
   }
 
   void _signOut(String uid) async {
+    setState(() {
+      _isTryLoggingOut = true;
+    });
     await ref.watch(authControllerProvider.notifier).signOut(uid);
     // ignore: use_build_context_synchronously
     Navigator.of(context).pushAndRemoveUntil(
@@ -196,7 +209,6 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = ref.watch(authControllerProvider);
     final currentUser = ref.watch(userProvider)!;
     return Scaffold(
       appBar: AppBar(
@@ -268,40 +280,44 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
               ),
               onTap: _navigateToSupport,
             ),
-            ListTile(
-              leading: const Icon(
-                Icons.help,
-                color: Pallete.whiteColor,
-              ),
-              title: const Text(
-                'Admin Dashboard',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
+            if (ref.watch(isAdminProvider))
+              ListTile(
+                leading: const Icon(
+                  Icons.dashboard,
+                  color: Pallete.whiteColor,
                 ),
+                title: const Text(
+                  'Admin Dashboard',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                onTap: _navigateToAdminDashboard,
               ),
-              onTap: _navigateToAdminDashboard,
-            ),
             const Spacer(),
-            ListTile(
-              leading: isLoading
-                  ? const Loading()
-                  : Icon(
+            _isTryLoggingOut
+                ? const Loading()
+                : ListTile(
+                    leading: Icon(
                       Icons.logout,
                       color:
                           ref.watch(preferredThemeProvider).declineButtonColor,
                     ),
-              title: Text(
-                'Sign Out',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color:
-                        ref.watch(preferredThemeProvider).declineButtonColor),
-              ),
-              onTap: () => _signOut(currentUser.uid),
-            ),
+                    title: Text(
+                      'Sign Out',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: ref
+                              .watch(preferredThemeProvider)
+                              .declineButtonColor),
+                    ),
+                    onTap: () {
+                      _signOut(currentUser.uid);
+                    },
+                  ),
           ],
         ),
-      ),
+      ).animate().fadeIn(duration: const Duration(milliseconds: 500)),
     );
   }
 }

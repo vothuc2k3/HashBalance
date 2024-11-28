@@ -4,9 +4,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
+import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
@@ -16,9 +17,9 @@ import 'package:hash_balance/models/user_model.dart';
 import 'package:image_picker/image_picker.dart';
 
 class UserProfileWidget extends ConsumerStatefulWidget {
-  const UserProfileWidget({super.key, required this.user});
-
-  final UserModel user;
+  const UserProfileWidget({
+    super.key,
+  });
 
   @override
   ConsumerState<UserProfileWidget> createState() => UserProfileWidgetState();
@@ -27,12 +28,14 @@ class UserProfileWidget extends ConsumerStatefulWidget {
 class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
   final double coverHeight = 250;
   final double profileHeight = 120;
+  final TextEditingController nameController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = ref.watch(userProvider)!;
     final double top = coverHeight - profileHeight / 2;
     final double bottom = profileHeight / 2;
-    var userProfileData = ref.watch(userProfileDataProvider(widget.user.uid));
+    var userProfileData = ref.watch(userProfileDataProvider(currentUser.uid));
     return RefreshIndicator(
       onRefresh: () async {
         ref.invalidate(userProfileDataProvider);
@@ -51,9 +54,9 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                 alignment: Alignment.center,
                 children: [
                   InkWell(
-                    onTap: () => _handleBannerImageAction(widget.user),
+                    onTap: () => _handleBannerImageAction(currentUser),
                     child: CachedNetworkImage(
-                      imageUrl: widget.user.bannerImage,
+                      imageUrl: currentUser.bannerImage,
                       width: double.infinity,
                       height: coverHeight,
                       fit: BoxFit.cover,
@@ -63,12 +66,12 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                     top: top,
                     left: 10,
                     child: InkWell(
-                      onTap: () => _handleProfileImageAction(widget.user),
+                      onTap: () => _handleProfileImageAction(currentUser),
                       child: CircleAvatar(
                         radius: (profileHeight / 2) - 10,
                         backgroundColor: Colors.grey.shade800,
                         backgroundImage: CachedNetworkImageProvider(
-                          widget.user.profileImage,
+                          currentUser.profileImage,
                         ),
                       ),
                     ),
@@ -87,7 +90,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                         child: Row(
                           children: [
                             Text(
-                              widget.user.name,
+                              currentUser.name,
                               style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
@@ -105,7 +108,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                             Padding(
                               padding: const EdgeInsets.only(right: 10),
                               child: InkWell(
-                                onTap: () => _showEditNameModal(widget.user),
+                                onTap: () => _showEditNameModal(currentUser),
                                 child: const Icon(Icons.edit),
                               ),
                             ),
@@ -124,7 +127,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                         child: Row(
                           children: [
                             Text(
-                              widget.user.bio ??
+                              currentUser.bio ??
                                   'You haven\'t said anything yet...',
                               style: TextStyle(
                                 fontSize: 16,
@@ -143,7 +146,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                             Padding(
                               padding: const EdgeInsets.only(right: 10),
                               child: InkWell(
-                                onTap: () => _showEditBioModal(widget.user),
+                                onTap: () => _showEditBioModal(currentUser),
                                 child: const Icon(Icons.edit),
                               ),
                             ),
@@ -162,7 +165,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                         child: Row(
                           children: [
                             Text(
-                              widget.user.description ??
+                              currentUser.description ??
                                   'You haven\'t described yourself yet...',
                               style: const TextStyle(
                                 fontSize: 14,
@@ -183,30 +186,13 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                               padding: const EdgeInsets.only(right: 10),
                               child: InkWell(
                                 onTap: () =>
-                                    _showEditDescriptionModal(widget.user),
+                                    _showEditDescriptionModal(currentUser),
                                 child: const Icon(Icons.edit),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.only(left: 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      _buildSocialIcon(FontAwesomeIcons.slack),
-                      const SizedBox(width: 12),
-                      _buildSocialIcon(FontAwesomeIcons.github),
-                      const SizedBox(width: 12),
-                      _buildSocialIcon(FontAwesomeIcons.twitter),
-                      const SizedBox(width: 12),
-                      _buildSocialIcon(FontAwesomeIcons.linkedin),
-                      const SizedBox(width: 12),
                     ],
                   ),
                 ),
@@ -223,7 +209,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                           oldValue: 0,
                           newValue: data.friends.length,
                           onPressed: () =>
-                              _navigateToFriendRequestsScreen(widget.user.uid),
+                              _navigateToFriendRequestsScreen(currentUser.uid),
                         ),
                         _buildVerticalDivider(),
                         _buildAnimatedButton(
@@ -243,7 +229,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                         _buildAnimatedButton(
                           text: 'Points',
                           oldValue: 0,
-                          newValue: widget.user.activityPoint,
+                          newValue: currentUser.activityPoint,
                           onPressed: () {},
                         ),
                       ],
@@ -257,7 +243,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                           text: 'Friends',
                           value: 0,
                           onPressed: () =>
-                              _navigateToFriendRequestsScreen(widget.user.uid),
+                              _navigateToFriendRequestsScreen(currentUser.uid),
                         ),
                         _buildVerticalDivider(),
                         _buildButton(
@@ -285,7 +271,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                 const SizedBox(height: 16),
                 const Divider(),
                 const SizedBox(height: 16),
-                _buildFriendsWidget(widget.user.uid),
+                _buildFriendsWidget(currentUser.uid),
               ],
             )
           ],
@@ -306,6 +292,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
   void _showEditNameModal(UserModel currentUser) async {
     final nameController = TextEditingController();
     showModalBottomSheet(
+      backgroundColor: ref.watch(preferredThemeProvider).first,
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
@@ -323,13 +310,50 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                   context: context,
                   builder: (context) {
                     return AlertDialog(
-                      title: const Text('Edit Name'),
-                      content: TextField(
-                        controller: nameController,
-                        decoration: const InputDecoration(
-                          hintText: 'Enter your new name',
+                      backgroundColor: ref.watch(preferredThemeProvider).first,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20.0),
+                      ),
+                      title: const Text(
+                        'Edit Name',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
                         ),
                       ),
+                      content: TextFormField(
+                        style: const TextStyle(
+                          color: Colors.white,
+                        ),
+                        controller: nameController..text = currentUser.name,
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          hintText: 'E.g: John Doe',
+                          hintStyle: TextStyle(color: Colors.white38),
+                        ),
+                        maxLength: 21,
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text(
+                            'Cancel',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            _editName(currentUser, nameController.text);
+                          },
+                          child: const Text(
+                            'Save',
+                            style: TextStyle(color: Colors.green),
+                          ),
+                        ),
+                      ],
                     );
                   },
                 );
@@ -351,6 +375,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
   void _showEditBioModal(UserModel currentUser) async {
     final bioController = TextEditingController();
     showModalBottomSheet(
+      backgroundColor: ref.watch(preferredThemeProvider).first,
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
@@ -368,41 +393,47 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                   context: context,
                   builder: (context) {
                     return AlertDialog(
-                      title: const Text('Edit Name'),
-                      content: TextField(
-                        controller: bioController,
-                        decoration: const InputDecoration(
-                          hintText: 'Enter your new bio',
+                      backgroundColor: ref.watch(preferredThemeProvider).first,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20.0),
+                      ),
+                      title: const Text(
+                        'Edit Bio',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
                         ),
+                      ),
+                      content: TextFormField(
+                        style: const TextStyle(
+                          color: Colors.white,
+                        ),
+                        controller: bioController..text = currentUser.bio ?? '',
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          hintText: 'Enter your new bio',
+                          hintStyle: TextStyle(color: Colors.white38),
+                        ),
+                        maxLength: 100,
                       ),
                       actions: [
                         TextButton(
                           onPressed: () {
                             Navigator.pop(context);
                           },
-                          child: const Text('Cancel'),
+                          child: const Text(
+                            'Cancel',
+                            style: TextStyle(color: Colors.red),
+                          ),
                         ),
                         TextButton(
                           onPressed: () {
-                            _editBio(currentUser, bioController.text);
                             Navigator.pop(context);
+                            _editBio(currentUser, bioController.text);
                           },
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.white,
-                            backgroundColor: Colors.blue,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 8.0, horizontal: 16.0),
-                            minimumSize: const Size(80, 40),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
                           child: const Text(
                             'Save',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: TextStyle(color: Colors.green),
                           ),
                         ),
                       ],
@@ -415,7 +446,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
               leading: const Icon(Icons.cancel),
               title: const Text('Cancel'),
               onTap: () {
-                Navigator.pop(context); // Đóng modal
+                Navigator.pop(context);
               },
             ),
           ],
@@ -437,6 +468,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
         (l) => showToast(false, l.message),
         (r) {
           showToast(true, 'Edit bio successfully');
+          _loadUserData(currentUser.uid);
         },
       );
     }
@@ -445,6 +477,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
   void _showEditDescriptionModal(UserModel currentUser) async {
     final descriptionController = TextEditingController();
     showModalBottomSheet(
+      backgroundColor: ref.watch(preferredThemeProvider).first,
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
@@ -455,49 +488,54 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
           children: [
             ListTile(
               leading: const Icon(Icons.edit),
-              title: const Text('Edit Bio'),
+              title: const Text('Edit Description'),
               onTap: () {
                 Navigator.pop(context);
                 showDialog(
                   context: context,
                   builder: (context) {
                     return AlertDialog(
-                      title: const Text('Edit Description'),
-                      content: TextField(
-                        controller: descriptionController,
-                        decoration: const InputDecoration(
-                          hintText: 'Enter your new description',
+                      backgroundColor: ref.watch(preferredThemeProvider).first,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20.0),
+                      ),
+                      title: const Text(
+                        'Edit Description',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
                         ),
+                      ),
+                      content: TextFormField(
+                        style: const TextStyle(
+                          color: Colors.white,
+                        ),
+                        controller: descriptionController..text = currentUser.description ?? '',
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          hintText: 'Enter your new description',
+                          hintStyle: TextStyle(color: Colors.white38),
+                        ),
+                        maxLength: 100,
                       ),
                       actions: [
                         TextButton(
                           onPressed: () {
                             Navigator.pop(context);
                           },
-                          child: const Text('Cancel'),
+                          child: const Text(
+                            'Cancel',
+                            style: TextStyle(color: Colors.red),
+                          ),
                         ),
                         TextButton(
                           onPressed: () {
-                            _editDescription(
-                                currentUser, descriptionController.text);
                             Navigator.pop(context);
+                            _editDescription(currentUser, descriptionController.text);
                           },
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.white,
-                            backgroundColor: Colors.blue,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 8.0, horizontal: 16.0),
-                            minimumSize: const Size(80, 40),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
                           child: const Text(
                             'Save',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: TextStyle(color: Colors.green),
                           ),
                         ),
                       ],
@@ -510,7 +548,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
               leading: const Icon(Icons.cancel),
               title: const Text('Cancel'),
               onTap: () {
-                Navigator.pop(context); // Đóng modal
+                Navigator.pop(context);
               },
             ),
           ],
@@ -521,11 +559,12 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
 
   void _handleProfileImageAction(UserModel currentUser) async {
     showModalBottomSheet(
+      backgroundColor: ref.watch(preferredThemeProvider).first,
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
       ),
-      builder: (BuildContext context) {
+      builder: (context) {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -560,6 +599,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
 
   void _handleBannerImageAction(UserModel currentUser) async {
     showModalBottomSheet(
+      backgroundColor: ref.watch(preferredThemeProvider).first,
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
@@ -663,6 +703,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
 
   void _changeBannerImage(UserModel currentUser) async {
     showModalBottomSheet(
+      backgroundColor: ref.watch(preferredThemeProvider).first,
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
@@ -675,7 +716,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
               leading: const Icon(Icons.camera_alt),
               title: const Text('Take a photo'),
               onTap: () async {
-                Navigator.pop(context); // Đóng modal
+                Navigator.pop(context); 
                 final XFile? image = await ImagePicker().pickImage(
                   source: ImageSource.camera,
                   imageQuality: 100,
@@ -714,6 +755,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
 
   void _changeProfileImage(UserModel currentUser) async {
     showModalBottomSheet(
+      backgroundColor: ref.watch(preferredThemeProvider).first,
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
@@ -763,6 +805,22 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
     );
   }
 
+  void _loadUserData(String uid) async {
+    final userModel =
+        await ref.read(authControllerProvider.notifier).fetchUserData(uid);
+    ref.read(userProvider.notifier).update((_) => userModel);
+  }
+
+  void _editName(UserModel currentUser, String name) async {
+    final result = await ref
+        .read(userControllerProvider.notifier)
+        .editName(currentUser, name);
+    result.fold((l) => showToast(false, l.message), (r) {
+      showToast(true, 'Edit name successfully');
+      _loadUserData(currentUser.uid);
+    });
+  }
+
   void _editDescription(UserModel currentUser, String description) async {
     if (description.isEmpty) {
       showToast(false, 'Description must be at least 1 characters');
@@ -776,6 +834,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
         (l) => showToast(false, l.message),
         (r) {
           showToast(true, 'Edit description successfully');
+          _loadUserData(currentUser.uid);
         },
       );
     }
@@ -787,6 +846,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
         .uploadBannerImage(currentUser, File(bannerImageFile.path));
     result.fold((l) => showToast(false, l.message), (r) {
       showToast(true, 'Upload banner image successfully');
+      _loadUserData(currentUser.uid);
     });
   }
 
@@ -797,27 +857,8 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
         .uploadProfileImage(currentUser, File(profileImageFile.path));
     result.fold((l) => showToast(false, l.message), (r) {
       showToast(true, 'Upload profile image successfully');
+      _loadUserData(currentUser.uid);
     });
-  }
-
-  Widget _buildSocialIcon(IconData icon) {
-    return CircleAvatar(
-      radius: 25,
-      child: Material(
-        shape: const CircleBorder(),
-        clipBehavior: Clip.hardEdge,
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {},
-          child: Center(
-            child: Icon(
-              icon,
-              size: 32,
-            ),
-          ),
-        ),
-      ),
-    );
   }
 
   Widget _buildAnimatedButton({

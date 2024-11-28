@@ -82,8 +82,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         height: 60.0,
         items: const [
           Icon(Icons.people, size: 30, color: Colors.white),
-          Icon(Icons.person_search_outlined, size: 30, color: Colors.white),
-          Icon(Icons.block, size: 30, color: Colors.white),
+          Icon(Icons.person_add_alt_1, size: 30, color: Colors.white),
+          Icon(Icons.person_remove, size: 30, color: Colors.white),
         ],
         color: ref.watch(preferredThemeProvider).first,
         backgroundColor: ref.watch(preferredThemeProvider).second,

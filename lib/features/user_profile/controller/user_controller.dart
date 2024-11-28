@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
+import 'package:hash_balance/features/cloud_vision/controller/cloud_vision_controller.dart';
 import 'package:hash_balance/features/user_profile/repository/user_repository.dart';
 import 'package:hash_balance/models/block_model.dart';
 import 'package:hash_balance/models/conbined_models/user_profile_data_model.dart';
@@ -24,15 +25,19 @@ final userProfileDataProvider =
 final userControllerProvider = StateNotifierProvider<UserController, bool>(
   (ref) => UserController(
     userRepository: ref.read(userRepositoryProvider),
+    cloudVisionController: ref.read(cloudVisionControllerProvider),
   ),
 );
 
 class UserController extends StateNotifier<bool> {
   final UserRepository _userRepository;
+  final CloudVisionController _cloudVisionController;
   final _uuid = const Uuid();
   UserController({
     required UserRepository userRepository,
+    required CloudVisionController cloudVisionController,
   })  : _userRepository = userRepository,
+        _cloudVisionController = cloudVisionController,
         super(false);
 
   Future<Either<Failures, String>> editUserProfile(
@@ -75,6 +80,15 @@ class UserController extends StateNotifier<bool> {
     File profileImage,
   ) async {
     try {
+      final result = await _cloudVisionController.areImagesSafe([profileImage]);
+      final isSafe = result.fold(
+        (failure) => left(failure),
+        (isSafe) => right(isSafe),
+      );
+      if (isSafe.isLeft()) return isSafe as Either<Failures, void>;
+      if (isSafe.isRight() && !isSafe.getOrElse((_) => false)) {
+        return left(Failures('Your image contains inappropriate content...'));
+      }
       return await _userRepository.uploadProfileImage(user, profileImage);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -88,6 +102,15 @@ class UserController extends StateNotifier<bool> {
     File bannerImage,
   ) async {
     try {
+      final result = await _cloudVisionController.areImagesSafe([bannerImage]);
+      final isSafe = result.fold(
+        (failure) => left(failure),
+        (isSafe) => right(isSafe),
+      );
+      if (isSafe.isLeft()) return isSafe as Either<Failures, void>;
+      if (isSafe.isRight() && !isSafe.getOrElse((_) => false)) {
+        return left(Failures('Your image contains inappropriate content...'));
+      }
       return await _userRepository.uploadBannerImage(user, bannerImage);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));

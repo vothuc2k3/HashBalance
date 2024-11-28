@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/admin_dashboard/controller/admin_dashboard_controller.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/home/screen/search_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
+import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
+import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({
@@ -32,6 +35,22 @@ class AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         builder: (context) => const SearchSuggestionsScreen(),
       ),
     );
+  }
+
+  _onUserTap(String uid) {
+    if (uid.isNotEmpty && uid == ref.read(userProvider)!.uid) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const UserProfileScreen()),
+      );
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OtherUserProfileScreen(targetUid: uid),
+        ),
+      );
+    }
   }
 
   @override
@@ -233,6 +252,7 @@ class AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   itemBuilder: (context, index) {
                     final user = activeUsers[index];
                     return ListTile(
+                      onTap: () => _onUserTap(user['uid'] as String),
                       leading: CircleAvatar(
                         backgroundImage: user['profileImage'].isNotEmpty
                             ? NetworkImage(user['profileImage'])

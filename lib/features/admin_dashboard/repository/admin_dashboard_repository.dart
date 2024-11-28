@@ -97,6 +97,7 @@ class AdminDashboardRepository {
         final commentDocs = await _comments.where('uid', isEqualTo: uid).get();
 
         return {
+          "uid": uid,
           "name": data["name"] ?? "Unknown",
           "profileImage": data["profileImage"] ?? "",
           "posts": postDocs.docs.length,
