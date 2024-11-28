@@ -121,7 +121,7 @@ class NewsfeedScreenState extends ConsumerState<NewsfeedScreen>
                       data: (posts) {
                         loadedPosts = posts;
                         if (loadedPosts.isEmpty) {
-                          return ListView(
+                          return Column(
                             children: [
                               Center(
                                 child: Container(

@@ -62,7 +62,7 @@ final getCombinedStatusProvider = StreamProvider.family((ref, Tuple2 data) {
       );
 });
 
-final fetchFriendRequestsProvider = StreamProvider.family((ref, String uid) {
+final fetchFriendRequestsProvider = FutureProvider.family((ref, String uid) {
   return ref
       .watch(friendControllerProvider.notifier)
       .fetchFriendRequestsByUser(uid);
@@ -369,8 +369,8 @@ class FriendController extends StateNotifier<bool> {
     );
   }
 
-  Stream<List<FriendRequesterDataModel>> fetchFriendRequestsByUser(String uid) {
-    return _friendRepository.fetchFriendRequestsByUser(uid);
+  Future<List<FriendRequesterDataModel>> fetchFriendRequestsByUser(String uid) async {
+    return await _friendRepository.fetchFriendRequestsByUser(uid);
   }
 
   Stream<bool> isBlockedByCurrentUser({

@@ -6,6 +6,7 @@ import 'package:hash_balance/core/widgets/community_card.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/widgets/user_card.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/search/controller/search_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
@@ -93,7 +94,17 @@ class _SearchSuggestionsScreenState
                                   themeProvider:
                                       ref.watch(preferredThemeProvider).third,
                                   onTap: () => _onCommunityTap(community),
-                                  memberCount: 0,
+                                  memberCount: ref
+                                      .watch(
+                                        getCommunityMemberCountProvider(
+                                          community.id,
+                                        ),
+                                      )
+                                      .when(
+                                        data: (data) => data,
+                                        error: (error, stack) => 0,
+                                        loading: () => 0,
+                                      ),
                                 ).animate().fadeIn(duration: 400.ms).moveY(
                                       begin: 20,
                                       end: 0,

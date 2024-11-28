@@ -423,6 +423,17 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
           },
         );
       }
+    } else {
+      final result = await ref
+          .read(communityControllerProvider.notifier)
+          .joinCommunity(_currentUser!.uid, widget._communityId);
+      result.fold(
+        (l) => showToast(false, l.toString()),
+        (r) {
+          showToast(true, r);
+          _loadMembership();
+        },
+      );
     }
   }
 

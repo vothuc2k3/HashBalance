@@ -560,24 +560,22 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
 
   Widget _buildCommentContent(CommentModel comment) {
     List<TextSpan> spans = [];
-    final RegExp hashtagRegExp = RegExp(r'\B#\w\w+');
+    Map<String, String> mentionedUsers = comment.mentionedUser ?? {};
+    for (var entry in mentionedUsers.entries) {
+      String taggedUid = entry.key;
+      String taggedName = entry.value;
 
-    comment.content!.splitMapJoin(
-      hashtagRegExp,
-      onMatch: (Match match) {
-        String? hashtag = match.group(0);
-        if (hashtag != null && hashtag.startsWith('#')) {
-          String taggedName = hashtag.substring(1);
-          String? taggedUid = comment.mentionedUser!.entries
-              .firstWhere(
-                (entry) => entry.value == taggedName,
-                orElse: () => const MapEntry('', ''),
-              )
-              .key;
-          if (taggedUid.isNotEmpty) {
+      String hashtag = '#$taggedName';
+
+      comment.content!.splitMapJoin(
+        RegExp(r'(#\w+[\w\s]*\w)'),
+        onMatch: (Match match) {
+          String matchedText = match.group(0)!;
+
+          if (matchedText == hashtag) {
             spans.add(
               TextSpan(
-                text: hashtag,
+                text: matchedText,
                 style: const TextStyle(
                   color: Colors.blue,
                   fontWeight: FontWeight.bold,
@@ -591,22 +589,22 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
           } else {
             spans.add(
               TextSpan(
-                text: hashtag,
+                text: matchedText,
                 style: const TextStyle(fontSize: 14),
               ),
             );
           }
-        }
-        return '';
-      },
-      onNonMatch: (String nonMatch) {
-        spans.add(TextSpan(
-          text: nonMatch,
-          style: const TextStyle(fontSize: 14),
-        ));
-        return '';
-      },
-    );
+          return '';
+        },
+        onNonMatch: (String nonMatch) {
+          spans.add(TextSpan(
+            text: nonMatch,
+            style: const TextStyle(fontSize: 14),
+          ));
+          return '';
+        },
+      );
+    }
 
     return RichText(
       text: TextSpan(

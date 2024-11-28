@@ -208,34 +208,33 @@ class FriendRepository {
     });
   }
 
-  Stream<List<FriendRequesterDataModel>> fetchFriendRequestsByUser(String uid) {
-    return _friendRequest
+  Future<List<FriendRequesterDataModel>> fetchFriendRequestsByUser(String uid) async {
+    final snapshot = await _friendRequest
         .where('targetUid', isEqualTo: uid)
-        .snapshots()
-        .asyncMap((snapshot) async {
-      List<FriendRequesterDataModel> friendRequestDataModels = [];
+        .get();
 
-      final friendRequests = snapshot.docs.map((doc) {
-        return FriendRequest.fromMap(doc.data() as Map<String, dynamic>);
-      }).toList();
+    List<FriendRequesterDataModel> friendRequestDataModels = [];
 
-      for (var request in friendRequests) {
-        final userDoc = await _users.doc(request.requestUid).get();
-        if (userDoc.exists) {
-          final userData = userDoc.data() as Map<String, dynamic>;
-          final userModel = UserModel.fromMap(userData);
+    final friendRequests = snapshot.docs.map((doc) {
+      return FriendRequest.fromMap(doc.data() as Map<String, dynamic>);
+    }).toList();
 
-          final friendRequesterDataModel = FriendRequesterDataModel(
-            friendRequest: request,
-            requester: userModel,
-          );
+    for (var request in friendRequests) {
+      final userDoc = await _users.doc(request.requestUid).get();
+      if (userDoc.exists) {
+        final userData = userDoc.data() as Map<String, dynamic>;
+        final userModel = UserModel.fromMap(userData);
 
-          friendRequestDataModels.add(friendRequesterDataModel);
-        }
+        final friendRequesterDataModel = FriendRequesterDataModel(
+          friendRequest: request,
+          requester: userModel,
+        );
+
+        friendRequestDataModels.add(friendRequesterDataModel);
       }
+    }
 
-      return friendRequestDataModels;
-    });
+    return friendRequestDataModels;
   }
 
   Stream<bool> isBlockedByCurrentUser({

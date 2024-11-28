@@ -10,10 +10,10 @@ import 'package:hash_balance/core/providers/storage_repository.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/cloud_vision/controller/cloud_vision_controller.dart';
-import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/invitation/controller/invitation_controller.dart';
 import 'package:hash_balance/features/moderation/repository/moderation_repository.dart';
 import 'package:hash_balance/features/notification/controller/notification_controller.dart';
+import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
 import 'package:hash_balance/features/user_devices/controller/user_device_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
@@ -79,7 +79,7 @@ final moderationControllerProvider =
       cloudVisionController: ref.read(cloudVisionControllerProvider),
       pushNotificationController:
           ref.read(pushNotificationControllerProvider.notifier),
-      commentController: ref.read(commentControllerProvider.notifier),
+      postController: ref.read(postControllerProvider.notifier),
       ref: ref,
     );
   },
@@ -91,7 +91,7 @@ class ModerationController extends StateNotifier<bool> {
   final InvitationController _invitationController;
   final NotificationController _notificationController;
   final PushNotificationController _pushNotificationController;
-  final CommentController _commentController;
+  final PostController _postController;
   final UserDeviceController _userDeviceController;
   final CloudVisionController _cloudVisionController;
   final Ref _ref;
@@ -103,7 +103,7 @@ class ModerationController extends StateNotifier<bool> {
     required InvitationController invitationController,
     required NotificationController notificationController,
     required PushNotificationController pushNotificationController,
-    required CommentController commentController,
+    required PostController postController,
     required UserDeviceController userDeviceController,
     required CloudVisionController cloudVisionController,
     required Ref ref,
@@ -112,7 +112,7 @@ class ModerationController extends StateNotifier<bool> {
         _invitationController = invitationController,
         _notificationController = notificationController,
         _pushNotificationController = pushNotificationController,
-        _commentController = commentController,
+        _postController = postController,
         _userDeviceController = userDeviceController,
         _cloudVisionController = cloudVisionController,
         _ref = ref,
@@ -325,23 +325,33 @@ class ModerationController extends StateNotifier<bool> {
     }
   }
 
-  Future<Either<Failures, void>> deletePost(Post post) async {
+  Future<Either<Failures, void>> deletePost(
+    Post post,
+    String reportReason,
+    String reportId,
+  ) async {
     try {
-      final user = _ref.watch(userProvider)!;
-      final result = await _moderationRepository.deletePost(post, user.uid);
-      result.fold((l) => left(l), (r) async {
-        if (post.images != null && post.images!.isNotEmpty) {
-          _storageRepository.deleteFile(
-            path: 'posts/images/${post.id}',
-          );
-        }
-        if (post.video != null && post.video != '') {
-          _storageRepository.deleteFile(
-            path: 'posts/videos/${post.id}',
-          );
-        }
-        await _commentController.clearPostComments(post.id);
-      });
+      final result = await _postController.deletePost(post);
+      final uid = _ref.watch(userProvider)!.uid;
+      if (result.isRight()) {
+        final notifModel = NotificationModel(
+          id: _uuid.v1(),
+          title: 'Post Deleted',
+          message:
+              'The post you reported has been deleted. Reason: $reportReason',
+          type: Constants.postReportType,
+          senderUid: uid,
+          createdAt: Timestamp.now(),
+          isRead: false,
+          communityId: post.communityId,
+        );
+        await _notificationController.addNotification(
+          uid,
+          notifModel,
+        );
+      } else {
+        return left(Failures(result.fold((l) => l.message, (r) => '')));
+      }
       return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));

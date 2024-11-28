@@ -433,6 +433,10 @@ class UserRepository {
       final querySnapshot =
           await _communityMembership.where('uid', isEqualTo: uid).get();
 
+      if (querySnapshot.docs.isEmpty) {
+        return [];
+      }
+
       final communityIds = querySnapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         return data['communityId'] as String;

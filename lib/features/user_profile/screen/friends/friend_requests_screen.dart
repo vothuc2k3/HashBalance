@@ -5,6 +5,7 @@ import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
+import 'package:hash_balance/models/conbined_models/friend_requester_data_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 class FriendRequestsScreen extends ConsumerStatefulWidget {
@@ -21,6 +22,8 @@ class FriendRequestsScreen extends ConsumerStatefulWidget {
 }
 
 class _FriendRequestsScreenState extends ConsumerState<FriendRequestsScreen> {
+  List<FriendRequesterDataModel> _friendRequests = [];
+
   void _acceptFriendRequest(UserModel targetUser) async {
     await ref
         .read(friendControllerProvider.notifier)
@@ -33,95 +36,117 @@ class _FriendRequestsScreenState extends ConsumerState<FriendRequestsScreen> {
         .declineFriendRequest(targetUser);
   }
 
+  Future<void> _refreshFriendRequests() async {
+    ref.invalidate(fetchFriendRequestsProvider(widget._uid));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          color: ref.watch(preferredThemeProvider).first,
-        ),
-        child: ref.watch(fetchFriendRequestsProvider(widget._uid)).whenOrNull(
-              data: (friendRequests) {
-                if (friendRequests.isEmpty) {
-                  return Center(
-                    child: const Text(
-                      'You have no new friend requests',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white70,
-                      ),
-                    ).animate().fadeIn(duration: 600.ms).moveY(
-                          begin: 30,
-                          end: 0,
-                          duration: 600.ms,
-                          curve: Curves.easeOutBack,
-                        ),
-                  );
-                }
-                return Column(
-                  children: [
-                    const Divider(color: Colors.white54),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              const Text(
-                                'Friend requests',
+      body: RefreshIndicator(
+        onRefresh: _refreshFriendRequests,
+        child: Container(
+          decoration: BoxDecoration(
+            color: ref.watch(preferredThemeProvider).first,
+          ),
+          child: ref.watch(fetchFriendRequestsProvider(widget._uid)).when(
+                    data: (friendRequests) {
+                      _friendRequests = friendRequests;
+                      if (_friendRequests.isEmpty) {
+                        return ListView(
+                          children: [
+                            SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.4,
+                            ),
+                            Center(
+                              child: const Text(
+                                'You have no new friend requests',
                                 style: TextStyle(
                                   fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                                  color: Colors.white70,
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                '${friendRequests.length}',
-                                style: const TextStyle(
-                                    fontSize: 18, color: Colors.redAccent),
-                              ),
-                            ],
+                              ).animate().fadeIn(duration: 600.ms).moveY(
+                                    begin: 30,
+                                    end: 0,
+                                    duration: 600.ms,
+                                    curve: Curves.easeOutBack,
+                                  ),
+                            ),
+                          ],
+                        );
+                      }
+                      return Column(
+                        children: [
+                          const Divider(color: Colors.white54),
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Text(
+                                      'Friend requests',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '${_friendRequests.length}',
+                                      style: const TextStyle(
+                                          fontSize: 18,
+                                          color: Colors.redAccent),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            child: ListView.builder(
+                              itemCount: _friendRequests.length,
+                              itemBuilder: (context, index) {
+                                final request = _friendRequests[index];
+                                return ListTile(
+                                  leading: CircleAvatar(
+                                    radius: 25,
+                                    backgroundImage: CachedNetworkImageProvider(
+                                      request.requester.profileImage,
+                                    ),
+                                    backgroundColor: Colors.grey.shade700,
+                                  ),
+                                  title: Text(
+                                    request.requester.name,
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                  subtitle: _buildFriendRequestStatus(request),
+                                );
+                              },
+                            ),
                           ),
                         ],
-                      ),
-                    ),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: friendRequests.length,
-                        itemBuilder: (context, index) {
-                          final request = friendRequests[index];
-                          return ListTile(
-                            leading: CircleAvatar(
-                              radius: 25,
-                              backgroundImage: CachedNetworkImageProvider(
-                                request.requester.profileImage,
-                              ),
-                              backgroundColor: Colors.grey.shade700,
-                            ),
-                            title: Text(
-                              request.requester.name,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600),
-                            ),
-                            subtitle: _buildFriendRequestStatus(request),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ) ??
-            const Loading().animate(),
+                      );
+                    },
+                    error: (error, stackTrace) {
+                      return Center(
+                        child: Text(error.toString()),
+                      );
+                    },
+                    loading: () => const Loading().animate(),
+                  ) ??
+              const Loading().animate(),
+        ),
       ),
     );
   }
 
-  Widget _buildFriendRequestStatus(request) {
-    // Check the status of the friend request
+  Widget _buildFriendRequestStatus(FriendRequesterDataModel request) {
     switch (request.friendRequest.status) {
       case 'pending':
         return Row(
@@ -137,7 +162,7 @@ class _FriendRequestsScreenState extends ConsumerState<FriendRequestsScreen> {
             ),
             const SizedBox(width: 8),
             OutlinedButton(
-              onPressed: () => _deleteFriendRequest(request.id),
+              onPressed: () => _deleteFriendRequest(request.requester),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Colors.white70),
                 minimumSize: const Size(80, 36),

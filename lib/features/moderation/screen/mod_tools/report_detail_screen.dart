@@ -73,7 +73,7 @@ class ReportDetailScreenState extends ConsumerState<ReportDetailScreen> {
                 'Cancel',
                 style: TextStyle(
                   color: ref.watch(preferredThemeProvider).approveButtonColor,
-                ),
+                ),  
               ),
             ),
             TextButton(
@@ -82,7 +82,7 @@ class ReportDetailScreenState extends ConsumerState<ReportDetailScreen> {
                 if (post != null) {
                   final result = await ref
                       .read(moderationControllerProvider.notifier)
-                      .deletePost(post);
+                      .deletePost(post, widget.report.message, widget.report.id);
                   result.fold((l) => showToast(false, l.message), (_) async {
                     final result = await ref
                         .read(reportControllerProvider)

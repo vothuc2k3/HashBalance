@@ -13,7 +13,6 @@ import 'package:hash_balance/features/cloud_vision/controller/cloud_vision_contr
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
-import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/perspective_api/controller/perspective_api_controller.dart';
 import 'package:hash_balance/features/post/repository/post_repository.dart';
 import 'package:hash_balance/features/post_share/controller/post_share_controller.dart';
@@ -88,22 +87,21 @@ final getPostCommentCountProvider = FutureProvider.family((ref, String postId) {
 
 final postControllerProvider = StateNotifierProvider<PostController, bool>(
   (ref) => PostController(
-      commentController: ref.read(commentControllerProvider.notifier),
-      postRepository: ref.read(postRepositoryProvider),
-      postShareController: ref.read(postShareControllerProvider.notifier),
-      friendController: ref.read(friendControllerProvider.notifier),
-      moderationController: ref.read(moderationControllerProvider.notifier),
-      communityController: ref.read(communityControllerProvider.notifier),
-      storageRepository: ref.read(storageRepositoryProvider),
-      cloudVisionController: ref.read(cloudVisionControllerProvider),
-      perspectiveApiController: ref.read(perspectiveApiControllerProvider),
-      ref: ref),
+    commentController: ref.read(commentControllerProvider.notifier),
+    postRepository: ref.read(postRepositoryProvider),
+    postShareController: ref.read(postShareControllerProvider.notifier),
+    friendController: ref.read(friendControllerProvider.notifier),
+    communityController: ref.read(communityControllerProvider.notifier),
+    storageRepository: ref.read(storageRepositoryProvider),
+    cloudVisionController: ref.read(cloudVisionControllerProvider),
+    perspectiveApiController: ref.read(perspectiveApiControllerProvider),
+    ref: ref,
+  ),
 );
 
 class PostController extends StateNotifier<bool> {
   final PostRepository _postRepository;
   final StorageRepository _storageRepository;
-  final ModerationController _moderationController;
   final CommunityController _communityController;
   final FriendController _friendController;
   final PostShareController _postShareController;
@@ -116,7 +114,6 @@ class PostController extends StateNotifier<bool> {
   PostController({
     required PostRepository postRepository,
     required StorageRepository storageRepository,
-    required ModerationController moderationController,
     required CommunityController communityController,
     required FriendController friendController,
     required PostShareController postShareController,
@@ -126,7 +123,6 @@ class PostController extends StateNotifier<bool> {
     required Ref ref,
   })  : _postRepository = postRepository,
         _storageRepository = storageRepository,
-        _moderationController = moderationController,
         _communityController = communityController,
         _friendController = friendController,
         _postShareController = postShareController,
@@ -177,10 +173,8 @@ class PostController extends StateNotifier<bool> {
       }
 
       final user = _ref.read(userProvider)!;
-      final role = await _moderationController
-          .getMemberRole(
-              getMembershipId(uid: user.uid, communityId: community.id))
-          .first;
+      final role = await _communityController
+          .getMemberRole(user.uid, community.id);
       if (role == 'suspended') {
         return left(Failures('You are suspended from this community'));
       }

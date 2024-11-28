@@ -127,8 +127,10 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                         child: Row(
                           children: [
                             Text(
-                              currentUser.bio ??
-                                  'You haven\'t said anything yet...',
+                              currentUser.bio == null ||
+                                      currentUser.bio!.isEmpty
+                                  ? 'You haven\'t said anything yet...'
+                                  : currentUser.bio!,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -165,8 +167,10 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                         child: Row(
                           children: [
                             Text(
-                              currentUser.description ??
-                                  'You haven\'t described yourself yet...',
+                              currentUser.description == null ||
+                                      currentUser.description!.isEmpty
+                                  ? 'You haven\'t described yourself yet...'
+                                  : currentUser.description!,
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.white70,

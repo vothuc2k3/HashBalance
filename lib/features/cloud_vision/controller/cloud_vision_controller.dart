@@ -24,22 +24,31 @@ class CloudVisionController {
 
   Future<List<String>> _encodeImagesToBase64(List<File> images) async {
     List<String> base64Images = [];
+    const maxSize = 500 * 1024;
+    const maxQuality = 50;
+    const stepSize = 10;
 
     for (final image in images) {
       final originalSize = image.lengthSync();
 
-      if (originalSize < 500 * 1024) {
+      if (originalSize < maxSize) {
         base64Images.add(base64Encode(image.readAsBytesSync()));
         continue;
       }
 
-      final compressedBytes = await FlutterImageCompress.compressWithFile(
-        image.absolute.path,
-        quality: 50,
-      );
+      int quality = maxQuality;
+      List<int>? compressedBytes;
+      while (quality > 0) {
+        compressedBytes = await FlutterImageCompress.compressWithFile(
+          image.absolute.path,
+          quality: quality,
+        );
 
-      if (compressedBytes == null) {
-        continue;
+        if (compressedBytes != null && compressedBytes.length < maxSize) {
+          break;
+        }
+
+        quality -= stepSize;
       }
 
       final format = _getImageExtension(image);
@@ -48,9 +57,9 @@ class CloudVisionController {
       }
 
       if (format == 'png' || format == 'jpg' || format == 'jpeg') {
-        base64Images.add(base64Encode(compressedBytes));
+        base64Images.add(base64Encode(compressedBytes!));
       } else if (format == 'webp') {
-        final convertedImage = _convertToPng(compressedBytes);
+        final convertedImage = _convertToPng(compressedBytes!);
         base64Images.add(base64Encode(convertedImage));
       }
     }

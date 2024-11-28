@@ -29,6 +29,12 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
   bool _isNotificationsEnabled = true;
   bool _isTryLoggingOut = false;
 
+  void _loadUserData(String uid) async {
+    final userModel =
+        await ref.read(authControllerProvider.notifier).fetchUserData(uid);
+    ref.read(userProvider.notifier).update((_) => userModel);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -42,7 +48,7 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
   }
 
   void _showPrivacySettings() {
-    final currentUser = ref.read(userProvider)!;
+    final currentUser = ref.watch(userProvider)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -75,7 +81,10 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
                     .updateUserPrivacy(newUser);
                 result.fold(
                   (l) => showToast(false, l.message),
-                  (_) => showToast(true, 'Privacy settings updated'),
+                  (_) {
+                    showToast(true, 'Privacy settings updated');
+                    _loadUserData(currentUser.uid);
+                  },
                 );
               },
             ),
@@ -95,7 +104,10 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
                     .updateUserPrivacy(newUser);
                 result.fold(
                   (l) => showToast(false, l.message),
-                  (_) => showToast(true, 'Privacy settings updated'),
+                  (_) {
+                    showToast(true, 'Privacy settings updated');
+                    _loadUserData(currentUser.uid);
+                  },
                 );
               },
             ),

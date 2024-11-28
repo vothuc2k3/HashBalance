@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/splash/splash_screen.dart';
 import 'package:hash_balance/core/widgets/post_images_grid.dart';
 import 'package:hash_balance/core/widgets/post_static_button.dart';
@@ -12,6 +13,7 @@ import 'package:hash_balance/features/moderation/controller/moderation_controlle
 import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
 import 'package:hash_balance/features/post/screen/hashtag_posts_screen.dart';
 import 'package:hash_balance/features/post_share/screen/post_share_screen.dart';
+import 'package:hash_balance/features/report/controller/report_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/vote_post/controller/vote_post_controller.dart';
@@ -172,6 +174,81 @@ class _NewsfeedPostContainerState extends ConsumerState<NewsfeedPostContainer> {
     }
   }
 
+  void _handleReportPost() {
+    TextEditingController reasonController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: ref.watch(preferredThemeProvider).first,
+          title: const Text('Report Post'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Please enter the reason for reporting this post:'),
+              const SizedBox(height: 10),
+              TextField(
+                controller: reasonController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  hintText: 'Enter your reason here',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.greenAccent,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final reason = reasonController.text;
+                if (reason.isNotEmpty) {
+                  _submitReportPost(reason);
+                  Navigator.of(context).pop();
+                } else {
+                  showToast(false, 'Please provide a reason for reporting.');
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+              ),
+              child: const Text(
+                'Submit',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _submitReportPost(String reason) async {
+    final result = await ref.read(reportControllerProvider).addReport(
+          widget.post.id,
+          null,
+          null,
+          Constants.postReportType,
+          widget.community.id,
+          reason,
+        );
+    result.fold((l) => showToast(false, l.message), (r) {
+      showToast(true, 'Your report has been recorded!');
+    });
+  }
+
   void _showPostOptionsMenu(String currentUid, String postUsername) {
     showModalBottomSheet(
       context: context,
@@ -199,6 +276,14 @@ class _NewsfeedPostContainerState extends ConsumerState<NewsfeedPostContainer> {
                       _handleDeletePost(widget.post);
                     },
                   ),
+                ListTile(
+                  leading: const Icon(Icons.report),
+                  title: const Text('Report this post'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _handleReportPost();
+                  },
+                ),
                 ListTile(
                   leading: const Icon(Icons.cancel),
                   title: const Text('Cancel'),

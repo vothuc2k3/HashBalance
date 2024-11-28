@@ -130,7 +130,9 @@ class CommunityRepository {
 
   //GET MOST JOINED COMMUNITIES
   Future<List<Tuple2<Community, int>>> getTopCommunitiesList() async {
-    final communitySnapshot = await _communities.get();
+    final communitySnapshot = await _communities
+        .where('type', whereIn: ['Public', 'Restricted'])
+        .get();
     final communityCountMap = <String, int>{};
 
     final memberCountFutures = communitySnapshot.docs.map((doc) async {

@@ -25,7 +25,9 @@ final communityReportsProvider =
 
 final reportControllerProvider = Provider(
   (ref) => ReportController(
-      reportRepository: ref.read(reportRepositoryProvider), ref: ref),
+    reportRepository: ref.read(reportRepositoryProvider),
+    ref: ref,
+  ),
 );
 
 class ReportController {
