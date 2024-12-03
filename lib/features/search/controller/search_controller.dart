@@ -2,7 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:hash_balance/features/search/repository/search_repository.dart';
 import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+
+final searchPostsProvider = FutureProvider.family((ref, String query) async {
+  final searchRepository = ref.watch(searchRepositoryProvider);
+  return searchRepository.searchPosts(query);
+});
 
 final searchCommunityProvider =
     FutureProvider.family((ref, String query) async {
@@ -35,5 +41,9 @@ class SearchController {
 
   Future<List<UserModel>> searchUsers(String query) async {
     return await _searchRepository.searchUsers(query);
+  }
+
+  Future<List<PostDataModel>> searchPosts(String query) async {
+    return await _searchRepository.searchPosts(query);
   }
 }

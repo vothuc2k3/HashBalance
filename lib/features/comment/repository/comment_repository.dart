@@ -165,4 +165,16 @@ class CommentRepository {
       return left(Failures(e.toString()));
     }
   }
+
+  Future<Either<Failures, void>> editComment(
+      String commentId, String content) async {
+    try {
+      await _comments.doc(commentId).update({'content': content});
+      return right(null);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
 }

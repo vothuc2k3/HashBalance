@@ -214,6 +214,8 @@ class _CommunityPostContainerState
       MaterialPageRoute(
         builder: (context) => CommentScreen(
           post: widget.post,
+          postAuthorName: widget.author.name,
+          communityName: widget.community.name,
         ),
       ),
     );

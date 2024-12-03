@@ -5,6 +5,7 @@ import 'package:hash_balance/core/splash/splash_screen.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/features/post/screen/edit_post_screen.dart';
@@ -221,7 +222,7 @@ class _NewsfeedPollContainerState extends ConsumerState<NewsfeedPollContainer> {
     return Row(
       children: [
         GestureDetector(
-          onTap: () => _navigateToCommunityScreen(),
+          onTap: () => _navigateToCommunityScreen(widget.community, currentUser!.uid),
           child: CircleAvatar(
             backgroundImage:
                 CachedNetworkImageProvider(widget.community.profileImage),
@@ -233,7 +234,7 @@ class _NewsfeedPollContainerState extends ConsumerState<NewsfeedPollContainer> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             GestureDetector(
-              onTap: () => _navigateToCommunityScreen(),
+              onTap: () => _navigateToCommunityScreen(widget.community, currentUser!.uid),
               child: Text(
                 widget.community.name,
                 style:
@@ -341,14 +342,38 @@ class _NewsfeedPollContainerState extends ConsumerState<NewsfeedPollContainer> {
         });
   }
 
-  void _navigateToCommunityScreen() {
+  void _navigateToCommunityScreen(
+    Community community,
+    String uid,
+  ) async {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => CommunityScreen(
-          communityId: widget.community.id,
-        ),
+        builder: (context) => const SplashScreen(),
       ),
+    );
+    final result = await ref
+        .read(communityControllerProvider.notifier)
+        .fetchSuspendStatus(communityId: community.id, uid: uid);
+    result.fold(
+      (l) {
+        showToast(false, 'Unexpected error happened...');
+      },
+      (r) {
+        if (r) {
+          showToast(false, 'You are suspended from this community');
+          Navigator.pop(context);
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CommunityScreen(
+                communityId: community.id,
+              ),
+            ),
+          );
+        }
+      },
     );
   }
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -7,31 +8,30 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/utils.dart';
-import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
-import 'package:hash_balance/features/call/controller/call_controller.dart';
-import 'package:hash_balance/features/call/screen/incoming_call_screen.dart';
-import 'package:hash_balance/features/community/controller/comunity_controller.dart';
-import 'package:hash_balance/features/community/screen/community_screen.dart';
-import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
-import 'package:hash_balance/features/network/controller/network_controller.dart';
-import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 import 'package:logger/logger.dart';
 import 'package:multi_trigger_autocomplete/multi_trigger_autocomplete.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:toastification/toastification.dart';
 
 import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/splash/splash_screen.dart';
+import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
+import 'package:hash_balance/features/call/controller/call_controller.dart';
+import 'package:hash_balance/features/call/screen/incoming_call_screen.dart';
+import 'package:hash_balance/features/community/controller/comunity_controller.dart';
+import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/home/screen/home_screen.dart';
 import 'package:hash_balance/features/message/screen/private_message_screen.dart';
+import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
+import 'package:hash_balance/firebase_options.dart';
+import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
-import 'package:hash_balance/firebase_options.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
@@ -70,7 +70,7 @@ class MyApp extends ConsumerStatefulWidget {
 class MyAppState extends ConsumerState<MyApp> {
   UserModel? userData;
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-  ConnectivityResult? lastStatus;
+  StreamSubscription<List<ConnectivityResult>>? subscription;
 
   void _setupLocalNotifications() async {
     const initializationSettingsAndroid =
@@ -264,19 +264,6 @@ class MyAppState extends ConsumerState<MyApp> {
     );
   }
 
-  String _connectivityStatusMessage(ConnectivityResult status) {
-    switch (status) {
-      case ConnectivityResult.wifi:
-        return 'Connected to Wi-Fi';
-      case ConnectivityResult.mobile:
-        return 'Connected to Mobile Network';
-      case ConnectivityResult.none:
-        return 'No Network Connection';
-      default:
-        return 'Unknown Network Status';
-    }
-  }
-
   void _loadUserData(String uid) async {
     Logger().d('Loading user data for uid: $uid');
     final userData = await ref
@@ -298,30 +285,30 @@ class MyAppState extends ConsumerState<MyApp> {
         }
       },
     );
+    subscription = Connectivity()
+        .onConnectivityChanged
+        .listen((List<ConnectivityResult> result) {
+      showToast(true, _connectivityStatusMessage(result.last));
+    });
+  }
+
+  String _connectivityStatusMessage(ConnectivityResult status) {
+    switch (status) {
+      case ConnectivityResult.none:
+        return 'No Network Connection';
+      default:
+        return 'Connected';
+    }
+  }
+
+  @override
+  void dispose() {
+    subscription?.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(
-      connectivityProvider,
-      (previous, next) {
-        next.when(
-          data: (statuses) {
-            if (statuses.isNotEmpty) {
-              final lastConnectivity = statuses.last;
-              if (lastConnectivity != lastStatus) {
-                lastStatus = lastConnectivity;
-                showToast(true, _connectivityStatusMessage(lastConnectivity));
-              }
-            }
-          },
-          loading: () {},
-          error: (error, stack) {
-            showToast(false, error.toString());
-          },
-        );
-      },
-    );
     ref.listen(
       authStageChangeProvider,
       (previous, next) {

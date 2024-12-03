@@ -24,9 +24,9 @@ import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 import 'package:hash_balance/models/poll_option_model.dart';
 
-final hashtagPostsProvider = StreamProvider.family((ref, String hashtag) {
+final hashtagPostsProvider = FutureProvider.family((ref, String hashtag) {
   return ref
-      .watch(postControllerProvider.notifier)
+      .read(postControllerProvider.notifier)
       .getHashtagPosts(hashtag: hashtag);
 });
 
@@ -55,7 +55,7 @@ final getUserVoteStatusProvider =
 
 final getPollOptionsProvider = StreamProvider.family((ref, String pollId) {
   return ref
-      .watch(postControllerProvider.notifier)
+      .read(postControllerProvider.notifier)
       .getPollOptions(pollId: pollId);
 });
 
@@ -69,7 +69,7 @@ final getPendingPostsProvider =
 final getPollOptionVotesCountAndUserVoteStatusProvider =
     StreamProvider.family((ref, Tuple2<String, String> data) {
   return ref
-      .watch(postControllerProvider.notifier)
+      .read(postControllerProvider.notifier)
       .getPollOptionVotesCountAndUserVoteStatus(
           pollId: data.item1, optionId: data.item2);
 });
@@ -77,7 +77,7 @@ final getPollOptionVotesCountAndUserVoteStatusProvider =
 final getUserPollOptionVoteProvider =
     StreamProvider.family((ref, String pollId) {
   return ref
-      .watch(postControllerProvider.notifier)
+      .read(postControllerProvider.notifier)
       .getUserPollOptionVote(pollId: pollId);
 });
 
@@ -173,8 +173,8 @@ class PostController extends StateNotifier<bool> {
       }
 
       final user = _ref.read(userProvider)!;
-      final role = await _communityController
-          .getMemberRole(user.uid, community.id);
+      final role =
+          await _communityController.getMemberRole(user.uid, community.id);
       if (role == 'suspended') {
         return left(Failures('You are suspended from this community'));
       }
@@ -465,7 +465,9 @@ class PostController extends StateNotifier<bool> {
     }
   }
 
-  Stream<List<PostDataModel>> getHashtagPosts({required String hashtag}) {
-    return _postRepository.getHashtagPosts(hashtag: hashtag);
+  Future<List<PostDataModel>> getHashtagPosts({required String hashtag}) async {
+    final posts = await _postRepository.getHashtagPosts(hashtag: hashtag);
+    posts.sort((a, b) => b.post.createdAt.compareTo(a.post.createdAt));
+    return posts;
   }
 }

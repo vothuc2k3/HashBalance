@@ -8,7 +8,6 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
-import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 
@@ -40,24 +39,25 @@ class _CommunityListScreenState extends ConsumerState<CommunityListScreen>
       ),
     );
     final result = await ref
-        .read(moderationControllerProvider.notifier)
-        .fetchMembershipStatus(
-          getMembershipId(uid: uid, communityId: community.id),
-        );
-
+        .read(communityControllerProvider.notifier)
+        .fetchSuspendStatus(communityId: community.id, uid: uid);
     result.fold(
       (l) {
         showToast(false, 'Unexpected error happened...');
       },
       (r) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CommunityScreen(
-              communityId: community.id,
+        if (r) {
+          showToast(false, 'You are suspended from this community');
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CommunityScreen(
+                communityId: community.id,
+              ),
             ),
-          ),
-        );
+          );
+        }
       },
     );
   }

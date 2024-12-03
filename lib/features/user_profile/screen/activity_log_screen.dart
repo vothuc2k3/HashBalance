@@ -112,36 +112,49 @@ class _ActivityLogScreenState extends ConsumerState<ActivityLogScreen> {
 
   Widget _buildBehaviorCard(ActivityLogModel activityLog) {
     return Card(
-      elevation: 4,
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      elevation: 8,
+      margin: const EdgeInsets.symmetric(vertical: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
       ),
       color: ref.watch(preferredThemeProvider).third,
       child: ListTile(
         leading: CircleAvatar(
-          radius: 25,
+          radius: 30,
           backgroundColor: Colors.blueAccent,
           child: Icon(
             _getIconByType(activityLog.activityType),
             color: Colors.white,
-            size: 24,
+            size: 28,
           ),
         ),
         title: Text(
           activityLog.title,
           style: const TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 16,
+            fontSize: 18,
             color: Colors.white,
           ),
         ),
-        subtitle: Text(
-          '${activityLog.message}\n${formatTime(activityLog.createdAt)}',
-          style: const TextStyle(
-            fontSize: 14,
-            color: Colors.white70,
-          ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              activityLog.message,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.white70,
+              ),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              formatTime(activityLog.createdAt),
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.white54,
+              ),
+            ),
+          ],
         ),
         isThreeLine: true,
       ),
@@ -156,6 +169,8 @@ class _ActivityLogScreenState extends ConsumerState<ActivityLogScreen> {
         return Icons.thumb_down;
       case Constants.activityLogTypeComment:
         return Icons.comment;
+      case Constants.activityLogTypeCreatePost:
+        return Icons.post_add;
       default:
         return Icons.circle;
     }

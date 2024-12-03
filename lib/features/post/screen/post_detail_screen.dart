@@ -159,6 +159,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     if (text.isNotEmpty) {
       ref.read(commentControllerProvider.notifier).comment(
         widget.post,
+        widget.author.name,
+        widget.community.name,
         text,
         [],
       );

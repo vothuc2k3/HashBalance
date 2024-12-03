@@ -9,7 +9,6 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/screen/create_community_screen.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
-import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/mod_tools_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/community_model.dart';
@@ -59,24 +58,26 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
       ),
     );
     final result = await ref
-        .watch(moderationControllerProvider.notifier)
-        .fetchMembershipStatus(
-          getMembershipId(uid: uid, communityId: community.id),
-        );
-
+        .read(communityControllerProvider.notifier)
+        .fetchSuspendStatus(communityId: community.id, uid: uid);
     result.fold(
       (l) {
         showToast(false, 'Unexpected error happened...');
       },
-      (r) async {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CommunityScreen(
-              communityId: community.id,
+      (r) {
+        if (r) {
+          showToast(false, 'You are suspended from this community');
+          Navigator.pop(context);
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CommunityScreen(
+                communityId: community.id,
+              ),
             ),
-          ),
-        );
+          );
+        }
       },
     );
   }

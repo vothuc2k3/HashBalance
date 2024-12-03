@@ -1,20 +1,24 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logger/logger.dart';
+
 import 'package:hash_balance/core/widgets/community_card.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
+import 'package:hash_balance/core/widgets/search_bar.dart' as search_bar;
 import 'package:hash_balance/core/widgets/user_card.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
+import 'package:hash_balance/features/newsfeed/screen/containers/newsfeed_poll_container.dart';
+import 'package:hash_balance/features/newsfeed/screen/containers/newsfeed_post_container.dart';
 import 'package:hash_balance/features/search/controller/search_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/user_model.dart';
-import 'package:logger/logger.dart';
-import 'package:hash_balance/core/widgets/search_bar.dart' as search_bar;
 
 class SearchSuggestionsScreen extends ConsumerStatefulWidget {
   const SearchSuggestionsScreen({super.key});
@@ -63,7 +67,7 @@ class _SearchSuggestionsScreenState
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: _query.isNotEmpty
-              ? (_query.startsWith('#=')
+              ? (_query.startsWith('#=') // Tìm kiếm cộng đồng
                   ? ref.watch(searchCommunityProvider(_query)).when(
                         data: (suggestions) {
                           if (suggestions.isEmpty) {
@@ -95,11 +99,8 @@ class _SearchSuggestionsScreenState
                                       ref.watch(preferredThemeProvider).third,
                                   onTap: () => _onCommunityTap(community),
                                   memberCount: ref
-                                      .watch(
-                                        getCommunityMemberCountProvider(
-                                          community.id,
-                                        ),
-                                      )
+                                      .watch(getCommunityMemberCountProvider(
+                                          community.id))
                                       .when(
                                         data: (data) => data,
                                         error: (error, stack) => 0,
@@ -135,7 +136,7 @@ class _SearchSuggestionsScreenState
                               curve: Curves.easeOutBack,
                             ),
                       )
-                  : (_query.startsWith('#')
+                  : (_query.startsWith('#') // Tìm kiếm người dùng
                       ? ref.watch(searchUserProvider(_query)).when(
                             data: (suggestions) {
                               final currentUser = ref.watch(userProvider)!;
@@ -202,20 +203,83 @@ class _SearchSuggestionsScreenState
                                   curve: Curves.easeOutBack,
                                 ),
                           )
-                      : const Center(
-                          child: Text(
-                            'Invalid search query. Please start with "#" or "#=".',
-                            style: TextStyle(color: Colors.white70),
-                          ),
-                        ).animate().fadeIn(duration: 600.ms).moveY(
-                            begin: 30,
-                            end: 0,
-                            duration: 600.ms,
-                            curve: Curves.easeOutBack,
-                          )))
+                      : (_query.startsWith('=')
+                          ? ref.watch(searchPostsProvider(_query)).when(
+                                data: (posts) {
+                                  if (posts.isEmpty) {
+                                    return Center(
+                                      child: Text(
+                                        'No posts found for "$_query"',
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          color: Colors.white70,
+                                        ),
+                                      )
+                                          .animate()
+                                          .fadeIn(duration: 600.ms)
+                                          .moveY(
+                                            begin: 30,
+                                            end: 0,
+                                            duration: 600.ms,
+                                            curve: Curves.easeOutBack,
+                                          ),
+                                    );
+                                  }
+                                  return ListView.builder(
+                                    itemCount: posts.length,
+                                    itemBuilder: (context, index) {
+                                      final postData = posts[index];
+                                      if (!postData.post.isPoll) {
+                                        return NewsfeedPostContainer(
+                                          author: postData.author!,
+                                          post: postData.post,
+                                          community: postData.community!,
+                                        ).animate().fadeIn();
+                                      } else if (postData.post.isPoll) {
+                                        return NewsfeedPollContainer(
+                                          author: postData.author!,
+                                          poll: postData.post,
+                                          community: postData.community!,
+                                        ).animate().fadeIn();
+                                      }
+                                      return const SizedBox.shrink();
+                                    },
+                                  );
+                                },
+                                loading: () => const Center(
+                                  child: Loading(),
+                                ).animate().fadeIn(duration: 600.ms).moveY(
+                                      begin: 30,
+                                      end: 0,
+                                      duration: 600.ms,
+                                      curve: Curves.easeOutBack,
+                                    ),
+                                error: (error, stack) => Center(
+                                  child: Text(
+                                    'Error: $error',
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
+                                ).animate().fadeIn(duration: 600.ms).moveY(
+                                      begin: 30,
+                                      end: 0,
+                                      duration: 600.ms,
+                                      curve: Curves.easeOutBack,
+                                    ),
+                              )
+                          : const Center(
+                              child: Text(
+                                'Invalid search query. Please start with "#" or "#=".',
+                                style: TextStyle(color: Colors.white70),
+                              ),
+                            ).animate().fadeIn(duration: 600.ms).moveY(
+                                begin: 30,
+                                end: 0,
+                                duration: 600.ms,
+                                curve: Curves.easeOutBack,
+                              ))))
               : Center(
                   child: const Text(
-                    'Search for communities or users',
+                    'Search for communities, users, or posts',
                     style: TextStyle(
                       fontSize: 18,
                       color: Colors.white70,

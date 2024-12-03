@@ -7,8 +7,8 @@ import 'package:hash_balance/core/widgets/post_images_grid.dart';
 import 'package:hash_balance/core/widgets/post_static_button.dart';
 import 'package:hash_balance/core/widgets/video_player_widget.dart';
 import 'package:hash_balance/core/widgets/vote_button.dart';
+import 'package:hash_balance/features/community/controller/comunity_controller.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
-import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
 import 'package:hash_balance/features/post_share/screen/post_share_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
@@ -140,6 +140,8 @@ class _TimelinePostContainerState extends ConsumerState<TimelinePostContainer> {
       MaterialPageRoute(
         builder: (context) => CommentScreen(
           post: widget.post,
+          postAuthorName: widget.author.name,
+          communityName: widget.community.name,
         ),
       ),
     );
@@ -156,24 +158,26 @@ class _TimelinePostContainerState extends ConsumerState<TimelinePostContainer> {
       ),
     );
     final result = await ref
-        .watch(moderationControllerProvider.notifier)
-        .fetchMembershipStatus(
-          getMembershipId(uid: uid, communityId: community.id),
-        );
-
+        .read(communityControllerProvider.notifier)
+        .fetchSuspendStatus(communityId: community.id, uid: uid);
     result.fold(
       (l) {
         showToast(false, 'Unexpected error happened...');
       },
       (r) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CommunityScreen(
-              communityId: community.id,
+        if (r) {
+          showToast(false, 'You are suspended from this community');
+          Navigator.pop(context);
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CommunityScreen(
+                communityId: community.id,
+              ),
             ),
-          ),
-        );
+          );
+        }
       },
     );
   }

@@ -78,6 +78,25 @@ class ActivityLogController extends StateNotifier<bool> {
     await _activityLogRepository.addActivityLog(activityLog);
   }
 
+  void addCommentActivityLog({
+    required String postAuthorName,
+    required String communityName,
+  }) async {
+    final currentUser = _ref.read(userProvider)!;
+    final activityLog = ActivityLogModel(
+      id: const Uuid().v4(),
+      uid: currentUser.uid,
+      activityType: Constants.activityLogTypeComment,
+      title: 'Comment on a post',
+      message: Constants.getActivityLogCommentMessage(
+        postAuthorName: postAuthorName,
+        communityName: communityName,
+      ),
+      createdAt: Timestamp.now(),
+    );
+    await _activityLogRepository.addActivityLog(activityLog);
+  }
+
   Stream<List<ActivityLogModel>> getActivityLog() {
     final currentUser = _ref.read(userProvider)!;
     return _activityLogRepository.getActivityLog(uid: currentUser.uid);

@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/network/controller/network_controller.dart';
 import 'package:hash_balance/features/setting/screen/setting_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/activity_log_screen.dart';
@@ -25,7 +26,7 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
-
+    final connectivityState = ref.watch(connectivityProvider);
     return Drawer(
       child: Container(
         decoration: BoxDecoration(
@@ -108,6 +109,53 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                   ),
                 ),
               ),
+              ListTile(
+                leading: const Icon(Icons.wifi),
+                title: connectivityState.when(
+                  data: (isConnected) {
+                    return Text(
+                      isConnected ? 'Connected' : 'No Internet Connection...',
+                      style: const TextStyle(
+                        color: Pallete.whiteColor,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  },
+                  loading: () => const Text(
+                    'Checking...',
+                    style: TextStyle(
+                      color: Pallete.whiteColor,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  error: (error, stack) => const Text(
+                    'Error',
+                    style: TextStyle(
+                      color: Pallete.whiteColor,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                trailing: connectivityState.when(
+                  data: (isConnected) {
+                    return Icon(
+                      isConnected ? Icons.signal_wifi_4_bar : Icons.signal_wifi_off,
+                      color: isConnected ? Colors.green : Colors.red,
+                    );
+                  },
+                  loading: () => const Icon(
+                    Icons.signal_wifi_statusbar_null,
+                    color: Colors.grey,
+                  ),
+                  error: (error, stack) => const Icon(
+                    Icons.error,
+                    color: Colors.red,
+                  ),
+                ),
+              ),
               Expanded(child: Container()),
               ListTile(
                 title: const Text(
@@ -129,8 +177,10 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
   }
 
   void _navigateToProfileScreen(UserModel user) {
-    Navigator.push(context,
-        MaterialPageRoute(builder: (context) => const UserProfileScreen()));
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const UserProfileScreen()),
+    );
   }
 
   void _navigateToFriendsScreen() {

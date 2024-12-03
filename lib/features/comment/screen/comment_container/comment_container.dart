@@ -209,10 +209,12 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
     showDialog(
       context: context,
       builder: (context) {
+        final contentController = TextEditingController(text: comment.content);
         return AlertDialog(
+          backgroundColor: ref.watch(preferredThemeProvider).first,
           title: const Text('Edit Comment'),
           content: TextField(
-            controller: TextEditingController(text: comment.content),
+            controller: contentController..text = widget.comment.content ?? '',
             decoration: const InputDecoration(
               hintText: 'Edit your comment...',
             ),
@@ -224,23 +226,43 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
               style: TextButton.styleFrom(
                 backgroundColor: ref.watch(preferredThemeProvider).second,
               ),
-              child: const Text('Cancel'),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.redAccent,
+                ),
+              ),
             ),
             ElevatedButton(
               onPressed: () {
-                if (_replyController.text.isNotEmpty) {
-                  _replyComment(_replyController.text);
+                if (contentController.text.isNotEmpty) {
+                  _editComment(contentController.text);
                   Navigator.of(context).pop();
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: ref.watch(preferredThemeProvider).second,
+                backgroundColor: Colors.green,
               ),
-              child: const Text('Save'),
+              child: const Text(
+                'Save',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
             ),
           ],
         );
       },
+    );
+  }
+
+  void _editComment(String content) async {
+    final result = await ref
+        .read(commentControllerProvider.notifier)
+        .editComment(widget.comment.id, content);
+    result.fold(
+      (l) => showToast(false, l.message),
+      (_) => showToast(true, 'Comment edited successfully'),
     );
   }
 
@@ -367,7 +389,7 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
           InkWell(
             onTap: () => _navigateToOtherUserScreen(currentUser!.uid),
             child: Text(
-              '#${author.name}',
+              author.name,
               style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
             ),
           ),
@@ -541,7 +563,12 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.redAccent,
+                ),
+              ),
             ),
             ElevatedButton(
               onPressed: () {
@@ -561,18 +588,17 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
   Widget _buildCommentContent(CommentModel comment) {
     List<TextSpan> spans = [];
     Map<String, String> mentionedUsers = comment.mentionedUser ?? {};
-    for (var entry in mentionedUsers.entries) {
-      String taggedUid = entry.key;
-      String taggedName = entry.value;
 
-      String hashtag = '#$taggedName';
-
+    if (comment.content != null && comment.content!.isNotEmpty) {
       comment.content!.splitMapJoin(
         RegExp(r'(#\w+[\w\s]*\w)'),
         onMatch: (Match match) {
           String matchedText = match.group(0)!;
+          String taggedUid = mentionedUsers.keys.firstWhere(
+              (key) => mentionedUsers[key] == matchedText.substring(1),
+              orElse: () => "");
 
-          if (matchedText == hashtag) {
+          if (taggedUid.isNotEmpty) {
             spans.add(
               TextSpan(
                 text: matchedText,
@@ -604,6 +630,13 @@ class _CommentContainerState extends ConsumerState<CommentContainer> {
           return '';
         },
       );
+    }
+
+    if (spans.isEmpty) {
+      spans.add(TextSpan(
+        text: comment.content ?? '',
+        style: const TextStyle(fontSize: 14),
+      ));
     }
 
     return RichText(

@@ -18,6 +18,7 @@ import 'package:hash_balance/models/post_model.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/foundation.dart' as foundation;
 import 'package:hash_balance/models/user_model.dart';
+import 'package:logger/web.dart';
 import 'package:multi_trigger_autocomplete/multi_trigger_autocomplete.dart';
 
 final currentCommentProvider = Provider<CommentModel>((ref) {
@@ -30,11 +31,17 @@ final currentPostProvider = Provider<Post>((ref) {
 
 class CommentScreen extends ConsumerStatefulWidget {
   final Post _post;
+  final String _postAuthorName;
+  final String _communityName;
 
   const CommentScreen({
     super.key,
     required Post post,
-  }) : _post = post;
+    required String postAuthorName,
+    required String communityName,
+  })  : _post = post,
+        _postAuthorName = postAuthorName,
+        _communityName = communityName;
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => _CommentScreenState();
@@ -55,10 +62,14 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
 
   void _addComment() async {
     if (_commentText != null && _commentText!.isNotEmpty) {
-      final result = await ref
-          .read(commentControllerProvider.notifier)
-          .comment(widget._post, _commentText!, _selectedUsers);
-
+      final result = await ref.read(commentControllerProvider.notifier).comment(
+            widget._post,
+            widget._postAuthorName,
+            widget._communityName,
+            _commentText,
+            _selectedUsers,
+          );
+      Logger().d(_commentText);
       result.fold((l) => showToast(false, l.message), (r) {
         _selectedUsers.clear();
         _internalController.clear();

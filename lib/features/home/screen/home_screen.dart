@@ -150,24 +150,9 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
                   Icons.search,
                 ),
               ),
-
-              //MARK: - NOTIFICATIONS
-              // if (user != null)
-              //   ref.watch(getNotifsProvider(user.uid)).whenOrNull(
-              //         data: (notifs) {
-              //           if (notifs == null || notifs.isEmpty) {
-              //             return const SizedBox.shrink();
-              //           } else {
-              //             return _buildNotificationMenu(notifs);
-              //           }
-              //         },
-              //       ) ??
-              //       _buildNotificationMenu([]),
-
-              //MARK: - PROFILE
               if (user != null)
-                Builder(
-                  builder: (context) {
+                StatefulBuilder(
+                  builder: (context, setState) {
                     return IconButton(
                       icon: CircleAvatar(
                         backgroundImage:

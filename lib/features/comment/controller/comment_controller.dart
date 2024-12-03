@@ -4,6 +4,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/constants/constants.dart';
 
 import 'package:hash_balance/core/failures.dart';
+import 'package:hash_balance/features/activity_log/controller/activity_log_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/comment/repository/comment_repository.dart';
 import 'package:hash_balance/features/push_notification/controller/push_notification_controller.dart';
@@ -44,6 +45,7 @@ final commentControllerProvider =
     notificationController: ref.read(notificationControllerProvider.notifier),
     userDeviceController: ref.read(userDeviceControllerProvider),
     perspectiveApiController: ref.read(perspectiveApiControllerProvider),
+    activityLogController: ref.read(activityLogControllerProvider.notifier),
     ref: ref,
   ),
 );
@@ -54,6 +56,7 @@ class CommentController extends StateNotifier<bool> {
   final NotificationController _notificationController;
   final UserDeviceController _userDeviceController;
   final PerspectiveApiController _perspectiveApiController;
+  final ActivityLogController _activityLogController;
   final Ref _ref;
   final Uuid _uuid = const Uuid();
 
@@ -63,18 +66,22 @@ class CommentController extends StateNotifier<bool> {
     required NotificationController notificationController,
     required UserDeviceController userDeviceController,
     required PerspectiveApiController perspectiveApiController,
+    required ActivityLogController activityLogController,
     required Ref ref,
   })  : _commentRepository = commentRepository,
         _pushNotificationController = pushNotificationController,
         _notificationController = notificationController,
         _userDeviceController = userDeviceController,
         _perspectiveApiController = perspectiveApiController,
+        _activityLogController = activityLogController,
         _ref = ref,
         super(false);
 
   //COMMENT
   Future<Either<Failures, void>> comment(
     Post post,
+    String postAuthorName,
+    String communityName,
     String? content,
     List<UserModel>? mentionUsers,
   ) async {
@@ -113,6 +120,10 @@ class CommentController extends StateNotifier<bool> {
           Failures(l.message),
         ),
         (r) async {
+          _activityLogController.addCommentActivityLog(
+            postAuthorName: postAuthorName,
+            communityName: communityName,
+          );
           if (comment.mentionedUser != null &&
               comment.mentionedUser!.isNotEmpty) {
             final notification = NotificationModel(
@@ -193,5 +204,10 @@ class CommentController extends StateNotifier<bool> {
 
   Future<Either<Failures, void>> clearCommentVotes(String commentId) async {
     return await _commentRepository.clearCommentVotes(commentId);
+  }
+
+  Future<Either<Failures, void>> editComment(
+      String commentId, String content) async {
+    return await _commentRepository.editComment(commentId, content);
   }
 }

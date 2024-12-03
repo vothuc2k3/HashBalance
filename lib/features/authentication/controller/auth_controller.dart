@@ -147,6 +147,7 @@ class AuthController extends StateNotifier<bool> {
       final token = await _ref.read(firebaseMessagingProvider).getToken();
       _ref.invalidate(newsfeedInitPostsProvider);
       _ref.invalidate(currentUserRoleProvider);
+      _ref.invalidate(userProvider);
       await _ref.read(userDeviceControllerProvider).removeUserDeviceToken(
             uid: uid,
             deviceToken: token ?? '',

@@ -521,8 +521,9 @@ class PostRepository {
     );
   }
 
-  Stream<List<PostDataModel>> getHashtagPosts(
-      {required String hashtag}) async* {
+  Future<List<PostDataModel>> getHashtagPosts({
+    required String hashtag,
+  }) async {
     final querySnapshot = await _posts.get();
     final postsWithHashtag = querySnapshot.docs.where((doc) {
       final postMap = doc.data() as Map<String, dynamic>;
@@ -536,8 +537,8 @@ class PostRepository {
       final postData = await getPostDataByPostId(postId: postId);
       if (postData != null) {
         postDataModels.add(postData);
-        yield postDataModels;
       }
     }
+    return postDataModels;
   }
 }

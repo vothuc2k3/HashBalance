@@ -46,14 +46,13 @@ class CommunityScreen extends ConsumerStatefulWidget {
 }
 
 class CommunityScreenState extends ConsumerState<CommunityScreen> {
-  Future<PostDataModel?>? pinnedPost;
   UserModel? _currentUser;
+  List<PostDataModel> _loadedPosts = [];
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _currentUser = ref.watch(userProvider);
-    _fetchSuspendStatus();
     _loadMembership();
   }
 
@@ -273,7 +272,19 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                       widget._communityId))
                                   .when(
                                     data: (posts) {
-                                      if (posts.isEmpty) {
+                                      _loadedPosts = posts;
+                                      _loadedPosts.sort((a, b) {
+                                        if (a.post.isPinned &&
+                                            !b.post.isPinned) {
+                                          return -1;
+                                        } else if (!a.post.isPinned &&
+                                            b.post.isPinned) {
+                                          return 1;
+                                        } else {
+                                          return 0;
+                                        }
+                                      });
+                                      if (_loadedPosts.isEmpty) {
                                         return Center(
                                           child: const Text(
                                             'No posts yet....',
@@ -296,10 +307,9 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                           physics:
                                               const NeverScrollableScrollPhysics(),
                                           shrinkWrap: true,
-                                          itemCount: posts.length,
+                                          itemCount: _loadedPosts.length,
                                           itemBuilder: (context, index) {
-                                            final post = posts[index];
-
+                                            final post = _loadedPosts[index];
                                             if (!post.post.isPoll) {
                                               return CommunityPostContainer(
                                                 isMod: ref.watch(
@@ -978,18 +988,6 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
   void _reportCommunity() {}
 
   void _blockCommunity() {}
-
-  void _fetchSuspendStatus() async {
-    final result = await ref
-        .read(communityControllerProvider.notifier)
-        .fetchSuspendStatus(
-            communityId: widget._communityId, uid: _currentUser!.uid);
-    result.fold((l) => null, (r) {
-      if (r == 'suspended') {
-        showToast(false, 'You are suspended from this community');
-      }
-    });
-  }
 
   void _loadMembership() async {
     final role = await ref

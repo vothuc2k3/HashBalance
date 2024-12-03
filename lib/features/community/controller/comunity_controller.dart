@@ -272,7 +272,7 @@ class CommunityController extends StateNotifier<bool> {
     return _communityRepository.getCurrentUserRole(data.item1, data.item2);
   }
 
-  Future<Either<Failures, String?>> fetchSuspendStatus({
+  Future<Either<Failures, bool>> fetchSuspendStatus({
     required String communityId,
     required String uid,
   }) async {

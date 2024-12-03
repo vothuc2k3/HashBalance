@@ -5,23 +5,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fuzzy/fuzzy.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
+import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/models/community_model.dart';
+import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 
 final searchRepositoryProvider = Provider(
   (ref) {
     return SearchRepository(
-      firestore: ref.watch(firebaseFirestoreProvider),
+      firestore: ref.read(firebaseFirestoreProvider),
+      postController: ref.read(postControllerProvider.notifier),
     );
   },
 );
 
 class SearchRepository {
   final FirebaseFirestore _firestore;
-
+  final PostController _postController;
   SearchRepository({
     required FirebaseFirestore firestore,
-  }) : _firestore = firestore;
+    required PostController postController,
+  })  : _firestore = firestore,
+        _postController = postController;
 
   Future<List<UserModel>> searchUsers(String query) async {
     if (query.isEmpty || !query.startsWith('#')) {
@@ -112,8 +117,42 @@ class SearchRepository {
     }
   }
 
+  Future<List<PostDataModel>> searchPosts(String query) async {
+    if (query.isEmpty || query == '#') {
+      return [];
+    }
+
+    try {
+      final querySnapshot = await _posts.get();
+
+      List<PostDataModel> postDataList = [];
+      for (var doc in querySnapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final content = data['content'] as String;
+
+        if (content.contains(query.substring(1))) {
+          final result =
+              await _postController.getPostDataByPostId(postId: doc.id);
+          result.fold(
+            (failure) {},
+            (postData) {
+              if (postData != null) {
+                postDataList.add(postData);
+              }
+            },
+          );
+        }
+      }
+      return postDataList;
+    } catch (error) {
+      return [];
+    }
+  }
+
   CollectionReference get _communities =>
       _firestore.collection(FirebaseConstants.communitiesCollection);
   CollectionReference get _user =>
       _firestore.collection(FirebaseConstants.usersCollection);
+  CollectionReference get _posts =>
+      _firestore.collection(FirebaseConstants.postsCollection);
 }

@@ -6,13 +6,13 @@ import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/admin_dashboard/screen/admin_dashboard.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/features/authentication/screen/auth_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_devices/controller/user_device_controller.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:restart_app/restart_app.dart';
 
 class SettingScreen extends ConsumerStatefulWidget {
   const SettingScreen({
@@ -213,15 +213,12 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
       _isTryLoggingOut = true;
     });
     await ref.watch(authControllerProvider.notifier).signOut(uid);
-    // ignore: use_build_context_synchronously
-    Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const AuthScreen()),
-        (route) => false);
+    Restart.restartApp();
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = ref.watch(userProvider)!;
+    final currentUser = ref.watch(userProvider);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: ref.watch(preferredThemeProvider).second,
@@ -239,20 +236,21 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
         ),
         child: Column(
           children: [
-            ListTile(
-              title: Text(
-                currentUser.isRestricted
-                    ? 'Privacy: Restricted'
-                    : 'Privacy: Open',
-                style: const TextStyle(
-                  color: Pallete.whiteColor,
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
+            if (currentUser != null)
+              ListTile(
+                title: Text(
+                  currentUser.isRestricted
+                      ? 'Privacy: Restricted'
+                      : 'Privacy: Open',
+                  style: const TextStyle(
+                    color: Pallete.whiteColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
+                leading: const Icon(Icons.privacy_tip),
+                onTap: () => _showPrivacySettings(),
               ),
-              leading: const Icon(Icons.privacy_tip),
-              onTap: () => _showPrivacySettings(),
-            ),
             SwitchListTile(
               title: const Text(
                 'Enable Push Notifications',
@@ -323,9 +321,11 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
                               .watch(preferredThemeProvider)
                               .declineButtonColor),
                     ),
-                    onTap: () {
-                      _signOut(currentUser.uid);
-                    },
+                    onTap: currentUser != null
+                        ? () {
+                            _signOut(currentUser.uid);
+                          }
+                        : null,
                   ),
           ],
         ),

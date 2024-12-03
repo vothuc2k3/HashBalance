@@ -288,18 +288,19 @@ class CommunityRepository {
     });
   }
 
-  Future<Either<Failures, String?>> fetchSuspendStatus({
+  Future<Either<Failures, bool>> fetchSuspendStatus({
     required String communityId,
     required String uid,
   }) async {
     try {
       final snapshot = await _suspendedUsers
-          .doc(getMembershipId(uid: uid, communityId: communityId))
+          .where('communityId', isEqualTo: communityId)
+          .where('uid', isEqualTo: uid)
           .get();
-      if (snapshot.exists) {
-        return right(snapshot.data() as String?);
+      if (snapshot.docs.isNotEmpty) {
+        return right(true);
       } else {
-        return right(null);
+        return right(false);
       }
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));

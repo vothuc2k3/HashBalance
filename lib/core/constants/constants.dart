@@ -104,6 +104,7 @@ class Constants {
   static const String activityLogTypeComment = 'comment';
   static const String activityLogTypeUpvote = 'upvote';
   static const String activityLogTypeDownvote = 'downvote';
+  static const String activityLogTypeCreatePost = 'create_post';
   static const String activityLogTypeJoinCommunity = 'join_community';
   static const String activityLogTypeLeaveCommunity = 'leave_community';
   static const String activityLogTypeDeletePost = 'delete_post';
@@ -151,6 +152,19 @@ class Constants {
     required String communityName,
   }) {
     return 'You have downvoted a post in $communityName by $postAuthorName.';
+  }
+
+  static String getActivityLogCommentMessage({
+    required String postAuthorName,
+    required String communityName,
+  }) {
+    return 'You have commented on a post in $communityName by $postAuthorName.';
+  }
+
+  static String getActivityLogCreatePostMessage({
+    required String communityName,
+  }) {
+    return 'You have created a post in $communityName.';
   }
 
   static String agoraAppId = 'a9942d0368fc4cdf9e59df9df19899c9';

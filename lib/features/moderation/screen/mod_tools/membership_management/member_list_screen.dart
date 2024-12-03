@@ -511,7 +511,7 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
     result.fold(
       (l) => showToast(false, l.message),
       (r) => showToast(true,
-          'User ${user.name} suspended for ${duration.inDays} days. Reason: $reason'),
+          'User ${user.name} suspended for 1 day. Reason: $reason'),
     );
   }
 
