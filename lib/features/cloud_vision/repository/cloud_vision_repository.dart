@@ -3,8 +3,8 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:hash_balance/core/constants/constants.dart';
 import 'package:logger/logger.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 final cloudVisionRepositoryProvider = Provider((ref) {
   return CloudVisionRepository();
@@ -15,7 +15,7 @@ class CloudVisionRepository {
 
   Future<Either<Failures, bool>> areImagesSafe(
       List<String> base64Images) async {
-    final url = "${Constants.domain}/analyzeImage";
+    final url = "${dotenv.env['DOMAIN']}/analyzeImage";
     for (final base64Image in base64Images) {
       try {
         final response = await http.post(

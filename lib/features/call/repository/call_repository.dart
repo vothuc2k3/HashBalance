@@ -12,6 +12,7 @@ import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/conbined_models/call_data_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 final callRepositoryProvider = Provider((ref) {
   return CallRepository(firestore: ref.read(firebaseFirestoreProvider));
@@ -35,7 +36,7 @@ class CallRepository {
   Future<Either<Failures, String>> fetchAgoraToken(String channelName) async {
     try {
       final response = await http.get(Uri.parse(
-          '${Constants.domain}/agoraAccessToken?channelName=$channelName'));
+          '${dotenv.env['DOMAIN']}/agoraAccessToken?channelName=$channelName'));
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);

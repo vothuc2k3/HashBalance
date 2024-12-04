@@ -10,7 +10,7 @@ import 'package:hash_balance/features/livestream/screen/widget/live_comment_box.
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/livestream_model.dart';
 import 'package:logger/logger.dart';
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 class LivestreamScreen extends ConsumerStatefulWidget {
   final Livestream livestream;
   final String uid;
@@ -42,7 +42,7 @@ class LivestreamScreenState extends ConsumerState<LivestreamScreen> {
     }
     agoraClient = AgoraClient(
       agoraConnectionData: AgoraConnectionData(
-        appId: Constants.agoraAppId,
+        appId: dotenv.env['AGORA_APP_ID'] ?? '',
         channelName: widget.livestream.id,
         tempToken: widget.livestream.agoraToken!,
       ),

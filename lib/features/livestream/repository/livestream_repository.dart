@@ -3,13 +3,13 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/models/livestream_comment_model.dart';
 import 'package:hash_balance/models/livestream_model.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 final livestreamRepositoryProvider = Provider((ref) {
   final firestore = ref.watch(firebaseFirestoreProvider);
@@ -65,7 +65,7 @@ class LivestreamRepository {
   Future<Either<Failures, String>> fetchAgoraToken(String channelName) async {
     try {
       final response = await http.get(
-        Uri.parse('${Constants.domain}/access_token?channelName=$channelName'),
+        Uri.parse('${dotenv.env['DOMAIN']}/access_token?channelName=$channelName'),
       );
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);

@@ -1,10 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/constants/constants.dart';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 final pushNotificationRepositoryProvider = Provider((ref) {
   return PushNotificationRepository();
 });
@@ -21,7 +20,7 @@ class PushNotificationRepository {
     Map<String, dynamic> data,
     String type,
   ) async {
-    final url = Uri.parse('${Constants.domain}/sendPushNotification');
+    final url = Uri.parse('${dotenv.env['DOMAIN']}/sendPushNotification');
     final response = await http.post(
       url,
       headers: {

@@ -15,6 +15,7 @@ import 'package:hash_balance/models/user_model.dart';
 import 'package:uuid/uuid.dart';
 import 'package:logger/logger.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 final userProvider = StateProvider<UserModel?>((ref) => null);
 
@@ -221,7 +222,7 @@ class AuthRepository {
   Future<Either<Failures, bool>> isAdmin(String uid) async {
     try {
       final response = await http.post(
-        Uri.parse('${Constants.domain}/isAdmin'),
+        Uri.parse('${dotenv.env['DOMAIN']}/isAdmin'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'uid': uid}),
       );

@@ -8,7 +8,7 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/call/controller/call_controller.dart';
 import 'package:hash_balance/models/call_model.dart';
 import 'package:hash_balance/models/user_model.dart';
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 class CallScreen extends ConsumerStatefulWidget {
   final Call _call;
   final UserModel _caller;
@@ -51,7 +51,7 @@ class CallScreenState extends ConsumerState<CallScreen> {
     channelName = getUids(widget._caller.uid, widget._receiver.uid);
     agoraClient = AgoraClient(
       agoraConnectionData: AgoraConnectionData(
-        appId: Constants.agoraAppId,
+        appId: dotenv.env['AGORA_APP_ID'] ?? '',
         channelName: channelName,
         tempToken: widget._token,
       ),

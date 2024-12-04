@@ -125,7 +125,7 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
               const Divider(),
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: ref.read(fetchCommunitiesProvider).when(
+                child: ref.watch(fetchCommunitiesProvider).when(
                       data: (communities) {
                         return DropdownSearch<Community>(
                           items: communities,

@@ -131,8 +131,7 @@ class CommunityRepository {
   //GET MOST JOINED COMMUNITIES
   Future<List<Tuple2<Community, int>>> getTopCommunitiesList() async {
     final communitySnapshot = await _communities
-        .where('type', whereIn: ['Public', 'Restricted'])
-        .get();
+        .where('type', whereIn: ['Public', 'Restricted']).get();
     final communityCountMap = <String, int>{};
 
     final memberCountFutures = communitySnapshot.docs.map((doc) async {
@@ -255,17 +254,17 @@ class CommunityRepository {
     });
   }
 
-  Stream<List<Community>> fetchCommunities() {
-    return _communities.snapshots().map(
-      (event) {
-        List<Community> communities = event.docs.map(
-          (doc) {
-            return Community.fromMap(doc.data() as Map<String, dynamic>);
-          },
-        ).toList();
-        return communities;
-      },
-    );
+  Future<List<Community>> fetchCommunities() async {
+    try {
+      final snapshot = await _communities
+          .where('type', whereIn: ['Public', 'Restricted']).get();
+      List<Community> communities = snapshot.docs.map((doc) {
+        return Community.fromMap(doc.data() as Map<String, dynamic>);
+      }).toList();
+      return communities;
+    } on FirebaseException catch (e) {
+      throw e.toString();
+    }
   }
 
   Stream<CurrentUserRoleModel?> getCurrentUserRole(

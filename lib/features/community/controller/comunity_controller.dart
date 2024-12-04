@@ -30,8 +30,11 @@ final communityPostsProvider = StreamProvider.family((ref, String communityId) {
       .fetchCommunityPosts(communityId);
 });
 
-final fetchCommunitiesProvider = StreamProvider((ref) =>
-    ref.watch(communityControllerProvider.notifier).fetchCommunities());
+final fetchCommunitiesProvider = FutureProvider((ref) async {
+  return await ref
+      .read(communityControllerProvider.notifier)
+      .fetchCommunities();
+});
 
 final fetchCommunityByIdProvider =
     FutureProviderFamily((ref, String communityId) {
@@ -262,8 +265,8 @@ class CommunityController extends StateNotifier<bool> {
     return _communityRepository.fetchCommunityPosts(communityId);
   }
 
-  Stream<List<Community>> fetchCommunities() {
-    return _communityRepository.fetchCommunities();
+  Future<List<Community>> fetchCommunities() async {
+    return await _communityRepository.fetchCommunities();
   }
 
   Stream<CurrentUserRoleModel?> getCurrentUserRole(
