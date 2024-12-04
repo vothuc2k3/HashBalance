@@ -12,8 +12,9 @@ import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/controller/auth_controller.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/features/community/controller/comunity_controller.dart';
+import 'package:hash_balance/features/community/controller/community_controller.dart';
 import 'package:hash_balance/features/community/screen/community_conversation_screen.dart';
+import 'package:hash_balance/features/community/screen/community_member_screen.dart';
 import 'package:hash_balance/features/community/screen/post_container/community_post_container.dart';
 import 'package:hash_balance/features/invitation/controller/invitation_controller.dart';
 import 'package:hash_balance/features/livestream/controller/livestream_controller.dart';
@@ -170,10 +171,15 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                             widget._communityId))
                                         .when(
                                           data: (countt) {
-                                            return Padding(
-                                              padding: const EdgeInsets.only(
-                                                  top: 10),
-                                              child: Text('$countt members'),
+                                            return GestureDetector(
+                                              onTap: () =>
+                                                  _navigateToCommunityMembersScreen(
+                                                      community),
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(
+                                                    top: 10),
+                                                child: Text('$countt members'),
+                                              ),
                                             );
                                           },
                                           error: (error, stackTrace) =>
@@ -994,5 +1000,14 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
         .read(communityControllerProvider.notifier)
         .getMemberRole(_currentUser!.uid, widget._communityId);
     ref.read(currentMembershipProvider.notifier).update((state) => role);
+  }
+
+  void _navigateToCommunityMembersScreen(Community community) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CommunityMembersScreen(community: community),
+      ),
+    );
   }
 }

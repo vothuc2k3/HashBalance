@@ -280,6 +280,7 @@ class CommunityRepository {
           communityId: communityId,
           role: data['role'] as String,
           status: data['status'] as String,
+          joinedAt: data['joinedAt'] as Timestamp,
         );
       } else {
         return null;
@@ -314,5 +315,91 @@ class CommunityRepository {
     } else {
       return '';
     }
+  }
+
+  Future<List<CurrentUserRoleModel?>> getInitialCommunityMembers(
+      String communityId) async {
+    final snapshot = await _communityMembership
+        .where('communityId', isEqualTo: communityId)
+        .orderBy('joinedAt', descending: true)
+        .limit(20)
+        .get();
+
+    final members = <CurrentUserRoleModel?>[];
+    final uids = snapshot.docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      return data['uid'] as String;
+    }).toList();
+
+    final userDocs = await _users.where('uid', whereIn: uids).get();
+
+    final userMap = {
+      for (var user in userDocs.docs)
+        (user.data() as Map<String, dynamic>)['uid']:
+            user.data() as Map<String, dynamic>
+    };
+
+    for (var doc in snapshot.docs) {
+      final data = doc.data() as Map<String, dynamic>;
+      final uid = data['uid'] as String;
+
+      final userDoc = userMap[uid];
+      if (userDoc != null) {
+        final user = UserModel.fromMap(userDoc);
+        members.add(CurrentUserRoleModel(
+          user: user,
+          communityId: communityId,
+          role: data['role'] as String,
+          status: data['status'] as String,
+          joinedAt: data['joinedAt'] as Timestamp,
+        ));
+      }
+    }
+
+    return members;
+  }
+
+  Future<List<CurrentUserRoleModel?>> getMoreCommunityMembers(
+      String communityId, Timestamp? lastJoinedAt) async {
+    if (lastJoinedAt == null) {
+      return [];
+    }
+    final snapshot = await _communityMembership
+        .where('communityId', isEqualTo: communityId)
+        .orderBy('joinedAt', descending: true)
+        .startAfter([lastJoinedAt])
+        .limit(20)
+        .get();
+
+    final uids = snapshot.docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      return data['uid'] as String;
+    }).toList();
+
+    final userDocs = await _users.where('uid', whereIn: uids).get();
+
+    final userMap = {
+      for (var user in userDocs.docs)
+        (user.data() as Map<String, dynamic>)['uid']:
+            user.data() as Map<String, dynamic>
+    };
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      final uid = data['uid'] as String;
+      final userDoc = userMap[uid];
+
+      if (userDoc != null) {
+        final user = UserModel.fromMap(userDoc);
+        return CurrentUserRoleModel(
+          user: user,
+          communityId: communityId,
+          role: data['role'] as String,
+          status: data['status'] as String,
+          joinedAt: data['joinedAt'] as Timestamp,
+        );
+      }
+      return null;
+    }).toList();
   }
 }

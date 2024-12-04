@@ -11,7 +11,7 @@ import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/cloud_vision/controller/cloud_vision_controller.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
-import 'package:hash_balance/features/community/controller/comunity_controller.dart';
+import 'package:hash_balance/features/community/controller/community_controller.dart';
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/perspective_api/controller/perspective_api_controller.dart';
 import 'package:hash_balance/features/post/repository/post_repository.dart';
@@ -24,10 +24,18 @@ import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 import 'package:hash_balance/models/poll_option_model.dart';
 
-final hashtagPostsProvider = FutureProvider.family((ref, String hashtag) {
+final fetchMoreHashtagPostsProvider =
+    FutureProvider.family<List<PostDataModel>, Tuple2<String, String>>(
+        (ref, Tuple2<String, String> data) {
   return ref
       .read(postControllerProvider.notifier)
-      .getHashtagPosts(hashtag: hashtag);
+      .fetchMoreHashtagPosts(hashtag: data.item1, lastPostId: data.item2);
+});
+
+final initHashtagPostsProvider = FutureProvider.family((ref, String hashtag) {
+  return ref
+      .read(postControllerProvider.notifier)
+      .getInitHashtagPosts(hashtag: hashtag);
 });
 
 final getPostVoteCountAndStatusProvider =
@@ -465,9 +473,18 @@ class PostController extends StateNotifier<bool> {
     }
   }
 
-  Future<List<PostDataModel>> getHashtagPosts({required String hashtag}) async {
-    final posts = await _postRepository.getHashtagPosts(hashtag: hashtag);
+  Future<List<PostDataModel>> getInitHashtagPosts(
+      {required String hashtag}) async {
+    final posts = await _postRepository.getInitHashtagPosts(hashtag: hashtag);
     posts.sort((a, b) => b.post.createdAt.compareTo(a.post.createdAt));
     return posts;
+  }
+
+  Future<List<PostDataModel>> fetchMoreHashtagPosts({
+    required String hashtag,
+    required String lastPostId,
+  }) async {
+    return await _postRepository.fetchMoreHashtagPosts(
+        hashtag: hashtag, lastPostId: lastPostId);
   }
 }

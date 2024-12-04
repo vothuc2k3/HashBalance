@@ -13,7 +13,7 @@ import 'package:video_player/video_player.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
-import 'package:hash_balance/features/community/controller/comunity_controller.dart';
+import 'package:hash_balance/features/community/controller/community_controller.dart';
 import 'package:hash_balance/features/home/screen/home_screen.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';

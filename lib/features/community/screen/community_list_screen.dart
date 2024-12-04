@@ -6,7 +6,7 @@ import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/features/community/controller/comunity_controller.dart';
+import 'package:hash_balance/features/community/controller/community_controller.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';

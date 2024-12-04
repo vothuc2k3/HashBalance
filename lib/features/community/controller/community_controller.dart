@@ -17,6 +17,13 @@ import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 
+final initialCommunityMembersProvider =
+    FutureProviderFamily((ref, String communityId) {
+  return ref
+      .read(communityControllerProvider.notifier)
+      .getInitialCommunityMembers(communityId);
+});
+
 final currentUserRoleProvider =
     StreamProvider.family.autoDispose((ref, Tuple2<String, String> data) {
   return ref
@@ -286,5 +293,18 @@ class CommunityController extends StateNotifier<bool> {
   Future<String> getMemberRole(String uid, String communityId) async {
     return await _communityRepository
         .getMemberRole(getMembershipId(uid: uid, communityId: communityId));
+  }
+
+  Future<List<CurrentUserRoleModel?>> getInitialCommunityMembers(
+      String communityId) async {
+    return await _communityRepository.getInitialCommunityMembers(communityId);
+  }
+
+  Future<List<CurrentUserRoleModel?>> getMoreCommunityMembers(
+      String communityId, Timestamp? lastJoinedAt) async {
+    return await _communityRepository.getMoreCommunityMembers(
+      communityId,
+      lastJoinedAt,
+    );
   }
 }

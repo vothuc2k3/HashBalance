@@ -20,11 +20,54 @@ class HashtagPostsScreen extends ConsumerStatefulWidget {
 }
 
 class _HashtagPostsScreenState extends ConsumerState<HashtagPostsScreen> {
-  Future<void> _refreshPosts() async {
-    ref.invalidate(hashtagPostsProvider(widget.filter));
+  List<PostDataModel> _posts = [];
+  bool _isLoadingMore = false;
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
   }
 
-  List<PostDataModel> _posts = [];
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels ==
+            _scrollController.position.maxScrollExtent &&
+        !_isLoadingMore) {
+      _loadMorePosts();
+    }
+  }
+
+  Future<void> _loadMorePosts() async {
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    final additionalPosts = await ref
+        .read(postControllerProvider.notifier)
+        .fetchMoreHashtagPosts(
+            hashtag: widget.filter, lastPostId: _posts.last.post.id);
+
+    if (additionalPosts.isNotEmpty) {
+      setState(() {
+        _posts.addAll(additionalPosts);
+      });
+    }
+
+    setState(() {
+      _isLoadingMore = false;
+    });
+  }
+
+  Future<void> _refreshPosts() async {
+    ref.invalidate(initHashtagPostsProvider(widget.filter));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,38 +82,56 @@ class _HashtagPostsScreenState extends ConsumerState<HashtagPostsScreen> {
         ),
         child: RefreshIndicator(
           onRefresh: _refreshPosts,
-          child: ref.watch(hashtagPostsProvider(widget.filter)).when(
-                data: (posts) {
-                  _posts = posts;
-                  if (_posts.isEmpty) {
-                    return Center(
-                      child: Text('No posts found for ${widget.filter}'),
-                    );
-                  }
-                  return ListView.builder(
-                    itemCount: _posts.length,
-                    itemBuilder: (context, index) {
-                      final postData = _posts[index];
-                      if (postData.post.isPoll) {
-                        return NewsfeedPollContainer(
-                          author: postData.author!,
-                          community: postData.community!,
-                          poll: postData.post,
+          child: CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              SliverToBoxAdapter(
+                child: ref.watch(initHashtagPostsProvider(widget.filter)).when(
+                      data: (posts) {
+                        if (posts.isEmpty) {
+                          return Center(
+                            child: Text('No posts found for ${widget.filter}'),
+                          );
+                        }
+
+                        _posts = posts;
+
+                        return ListView.builder(
+                          physics: const NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
+                          itemCount: _posts.length + 1,
+                          itemBuilder: (context, index) {
+                            if (index == _posts.length) {
+                              return _isLoadingMore
+                                  ? const Center(child: Loading())
+                                  : const SizedBox.shrink();
+                            }
+                            final postData = _posts[index];
+                            if (!postData.post.isPoll) {
+                              return NewsfeedPostContainer(
+                                author: postData.author!,
+                                post: postData.post,
+                                community: postData.community!,
+                              );
+                            } else if (postData.post.isPoll) {
+                              return NewsfeedPollContainer(
+                                author: postData.author!,
+                                poll: postData.post,
+                                community: postData.community!,
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
                         );
-                      }
-                      return NewsfeedPostContainer(
-                        post: postData.post,
-                        author: postData.author!,
-                        community: postData.community!,
-                      );
-                    },
-                  );
-                },
-                loading: () => const Center(child: Loading()),
-                error: (error, stackTrace) => Center(
-                  child: Text('Error: $error'),
-                ),
+                      },
+                      loading: () => const Center(child: Loading()),
+                      error: (error, stackTrace) => Center(
+                        child: Text('Error: $error'),
+                      ),
+                    ),
               ),
+            ],
+          ),
         ),
       ),
     );

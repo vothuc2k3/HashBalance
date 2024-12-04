@@ -521,20 +521,44 @@ class PostRepository {
     );
   }
 
-  Future<List<PostDataModel>> getHashtagPosts({
+  Future<List<PostDataModel>> getInitHashtagPosts({
     required String hashtag,
   }) async {
-    final querySnapshot = await _posts.get();
+    final querySnapshot = await _posts
+        .where('status', isEqualTo: 'Approved')
+        .orderBy('createdAt', descending: true)
+        .limit(5)
+        .get();
     final postsWithHashtag = querySnapshot.docs.where((doc) {
       final postMap = doc.data() as Map<String, dynamic>;
       final content = postMap['content'] as String;
       return content.contains(hashtag);
-    }).toList();
+    });
 
     List<PostDataModel> postDataModels = [];
     for (var doc in postsWithHashtag) {
       final postId = doc.id;
       final postData = await getPostDataByPostId(postId: postId);
+      if (postData != null) {
+        postDataModels.add(postData);
+      }
+    }
+    return postDataModels;
+  }
+
+  Future<List<PostDataModel>> fetchMoreHashtagPosts({
+    required String hashtag,
+    required String lastPostId,
+  }) async {
+    final querySnapshot = await _posts
+        .where('status', isEqualTo: 'Approved')
+        .orderBy('createdAt', descending: true)
+        .startAfter([lastPostId])
+        .limit(5)
+        .get();
+    List<PostDataModel> postDataModels = [];
+    for (var doc in querySnapshot.docs) {
+      final postData = await getPostDataByPostId(postId: doc.id);
       if (postData != null) {
         postDataModels.add(postData);
       }

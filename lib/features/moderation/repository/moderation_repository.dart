@@ -344,12 +344,15 @@ class ModerationRepository {
               UserModel.fromMap(userDoc.data() as Map<String, dynamic>);
           final role = memberRolesAndStatus[user.uid]?['role'] ?? 'Member';
           final status = memberRolesAndStatus[user.uid]?['status'] ?? 'Active';
+          final joinedAt =
+              memberRolesAndStatus[user.uid]?['joinedAt'] as Timestamp;
 
           members.add(CurrentUserRoleModel(
             user: user,
             communityId: communityId,
             role: role,
             status: status,
+            joinedAt: joinedAt,
           ));
         }
       }
@@ -454,6 +457,7 @@ class ModerationRepository {
       return users;
     });
   }
+
   Stream<String> getMemberRole(String membershipId) {
     return _communityMembership.doc(membershipId).snapshots().map((snapshot) {
       if (!snapshot.exists) {

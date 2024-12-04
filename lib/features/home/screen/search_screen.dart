@@ -10,7 +10,7 @@ import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/core/widgets/search_bar.dart' as search_bar;
 import 'package:hash_balance/core/widgets/user_card.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/features/community/controller/comunity_controller.dart';
+import 'package:hash_balance/features/community/controller/community_controller.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/newsfeed/screen/containers/newsfeed_poll_container.dart';
 import 'package:hash_balance/features/newsfeed/screen/containers/newsfeed_post_container.dart';
