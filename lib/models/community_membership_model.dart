@@ -1,4 +1,3 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -9,31 +8,35 @@ class CommunityMembership {
   final String status;
   final String uid;
   final String role;
+  final bool isCreator;
   final Timestamp joinedAt;
   CommunityMembership({
     required this.id,
     required this.communityId,
+    required this.status,
     required this.uid,
     required this.role,
-    required this.status,
+    required this.isCreator,
     required this.joinedAt,
   });
 
   CommunityMembership copyWith({
     String? id,
     String? communityId,
-    Timestamp? joinedAt,
+    String? status,
     String? uid,
     String? role,
-    String? status,
+    bool? isCreator,
+    Timestamp? joinedAt,
   }) {
     return CommunityMembership(
       id: id ?? this.id,
       communityId: communityId ?? this.communityId,
-      joinedAt: joinedAt ?? this.joinedAt,
+      status: status ?? this.status,
       uid: uid ?? this.uid,
       role: role ?? this.role,
-      status: status ?? this.status,
+      isCreator: isCreator ?? this.isCreator,
+      joinedAt: joinedAt ?? this.joinedAt,
     );
   }
 
@@ -41,10 +44,11 @@ class CommunityMembership {
     return <String, dynamic>{
       'id': id,
       'communityId': communityId,
-      'joinedAt': joinedAt,
+      'status': status,
       'uid': uid,
       'role': role,
-        'status': status,
+      'isCreator': isCreator,
+      'joinedAt': joinedAt,
     };
   }
 
@@ -52,10 +56,11 @@ class CommunityMembership {
     return CommunityMembership(
       id: map['id'] as String,
       communityId: map['communityId'] as String,
-      joinedAt: map['joinedAt'] as Timestamp,
+      status: map['status'] as String,
       uid: map['uid'] as String,
       role: map['role'] as String,
-      status: map['status'] as String,
+      isCreator: map['isCreator'] as bool,
+      joinedAt: map['joinedAt'] as Timestamp,
     );
   }
 
@@ -66,7 +71,7 @@ class CommunityMembership {
 
   @override
   String toString() {
-    return 'CommunityMembership(id: $id, communityId: $communityId, joinedAt: $joinedAt, uid: $uid, role: $role, status: $status)';
+    return 'CommunityMembership(id: $id, communityId: $communityId, status: $status, uid: $uid, role: $role, isCreator: $isCreator, joinedAt: $joinedAt)';
   }
 
   @override
@@ -75,20 +80,21 @@ class CommunityMembership {
 
     return other.id == id &&
         other.communityId == communityId &&
-        other.joinedAt == joinedAt &&
+        other.status == status &&
         other.uid == uid &&
         other.role == role &&
-        other.status == status;
+        other.isCreator == isCreator &&
+        other.joinedAt == joinedAt;
   }
 
   @override
   int get hashCode {
     return id.hashCode ^
         communityId.hashCode ^
-        joinedAt.hashCode ^
+        status.hashCode ^
         uid.hashCode ^
         role.hashCode ^
-        status.hashCode;
+        isCreator.hashCode ^
+        joinedAt.hashCode;
   }
 }
-

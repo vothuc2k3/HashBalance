@@ -44,11 +44,12 @@ class CommunityRepository {
   //CREATE A WHOLE NEW COMMUNITY
   Future<Either<Failures, String>> createCommunity(Community community) async {
     try {
-      var communityDoc = await _communities.doc(community.id).get();
+      final communityDoc = await _communities.doc(community.id).get();
 
       if (communityDoc.exists) {
-        throw 'The name is already exists!';
+        return left(Failures('The name is already exists!'));
       }
+      
       await _communities.doc(community.id).set(community.toMap());
       return right('Successfully created community');
     } on FirebaseException catch (e) {
@@ -281,6 +282,7 @@ class CommunityRepository {
           role: data['role'] as String,
           status: data['status'] as String,
           joinedAt: data['joinedAt'] as Timestamp,
+          isCreator: data['isCreator'] as bool,
         );
       } else {
         return null;
@@ -352,6 +354,7 @@ class CommunityRepository {
           role: data['role'] as String,
           status: data['status'] as String,
           joinedAt: data['joinedAt'] as Timestamp,
+          isCreator: data['isCreator'] as bool,
         ));
       }
     }
@@ -397,6 +400,7 @@ class CommunityRepository {
           role: data['role'] as String,
           status: data['status'] as String,
           joinedAt: data['joinedAt'] as Timestamp,
+          isCreator: data['isCreator'] as bool,
         );
       }
       return null;

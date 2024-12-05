@@ -5,7 +5,7 @@ import 'package:hash_balance/models/user_model.dart';
 
 class PostShareDataModel {
   final PostShare postShare;
-  final Post post;
+  final Post? post;
   final UserModel shareUser;
   final UserModel author;
   final Community community;

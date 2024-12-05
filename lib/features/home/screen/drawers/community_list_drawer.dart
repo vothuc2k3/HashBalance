@@ -118,9 +118,7 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
                 leading: const Icon(
                   Icons.add,
                 ),
-                onTap: () {
-                  _navigateToCreateCommunityScreen();
-                },
+                onTap: () => _navigateToCreateCommunityScreen,
               ).animate().fadeIn(),
               const Divider(),
               Padding(
@@ -133,9 +131,7 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
                           onChanged: (Community? selectedCommunity) {
                             if (selectedCommunity != null) {
                               _navigateToCommunityScreen(
-                                selectedCommunity,
-                                currentUser.uid,
-                              );
+                                  selectedCommunity, currentUser.uid);
                             }
                           },
                           dropdownDecoratorProps: DropDownDecoratorProps(
@@ -163,12 +159,15 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
                             ),
                             itemBuilder: (context, item, isSelected) {
                               return ListTile(
-                                title: Text(item.name),
+                                title: Text(
+                                  item.name,
+                                ),
                                 leading: CircleAvatar(
                                   backgroundImage: CachedNetworkImageProvider(
                                     item.profileImage,
                                   ),
                                 ),
+                                tileColor: ref.watch(preferredThemeProvider).first,
                               ).animate().fadeIn();
                             },
                           ),

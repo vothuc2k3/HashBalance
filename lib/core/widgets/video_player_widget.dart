@@ -1,14 +1,18 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:appinio_video_player/appinio_video_player.dart';
 
 class VideoPlayerWidget extends StatefulWidget {
-  final String videoUrl;
+  final String? videoUrl;
+  final File? videoFile;
 
   const VideoPlayerWidget({
     super.key,
-    required this.videoUrl,
-  });
+    this.videoUrl,
+    this.videoFile,
+  }) : assert(videoUrl != null || videoFile != null, 'Either videoUrl or videoFile must be provided.');
 
   @override
   State<VideoPlayerWidget> createState() => _VideoPlayerWidgetState();
@@ -22,11 +26,19 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   void initState() {
     super.initState();
 
-    _videoController =
-        VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
-          ..initialize().then((_) {
-            setState(() {});
-          });
+    if (widget.videoUrl != null) {
+      _videoController =
+          VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl!))
+            ..initialize().then((_) {
+              setState(() {});
+            });
+    } else if (widget.videoFile != null) {
+      _videoController =
+          VideoPlayerController.file(widget.videoFile!)
+            ..initialize().then((_) {
+              setState(() {});
+            });
+    }
 
     _customVideoPlayerController = CustomVideoPlayerController(
       context: context,

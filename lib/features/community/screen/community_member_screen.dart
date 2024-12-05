@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
@@ -67,6 +68,17 @@ class _CommunityMembersScreenState
     });
   }
 
+  void _sortMembers() {
+    _members.sort((a, b) {
+      if (a?.role == 'moderator' && b?.role != 'moderator') {
+        return -1;
+      } else if (a?.role != 'moderator' && b?.role == 'moderator') {
+        return 1;
+      }
+      return 0;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,6 +99,7 @@ class _CommunityMembersScreenState
               .when(
                 data: (members) {
                   _members = members;
+                  _sortMembers();
                   if (_members.isEmpty) {
                     return const Center(child: Text('No members found'));
                   }
@@ -125,8 +138,8 @@ class _CommunityMembersScreenState
                             const EdgeInsets.symmetric(vertical: 10),
                         leading: CircleAvatar(
                           radius: 30,
-                          backgroundImage:
-                              NetworkImage(member!.user.profileImage),
+                          backgroundImage: CachedNetworkImageProvider(
+                              member!.user.profileImage),
                         ),
                         title: Text(
                           member.user.name,
@@ -134,8 +147,10 @@ class _CommunityMembersScreenState
                               fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text(
-                          member.role[0].toUpperCase() +
-                              member.role.substring(1),
+                          member.isCreator
+                              ? 'Creator'
+                              : member.role[0].toUpperCase() +
+                                  member.role.substring(1),
                           style:
                               const TextStyle(fontSize: 14, color: Colors.grey),
                         ),

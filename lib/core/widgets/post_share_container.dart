@@ -51,7 +51,10 @@ class PostShareContainer extends ConsumerWidget {
                     ),
                     Text(
                       formatTime(postShareData.postShare.createdAt),
-                      style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                      style: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -73,11 +76,21 @@ class PostShareContainer extends ConsumerWidget {
               ),
             ),
           const Divider(color: Colors.grey),
-          TimelinePostContainer(
-            post: postShareData.post,
-            author: postShareData.author,
-            community: postShareData.community,
-          ),
+          if (postShareData.post != null) ...[
+            TimelinePostContainer(
+              post: postShareData.post!,
+              author: postShareData.author,
+              community: postShareData.community,
+            ),
+          ] else ...[
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                'This post has been deleted.',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
         ],
       ),
     );

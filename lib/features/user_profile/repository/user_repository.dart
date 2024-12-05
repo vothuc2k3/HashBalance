@@ -460,4 +460,24 @@ class UserRepository {
       return left(Failures(e.toString()));
     }
   }
+
+  Future<Either<Failures, List<UserModel>>> getCurrentUserFollowers(
+      String uid) async {
+    try {
+      final querySnapshot =
+          await _follower.where('targetUid', isEqualTo: uid).get();
+
+      final followers = await Future.wait(querySnapshot.docs.map((doc) async {
+        final data = doc.data() as Map<String, dynamic>;
+        final followerUser = await fetchUserByUidProvider(data['followerUid']);
+        return followerUser;
+      }).toList());
+
+      return right(followers);
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
 }

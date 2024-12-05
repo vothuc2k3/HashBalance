@@ -213,6 +213,35 @@ class PostRepository {
     );
   }
 
+  Stream<List<PostDataModel>> getRejectedPosts({
+    required String communityId,
+  }) {
+    return _posts
+        .where('communityId', isEqualTo: communityId)
+        .where('status', isEqualTo: 'Rejected')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .asyncMap(
+      (event) async {
+        List<PostDataModel> posts = [];
+        if (event.docs.isNotEmpty) {
+          for (var postDoc in event.docs) {
+            final post = Post.fromMap(postDoc.data() as Map<String, dynamic>);
+            final authorDoc = await _users.doc(post.uid).get();
+            final author =
+                UserModel.fromMap(authorDoc.data() as Map<String, dynamic>);
+            posts.add(PostDataModel(post: post, author: author));
+          }
+          _logger.d('There are rejected posts');
+          return posts;
+        } else {
+          _logger.d('No rejected posts');
+          return [];
+        }
+      },
+    );
+  }
+
   //FETCH PIN POST
   Future<PostDataModel?> getCommunityPinnedPost(Community community) async {
     final pinnedPostDoc = await _posts
@@ -548,16 +577,21 @@ class PostRepository {
 
   Future<List<PostDataModel>> fetchMoreHashtagPosts({
     required String hashtag,
-    required String lastPostId,
+    required Timestamp createdAt,
   }) async {
     final querySnapshot = await _posts
         .where('status', isEqualTo: 'Approved')
         .orderBy('createdAt', descending: true)
-        .startAfter([lastPostId])
+        .startAfter([createdAt])
         .limit(5)
         .get();
+    final postsWithHashtag = querySnapshot.docs.where((doc) {
+      final postMap = doc.data() as Map<String, dynamic>;
+      final content = postMap['content'] as String;
+      return content.contains(hashtag);
+    });
     List<PostDataModel> postDataModels = [];
-    for (var doc in querySnapshot.docs) {
+    for (var doc in postsWithHashtag) {
       final postData = await getPostDataByPostId(postId: doc.id);
       if (postData != null) {
         postDataModels.add(postData);

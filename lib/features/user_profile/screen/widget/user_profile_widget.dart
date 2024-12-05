@@ -11,7 +11,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
-import 'package:hash_balance/features/user_profile/screen/friends/friend_requests_screen.dart';
+import 'package:hash_balance/features/user_profile/screen/friends/friends_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:image_picker/image_picker.dart';
@@ -213,7 +213,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                           oldValue: 0,
                           newValue: data.friends.length,
                           onPressed: () =>
-                              _navigateToFriendRequestsScreen(currentUser.uid),
+                              _navigateToFriendsScreen(currentUser.uid),
                         ),
                         _buildVerticalDivider(),
                         _buildAnimatedButton(
@@ -247,7 +247,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                           text: 'Friends',
                           value: 0,
                           onPressed: () =>
-                              _navigateToFriendRequestsScreen(currentUser.uid),
+                              _navigateToFriendsScreen(currentUser.uid),
                         ),
                         _buildVerticalDivider(),
                         _buildButton(
@@ -284,11 +284,11 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
     );
   }
 
-  void _navigateToFriendRequestsScreen(String uid) {
+  void _navigateToFriendsScreen(String uid) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => FriendRequestsScreen(uid: uid),
+        builder: (context) => FriendsScreen(uid: uid),
       ),
     );
   }

@@ -20,16 +20,24 @@ import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/poll_option_vote_model.dart';
 import 'package:hash_balance/models/post_model.dart';
+import 'package:logger/logger.dart';
 import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 import 'package:hash_balance/models/poll_option_model.dart';
 
+final getRejectedPostsProvider =
+    StreamProvider.family((ref, String communityId) {
+  return ref.read(postControllerProvider.notifier).getRejectedPosts(
+        communityId: communityId,
+      );
+});
+
 final fetchMoreHashtagPostsProvider =
-    FutureProvider.family<List<PostDataModel>, Tuple2<String, String>>(
-        (ref, Tuple2<String, String> data) {
+    FutureProvider.family<List<PostDataModel>, Tuple2<String, Timestamp>>(
+        (ref, Tuple2<String, Timestamp> data) {
   return ref
       .read(postControllerProvider.notifier)
-      .fetchMoreHashtagPosts(hashtag: data.item1, lastPostId: data.item2);
+      .fetchMoreHashtagPosts(hashtag: data.item1, createdAt: data.item2);
 });
 
 final initHashtagPostsProvider = FutureProvider.family((ref, String hashtag) {
@@ -207,8 +215,7 @@ class PostController extends StateNotifier<bool> {
             (r) async {
               await _friendController.notifyFollowers(
                 uid: user.uid,
-                message:
-                    '$user.username has posted a new post in ${community.name}',
+                message: Constants.getNewPostContent(user.name, community.name),
                 title: 'New Post',
                 type: Constants.newPostType,
               );
@@ -475,16 +482,20 @@ class PostController extends StateNotifier<bool> {
 
   Future<List<PostDataModel>> getInitHashtagPosts(
       {required String hashtag}) async {
+    Logger().d(hashtag);
     final posts = await _postRepository.getInitHashtagPosts(hashtag: hashtag);
-    posts.sort((a, b) => b.post.createdAt.compareTo(a.post.createdAt));
     return posts;
   }
 
   Future<List<PostDataModel>> fetchMoreHashtagPosts({
     required String hashtag,
-    required String lastPostId,
+    required Timestamp createdAt,
   }) async {
     return await _postRepository.fetchMoreHashtagPosts(
-        hashtag: hashtag, lastPostId: lastPostId);
+        hashtag: hashtag, createdAt: createdAt);
+  }
+
+  Stream<List<PostDataModel>> getRejectedPosts({required String communityId}) {
+    return _postRepository.getRejectedPosts(communityId: communityId);
   }
 }

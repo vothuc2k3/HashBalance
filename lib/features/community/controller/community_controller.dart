@@ -166,6 +166,7 @@ class CommunityController extends StateNotifier<bool> {
         uid: uid,
         role: Constants.memberRole,
         status: Constants.memberActiveStatus,
+        isCreator: false,
       );
 
       final result = await _communityRepository.joinCommunity(newMembership);
@@ -196,6 +197,36 @@ class CommunityController extends StateNotifier<bool> {
         uid: uid,
         role: Constants.moderatorRole,
         status: Constants.memberActiveStatus,
+        isCreator: false,
+      );
+
+      final result = await _communityRepository.joinCommunity(newMembership);
+
+      return result.fold(
+        (l) => left(Failures(l.message)),
+        (r) => right('Successfully Joined The Community!'),
+      );
+    } on FirebaseException catch (e) {
+      return left(Failures(e.message!));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  //JOIN AS MOD
+  Future<Either<Failures, String>> joinCommunityAsCreator(
+    String uid,
+    String communityId,
+  ) async {
+    try {
+      final newMembership = CommunityMembership(
+        id: getMembershipId(uid: uid, communityId: communityId),
+        communityId: communityId,
+        joinedAt: Timestamp.now(),
+        uid: uid,
+        role: Constants.moderatorRole,
+        status: Constants.memberActiveStatus,
+        isCreator: true,
       );
 
       final result = await _communityRepository.joinCommunity(newMembership);

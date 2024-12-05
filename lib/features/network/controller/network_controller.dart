@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
-import 'package:logger/logger.dart';
 import 'package:dio/dio.dart';
 
 final connectivityProvider = StreamProvider((ref) {
@@ -24,7 +23,6 @@ class NetworkController {
 
   Future<bool> _pingWebsite(String url) async {
     try {
-      Logger().d('Reach here 1');
       final dio = Dio(BaseOptions(
         connectTimeout: const Duration(seconds: 2),
         receiveTimeout: const Duration(seconds: 2),

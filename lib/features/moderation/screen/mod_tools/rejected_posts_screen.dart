@@ -1,57 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/error_text.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
-import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
+import 'package:hash_balance/core/widgets/rejected_post_container.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/community_model.dart';
-import 'package:hash_balance/features/moderation/screen/post_container/pending_post_container.dart';
-import 'package:hash_balance/models/post_model.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
-class PendingPostScreen extends ConsumerStatefulWidget {
-  final Community _community;
+class RejectedPostScreen extends ConsumerStatefulWidget {
+  const RejectedPostScreen({super.key, required this.community});
 
-  const PendingPostScreen({
-    super.key,
-    required Community community,
-  }) : _community = community;
+  final Community community;
 
   @override
-  PendingPostScreenState createState() => PendingPostScreenState();
+  RejectedPostScreenState createState() => RejectedPostScreenState();
 }
 
-class PendingPostScreenState extends ConsumerState<PendingPostScreen> {
-  void _handlePostApproval(Post post, String decision) async {
-    final result = await ref
-        .read(moderationControllerProvider.notifier)
-        .handlePostApproval(post, decision);
-    result.fold(
-      (l) => showToast(false, l.message),
-      (r) {
-        showToast(
-            true, decision == 'Approved' ? 'Approved post!' : 'Rejected post!');
-      },
-    );
-  }
-
+class RejectedPostScreenState extends ConsumerState<RejectedPostScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pending Posts'),
+        title: const Text('Rejected Posts'),
         backgroundColor: ref.watch(preferredThemeProvider).second,
       ),
       body: Container(
         color: ref.watch(preferredThemeProvider).first,
-        child: ref.watch(getPendingPostsProvider(widget._community.id)).when(
+        child: ref.watch(getRejectedPostsProvider(widget.community.id)).when(
               data: (data) {
                 if (data.isEmpty) {
                   return Center(
                     child: const Text(
-                      'No pending posts awaiting...',
+                      'No rejected posts awaiting...',
                       style: TextStyle(
                         fontSize: 18,
                         color: Colors.white70,
@@ -67,10 +48,10 @@ class PendingPostScreenState extends ConsumerState<PendingPostScreen> {
                 return ListView.builder(
                   itemCount: data.length,
                   itemBuilder: (context, index) {
-                    return PendingPostContainer(
+                    return RejectedPostContainer(
                       post: data[index].post,
                       author: data[index].author!,
-                      handlePostApproval: _handlePostApproval,
+                      community: widget.community,
                     );
                   },
                 );

@@ -328,9 +328,11 @@ class ModerationRepository {
       for (var doc in snapshot.docs) {
         final role = doc['role'] as String;
         final status = doc['status'] as String;
+        final isCreator = doc['isCreator'] as bool;
         memberRolesAndStatus[doc['uid']] = {
           'role': role,
           'status': status,
+          'isCreator': isCreator.toString(),
         };
       }
 
@@ -346,6 +348,8 @@ class ModerationRepository {
           final status = memberRolesAndStatus[user.uid]?['status'] ?? 'Active';
           final joinedAt =
               memberRolesAndStatus[user.uid]?['joinedAt'] as Timestamp;
+          final isCreator =
+              memberRolesAndStatus[user.uid]?['isCreator'] as bool;
 
           members.add(CurrentUserRoleModel(
             user: user,
@@ -353,6 +357,7 @@ class ModerationRepository {
             role: role,
             status: status,
             joinedAt: joinedAt,
+            isCreator: isCreator,
           ));
         }
       }

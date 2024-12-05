@@ -1,10 +1,10 @@
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/widgets/video_player_widget.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
 import 'package:image_picker/image_picker.dart';
@@ -19,7 +19,6 @@ import 'package:hash_balance/features/post/controller/post_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/user_model.dart';
-import 'package:hash_balance/theme/pallette.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 class CreatePostWidget extends ConsumerStatefulWidget {
@@ -315,59 +314,8 @@ class _CreatePostWidgetState extends ConsumerState<CreatePostWidget> {
                                       onTap: () {
                                         _selectVideo();
                                       },
-                                      child: Stack(
-                                        children: [
-                                          DottedBorder(
-                                            borderType: BorderType.RRect,
-                                            dashPattern: const [10, 4],
-                                            strokeCap: StrokeCap.round,
-                                            color: Pallete.darkModeAppTheme
-                                                .textTheme.bodyMedium!.color!,
-                                            child: Container(
-                                              width: double.infinity,
-                                              height: 150,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                              ),
-                                              child: video != null
-                                                  ? Center(
-                                                      child: AspectRatio(
-                                                        aspectRatio:
-                                                            _videoPlayerController!
-                                                                .value
-                                                                .aspectRatio,
-                                                        child: VideoPlayer(
-                                                            _videoPlayerController!),
-                                                      ),
-                                                    )
-                                                  : const Center(
-                                                      child: Icon(
-                                                        Icons.videocam_outlined,
-                                                        size: 40,
-                                                      ),
-                                                    ),
-                                            ),
-                                          ),
-                                          Positioned(
-                                            bottom: 10,
-                                            right: 10,
-                                            child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      vertical: 5,
-                                                      horizontal: 10),
-                                              color:
-                                                  Colors.black.withOpacity(0.5),
-                                              child: const Text(
-                                                'Long press to cancel',
-                                                style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 12),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+                                      child: VideoPlayerWidget(
+                                        videoFile: video,
                                       ),
                                     )
                                   : const SizedBox.shrink(),

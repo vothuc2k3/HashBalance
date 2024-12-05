@@ -9,6 +9,7 @@ import 'package:hash_balance/features/setting/screen/setting_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/activity_log_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/friends/friends_screen.dart';
+import 'package:hash_balance/features/user_profile/screen/user_followers_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
@@ -98,6 +99,18 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                 onTap: () => _navigateToFriendsScreen(),
               ),
               ListTile(
+                title: const Text(
+                  'Followers',
+                  style: TextStyle(
+                    color: Pallete.whiteColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                leading: const Icon(Icons.people),
+                onTap: () => _navigateToFollowersScreen(),
+              ),
+              ListTile(
                 leading: const Icon(Icons.receipt_long),
                 onTap: () => _navigateToActivityLogScreen(),
                 title: const Text(
@@ -142,7 +155,9 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                 trailing: connectivityState.when(
                   data: (isConnected) {
                     return Icon(
-                      isConnected ? Icons.signal_wifi_4_bar : Icons.signal_wifi_off,
+                      isConnected
+                          ? Icons.signal_wifi_4_bar
+                          : Icons.signal_wifi_off,
                       color: isConnected ? Colors.green : Colors.red,
                     );
                   },
@@ -208,6 +223,15 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
       context,
       MaterialPageRoute(
         builder: (context) => const ActivityLogScreen(),
+      ),
+    );
+  }
+
+  void _navigateToFollowersScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const UserFollowersScreen(),
       ),
     );
   }

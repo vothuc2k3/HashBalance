@@ -140,6 +140,10 @@ class Constants {
     return '$name has mentioned you in a comment!';
   }
 
+  static String getNewPostContent(String name, String communityName) {
+    return '$name has posted a new post in $communityName!';
+  }
+
   static String getActivityLogUpvoteMessage({
     required String postAuthorName,
     required String communityName,

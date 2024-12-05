@@ -12,6 +12,12 @@ import 'package:hash_balance/models/conbined_models/timeline_item_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:uuid/uuid.dart';
 
+final followersProvider =
+    FutureProvider.family<Either<Failures, List<UserModel>>, String>(
+  (ref, String uid) =>
+      ref.watch(userControllerProvider.notifier).getCurrentUserFollowers(uid),
+);
+
 final userTimelineProvider = StreamProvider.family((ref, UserModel user) {
   return ref.watch(userControllerProvider.notifier).getUserTimelineItems(user);
 });
@@ -123,6 +129,13 @@ class UserController extends StateNotifier<bool> {
     UserModel user,
     String name,
   ) async {
+    if (name.isEmpty) return left(Failures('Name cannot be empty'));
+    if (name.length > 22) {
+      return left(Failures('Name cannot be longer than 22 characters'));
+    }
+    if (name.length < 3) {
+      return left(Failures('Name cannot be shorter than 3 characters'));
+    }
     try {
       return await _userRepository.editName(user, name);
     } on FirebaseException catch (e) {
@@ -193,5 +206,10 @@ class UserController extends StateNotifier<bool> {
 
   Future<Either<Failures, void>> updateUserPrivacy(UserModel user) async {
     return await _userRepository.updateUserPrivacy(user);
+  }
+
+  Future<Either<Failures, List<UserModel>>> getCurrentUserFollowers(
+      String uid) async {
+    return await _userRepository.getCurrentUserFollowers(uid);
   }
 }

@@ -23,6 +23,7 @@ import 'package:hash_balance/features/moderation/controller/moderation_controlle
 import 'package:hash_balance/features/moderation/screen/mod_tools/invite_moderators_screen.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/mod_tools_screen.dart';
 import 'package:hash_balance/features/community/screen/post_container/community_poll_container.dart';
+import 'package:hash_balance/features/community/screen/create_post_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/post_data_model.dart';
 import 'package:hash_balance/models/invitation_model.dart';
@@ -62,12 +63,25 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     super.dispose();
   }
 
+  void _navigateToCreatePostScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const CreatePostScreen()),
+    );
+  }
+
   //MARK: - BUILD WIDGET
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(userProvider)!;
     final role = ref.watch(currentMembershipProvider);
     return Scaffold(
+      floatingActionButton: role == 'member' || role == 'moderator'
+          ? FloatingActionButton(
+              onPressed: () => _navigateToCreatePostScreen(),
+              child: const Icon(Icons.add),
+            )
+          : null,
       body: Container(
         color: ref.watch(preferredThemeProvider).first,
         child: ref.watch(communityByIdProvider(widget._communityId)).when(

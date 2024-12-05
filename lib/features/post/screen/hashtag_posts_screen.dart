@@ -52,7 +52,7 @@ class _HashtagPostsScreenState extends ConsumerState<HashtagPostsScreen> {
     final additionalPosts = await ref
         .read(postControllerProvider.notifier)
         .fetchMoreHashtagPosts(
-            hashtag: widget.filter, lastPostId: _posts.last.post.id);
+            hashtag: widget.filter, createdAt: _posts.last.post.createdAt);
 
     if (additionalPosts.isNotEmpty) {
       setState(() {
@@ -67,6 +67,12 @@ class _HashtagPostsScreenState extends ConsumerState<HashtagPostsScreen> {
 
   Future<void> _refreshPosts() async {
     ref.invalidate(initHashtagPostsProvider(widget.filter));
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _posts.clear();
   }
 
   @override
@@ -88,14 +94,7 @@ class _HashtagPostsScreenState extends ConsumerState<HashtagPostsScreen> {
               SliverToBoxAdapter(
                 child: ref.watch(initHashtagPostsProvider(widget.filter)).when(
                       data: (posts) {
-                        if (posts.isEmpty) {
-                          return Center(
-                            child: Text('No posts found for ${widget.filter}'),
-                          );
-                        }
-
                         _posts = posts;
-
                         return ListView.builder(
                           physics: const NeverScrollableScrollPhysics(),
                           shrinkWrap: true,

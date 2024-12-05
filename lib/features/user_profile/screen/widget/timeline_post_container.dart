@@ -91,17 +91,58 @@ class _TimelinePostContainerState extends ConsumerState<TimelinePostContainer> {
   }
 
   void _handleDeletePost(Post post) async {
-    final result =
-        await ref.read(postControllerProvider.notifier).deletePost(post);
-    result.fold(
-      (l) {
-        showToast(false, l.message);
-      },
-      (r) {
-        showToast(true, 'Delete successfully...');
-        ref.invalidate(newsfeedInitPostsProvider);
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: ref.watch(preferredThemeProvider).first,
+          title: const Text('Confirm Delete'),
+          content: const Text('Are you sure you want to delete this post?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.greenAccent,
+                ),
+              ),
+            ),
+            ElevatedButton.icon(
+              onPressed: () async {
+                Navigator.of(context).pop(true);
+              },
+              icon: const Icon(Icons.delete, color: Colors.red),
+              label: const Text(
+                'Delete',
+                style: TextStyle(
+                  color: Colors.red,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+              ),
+            ),
+          ],
+        );
       },
     );
+    if (result == true) {
+      final result =
+          await ref.read(postControllerProvider.notifier).deletePost(post);
+      result.fold(
+        (l) {
+          showToast(false, l.message);
+        },
+        (r) {
+          showToast(true, 'Delete successfully...');
+          ref.invalidate(newsfeedInitPostsProvider);
+        },
+      );
+    }
   }
 
   void _showPostOptionsMenu(String currentUid, String postUsername) {

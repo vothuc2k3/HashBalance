@@ -7,6 +7,7 @@ import 'package:hash_balance/features/moderation/screen/mod_tools/archived_posts
 import 'package:hash_balance/features/moderation/screen/mod_tools/invite_moderators_screen.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/membership_management/membership_management_screen.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/pending_post_screen.dart';
+import 'package:hash_balance/features/moderation/screen/mod_tools/rejected_posts_screen.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/reports_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/community_model.dart';
@@ -171,9 +172,16 @@ class _ModToolsScreenState extends ConsumerState<ModToolsScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => PendingPostScreen(
-          community: community,
-        ),
+        builder: (context) => PendingPostScreen(community: community),
+      ),
+    );
+  }
+
+  void _navigateToRejectedPostScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RejectedPostScreen(community: community),
       ),
     );
   }
@@ -217,6 +225,11 @@ class _ModToolsScreenState extends ConsumerState<ModToolsScreen> {
               leading: const Icon(Icons.access_time),
               title: const Text('Pending Posts'),
               onTap: () => _navigateToPendingPostScreen(),
+            ),
+            ListTile(
+              leading: const Icon(Icons.cancel),
+              title: const Text('Rejected Posts'),
+              onTap: () => _navigateToRejectedPostScreen(),
             ),
             ListTile(
               leading: const Icon(Icons.archive),
