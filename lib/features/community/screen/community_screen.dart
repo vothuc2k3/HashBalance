@@ -50,6 +50,7 @@ class CommunityScreen extends ConsumerStatefulWidget {
 class CommunityScreenState extends ConsumerState<CommunityScreen> {
   UserModel? _currentUser;
   List<PostDataModel> _loadedPosts = [];
+  Community? currentCommunity;
 
   @override
   void didChangeDependencies() {
@@ -64,10 +65,16 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
   }
 
   void _navigateToCreatePostScreen() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const CreatePostScreen()),
-    );
+    if (currentCommunity != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CreatePostScreen(
+            chosenCommunity: currentCommunity!,
+          ),
+        ),
+      );
+    }
   }
 
   //MARK: - BUILD WIDGET
@@ -86,6 +93,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
         color: ref.watch(preferredThemeProvider).first,
         child: ref.watch(communityByIdProvider(widget._communityId)).when(
               data: (community) {
+                currentCommunity = community;
                 return ref
                     .watch(currentUserRoleProvider(
                         Tuple2(currentUser.uid, widget._communityId)))

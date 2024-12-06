@@ -19,7 +19,6 @@ import 'package:hash_balance/features/post/screen/post_detail_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
-import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:logger/logger.dart';
@@ -170,12 +169,6 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
         .fetchUserByUidProvider(uid);
   }
 
-  Future<Community> _fetchCommunityById(String communityId) async {
-    return ref
-        .read(communityControllerProvider.notifier)
-        .fetchCommunityById(communityId);
-  }
-
   @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
@@ -203,6 +196,7 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
+    final notifsAsyncValue = ref.watch(getInitialNotifsProvider(user!.uid));
     return Scaffold(
       body: Container(
         color: ref.watch(preferredThemeProvider).first,
@@ -211,7 +205,8 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                if (_notifications != null && _notifications!.isNotEmpty)
+                if (notifsAsyncValue.value != null &&
+                    notifsAsyncValue.value!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(right: 10.0, top: 10.0),
                     child: TextButton.icon(
@@ -272,148 +267,146 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
             ),
             const SizedBox(height: 10),
             Expanded(
-              child: ref.watch(getInitialNotifsProvider(user!.uid)).when(
-                    data: (notifs) {
-                      _notifications = notifs;
-                      _lastNotification =
-                          (_notifications != null && _notifications!.isNotEmpty)
-                              ? _notifications!.last
-                              : null;
+              child: notifsAsyncValue.when(
+                data: (notifs) {
+                  _notifications = notifs;
+                  _lastNotification =
+                      (_notifications != null && _notifications!.isNotEmpty)
+                          ? _notifications!.last
+                          : null;
 
-                      if (_notifications?.isEmpty ?? true) {
-                        return Center(
-                          child: const Text(
-                            'You have no new notifications',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.white70,
-                            ),
-                          ).animate().fadeIn(duration: 600.ms).moveY(
-                                begin: 30,
-                                end: 0,
-                                duration: 600.ms,
-                                curve: Curves.easeOutBack,
-                              ),
-                        );
+                  if (_notifications?.isEmpty ?? true) {
+                    return Center(
+                      child: const Text(
+                        'You have no new notifications',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white70,
+                        ),
+                      ).animate().fadeIn(duration: 600.ms).moveY(
+                            begin: 30,
+                            end: 0,
+                            duration: 600.ms,
+                            curve: Curves.easeOutBack,
+                          ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    controller: _scrollController,
+                    itemCount: _notifications!.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == _notifications!.length) {
+                        return _isLoadingMoreNotifications
+                            ? const Center(child: Loading())
+                            : const SizedBox.shrink();
                       }
 
-                      return ListView.builder(
-                        controller: _scrollController,
-                        itemCount: _notifications!.length + 1,
-                        itemBuilder: (context, index) {
-                          if (index == _notifications!.length) {
-                            return _isLoadingMoreNotifications
-                                ? const Center(child: Loading())
-                                : const SizedBox.shrink();
-                          }
+                      final notif = _notifications![index];
+                      final timeString = formatTime(notif.createdAt);
 
-                          final notif = _notifications![index];
-                          final timeString = formatTime(notif.createdAt);
-
-                          return Slidable(
-                            key: Key(notif.id),
-                            endActionPane: ActionPane(
-                              motion: const ScrollMotion(),
-                              dismissible: DismissiblePane(
-                                onDismissed: () {
-                                  _deleteNotification(notif.id);
-                                },
+                      return Slidable(
+                        key: Key(notif.id),
+                        endActionPane: ActionPane(
+                          motion: const ScrollMotion(),
+                          dismissible: DismissiblePane(
+                            onDismissed: () {
+                              _deleteNotification(notif.id);
+                            },
+                          ),
+                          children: [
+                            SlidableAction(
+                              onPressed: (context) =>
+                                  _deleteNotification(notif.id),
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                              icon: Icons.delete,
+                              label: 'Delete',
+                              spacing: 8,
+                            ),
+                          ],
+                        ),
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          padding: const EdgeInsets.all(15),
+                          decoration: BoxDecoration(
+                            color: notif.isRead
+                                ? ref.watch(preferredThemeProvider).second
+                                : ref.watch(preferredThemeProvider).third,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 5,
+                                offset: Offset(0, 2),
                               ),
+                            ],
+                          ),
+                          child: ListTile(
+                            title: Text(
+                              notif.title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.white,
+                              ),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                SlidableAction(
-                                  onPressed: (context) =>
-                                      _deleteNotification(notif.id),
-                                  backgroundColor: Colors.red,
-                                  foregroundColor: Colors.white,
-                                  icon: Icons.delete,
-                                  label: 'Delete',
-                                  spacing: 8,
+                                Text(
+                                  notif.message,
+                                  style: const TextStyle(color: Colors.white70),
+                                ),
+                                const SizedBox(height: 5),
+                                Text(
+                                  timeString,
+                                  style: const TextStyle(
+                                    color: Colors.white54,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ],
                             ),
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 5,
-                              ),
-                              padding: const EdgeInsets.all(15),
-                              decoration: BoxDecoration(
-                                color: notif.isRead
-                                    ? ref.watch(preferredThemeProvider).second
-                                    : ref.watch(preferredThemeProvider).third,
-                                borderRadius: BorderRadius.circular(10),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Colors.black12,
-                                    blurRadius: 5,
-                                    offset: Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: ListTile(
-                                title: Text(
-                                  notif.title,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      notif.message,
-                                      style: const TextStyle(
-                                          color: Colors.white70),
-                                    ),
-                                    const SizedBox(height: 5),
-                                    Text(
-                                      timeString,
-                                      style: const TextStyle(
-                                        color: Colors.white54,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                trailing: notif.isRead == true
-                                    ? null
-                                    : const Icon(Icons.new_releases,
-                                        color: Colors.red),
-                                onTap: () {
-                                  _markAsRead(notif.id, user);
-                                  switch (notif.type) {
-                                    case Constants.friendRequestType:
-                                      _navigateToProfileScreen(notif.senderUid);
-                                      break;
-                                    case Constants.acceptRequestType:
-                                      _navigateToProfileScreen(notif.senderUid);
-                                      break;
-                                    case Constants.moderatorInvitationType:
-                                      _navigateToCommunityScreen(
-                                          notif.communityId!, user.uid);
-                                      break;
-                                    case Constants.newFollowerType:
-                                      _navigateToProfileScreen(notif.senderUid);
-                                      break;
-                                    case Constants.commentMentionType:
-                                      _navigateToPostDetailScreen(
-                                          notif.postId!);
-                                    default:
-                                      break;
-                                  }
-                                },
-                              ),
-                            ),
-                          );
-                        },
+                            trailing: notif.isRead == true
+                                ? null
+                                : const Icon(Icons.new_releases,
+                                    color: Colors.red),
+                            onTap: () {
+                              _markAsRead(notif.id, user);
+                              switch (notif.type) {
+                                case Constants.friendRequestType:
+                                  _navigateToProfileScreen(notif.senderUid);
+                                  break;
+                                case Constants.acceptRequestType:
+                                  _navigateToProfileScreen(notif.senderUid);
+                                  break;
+                                case Constants.moderatorInvitationType:
+                                  _navigateToCommunityScreen(
+                                      notif.communityId!, user.uid);
+                                  break;
+                                case Constants.newFollowerType:
+                                  _navigateToProfileScreen(notif.senderUid);
+                                  break;
+                                case Constants.commentMentionType:
+                                  _navigateToPostDetailScreen(notif.postId!);
+                                default:
+                                  break;
+                              }
+                            },
+                          ),
+                        ),
                       );
                     },
-                    error: (error, stackTrace) =>
-                        ErrorText(error: error.toString()),
-                    loading: () => const Loading(),
-                  ),
+                  );
+                },
+                error: (error, stackTrace) =>
+                    ErrorText(error: error.toString()),
+                loading: () => const Loading(),
+              ),
             ),
           ],
         ),

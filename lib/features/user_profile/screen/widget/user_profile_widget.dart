@@ -15,6 +15,7 @@ import 'package:hash_balance/features/user_profile/screen/friends/friends_screen
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:logger/logger.dart';
 
 class UserProfileWidget extends ConsumerStatefulWidget {
   const UserProfileWidget({
@@ -32,9 +33,10 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = ref.watch(userProvider)!;
     final double top = coverHeight - profileHeight / 2;
     final double bottom = profileHeight / 2;
+    final currentUser = ref.watch(userProvider)!;
+    Logger().d(currentUser.uid);
     var userProfileData = ref.watch(userProfileDataProvider(currentUser.uid));
     return RefreshIndicator(
       onRefresh: () async {
@@ -514,7 +516,8 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                         style: const TextStyle(
                           color: Colors.white,
                         ),
-                        controller: descriptionController..text = currentUser.description ?? '',
+                        controller: descriptionController
+                          ..text = currentUser.description ?? '',
                         decoration: const InputDecoration(
                           border: InputBorder.none,
                           hintText: 'Enter your new description',
@@ -535,7 +538,8 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
                         TextButton(
                           onPressed: () {
                             Navigator.pop(context);
-                            _editDescription(currentUser, descriptionController.text);
+                            _editDescription(
+                                currentUser, descriptionController.text);
                           },
                           child: const Text(
                             'Save',
@@ -720,7 +724,7 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
               leading: const Icon(Icons.camera_alt),
               title: const Text('Take a photo'),
               onTap: () async {
-                Navigator.pop(context); 
+                Navigator.pop(context);
                 final XFile? image = await ImagePicker().pickImage(
                   source: ImageSource.camera,
                   imageQuality: 100,

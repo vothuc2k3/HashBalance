@@ -18,8 +18,7 @@ class FriendsScreen extends ConsumerStatefulWidget {
   ConsumerState<FriendsScreen> createState() => _FriendsScreenState();
 }
 
-class _FriendsScreenState extends ConsumerState<FriendsScreen>
-    with TickerProviderStateMixin {
+class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   final PageController _pageController = PageController();
   int _page = 0;
   final _titles = const ['Friends', 'Friend Requests', 'Blocked Users'];
@@ -36,35 +35,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   }
 
   @override
-  void initState() {
-    super.initState();
-    GlobalAnimationController.initialize(this);
-    GlobalAnimationController.start();
-  }
-
-  @override
-  void dispose() {
-    GlobalAnimationController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    GlobalAnimationController.initialize(this);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: ref.watch(preferredThemeProvider).third,
-        title: AnimatedBuilder(
-          animation: GlobalAnimationController.animationController!,
-          builder: (context, child) {
-            return Transform.scale(
-              scale: GlobalAnimationController.animationController!.value,
-              child: Text(
-                _titles[_page],
-                key: ValueKey(_page),
-              ),
-            );
-          },
+        title: Text(
+          _titles[_page],
+          key: ValueKey(_page),
         ),
         centerTitle: false,
       ),
@@ -94,25 +71,5 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         letIndexChange: (index) => true,
       ),
     );
-  }
-}
-
-class GlobalAnimationController {
-  static AnimationController? animationController;
-
-  static void initialize(TickerProvider vsync) {
-    animationController ??= AnimationController(
-      vsync: vsync,
-      duration: const Duration(seconds: 2),
-    );
-  }
-
-  static void start() {
-    animationController?.forward();
-  }
-
-  static void dispose() {
-    animationController?.dispose();
-    animationController = null;
   }
 }

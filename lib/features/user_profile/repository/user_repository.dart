@@ -294,6 +294,14 @@ class UserRepository {
 
       final documents = results.expand((result) => result.docs).toList();
 
+      if (documents.isEmpty) {
+        return UserProfileDataModel(
+          friends: [],
+          followers: [],
+          following: [],
+        );
+      }
+
       final friendUids = documents.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         return data['uid1'] == uid ? data['uid2'] : data['uid1'];

@@ -31,6 +31,14 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
   }
 
   void createCommunity() async {
+    if (communityNameController.text.isEmpty) {
+      showToast(false, 'Community Name Cannot Be Empty!');
+      return;
+    }
+    if (communityNameController.text.contains(' ')) {
+      showToast(false, 'Community Name Should Not Contain Whitespaces...');
+      return;
+    }
     final result =
         await ref.watch(communityControllerProvider.notifier).createCommunity(
               context,
@@ -166,7 +174,7 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
                             controller: communityNameController,
                             decoration: const InputDecoration(
                               border: InputBorder.none,
-                              prefixText: '# ',
+                              prefixText: '#=',
                               prefixStyle: TextStyle(color: Colors.white54),
                               hintText: 'Enter community name',
                               hintStyle: TextStyle(color: Colors.white38),

@@ -11,6 +11,7 @@ import 'package:hash_balance/core/widgets/vote_button.dart';
 import 'package:hash_balance/features/community/controller/community_controller.dart';
 import 'package:hash_balance/features/community/screen/community_screen.dart';
 import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
+import 'package:hash_balance/features/post/screen/edit_post_screen.dart';
 import 'package:hash_balance/features/post/screen/hashtag_posts_screen.dart';
 import 'package:hash_balance/features/post_share/screen/post_share_screen.dart';
 import 'package:hash_balance/features/report/controller/report_controller.dart';
@@ -18,6 +19,7 @@ import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/vote_post/controller/vote_post_controller.dart';
 import 'package:mdi/mdi.dart';
+import 'package:flutter/foundation.dart';
 
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
@@ -114,6 +116,17 @@ class _NewsfeedPostContainerState extends ConsumerState<NewsfeedPostContainer> {
           post: widget.post,
           author: widget.author,
           community: widget.community,
+        ),
+      ),
+    );
+  }
+
+  void _handleEditPost() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditPostScreen(
+          post: widget.post,
         ),
       ),
     );
@@ -269,6 +282,15 @@ class _NewsfeedPostContainerState extends ConsumerState<NewsfeedPostContainer> {
                   ),
                 if (currentUid == widget.post.uid)
                   ListTile(
+                    leading: const Icon(Icons.edit),
+                    title: const Text('Edit this post'),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      _handleEditPost();
+                    },
+                  ),
+                if (currentUid == widget.post.uid)
+                  ListTile(
                     leading: const Icon(Icons.delete),
                     title: const Text('Delete this post'),
                     onTap: () {
@@ -359,6 +381,7 @@ class _NewsfeedPostContainerState extends ConsumerState<NewsfeedPostContainer> {
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       padding: const EdgeInsets.all(5),
       color: ref.watch(preferredThemeProvider).second,
+      width: kIsWeb ? 600 : double.infinity,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

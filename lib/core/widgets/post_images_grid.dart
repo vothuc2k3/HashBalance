@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:hash_balance/core/utils.dart';
@@ -14,6 +15,12 @@ class PostImagesGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (images.length == 1) {
+      return Center(
+        child: _buildImage(context, images.first),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: StaggeredGrid.count(
@@ -21,11 +28,23 @@ class PostImagesGrid extends StatelessWidget {
         mainAxisSpacing: 4,
         crossAxisSpacing: 4,
         children: images.map((imageUrl) {
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: GestureDetector(
-              onTap: () => showImage(context, imageUrl),
-              child: CachedNetworkImage(
+          return _buildImage(context, imageUrl);
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildImage(BuildContext context, String imageUrl) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: GestureDetector(
+        onTap: () => showImage(context, imageUrl),
+        child: kIsWeb
+            ? Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+              )
+            : CachedNetworkImage(
                 imageUrl: imageUrl,
                 fit: BoxFit.cover,
                 progressIndicatorBuilder: (context, url, downloadProgress) {
@@ -41,9 +60,6 @@ class PostImagesGrid extends StatelessWidget {
                   );
                 },
               ),
-            ),
-          );
-        }).toList(),
       ),
     );
   }

@@ -6,7 +6,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/video_player_widget.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
-import 'package:hash_balance/features/newsfeed/controller/newsfeed_controller.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:video_player/video_player.dart';
 
@@ -103,8 +102,8 @@ class _CreatePostWidgetState extends ConsumerState<CreatePostWidget> {
               video = null;
             },
           );
-          ref.invalidate(newsfeedInitPostsProvider);
-          context.findAncestorStateOfType<HomeScreenState>()?.onTabTapped(0);
+          ref.invalidate(communityPostsProvider);
+          Navigator.of(context).pop();
         },
       );
     }

@@ -104,9 +104,7 @@ class AuthController extends StateNotifier<bool> {
                   l.message,
                 ),
               ), (r) {
-        _ref.watch(userProvider.notifier).update(
-              (state) => userModel,
-            );
+        _ref.read(userProvider.notifier).update((state) => r);
         return right(userModel);
       });
     } on FirebaseAuthException catch (e) {

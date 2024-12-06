@@ -49,7 +49,7 @@ class CommunityRepository {
       if (communityDoc.exists) {
         return left(Failures('The name is already exists!'));
       }
-      
+
       await _communities.doc(community.id).set(community.toMap());
       return right('Successfully created community');
     } on FirebaseException catch (e) {
@@ -251,6 +251,8 @@ class CommunityRepository {
 
         postDataModels.add(postDataModel);
       }
+      postDataModels
+          .sort((a, b) => b.post.createdAt.compareTo(a.post.createdAt));
       return postDataModels;
     });
   }

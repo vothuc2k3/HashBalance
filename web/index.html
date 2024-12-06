@@ -35,7 +35,7 @@
 
   <script>
     // The value below is injected by flutter build, do not touch.
-    const serviceWorkerVersion = null;
+    const serviceWorkerVersion = "{{flutter_service_worker_version}}"; // Updated to use template token
   </script>
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
@@ -49,7 +49,7 @@
         serviceWorker: {
           serviceWorkerVersion: serviceWorkerVersion,
         },
-        onEntrypointLoaded: function (engineInitializer) {
+          onEntrypointLoaded: function (engineInitializer) {
           engineInitializer.initializeEngine().then(function (appRunner) {
             appRunner.runApp();
           });

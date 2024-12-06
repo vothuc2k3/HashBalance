@@ -99,7 +99,7 @@ class EmailSignUpScreenState extends ConsumerState<EmailSignUpScreen> {
         .signUpWithEmailAndPassword(
           email.text.toLowerCase().trim(),
           password.text,
-          userName.text.trim().toLowerCase(),
+          userName.text.trim(),
         );
     user.fold((l) {
       if (context.mounted) {

@@ -130,7 +130,7 @@ class CommunityController extends StateNotifier<bool> {
         createdAt: Timestamp.now(),
       );
       final result = await _communityRepository.createCommunity(community);
-      await joinCommunityAsModerator(currentUser!.uid, community.id);
+      await joinCommunityAsCreator(currentUser!.uid, community.id);
       return result;
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));

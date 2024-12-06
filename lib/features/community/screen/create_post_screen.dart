@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/post/screen/widgets/create_poll_widget.dart';
-import 'package:hash_balance/features/post/screen/widgets/create_post_widget.dart';
+import 'package:hash_balance/features/community/screen/create_post_widget.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 
 class CreatePostScreen extends ConsumerStatefulWidget {
-  final Community? chosenCommunity;
-  final bool? isFromCommunityScreen;
+  final Community chosenCommunity;
 
   const CreatePostScreen({
     super.key,
-    this.chosenCommunity,
-    this.isFromCommunityScreen,
+    required this.chosenCommunity,
   });
 
   @override
@@ -43,9 +41,11 @@ class CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         controller: _pageController,
         onPageChanged: _onPageChanged,
         physics: const NeverScrollableScrollPhysics(),
-        children: const [
-          CreatePostWidget(),
-          CreatePollWidget(),
+        children: [
+          CreatePostWidget(
+            chosenCommunity: widget.chosenCommunity,
+          ),
+          const CreatePollWidget(),
         ],
       ),
       bottomNavigationBar: CurvedNavigationBar(

@@ -12,7 +12,16 @@
           "package_name": "com.example.hash_balance"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "456581070342-ususd04c7e8sb8glti18l240v29e0i9p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.hash_balance",
+            "certificate_hash": "9313148d80a8e844796a94960604b7ab6e3ff924"
+          }
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAt0vq2v6bpxhyw1iQutVDY8Aq21Z93gNM"
@@ -20,7 +29,15 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "456581070342-lutie0chntsav1o4euh5sebgbfvpbgu1.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.hashBalance"
+              }
+            }
+          ]
         }
       }
     }

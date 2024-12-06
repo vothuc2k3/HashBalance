@@ -118,7 +118,7 @@ class CommunityListDrawerState extends ConsumerState<CommunityListDrawer>
                 leading: const Icon(
                   Icons.add,
                 ),
-                onTap: () => _navigateToCreateCommunityScreen,
+                onTap: () => _navigateToCreateCommunityScreen(),
               ).animate().fadeIn(),
               const Divider(),
               Padding(
