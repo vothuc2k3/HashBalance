@@ -7,6 +7,7 @@ import 'package:fuzzy/fuzzy.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/invitation/controller/invitation_controller.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/community_model.dart';
@@ -101,8 +102,8 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
               child: RefreshIndicator(
                 onRefresh: _onRefresh,
                 child: ref
-                    .watch(
-                        fetchInitialCommunityMembersProvider(widget.community.id))
+                    .watch(fetchInitialCommunityMembersProvider(
+                        widget.community.id))
                     .when(
                       data: (members) {
                         memberList = members;
@@ -260,8 +261,8 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
               ListTile(
                 title:
                     const Text('1 Day', style: TextStyle(color: Colors.white)),
-                onTap: () =>
-                    _handleTemporarySuspension(user, const Duration(minutes: 5)),
+                onTap: () => _handleTemporarySuspension(
+                    user, const Duration(minutes: 5)),
               ),
               ListTile(
                 title:
@@ -312,7 +313,7 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
     );
   }
 
-  Future<void> _onRefresh()async{
+  Future<void> _onRefresh() async {
     ref.invalidate(fetchInitialCommunityMembersProvider);
   }
 
@@ -510,15 +511,16 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
             );
     result.fold(
       (l) => showToast(false, l.message),
-      (r) => showToast(true,
-          'User ${user.name} suspended for 1 day. Reason: $reason'),
+      (r) => showToast(
+          true, 'User ${user.name} suspended for 1 day. Reason: $reason'),
     );
   }
 
   void _inviteUserAsModerator(UserModel friend) async {
     final result = await ref
-        .read(moderationControllerProvider.notifier)
-        .inviteAsModerator(friend.uid, widget.community);
+        .read(invitationControllerProvider)
+        .addModeratorInvitation(
+            friend.uid, widget.community.id, widget.community.name);
     result.fold(
       (l) => showToast(false, l.message),
       (r) {

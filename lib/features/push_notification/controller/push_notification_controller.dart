@@ -23,7 +23,7 @@ class PushNotificationController extends StateNotifier<bool> {
     List<String> tokens,
     String message,
     String title,
-    Map<String, dynamic> payload,
+    Map<String, String> payload,
     String type,
   ) async {
     await _pushNotificationRepository.sendFCMNotification(

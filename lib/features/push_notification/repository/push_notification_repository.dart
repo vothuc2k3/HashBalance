@@ -17,7 +17,7 @@ class PushNotificationRepository {
     List<String> tokens,
     String message,
     String title,
-    Map<String, dynamic> data,
+    Map<String, String> data,
     String type,
   ) async {
     final url = Uri.parse('${dotenv.env['DOMAIN']}/sendPushNotification');

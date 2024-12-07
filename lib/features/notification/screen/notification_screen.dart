@@ -393,6 +393,11 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
                                   break;
                                 case Constants.commentMentionType:
                                   _navigateToPostDetailScreen(notif.postId!);
+                                  break;
+                                case Constants.membershipInvitationType:
+                                  _navigateToCommunityScreen(
+                                      notif.communityId!, user.uid);
+                                  break;
                                 default:
                                   break;
                               }

@@ -224,6 +224,36 @@ class MyAppState extends ConsumerState<MyApp> {
               ),
             );
             break;
+          case Constants.membershipInvitationType:
+            final communityId = payloadData['communityId'] as String;
+            final currentUser = ref.read(userProvider)!;
+            navigatorKey.currentState?.push(
+              MaterialPageRoute(
+                builder: (context) => const SplashScreen(),
+              ),
+            );
+            final result = await ref
+                .read(communityControllerProvider.notifier)
+                .fetchSuspendStatus(communityId: communityId, uid: currentUser.uid);
+            result.fold(
+              (l) {
+                showToast(false, 'Unexpected error happened...');
+              },
+              (r) {
+                if (r) {
+                  showToast(false, 'You are suspended from this community');
+                } else {
+                  navigatorKey.currentState?.pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => CommunityScreen(
+                        communityId: communityId,
+                      ),
+                    ),
+                  );
+                }
+              },
+            );
+            break;
           default:
             break;
         }

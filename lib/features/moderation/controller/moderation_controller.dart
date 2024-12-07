@@ -88,11 +88,8 @@ final moderationControllerProvider =
 class ModerationController extends StateNotifier<bool> {
   final ModerationRepository _moderationRepository;
   final StorageRepository _storageRepository;
-  final InvitationController _invitationController;
   final NotificationController _notificationController;
-  final PushNotificationController _pushNotificationController;
   final PostController _postController;
-  final UserDeviceController _userDeviceController;
   final CloudVisionController _cloudVisionController;
   final Ref _ref;
   final Uuid _uuid = const Uuid();
@@ -109,11 +106,8 @@ class ModerationController extends StateNotifier<bool> {
     required Ref ref,
   })  : _moderationRepository = moderationRepository,
         _storageRepository = storageRepository,
-        _invitationController = invitationController,
         _notificationController = notificationController,
-        _pushNotificationController = pushNotificationController,
         _postController = postController,
-        _userDeviceController = userDeviceController,
         _cloudVisionController = cloudVisionController,
         _ref = ref,
         super(false);
@@ -248,64 +242,6 @@ class ModerationController extends StateNotifier<bool> {
       Post post, String decision) async {
     try {
       return await _moderationRepository.handlePostApproval(post, decision);
-    } on FirebaseException catch (e) {
-      return left(Failures(e.message!));
-    } catch (e) {
-      return left(Failures(e.toString()));
-    }
-  }
-
-  //INVITE A FRIEND TO JOIN MODERATION
-  Future<Either<Failures, void>> inviteAsModerator(
-      String uid, Community community) async {
-    try {
-      final currentUser = _ref.watch(userProvider)!;
-
-      //SEND INVITATION
-      await _invitationController.addInvitation(
-        uid,
-        Constants.moderatorInvitationTitle,
-        community.id,
-      );
-
-      //ADD NOTIFICATION TO THE INVITEE
-      final notif = NotificationModel(
-        id: _uuid.v1(),
-        title: Constants.moderatorInvitationTitle,
-        message: Constants.getModeratorInvitationContent(
-          currentUser.name,
-          community.name,
-        ),
-        type: Constants.moderatorInvitationType,
-        targetUid: uid,
-        senderUid: currentUser.uid,
-        createdAt: Timestamp.now(),
-        isRead: false,
-      );
-      await _notificationController.addNotification(uid, notif);
-
-      //SEND PUSH NOTIFICATION TO THE TARGET
-      final result = await _userDeviceController.getUserDeviceTokens(uid);
-      result.fold(
-        (l) => throw FirebaseException(
-          plugin: 'Firebase Exception',
-          message: l.message,
-        ),
-        (tokens) async {
-          await _pushNotificationController.sendPushNotification(
-            tokens,
-            notif.message,
-            notif.title,
-            {
-              'type': Constants.moderatorInvitationType,
-              'uid': currentUser.uid,
-              'communityId': community.id,
-            },
-            Constants.moderatorInvitationType,
-          );
-        },
-      );
-      return right(null);
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
     } catch (e) {

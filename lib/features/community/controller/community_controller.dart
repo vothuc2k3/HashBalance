@@ -204,7 +204,7 @@ class CommunityController extends StateNotifier<bool> {
 
       return result.fold(
         (l) => left(Failures(l.message)),
-        (r) => right('Successfully Joined The Community!'),
+        (r) => right('Successfully Become A Moderator!'),
       );
     } on FirebaseException catch (e) {
       return left(Failures(e.message!));
@@ -337,5 +337,9 @@ class CommunityController extends StateNotifier<bool> {
       communityId,
       lastJoinedAt,
     );
+  }
+
+  Future<List<String>> getMembershipUids(String communityId) async {
+    return await _communityRepository.getMembershipUids(communityId);
   }
 }

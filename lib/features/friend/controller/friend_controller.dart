@@ -55,7 +55,7 @@ final isBlockedByTargetUserProvider = StreamProvider.family((ref, Tuple2 data) {
       );
 });
 
-final getCombinedStatusProvider = StreamProvider.family((ref, Tuple2 data) {
+final getCombinedStatusProvider = StreamProvider.family((ref, Tuple2<String, String> data) {
   return ref.watch(friendControllerProvider.notifier).getCombinedStatus(
         currentUid: data.item1,
         targetUid: data.item2,

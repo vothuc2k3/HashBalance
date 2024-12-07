@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/splash/splash_screen.dart';
 import 'package:hash_balance/core/widgets/community_livestream_container.dart';
 
@@ -16,6 +17,7 @@ import 'package:hash_balance/features/community/controller/community_controller.
 import 'package:hash_balance/features/community/screen/community_conversation_screen.dart';
 import 'package:hash_balance/features/community/screen/community_member_screen.dart';
 import 'package:hash_balance/features/community/screen/post_container/community_post_container.dart';
+import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/invitation/controller/invitation_controller.dart';
 import 'package:hash_balance/features/livestream/controller/livestream_controller.dart';
 import 'package:hash_balance/features/livestream/screen/livestream_screen.dart';
@@ -31,9 +33,11 @@ import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:tuple/tuple.dart';
 
 final currentMembershipProvider = StateProvider<String?>((ref) => null);
+final currentInvitationProvider = StateProvider<Invitation?>((ref) => null);
 
 class CommunityScreen extends ConsumerStatefulWidget {
   final String _communityId;
@@ -537,20 +541,41 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
   }
 
   void _handleInvitation(
-      bool option, String? uid, Invitation invitation) async {
+    bool option,
+    String? uid,
+    Invitation invitation,
+  ) async {
     switch (option) {
       case true:
-        final result = await ref
-            .read(communityControllerProvider.notifier)
-            .joinCommunityAsModerator(uid!, widget._communityId);
-        result.fold((l) => showToast(false, l.message), (r) async {
-          showToast(true, 'Successfully become a Moderator!');
-          final result = await ref
-              .read(invitationControllerProvider)
-              .deleteInvitation(invitation.id);
-          result.fold((l) => showToast(false, l.message), (_) {});
-        });
-        break;
+        switch (invitation.type) {
+          case Constants.moderatorInvitationType:
+            final result = await ref
+                .read(communityControllerProvider.notifier)
+                .joinCommunityAsModerator(uid!, widget._communityId);
+            result.fold((l) => showToast(false, l.message), (r) async {
+              showToast(true, r);
+              _loadMembership();
+              final result = await ref
+                  .read(invitationControllerProvider)
+                  .deleteInvitation(invitation.id);
+              result.fold((l) => showToast(false, l.message), (_) {});
+            });
+            break;
+          case Constants.membershipInvitationType:
+            final result = await ref
+                .read(communityControllerProvider.notifier)
+                .joinCommunity(uid!, widget._communityId);
+            result.fold((l) => showToast(false, l.message), (r) async {
+              showToast(true, r);
+              _loadMembership();
+              final result = await ref
+                  .read(invitationControllerProvider)
+                  .deleteInvitation(invitation.id);
+              result.fold((l) => showToast(false, l.message), (_) {});
+            });
+
+            break;
+        }
       case false:
         final result = await ref
             .read(invitationControllerProvider)
@@ -558,6 +583,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
         result.fold((l) => showToast(false, l.message), (_) {});
         break;
     }
+    ref.invalidate(invitationProvider);
   }
 
   _navigateToModToolsScreen(Community community) {
@@ -836,19 +862,26 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
         const PopupMenuItem<int>(
           value: 1,
           child: ListTile(
+            leading: Icon(Icons.person_add),
+            title: Text('Invite Friends'),
+          ),
+        ),
+        const PopupMenuItem<int>(
+          value: 2,
+          child: ListTile(
             leading: Icon(Icons.report),
             title: Text('Report'),
           ),
         ),
         const PopupMenuItem<int>(
-          value: 2,
+          value: 3,
           child: ListTile(
             leading: Icon(Icons.block),
             title: Text('Block'),
           ),
         ),
         const PopupMenuItem<int>(
-          value: 3,
+          value: 4,
           child: ListTile(
             leading: Icon(Icons.arrow_left),
             title: Text('Leave Community'),
@@ -863,12 +896,15 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
               _navigateToCommunityConversations(community);
               break;
             case 1:
-              _reportCommunity();
+              _inviteFriends(community);
               break;
             case 2:
-              _blockCommunity();
+              _reportCommunity();
               break;
             case 3:
+              _blockCommunity();
+              break;
+            case 4:
               _leaveCommunity(community.id);
               break;
           }
@@ -946,7 +982,9 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(invitation.type),
+                      Text(invitation.type == Constants.moderatorInvitationType
+                          ? 'Moderator Invitation'
+                          : 'Membership Invitation'),
                       Text('From: ${sender.name}'),
                       const SizedBox(height: 20),
                       Row(
@@ -1002,6 +1040,108 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     );
   }
 
+  void _inviteFriends(Community community) {
+    showMaterialModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Consumer(
+          builder: (context, ref, child) {
+            return Container(
+              color: ref.watch(preferredThemeProvider).first,
+              child: ref.watch(fetchFriendsProvider(_currentUser!.uid)).when(
+                    data: (friends) {
+                      return FutureBuilder<List<String>>(
+                        future: ref
+                            .read(communityControllerProvider.notifier)
+                            .getMembershipUids(widget._communityId),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Loading().animate().fadeIn();
+                          } else if (snapshot.hasError) {
+                            return ErrorText(error: snapshot.error.toString());
+                          } else {
+                            final uids = snapshot.data ?? [];
+                            final filteredFriends = friends
+                                .where((friend) => !uids.contains(friend.uid))
+                                .toList();
+                            if (filteredFriends.isEmpty) {
+                              return Center(
+                                child: const Text(
+                                  'No friends found...',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.white70,
+                                  ),
+                                ).animate().fadeIn(duration: 600.ms).moveY(
+                                      begin: 30,
+                                      end: 0,
+                                      duration: 600.ms,
+                                      curve: Curves.easeOutBack,
+                                    ),
+                              );
+                            }
+                            return Column(
+                              children: [
+                                const Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: Text(
+                                    'Invite Friends',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: ListView.builder(
+                                    itemCount: filteredFriends.length,
+                                    itemBuilder: (context, index) {
+                                      final user = filteredFriends[index];
+                                      return ListTile(
+                                        leading: CircleAvatar(
+                                          backgroundImage:
+                                              CachedNetworkImageProvider(
+                                                  user.profileImage),
+                                        ),
+                                        title: Text(user.name),
+                                        trailing: ElevatedButton(
+                                          onPressed: () {
+                                            _inviteFriend(user.uid, user.name);
+                                            Navigator.pop(context);
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: ref
+                                                .watch(preferredThemeProvider)
+                                                .approveButtonColor,
+                                          ),
+                                          child: const Text(
+                                            'Invite',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+                        },
+                      );
+                    },
+                    loading: () => const Loading().animate().fadeIn(),
+                    error: (error, stack) => ErrorText(error: error.toString()),
+                  ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _navigateToInviteModeratorsScreen(Community community) {
     Navigator.push(
       context,
@@ -1016,6 +1156,16 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
   void _reportCommunity() {}
 
   void _blockCommunity() {}
+
+  void _inviteFriend(String uid, String name) async {
+    final result = await ref
+        .read(invitationControllerProvider)
+        .addMembershipInvitation(
+            uid, widget._communityId, currentCommunity!.name);
+    result.fold((l) => showToast(false, l.message), (r) {
+      showToast(true, 'Invitation sent to $name!');
+    });
+  }
 
   void _loadMembership() async {
     final role = await ref
