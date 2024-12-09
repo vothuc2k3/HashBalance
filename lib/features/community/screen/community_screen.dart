@@ -20,7 +20,7 @@ import 'package:hash_balance/features/community/screen/post_container/community_
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/invitation/controller/invitation_controller.dart';
 import 'package:hash_balance/features/livestream/controller/livestream_controller.dart';
-import 'package:hash_balance/features/livestream/screen/livestream_screen.dart';
+import 'package:hash_balance/features/livestream/screen/host_livestream_screen.dart';
 import 'package:hash_balance/features/moderation/controller/moderation_controller.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/invite_moderators_screen.dart';
 import 'package:hash_balance/features/moderation/screen/mod_tools/mod_tools_screen.dart';
@@ -170,7 +170,9 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                         ),
                                         IconButton(
                                           onPressed: () => _onCreateLivestream(
-                                              community, currentUser.uid),
+                                            community,
+                                            currentUser.uid,
+                                          ),
                                           icon: const Icon(
                                             Icons.add,
                                             color: Colors.white,
@@ -288,8 +290,9 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
                                         return const SizedBox.shrink();
                                       } else {
                                         return CommunityLivestreamContainer(
-                                            livestream: livestream,
-                                            uid: currentUser.uid);
+                                          livestream: livestream,
+                                          communityName: community.name,
+                                        );
                                       }
                                     },
                                     loading: () => const Loading(),
@@ -595,24 +598,25 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
     );
   }
 
-  void _onCreateLivestream(Community community, String uid) async {
+  void _onCreateLivestream(Community community, String currentUid) async {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => const SplashScreen(),
       ),
     );
-    final result = await ref
-        .read(livestreamControllerProvider)
-        .createLivestream(
-            communityId: community.id, content: '', uid: _currentUser!.uid);
+    final result =
+        await ref.read(livestreamControllerProvider).createLivestream(
+              communityId: community.id,
+              content: '',
+              uid: currentUid,
+            );
     result.fold((l) => showToast(false, l.message), (r) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => LivestreamScreen(
+          builder: (context) => HostLivestreamScreen(
             livestream: r,
-            uid: uid,
           ),
         ),
       );
@@ -936,11 +940,18 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
           value: 2,
           child: ListTile(
             leading: Icon(Icons.person_add),
-            title: Text('Invite Moderators'),
+            title: Text('Invite Friends'),
           ),
         ),
         const PopupMenuItem<int>(
           value: 3,
+          child: ListTile(
+            leading: Icon(Icons.group_add),
+            title: Text('Invite Moderators'),
+          ),
+        ),
+        const PopupMenuItem<int>(
+          value: 4,
           child: ListTile(
             leading: Icon(Icons.arrow_left),
             title: Text('Leave Community'),
@@ -959,9 +970,12 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
               _navigateToModToolsScreen(community);
               break;
             case 2:
-              _navigateToInviteModeratorsScreen(community);
+              _inviteFriends(community);
               break;
             case 3:
+              _navigateToInviteModeratorsScreen(community);
+              break;
+            case 4:
               _leaveCommunity(community.id);
               break;
           }

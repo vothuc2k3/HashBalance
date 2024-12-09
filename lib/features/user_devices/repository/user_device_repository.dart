@@ -30,15 +30,22 @@ class UserDeviceRepository {
     try {
       final userDoc = await _users.doc(uid).get();
       if (userDoc.exists) {
-        final Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+        final Map<String, dynamic> userData =
+            userDoc.data() as Map<String, dynamic>;
         List<String> userDevices =
             List<String>.from(userData['userDevices'] ?? []);
         if (!userDevices.contains(deviceToken)) {
-          userDevices.add(deviceToken);
+          if (userDevices.length < 3) {
+            userDevices.add(deviceToken);
+          } else {
+            userDevices[0] = deviceToken;
+          }
           await _users.doc(uid).update({'userDevices': userDevices});
         }
       } else {
-        await _users.doc(uid).set({'userDevices': [deviceToken]});
+        await _users.doc(uid).set({
+          'userDevices': [deviceToken]
+        });
       }
       return right(null);
     } on FirebaseException catch (e) {

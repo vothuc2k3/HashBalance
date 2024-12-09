@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 
 class PostStaticButton extends StatelessWidget {
   final IconData icon;
-  final String label;
   final Function onTap;
 
   const PostStaticButton({
     super.key,
     required this.icon,
-    required this.label,
     required this.onTap,
   });
 
@@ -16,11 +14,11 @@ class PostStaticButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () => onTap(),
-      borderRadius: BorderRadius.circular(15), // Giảm kích thước borderRadius
+      borderRadius: BorderRadius.circular(15),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.purple[800],
-          borderRadius: BorderRadius.circular(15), // Giảm kích thước borderRadius
+          borderRadius: BorderRadius.circular(15),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.4),
@@ -38,25 +36,11 @@ class PostStaticButton extends StatelessWidget {
             end: Alignment.bottomRight,
           ),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0), // Giảm padding
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: Colors.white,
-              size: 18, // Giảm kích thước icon
-            ),
-            const SizedBox(width: 4), // Giảm khoảng cách giữa icon và label
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14, // Giảm kích thước font
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
+        padding: const EdgeInsets.all(8.0),
+        child: Icon(
+          icon,
+          color: Colors.white,
+          size: 18,
         ),
       ),
     );

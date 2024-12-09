@@ -589,6 +589,7 @@ class PostActions extends ConsumerWidget {
         _onVote = onVote,
         _onComment = onComment,
         _onShare = onShare;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return StreamBuilder<Map<String, dynamic>>(
@@ -604,34 +605,44 @@ class PostActions extends ConsumerWidget {
           final downvotes = data['downvotes'] ?? 0;
           final status = data['userVoteStatus'];
 
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              VoteButton(
-                icon: Icons.arrow_upward_rounded,
-                count: upvotes,
-                color: status == 'upvoted' ? Colors.orange : Colors.grey[600],
-                onTap: (isUpvote) => _onVote(isUpvote),
-                isUpvote: true,
-              ),
-              VoteButton(
-                icon: Mdi.arrowDown,
-                count: downvotes,
-                color: status == 'downvoted' ? Colors.blue : Colors.grey[600],
-                onTap: (isUpvote) => _onVote(isUpvote),
-                isUpvote: false,
-              ),
-              PostStaticButton(
-                icon: Mdi.commentOutline,
-                label: 'Comments',
-                onTap: _onComment,
-              ),
-              PostStaticButton(
-                icon: Mdi.shareOutline,
-                label: 'Share',
-                onTap: _onShare,
-              ),
-            ],
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Flexible(
+                    child: VoteButton(
+                      icon: Icons.arrow_upward_rounded,
+                      count: upvotes,
+                      color: status == 'upvoted' ? Colors.orange : Colors.grey[600],
+                      onTap: (isUpvote) => _onVote(isUpvote),
+                      isUpvote: true,
+                    ),
+                  ),
+                  Flexible(
+                    child: VoteButton(
+                      icon: Mdi.arrowDown,
+                      count: downvotes,
+                      color: status == 'downvoted' ? Colors.blue : Colors.grey[600],
+                      onTap: (isUpvote) => _onVote(isUpvote),
+                      isUpvote: false,
+                    ),
+                  ),
+                  Flexible(
+                    child: PostStaticButton(
+                      icon: Mdi.commentOutline,
+                      onTap: _onComment,
+                    ),
+                  ),
+                  Flexible(
+                    child: PostStaticButton(
+                      icon: Mdi.shareOutline,
+                      onTap: _onShare,
+                    ),
+                  ),
+                ],
+              );
+            },
           );
         } else {
           return const SizedBox.shrink();

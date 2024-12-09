@@ -9,6 +9,7 @@ class Livestream {
   final String communityId;
   final String status;
   final String? agoraToken;
+  final int agoraUid;
   final Timestamp createdAt;
   Livestream({
     required this.id,
@@ -17,6 +18,7 @@ class Livestream {
     required this.communityId,
     required this.status,
     this.agoraToken,
+    required this.agoraUid,
     required this.createdAt,
   });
 
@@ -27,6 +29,7 @@ class Livestream {
     String? communityId,
     String? status,
     String? agoraToken,
+    int? agoraUid,
     Timestamp? createdAt,
   }) {
     return Livestream(
@@ -36,6 +39,7 @@ class Livestream {
       communityId: communityId ?? this.communityId,
       status: status ?? this.status,
       agoraToken: agoraToken ?? this.agoraToken,
+      agoraUid: agoraUid ?? this.agoraUid,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -48,6 +52,7 @@ class Livestream {
       'communityId': communityId,
       'status': status,
       'agoraToken': agoraToken,
+      'agoraUid': agoraUid,
       'createdAt': createdAt,
     };
   }
@@ -59,8 +64,8 @@ class Livestream {
       uid: map['uid'] as String,
       communityId: map['communityId'] as String,
       status: map['status'] as String,
-      agoraToken:
-          map['agoraToken'] != null ? map['agoraToken'] as String : null,
+      agoraToken: map['agoraToken'] != null ? map['agoraToken'] as String : null,
+      agoraUid: map['agoraUid'] as int,
       createdAt: map['createdAt'] as Timestamp,
     );
   }
@@ -72,30 +77,33 @@ class Livestream {
 
   @override
   String toString() {
-    return 'Livestream(id: $id, content: $content, uid: $uid, communityId: $communityId, status: $status, agoraToken: $agoraToken, createdAt: $createdAt)';
+    return 'Livestream(id: $id, content: $content, uid: $uid, communityId: $communityId, status: $status, agoraToken: $agoraToken, agoraUid: $agoraUid, createdAt: $createdAt)';
   }
 
   @override
   bool operator ==(covariant Livestream other) {
     if (identical(this, other)) return true;
-
-    return other.id == id &&
-        other.content == content &&
-        other.uid == uid &&
-        other.communityId == communityId &&
-        other.status == status &&
-        other.agoraToken == agoraToken &&
-        other.createdAt == createdAt;
+  
+    return 
+      other.id == id &&
+      other.content == content &&
+      other.uid == uid &&
+      other.communityId == communityId &&
+      other.status == status &&
+      other.agoraToken == agoraToken &&
+      other.agoraUid == agoraUid &&
+      other.createdAt == createdAt;
   }
 
   @override
   int get hashCode {
     return id.hashCode ^
-        content.hashCode ^
-        uid.hashCode ^
-        communityId.hashCode ^
-        status.hashCode ^
-        agoraToken.hashCode ^
-        createdAt.hashCode;
+      content.hashCode ^
+      uid.hashCode ^
+      communityId.hashCode ^
+      status.hashCode ^
+      agoraToken.hashCode ^
+      agoraUid.hashCode ^
+      createdAt.hashCode;
   }
 }

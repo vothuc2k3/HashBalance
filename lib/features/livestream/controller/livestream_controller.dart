@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/models/livestream_model.dart';
 import 'package:uuid/uuid.dart';
 
@@ -71,11 +72,13 @@ class LivestreamController {
           communityId: communityId,
           content: content,
           uid: uid,
-          status: 'on_going',
+          status: Constants.callStatusOngoing,
           agoraToken: token,
+          agoraUid: 0,
           createdAt: Timestamp.now(),
         );
-        final createResult = await _livestreamRepository.createLivestream(livestream);
+        final createResult =
+            await _livestreamRepository.createLivestream(livestream);
         return createResult.fold(
           (failure) => left(failure),
           (_) => right(livestream),
@@ -94,5 +97,9 @@ class LivestreamController {
 
   Stream<Livestream> listenToLivestream(String livestreamId) {
     return _livestreamRepository.listenToLivestream(livestreamId);
+  }
+
+  Future<void> updateAgoraUid(String livestreamId, int agoraUid) async {
+    return _livestreamRepository.updateAgoraUid(livestreamId, agoraUid);
   }
 }

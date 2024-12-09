@@ -1,31 +1,48 @@
-import 'package:flutter/material.dart';
-import 'package:hash_balance/models/livestream_model.dart';
-import 'package:hash_balance/features/livestream/screen/livestream_screen.dart';
+// ignore_for_file: use_build_context_synchronously
 
-class CommunityLivestreamContainer extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/livestream/controller/livestream_controller.dart';
+import 'package:hash_balance/features/livestream/screen/audience_livestream_screen.dart';
+import 'package:hash_balance/models/livestream_model.dart';
+
+class CommunityLivestreamContainer extends ConsumerStatefulWidget {
   final Livestream livestream;
-  final String uid;
+  final String communityName;
 
   const CommunityLivestreamContainer({
     super.key,
     required this.livestream,
-    required this.uid,
+    required this.communityName,
   });
 
   @override
+  ConsumerState<CommunityLivestreamContainer> createState() =>
+      _CommunityLivestreamContainerState();
+}
+
+class _CommunityLivestreamContainerState
+    extends ConsumerState<CommunityLivestreamContainer> {
+  _joinLivestream(BuildContext context, String currentUid) async {
+    await ref
+        .read(livestreamControllerProvider)
+        .updateAgoraUid(widget.livestream.id, widget.livestream.agoraUid + 1);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AudienceLivestreamScreen(
+          livestream: widget.livestream,
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final currentUser = ref.watch(userProvider)!;
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => LivestreamScreen(
-              livestream: livestream,
-              uid: uid,
-            ),
-          ),
-        );
-      },
+      onTap: () => _joinLivestream(context, currentUser.uid),
       child: Container(
         margin: const EdgeInsets.all(8.0),
         padding: const EdgeInsets.all(16.0),
@@ -44,7 +61,7 @@ class CommunityLivestreamContainer extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              livestream.content,
+              widget.livestream.content,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,

@@ -656,12 +656,10 @@ class PostActions extends ConsumerWidget {
               ),
               PostStaticButton(
                 icon: Icons.comment_rounded,
-                label: 'Comments',
                 onTap: _onComment,
               ),
               PostStaticButton(
                 icon: Icons.share_rounded,
-                label: 'Share',
                 onTap: _onShare,
               ),
             ],

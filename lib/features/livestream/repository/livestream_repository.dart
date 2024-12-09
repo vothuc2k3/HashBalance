@@ -23,15 +23,15 @@ class LivestreamRepository {
     required FirebaseFirestore firestore,
   }) : _firestore = firestore;
 
-  CollectionReference get livestreams =>
+  CollectionReference get _livestreams =>
       _firestore.collection(FirebaseConstants.livestreamsCollection);
 
-  CollectionReference get livestreamComments =>
+  CollectionReference get _livestreamComments =>
       _firestore.collection(FirebaseConstants.livestreamCommentsCollection);
 
   Future<Either<Failures, void>> createLivestream(Livestream livestream) async {
     try {
-      await livestreams.doc(livestream.id).set(livestream.toMap());
+      await _livestreams.doc(livestream.id).set(livestream.toMap());
       return right(null);
     } catch (e) {
       return left(Failures(e.toString()));
@@ -39,7 +39,7 @@ class LivestreamRepository {
   }
 
   Stream<List<LivestreamComment>> getLivestreamComments(String streamId) {
-    return livestreamComments
+    return _livestreamComments
         .where('streamId', isEqualTo: streamId)
         .orderBy('createdAt', descending: true)
         .snapshots()
@@ -53,7 +53,7 @@ class LivestreamRepository {
     LivestreamComment livestreamComment,
   ) async {
     try {
-      await livestreamComments
+      await _livestreamComments
           .doc(livestreamComment.id)
           .set(livestreamComment.toMap());
       return right(null);
@@ -64,22 +64,28 @@ class LivestreamRepository {
 
   Future<Either<Failures, String>> fetchAgoraToken(String channelName) async {
     try {
-      final response = await http.get(
-        Uri.parse('${dotenv.env['DOMAIN']}/access_token?channelName=$channelName'),
-      );
+      final response = await http.get(Uri.parse(
+          '${dotenv.env['DOMAIN']}/agoraAccessToken?channelName=$channelName'));
+
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
         return right(data['token']);
+      } else if (response.statusCode == 400) {
+        throw Exception(
+            'Bad Request: The server could not understand the request. Check if the channel name is provided correctly.');
+      } else if (response.statusCode == 500) {
+        throw Exception(
+            'Server Error: Something went wrong on the server while generating the token.');
       } else {
-        throw Exception('Failed to load token');
+        throw Exception('${response.statusCode}');
       }
     } catch (e) {
-      return left(Failures(e.toString()));
+      return left(Failures('Error fetching Agora token: ${e.toString()}'));
     }
   }
 
   Stream<Livestream?> getCommunityLivestream(String communityId) {
-    return livestreams
+    return _livestreams
         .where('communityId', isEqualTo: communityId)
         .where('status', isEqualTo: 'on_going')
         .snapshots()
@@ -97,7 +103,7 @@ class LivestreamRepository {
 
   Future<Either<Failures, void>> endLivestream(String livestreamId) async {
     try {
-      await livestreams.doc(livestreamId).update({'status': 'ended'});
+      await _livestreams.doc(livestreamId).update({'status': 'ended'});
       return right(null);
     } catch (e) {
       return left(Failures(e.toString()));
@@ -105,6 +111,11 @@ class LivestreamRepository {
   }
 
   Stream<Livestream> listenToLivestream(String livestreamId) {
-    return livestreams.doc(livestreamId).snapshots().map((event) => Livestream.fromMap(event.data() as Map<String, dynamic>));
+    return _livestreams.doc(livestreamId).snapshots().map(
+        (event) => Livestream.fromMap(event.data() as Map<String, dynamic>));
+  }
+
+  Future<void> updateAgoraUid(String livestreamId, int agoraUid) async {
+    await _livestreams.doc(livestreamId).update({'agoraUid': agoraUid});
   }
 }

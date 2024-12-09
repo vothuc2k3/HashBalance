@@ -473,12 +473,10 @@ class _PostActionsState extends ConsumerState<PostActions> {
             ),
             PostStaticButton(
               icon: Mdi.commentOutline,
-              label: 'Comments',
               onTap: widget.onComment,
             ),
             PostStaticButton(
               icon: Mdi.shareOutline,
-              label: 'Share',
               onTap: widget.onShare,
             ),
           ],
@@ -508,12 +506,10 @@ class _PostActionsState extends ConsumerState<PostActions> {
               ),
               PostStaticButton(
                 icon: Mdi.commentOutline,
-                label: 'Comments',
                 onTap: widget.onComment,
               ),
               PostStaticButton(
                 icon: Mdi.shareOutline,
-                label: 'Share',
                 onTap: widget.onShare,
               ),
             ],

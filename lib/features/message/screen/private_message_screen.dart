@@ -197,9 +197,12 @@ class _PrivateMessageScreenState extends ConsumerState<PrivateMessageScreen> {
                   CachedNetworkImageProvider(widget._targetUser.profileImage),
             ),
             const SizedBox(width: 10),
-            Text(
-              widget._targetUser.name,
-              style: const TextStyle(fontSize: 14),
+            Flexible(
+              child: Text(
+                widget._targetUser.name,
+                style: const TextStyle(fontSize: 14),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),
