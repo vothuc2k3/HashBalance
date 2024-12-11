@@ -8,6 +8,7 @@ import 'package:uuid/uuid.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/features/livestream/repository/livestream_repository.dart';
 import 'package:hash_balance/models/livestream_comment_model.dart';
+import 'package:hash_balance/models/conbined_models/livestream_comment_view_model.dart';
 
 final listenToLivestreamProvider =
     StreamProvider.family<Livestream, String>((ref, livestreamId) {
@@ -22,7 +23,7 @@ final communityLivestreamProvider =
 });
 
 final getLivestreamCommentsProvider =
-    StreamProvider.family<List<LivestreamComment>, String>((ref, streamId) {
+    StreamProvider.family<List<LivestreamCommentViewModel>, String>((ref, streamId) {
   final livestreamController = ref.watch(livestreamControllerProvider);
   return livestreamController.getLivestreamComments(streamId);
 });
@@ -38,7 +39,8 @@ class LivestreamController {
   LivestreamController({required LivestreamRepository livestreamRepository})
       : _livestreamRepository = livestreamRepository;
 
-  Stream<List<LivestreamComment>> getLivestreamComments(String streamId) {
+  Stream<List<LivestreamCommentViewModel>> getLivestreamComments(
+      String streamId) {
     return _livestreamRepository.getLivestreamComments(streamId);
   }
 

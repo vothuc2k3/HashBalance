@@ -15,7 +15,6 @@ import 'package:hash_balance/features/user_profile/screen/friends/friends_screen
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:logger/logger.dart';
 
 class UserProfileWidget extends ConsumerStatefulWidget {
   const UserProfileWidget({
@@ -36,7 +35,6 @@ class UserProfileWidgetState extends ConsumerState<UserProfileWidget> {
     final double top = coverHeight - profileHeight / 2;
     final double bottom = profileHeight / 2;
     final currentUser = ref.watch(userProvider)!;
-    Logger().d(currentUser.uid);
     var userProfileData = ref.watch(userProfileDataProvider(currentUser.uid));
     return RefreshIndicator(
       onRefresh: () async {

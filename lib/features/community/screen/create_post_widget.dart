@@ -247,13 +247,20 @@ class _CreatePostWidgetState extends ConsumerState<CreatePostWidget> {
                               ElevatedButton(
                                 onPressed: _selectImages,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      Theme.of(context).colorScheme.primary,
+                                  backgroundColor: ref
+                                      .watch(preferredThemeProvider)
+                                      .approveButtonColor,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                  fixedSize: const Size(
+                                      150, 48), // Fixed width and height
                                 ),
                                 child: const Text(
                                   'Pick Images',
                                   style: TextStyle(
-                                    color: Colors.white60,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
@@ -304,13 +311,19 @@ class _CreatePostWidgetState extends ConsumerState<CreatePostWidget> {
                               ElevatedButton(
                                 onPressed: _selectVideo,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      Theme.of(context).colorScheme.primary,
+                                  backgroundColor: ref
+                                      .watch(preferredThemeProvider)
+                                      .approveButtonColor,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                  fixedSize: const Size(150, 48),
                                 ),
                                 child: const Text(
                                   'Pick Video',
                                   style: TextStyle(
-                                    color: Colors.white60,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
@@ -324,24 +337,26 @@ class _CreatePostWidgetState extends ConsumerState<CreatePostWidget> {
                                       ),
                                     )
                                   : const SizedBox.shrink(),
-                              Padding(
-                                padding: const EdgeInsets.all(10),
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.teal,
-                                  ),
-                                  onPressed: _createPost,
-                                  child: loading
-                                      ? const Loading()
-                                      : const Text(
-                                          'Post',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                ),
-                              ),
                               const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: _createPost,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.teal,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                  fixedSize: const Size(150, 48),
+                                ),
+                                child: loading
+                                    ? const Loading()
+                                    : const Text(
+                                        'Post',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                              ),
                             ],
                           ),
                         ),

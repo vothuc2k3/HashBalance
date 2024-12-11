@@ -12,6 +12,7 @@ import 'package:hash_balance/features/comment/screen/comment_container/comment_c
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
+import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 import 'package:hash_balance/models/comment_model.dart';
 import 'package:hash_balance/models/conbined_models/comment_data_model.dart';
 import 'package:hash_balance/models/post_model.dart';
@@ -84,12 +85,21 @@ class _CommentScreenState extends ConsumerState<CommentScreen> {
   }
 
   void _navigateToTaggedUser(String uid) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => OtherUserProfileScreen(targetUid: uid),
-      ),
-    );
+    if (uid == ref.read(userProvider)!.uid) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const UserProfileScreen(),
+        ),
+      );
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OtherUserProfileScreen(targetUid: uid),
+        ),
+      );
+    }
   }
 
   @override

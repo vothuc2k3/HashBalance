@@ -83,7 +83,7 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
         .read(postControllerProvider.notifier)
         .getPostDataByPostId(postId: postId);
     result.fold(
-      (l) => showToast(false, l.message),
+      (l) => showToast(false, 'Post not found...'),
       (postData) {
         if (postData != null) {
           Navigator.push(
@@ -397,6 +397,9 @@ class NotificationScreenState extends ConsumerState<NotificationScreen> {
                                 case Constants.membershipInvitationType:
                                   _navigateToCommunityScreen(
                                       notif.communityId!, user.uid);
+                                  break;
+                                case Constants.newPostType:
+                                  _navigateToPostDetailScreen(notif.postId!);
                                   break;
                                 default:
                                   break;

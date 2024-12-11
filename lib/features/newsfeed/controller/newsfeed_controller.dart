@@ -55,9 +55,11 @@ class NewsfeedController extends StateNotifier<bool> {
         communityIds: topCommunityIds,
       );
     } else {
-      return await _newsfeedRepository.getNewsfeedInitPosts(
+      final posts = await _newsfeedRepository.getNewsfeedInitPosts(
         communityIds: userJoinedCommunitiesIds,
       );
+      posts.sort((a, b) => b.post.createdAt.compareTo(a.post.createdAt));
+      return posts;
     }
   }
 

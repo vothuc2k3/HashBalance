@@ -86,7 +86,6 @@ class AuthRepository {
       }
       return right(user);
     } on FirebaseAuthException catch (e) {
-      Logger().d(e.code);
       String errorMessage;
       switch (e.code) {
         case 'account-exists-with-different-credential':
@@ -101,7 +100,6 @@ class AuthRepository {
       }
       return left(Failures(errorMessage));
     } catch (e) {
-      Logger().d(e.toString());
       return left(Failures('An unexpected error occurred. Please try again.'));
     }
   }

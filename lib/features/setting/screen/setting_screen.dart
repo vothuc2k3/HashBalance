@@ -236,6 +236,15 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
         ),
         child: Column(
           children: [
+            ListTile(
+              title: const Text(
+                'Test Button',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onTap: () async {},
+            ),
             if (currentUser != null)
               ListTile(
                 title: Text(

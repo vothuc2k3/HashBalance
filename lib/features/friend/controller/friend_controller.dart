@@ -17,6 +17,7 @@ import 'package:hash_balance/models/friendship_model.dart';
 import 'package:hash_balance/models/friendship_request_model.dart';
 import 'package:hash_balance/models/notification_model.dart';
 import 'package:hash_balance/models/user_model.dart';
+import 'package:logger/logger.dart';
 import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 
@@ -55,7 +56,8 @@ final isBlockedByTargetUserProvider = StreamProvider.family((ref, Tuple2 data) {
       );
 });
 
-final getCombinedStatusProvider = StreamProvider.family((ref, Tuple2<String, String> data) {
+final getCombinedStatusProvider =
+    StreamProvider.family((ref, Tuple2<String, String> data) {
   return ref.watch(friendControllerProvider.notifier).getCombinedStatus(
         currentUid: data.item1,
         targetUid: data.item2,
@@ -128,6 +130,11 @@ class FriendController extends StateNotifier<bool> {
   //SEND FRIEND REQUEST
   Future<Either<Failures, void>> sendFriendRequest(UserModel targetUser) async {
     try {
+      final isFriend = await getFriendshipStatus(targetUser.uid).first;
+      if (isFriend) {
+        Logger().d('You are already friends');
+        return left(Failures('You are already friends'));
+      }
       final sender = _ref.read(userProvider)!;
       final request = FriendRequest(
         id: getUids(sender.uid, targetUser.uid),
@@ -369,7 +376,8 @@ class FriendController extends StateNotifier<bool> {
     );
   }
 
-  Future<List<FriendRequesterDataModel>> fetchFriendRequestsByUser(String uid) async {
+  Future<List<FriendRequesterDataModel>> fetchFriendRequestsByUser(
+      String uid) async {
     return await _friendRepository.fetchFriendRequestsByUser(uid);
   }
 
@@ -417,39 +425,53 @@ class FriendController extends StateNotifier<bool> {
     required String message,
     required String title,
     required String type,
+    String? postId,
   }) async {
     final followerUids = await getUserFollowerUids(uid);
     final tokens = <String>[];
-    for (final followerUid in followerUids) {
-      final result =
-          await _userDeviceController.getUserDeviceTokens(followerUid);
-      result.fold(
-        (l) {},
-        (tokens) => tokens.addAll(tokens),
+    if (followerUids.isNotEmpty) {
+      //GET TOKENS
+      for (final followerUid in followerUids) {
+        final result =
+            await _userDeviceController.getUserDeviceTokens(followerUid);
+        final isSuccess = result.fold(
+          (l) => false,
+          (r) => true,
+        );
+        if (isSuccess) {
+          tokens.addAll(result.getOrElse((_) => []));
+        }
+      }
+      //SEND PUSH NOTIFICATION
+      await _pushNotificationController.sendPushNotification(
+        tokens,
+        message,
+        title,
+        {
+          'type': type,
+          'uid': uid,
+        },
+        type,
       );
+      //SEND NOTIFICATION
+      for (final followerUid in followerUids) {
+        await _notificationController.addNotification(
+          followerUid,
+          NotificationModel(
+            id: _uuid.v1(),
+            title: title,
+            message: message,
+            type: type,
+            senderUid: uid,
+            createdAt: Timestamp.now(),
+            isRead: false,
+            postId: postId,
+          ),
+        );
+      }
+    } else {
+      return;
     }
-    await _pushNotificationController.sendPushNotification(
-      tokens,
-      message,
-      title,
-      {
-        'type': type,
-        'uid': uid,
-      },
-      type,
-    );
-    await _notificationController.addNotification(
-      uid,
-      NotificationModel(
-        id: _uuid.v1(),
-        title: title,
-        message: message,
-        type: type,
-        senderUid: uid,
-        createdAt: Timestamp.now(),
-        isRead: false,
-      ),
-    );
   }
 
   Stream<bool> isBlockedByTargetUser({

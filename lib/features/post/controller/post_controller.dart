@@ -157,6 +157,7 @@ class PostController extends StateNotifier<bool> {
   }) async {
     state = true;
     try {
+      final currentUser = _ref.read(userProvider)!;
       late String postStatus;
       if (content.isEmpty && images == null && video == null) {
         return left(Failures('Post cannot be empty'));
@@ -188,9 +189,8 @@ class PostController extends StateNotifier<bool> {
         }
       }
 
-      final user = _ref.read(userProvider)!;
-      final role =
-          await _communityController.getMemberRole(user.uid, community.id);
+      final role = await _communityController.getMemberRole(
+          currentUser.uid, community.id);
       if (role == 'suspended') {
         return left(Failures('You are suspended from this community'));
       }
@@ -200,7 +200,7 @@ class PostController extends StateNotifier<bool> {
           postStatus = 'Approved';
           final post = Post(
             communityId: community.id,
-            uid: user.uid,
+            uid: currentUser.uid,
             content: content,
             status: postStatus,
             isEdited: false,
@@ -210,17 +210,22 @@ class PostController extends StateNotifier<bool> {
             id: _uuid.v1(),
           );
           final result = await _postRepository.createPost(post, images, video);
-          result.fold(
-            (l) => left(l),
-            (r) async {
-              await _friendController.notifyFollowers(
-                uid: user.uid,
-                message: Constants.getNewPostContent(user.name, community.name),
-                title: 'New Post',
-                type: Constants.newPostType,
-              );
-            },
+          final isSuccess = result.fold(
+            (l) => false,
+            (r) => true,
           );
+          if (isSuccess) {
+            await _friendController.notifyFollowers(
+              uid: currentUser.uid,
+              message: Constants.getNewPostContent(
+                currentUser.name,
+                community.name,
+              ),
+              title: 'New Post',
+              type: Constants.newPostType,
+              postId: post.id,
+            );
+          }
           return result;
         default:
           role == 'moderator'
@@ -228,7 +233,7 @@ class PostController extends StateNotifier<bool> {
               : postStatus = 'Pending';
           final post = Post(
             communityId: community.id,
-            uid: user.uid,
+            uid: currentUser.uid,
             content: content,
             status: postStatus,
             isEdited: false,

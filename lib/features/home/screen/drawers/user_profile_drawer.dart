@@ -95,7 +95,7 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                leading: const Icon(Icons.people),
+                leading: const Icon(Icons.group),
                 onTap: () => _navigateToFriendsScreen(),
               ),
               ListTile(
@@ -107,7 +107,7 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                leading: const Icon(Icons.people),
+                leading: const Icon(Icons.person_add),
                 onTap: () => _navigateToFollowersScreen(),
               ),
               ListTile(

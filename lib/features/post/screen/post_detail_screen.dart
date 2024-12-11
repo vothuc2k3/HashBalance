@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/newsfeed/screen/containers/newsfeed_post_container.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/features/comment/controller/comment_controller.dart';
 import 'package:hash_balance/features/comment/screen/comment_container/comment_container.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
+import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -46,7 +48,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
       ),
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar: false,
       backgroundColor: ref.watch(preferredThemeProvider).first,
       body: SingleChildScrollView(
         child: Column(
@@ -111,13 +113,22 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   comment: comment.comment,
                   post: widget.post,
                   navigateToTaggedUser: (uid) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            OtherUserProfileScreen(targetUid: uid),
-                      ),
-                    );
+                    if (uid == ref.read(userProvider)!.uid) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const UserProfileScreen(),
+                        ),
+                      );
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              OtherUserProfileScreen(targetUid: uid),
+                        ),
+                      );
+                    }
                   },
                 );
               },

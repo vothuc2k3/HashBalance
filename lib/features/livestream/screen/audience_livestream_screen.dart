@@ -56,22 +56,6 @@ class AudienceLivestreamScreenState
 
       await agoraClient.engine.enableVideo();
       await agoraClient.engine.enableLocalVideo(false);
-
-      await agoraClient.engine.joinChannel(
-        token: widget.livestream.agoraToken!,
-        channelId: widget.livestream.id,
-        uid: widget.livestream.agoraUid,
-        options: const ChannelMediaOptions(
-          autoSubscribeAudio: true,
-          autoSubscribeVideo: true,
-          publishCameraTrack: false,
-          publishMicrophoneTrack: false,
-          publishScreenTrack: false,
-          publishScreenCaptureAudio: false,
-          publishScreenCaptureVideo: false,
-          clientRoleType: ClientRoleType.clientRoleAudience,
-        ),
-      );
     } catch (e) {
       debugPrint('Error initializing Agora: $e');
     }

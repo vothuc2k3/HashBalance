@@ -5,6 +5,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:hash_balance/core/utils.dart';
 import 'package:hash_balance/core/widgets/video_player_widget.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
+import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -26,6 +27,7 @@ class _EditPostWidgetState extends ConsumerState<EditPostWidget> {
   final List<File> _newImageFiles = [];
   String? _videoUrl;
   File? _videoFile;
+  bool _hasChanged = false;
 
   @override
   void initState() {
@@ -33,14 +35,28 @@ class _EditPostWidgetState extends ConsumerState<EditPostWidget> {
     _imageUrls = List.from(widget.post.images ?? []);
     _videoUrl = widget.post.video;
     _contentController.text = widget.post.content;
+
+    _contentController.addListener(_onContentChanged);
+  }
+
+  @override
+  void dispose() {
+    _contentController.removeListener(_onContentChanged);
+    _contentController.dispose();
+    super.dispose();
+  }
+
+  void _onContentChanged() {
+    setState(() {
+      _hasChanged = true;
+    });
   }
 
   void _savePost() async {
-    // Combine existing URLs with newly selected files for saving
     final result = await ref.read(postControllerProvider.notifier).updatePost(
           widget.post.copyWith(
             content: _contentController.text,
-            images: _imageUrls, // Only existing URLs
+            images: _imageUrls,
           ),
           _newImageFiles.isNotEmpty ? _newImageFiles : null,
           _videoFile,
@@ -64,6 +80,7 @@ class _EditPostWidgetState extends ConsumerState<EditPostWidget> {
     if (pickedFile != null) {
       setState(() {
         _newImageFiles.add(File(pickedFile.path));
+        _hasChanged = true;
       });
     }
   }
@@ -78,6 +95,7 @@ class _EditPostWidgetState extends ConsumerState<EditPostWidget> {
     if (pickedFile != null) {
       setState(() {
         _videoFile = File(pickedFile.path);
+        _hasChanged = true;
       });
     }
   }
@@ -89,15 +107,35 @@ class _EditPostWidgetState extends ConsumerState<EditPostWidget> {
       } else {
         _newImageFiles.removeAt(index - _imageUrls.length);
       }
+      _hasChanged = true;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Edit Post'),
+        backgroundColor: ref.watch(preferredThemeProvider).second,
+        actions: [
+          _hasChanged
+              ? IconButton(
+                  onPressed: _savePost,
+                  icon: Icon(
+                    Icons.save,
+                    color: ref.watch(preferredThemeProvider).approveButtonColor,
+                  ),
+                )
+              : IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.save, color: Colors.grey),
+                ),
+        ],
+      ),
+      body: Container(
+        color: ref.watch(preferredThemeProvider).first,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -122,14 +160,13 @@ class _EditPostWidgetState extends ConsumerState<EditPostWidget> {
                         ..._imageUrls.map(
                           (image) {
                             final index = _imageUrls.indexOf(image);
-                            return _buildImagePreview(
-                                image: image, index: index);
+                            return _buildImagePreview(image: image, index: index);
                           },
                         ),
                         ..._newImageFiles.map(
                           (file) {
-                            final index = _newImageFiles.indexOf(file) +
-                                _imageUrls.length;
+                            final index =
+                                _newImageFiles.indexOf(file) + _imageUrls.length;
                             return _buildImagePreview(file: file, index: index);
                           },
                         ),
@@ -157,7 +194,10 @@ class _EditPostWidgetState extends ConsumerState<EditPostWidget> {
                         VideoPlayerWidget(videoUrl: _videoUrl!),
                         TextButton(
                           onPressed: () {
-                            setState(() => _videoUrl = null);
+                            setState(() {
+                              _videoUrl = null;
+                              _hasChanged = true;
+                            });
                           },
                           child: const Text(
                             'Remove Video',
@@ -174,7 +214,10 @@ class _EditPostWidgetState extends ConsumerState<EditPostWidget> {
                             VideoPlayerWidget(videoUrl: _videoFile!.path),
                             ElevatedButton(
                               onPressed: () {
-                                setState(() => _videoFile = null);
+                                setState(() {
+                                  _videoFile = null;
+                                  _hasChanged = true;
+                                });
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor:
@@ -206,15 +249,7 @@ class _EditPostWidgetState extends ConsumerState<EditPostWidget> {
             ],
           ),
         ),
-        Positioned(
-          top: 10,
-          right: 10,
-          child: IconButton(
-            icon: const Icon(Icons.save, color: Colors.green),
-            onPressed: _savePost,
-          ),
-        ),
-      ],
+      ),
     );
   }
 

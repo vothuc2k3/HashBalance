@@ -353,6 +353,4 @@ class FriendRepository {
       return data['followerUid'] as String;
     }).toList();
   }
-
-  
 }

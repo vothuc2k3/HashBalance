@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
@@ -50,10 +51,8 @@ class LiveCommentBoxState extends ConsumerState<LiveCommentBox> {
                   if (comments.isEmpty) {
                     return const Center(child: Text('No comments yet.'));
                   }
-
                   WidgetsBinding.instance
                       .addPostFrameCallback((_) => _scrollToBottom());
-
                   return ListView.builder(
                     controller: _scrollController,
                     itemCount: comments.length,
@@ -62,11 +61,15 @@ class LiveCommentBoxState extends ConsumerState<LiveCommentBox> {
                       final comment = comments[index];
                       return ListTile(
                         leading: CircleAvatar(
-                          child:
-                              Text(comment.uid.substring(0, 1).toUpperCase()),
+                          child: CachedNetworkImage(
+                            imageUrl: comment.user.profileImage,
+                            placeholder: (context, url) => const Loading(),
+                            errorWidget: (context, url, error) =>
+                                const Icon(Icons.error),
+                          ),
                         ),
-                        title: Text(comment.uid),
-                        subtitle: Text(comment.content),
+                        title: Text(comment.user.name),
+                        subtitle: Text(comment.comment.content),
                       );
                     },
                   );

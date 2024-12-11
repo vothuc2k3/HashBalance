@@ -5,7 +5,6 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
-import 'package:logger/logger.dart';
 import 'package:dio/dio.dart' as dio;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 final adminDashboardRepositoryProvider = Provider((ref) =>
@@ -75,7 +74,6 @@ class AdminDashboardRepository {
       trendingHashtags
           .sort((a, b) => (b["count"] as int).compareTo(a["count"] as int));
 
-      Logger().d(trendingHashtags.toString());
       return trendingHashtags;
     } on FirebaseException catch (e) {
       throw Failures(e.message ?? "Unknown error");

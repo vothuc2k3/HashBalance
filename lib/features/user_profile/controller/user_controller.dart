@@ -12,6 +12,12 @@ import 'package:hash_balance/models/conbined_models/timeline_item_model.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:uuid/uuid.dart';
 
+final followingProvider =
+    FutureProvider.family<Either<Failures, List<UserModel>>, String>(
+  (ref, String uid) =>
+      ref.watch(userControllerProvider.notifier).getCurrentUserFollowing(uid),
+);
+
 final followersProvider =
     FutureProvider.family<Either<Failures, List<UserModel>>, String>(
   (ref, String uid) =>
@@ -211,5 +217,10 @@ class UserController extends StateNotifier<bool> {
   Future<Either<Failures, List<UserModel>>> getCurrentUserFollowers(
       String uid) async {
     return await _userRepository.getCurrentUserFollowers(uid);
+  }
+
+  Future<Either<Failures, List<UserModel>>> getCurrentUserFollowing(
+      String uid) async {
+    return await _userRepository.getCurrentUserFollowing(uid);
   }
 }

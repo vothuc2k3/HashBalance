@@ -6,22 +6,29 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
+import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
+import 'package:hash_balance/models/conbined_models/livestream_comment_view_model.dart';
 import 'package:hash_balance/models/livestream_comment_model.dart';
 import 'package:hash_balance/models/livestream_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 final livestreamRepositoryProvider = Provider((ref) {
-  final firestore = ref.watch(firebaseFirestoreProvider);
-  return LivestreamRepository(firestore: firestore);
+  final firestore = ref.read(firebaseFirestoreProvider);
+  final userController = ref.read(userControllerProvider.notifier);
+  return LivestreamRepository(
+      firestore: firestore, userController: userController);
 });
 
 class LivestreamRepository {
   final FirebaseFirestore _firestore;
+  final UserController _userController;
 
   LivestreamRepository({
     required FirebaseFirestore firestore,
-  }) : _firestore = firestore;
+    required UserController userController,
+  })  : _firestore = firestore,
+        _userController = userController;
 
   CollectionReference get _livestreams =>
       _firestore.collection(FirebaseConstants.livestreamsCollection);
@@ -38,15 +45,27 @@ class LivestreamRepository {
     }
   }
 
-  Stream<List<LivestreamComment>> getLivestreamComments(String streamId) {
+  Stream<List<LivestreamCommentViewModel>> getLivestreamComments(
+      String streamId) {
     return _livestreamComments
         .where('streamId', isEqualTo: streamId)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((event) => event.docs
-            .map((doc) =>
-                LivestreamComment.fromMap(doc.data() as Map<String, dynamic>))
-            .toList());
+        .asyncMap(
+      (event) async {
+        final data =
+            event.docs.map((doc) => doc.data() as Map<String, dynamic>);
+        final List<LivestreamCommentViewModel> comments = [];
+        for (final commentMap in data) {
+          final comment = LivestreamComment.fromMap(commentMap);
+          final user =
+              await _userController.fetchUserByUidProvider(comment.uid);
+          comments
+              .add(LivestreamCommentViewModel(comment: comment, user: user));
+        }
+        return comments;
+      },
+    );
   }
 
   Future<Either<Failures, void>> createLivestreamComment(

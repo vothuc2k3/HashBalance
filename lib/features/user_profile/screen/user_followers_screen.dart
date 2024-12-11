@@ -15,11 +15,10 @@ class UserFollowersScreen extends ConsumerStatefulWidget {
       _UserFollowersScreenState();
 }
 
-class _UserFollowersScreenState extends ConsumerState<UserFollowersScreen>
-    with TickerProviderStateMixin {
+class _UserFollowersScreenState extends ConsumerState<UserFollowersScreen> {
   final PageController _pageController = PageController();
   int _page = 0;
-  final _titles = const ['Friends', 'Friend Requests', 'Blocked Users'];
+  final _titles = const ['Followers', 'Following'];
 
   void _onPageChanged(int page) {
     setState(() {
@@ -33,35 +32,13 @@ class _UserFollowersScreenState extends ConsumerState<UserFollowersScreen>
   }
 
   @override
-  void initState() {
-    super.initState();
-    GlobalAnimationController.initialize(this);
-    GlobalAnimationController.start();
-  }
-
-  @override
-  void dispose() {
-    GlobalAnimationController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    GlobalAnimationController.initialize(this);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: ref.watch(preferredThemeProvider).third,
-        title: AnimatedBuilder(
-          animation: GlobalAnimationController.animationController!,
-          builder: (context, child) {
-            return Transform.scale(
-              scale: GlobalAnimationController.animationController!.value,
-              child: Text(
-                _titles[_page],
-                key: ValueKey(_page),
-              ),
-            );
-          },
+        title: Text(
+          _titles[_page],
+          key: ValueKey(_page),
         ),
         centerTitle: false,
       ),
@@ -79,7 +56,6 @@ class _UserFollowersScreenState extends ConsumerState<UserFollowersScreen>
         items: const [
           Icon(Icons.people, size: 30, color: Colors.white),
           Icon(Icons.person_add_alt_1, size: 30, color: Colors.white),
-          Icon(Icons.person_remove, size: 30, color: Colors.white),
         ],
         color: ref.watch(preferredThemeProvider).first,
         backgroundColor: ref.watch(preferredThemeProvider).second,
@@ -90,25 +66,5 @@ class _UserFollowersScreenState extends ConsumerState<UserFollowersScreen>
         letIndexChange: (index) => true,
       ),
     );
-  }
-}
-
-class GlobalAnimationController {
-  static AnimationController? animationController;
-
-  static void initialize(TickerProvider vsync) {
-    animationController ??= AnimationController(
-      vsync: vsync,
-      duration: const Duration(seconds: 2),
-    );
-  }
-
-  static void start() {
-    animationController?.forward();
-  }
-
-  static void dispose() {
-    animationController?.dispose();
-    animationController = null;
   }
 }

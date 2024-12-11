@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/community/controller/community_controller.dart';
 import 'package:hash_balance/features/post/controller/post_controller.dart';
@@ -62,7 +63,7 @@ class _CreatePollWidgetState extends ConsumerState<CreatePollWidget> {
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.read(userProvider)!;
-
+    final loading = ref.watch(postControllerProvider);
     return Container(
       decoration: BoxDecoration(
         color: ref.watch(preferredThemeProvider).first,
@@ -167,31 +168,52 @@ class _CreatePollWidgetState extends ConsumerState<CreatePollWidget> {
                     }),
                     const SizedBox(height: 10),
                     if (pollOptionControllers.length < 10)
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              ref.watch(preferredThemeProvider).third,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            pollOptionControllers.add(TextEditingController());
-                          });
-                        },
-                        child: const Text(
-                          'Add Option',
-                          style: TextStyle(color: Colors.white),
+                      Center(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              pollOptionControllers
+                                  .add(TextEditingController());
+                            });
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: ref
+                                .watch(preferredThemeProvider)
+                                .approveButtonColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            fixedSize: const Size(150, 48),
+                          ),
+                          child: const Text(
+                            'Add Option',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
                     const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: _createPoll,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            ref.watch(preferredThemeProvider).third,
-                      ),
-                      child: const Text(
-                        'Create Poll',
-                        style: TextStyle(color: Colors.white),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: loading ? null : _createPoll,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.teal,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          fixedSize: const Size(150, 48),
+                        ),
+                        child: loading
+                            ? const Loading()
+                            : const Text(
+                                'Create',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
                     ),
                   ],

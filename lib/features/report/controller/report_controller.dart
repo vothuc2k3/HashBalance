@@ -46,7 +46,7 @@ class ReportController {
     String? reportedCommentId,
     String? reportedUserId,
     String type,
-    String communityId,
+    String? communityId,
     String message,
   ) async {
     try {

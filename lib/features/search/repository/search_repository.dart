@@ -118,7 +118,7 @@ class SearchRepository {
   }
 
   Future<List<PostDataModel>> searchPosts(String query) async {
-    if (query.isEmpty || query == '#') {
+    if (query.isEmpty || query == '=') {
       return [];
     }
 
