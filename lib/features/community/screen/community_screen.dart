@@ -694,11 +694,11 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
               onTap: () async {
                 Navigator.pop(context);
                 final XFile? image = await ImagePicker().pickImage(
-                  source: ImageSource.gallery, // Chọn từ bộ nhớ
-                  imageQuality: 100, // Giảm chất lượng ảnh để giảm dung lượng
+                  source: ImageSource.gallery,
+                  imageQuality: 100,
                 );
                 if (image != null) {
-                  _uploadBannerImage(community, image); // Xử lý ảnh
+                  _uploadBannerImage(community, image);
                 }
               },
             ),
@@ -706,7 +706,7 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
               leading: const Icon(Icons.cancel),
               title: const Text('Cancel'),
               onTap: () {
-                Navigator.pop(context); // Đóng modal
+                Navigator.pop(context);
               },
             ),
           ],
@@ -946,13 +946,6 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
         const PopupMenuItem<int>(
           value: 3,
           child: ListTile(
-            leading: Icon(Icons.group_add),
-            title: Text('Invite Moderators'),
-          ),
-        ),
-        const PopupMenuItem<int>(
-          value: 4,
-          child: ListTile(
             leading: Icon(Icons.arrow_left),
             title: Text('Leave Community'),
           ),
@@ -973,9 +966,6 @@ class CommunityScreenState extends ConsumerState<CommunityScreen> {
               _inviteFriends(community);
               break;
             case 3:
-              _navigateToInviteModeratorsScreen(community);
-              break;
-            case 4:
               _leaveCommunity(community.id);
               break;
           }

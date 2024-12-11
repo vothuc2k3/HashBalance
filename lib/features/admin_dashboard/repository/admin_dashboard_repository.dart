@@ -1,18 +1,22 @@
+import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:hash_balance/core/constants/constants.dart';
 import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
-import 'package:dio/dio.dart' as dio;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:hash_balance/models/report_model.dart';
+import 'package:http/http.dart' as http;
+import 'package:logger/logger.dart';
+
 final adminDashboardRepositoryProvider = Provider((ref) =>
     AdminDashboardRepository(firestore: ref.watch(firebaseFirestoreProvider)));
 
 class AdminDashboardRepository {
   final FirebaseFirestore _firestore;
-  
 
   AdminDashboardRepository({
     required FirebaseFirestore firestore,
@@ -30,6 +34,9 @@ class AdminDashboardRepository {
   //REFERENCE ALL THE REPORTS
   CollectionReference get _reports =>
       _firestore.collection(FirebaseConstants.reportCollection);
+  //REFERENCE ALL THE BADGES
+  CollectionReference get _badges =>
+      _firestore.collection(FirebaseConstants.badgesCollection);
 
   Stream<int> getUsersCount() {
     return _users.snapshots().map((snapshot) => snapshot.docs.length);
@@ -110,10 +117,13 @@ class AdminDashboardRepository {
 
   Future<Either<Failures, void>> disableUserAccount(String uid) async {
     try {
-      final url = '${dotenv.env['DOMAIN']}/disableUserAccount';
-      final response = await dio.Dio().post(
+      final url = Uri.parse('${dotenv.env['DOMAIN']}/disableUserAccount');
+      final response = await http.post(
         url,
-        data: {"uid": uid},
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(
+          {"uid": uid},
+        ),
       );
       if (response.statusCode == 200) {
         return right(null);
@@ -122,6 +132,22 @@ class AdminDashboardRepository {
       }
     } catch (e) {
       return left(Failures(e.toString()));
+    } finally {
+      Logger().d("Attempted to disable user account with uid: $uid");
+    }
+  }
+
+  Stream<Either<Failures, List<Report>>> getReports() async* {
+    try {
+      final response = await _reports.where('type', whereIn: [
+        Constants.userReportType,
+        Constants.communityReportType,
+      ]).get();
+      yield right(response.docs
+          .map((doc) => Report.fromMap(doc.data() as Map<String, dynamic>))
+          .toList());
+    } catch (e) {
+      yield left(Failures(e.toString()));
     }
   }
 }

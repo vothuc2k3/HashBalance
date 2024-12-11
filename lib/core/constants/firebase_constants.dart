@@ -24,4 +24,5 @@ class FirebaseConstants {
   static const suspendedUsersCollection = 'suspended_users';
   static const livestreamsCollection = 'livestreams';
   static const livestreamCommentsCollection = 'livestream_comments';
+  static const badgesCollection = 'badges';
 }

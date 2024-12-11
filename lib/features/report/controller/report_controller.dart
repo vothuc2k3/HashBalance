@@ -6,9 +6,19 @@ import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/report/repository/report_repository.dart';
 import 'package:hash_balance/models/conbined_models/comment_report_model.dart';
+import 'package:hash_balance/models/conbined_models/community_report_model.dart';
 import 'package:hash_balance/models/conbined_models/post_report_model.dart';
+import 'package:hash_balance/models/conbined_models/user_report_model.dart';
 import 'package:hash_balance/models/report_model.dart';
 import 'package:uuid/uuid.dart';
+
+final communityReportDataProvider = StreamProviderFamily((ref, Report report) {
+  return ref.watch(reportControllerProvider).fetchCommunityReportData(report);
+});
+
+final userReportDataProvider = StreamProviderFamily((ref, Report report) {
+  return ref.watch(reportControllerProvider).fetchUserReportData(report);
+});
 
 final commentReportDataProvider = StreamProviderFamily((ref, Report report) {
   return ref.watch(reportControllerProvider).fetchCommentReportData(report);
@@ -115,6 +125,14 @@ class ReportController {
 
   Stream<CommentReportModel> fetchCommentReportData(Report report) {
     return _reportRepository.fetchCommentReportData(report);
+  }
+
+  Stream<UserReportModel> fetchUserReportData(Report report) {
+    return _reportRepository.fetchUserReportData(report);
+  }
+
+  Stream<CommunityReportModel> fetchCommunityReportData(Report report) {
+    return _reportRepository.fetchCommunityReportData(report);
   }
 
   Future<Either<Failures, void>> resolveReport(String reportId) async {

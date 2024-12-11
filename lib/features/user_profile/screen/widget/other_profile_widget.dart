@@ -11,6 +11,7 @@ import 'package:hash_balance/features/authentication/repository/auth_repository.
 import 'package:hash_balance/features/friend/controller/friend_controller.dart';
 import 'package:hash_balance/features/message/screen/private_message_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
+import 'package:hash_balance/features/user_profile/controller/user_controller.dart';
 import 'package:hash_balance/features/user_profile/screen/friends/mutual_friends_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/other_user_profile_screen.dart';
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
@@ -32,7 +33,7 @@ class _OtherUserProfileWidgetState
   final double coverHeight = 250;
   final double profileHeight = 120;
 
-  UserModel get _user => widget.user;
+  UserModel get _targetUser => widget.user;
 
   void _cancelFriendRequest(String requestId) async {
     final result = await ref
@@ -101,15 +102,16 @@ class _OtherUserProfileWidgetState
 
   Future<void> _onRefresh() async {
     ref.invalidate(getCombinedStatusProvider);
+    ref.invalidate(userProfileDataProvider);
   }
 
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(userProvider);
-    final uids = getUids(currentUser!.uid, _user.uid);
-    final combinedStatus = ref
-        .watch(getCombinedStatusProvider(Tuple2(currentUser.uid, _user.uid)));
-
+    final uids = getUids(currentUser!.uid, _targetUser.uid);
+    final combinedStatus = ref.watch(
+        getCombinedStatusProvider(Tuple2(currentUser.uid, _targetUser.uid)));
+    final userProfileData = ref.watch(userProfileDataProvider(_targetUser.uid));
     final double top = coverHeight - profileHeight / 2;
     final double bottom = profileHeight / 2;
     return Scaffold(
@@ -117,7 +119,7 @@ class _OtherUserProfileWidgetState
         onRefresh: _onRefresh,
         child: Container(
           color: ref.watch(preferredThemeProvider).first,
-          child: ref.watch(getUserDataProvider(_user.uid)).when(
+          child: ref.watch(getUserDataProvider(_targetUser.uid)).when(
                 data: (user) {
                   return combinedStatus.when(
                       data: (data) {
@@ -273,22 +275,63 @@ class _OtherUserProfileWidgetState
                                   const SizedBox(height: 16),
                                   const Divider(),
                                   const SizedBox(height: 16),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      _buildButton(text: 'Friends', value: 52),
-                                      _buildVerticalDivider(),
-                                      _buildButton(
-                                        text: 'Points',
-                                        value: user.activityPoint,
-                                      ),
-                                      _buildVerticalDivider(),
-                                      _buildButton(
-                                          text: 'Achievements', value: 0),
-                                      _buildVerticalDivider(),
-                                      _buildButton(
-                                          text: 'Followers', value: 5834),
-                                    ],
+                                  userProfileData.when(
+                                    data: (data) {
+                                      return Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          _buildButton(
+                                            text: 'Friends',
+                                            value: data.friends.length,
+                                          ),
+                                          _buildVerticalDivider(),
+                                          _buildButton(
+                                            text: 'Followers',
+                                            value: data.followers.length,
+                                          ),
+                                          _buildVerticalDivider(),
+                                          _buildButton(
+                                            text: 'Following',
+                                            value: data.following.length,
+                                          ),
+                                          _buildVerticalDivider(),
+                                          _buildButton(
+                                            text: 'Points',
+                                            value: user.activityPoint,
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                    loading: () {
+                                      return Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          _buildButton(
+                                            text: 'Friends',
+                                            value: 0,
+                                          ),
+                                          _buildVerticalDivider(),
+                                          _buildButton(
+                                            text: 'Followers',
+                                            value: 0,
+                                          ),
+                                          _buildVerticalDivider(),
+                                          _buildButton(
+                                            text: 'Following',
+                                            value: 0,
+                                          ),
+                                          _buildVerticalDivider(),
+                                          _buildButton(
+                                            text: 'Points',
+                                            value: 0,
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                    error: (error, stackTrace) =>
+                                        Text('Error: $error'),
                                   ),
                                   const SizedBox(height: 16),
                                   const Divider(),

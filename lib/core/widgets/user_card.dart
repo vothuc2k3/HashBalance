@@ -41,7 +41,6 @@ class UserCard extends ConsumerWidget {
       showToast(false, 'You cannot report yourself');
       return;
     }
-
     String? message = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {

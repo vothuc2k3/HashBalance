@@ -125,13 +125,13 @@ flutter:
     - .env
     - assets/images/logo.png
     - assets/images/googleLogo.png
-    - assets/images/signinEmote.png
     - assets/images/emailLogo.png
     - assets/images/facebookLogo.png
     - assets/images/user_profile_placeholder.png
     - assets/images/post_image_placeholder.png
     - assets/audio/ringtone.mp3
     - assets/images/Login_character/
+    - assets/images/default_badge.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

@@ -70,7 +70,11 @@ class _CommunityMembersScreenState
 
   void _sortMembers() {
     _members.sort((a, b) {
-      if (a?.role == 'moderator' && b?.role != 'moderator') {
+      if (a?.isCreator == true && b?.isCreator != true) {
+        return -1;
+      } else if (a?.isCreator != true && b?.isCreator == true) {
+        return 1;
+      } else if (a?.role == 'moderator' && b?.role != 'moderator') {
         return -1;
       } else if (a?.role != 'moderator' && b?.role == 'moderator') {
         return 1;
@@ -83,7 +87,12 @@ class _CommunityMembersScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("${widget.community.name} Members"),
+        title: Text(
+          "${widget.community.name} Members",
+          style: const TextStyle(
+            fontSize: 20,
+          ),
+        ),
         backgroundColor: ref.watch(preferredThemeProvider).second,
       ),
       body: Container(

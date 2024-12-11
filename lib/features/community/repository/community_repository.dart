@@ -418,4 +418,18 @@ class CommunityRepository {
       return data['uid'] as String;
     }).toList();
   }
+
+  Future<bool> isCommunityCreator({
+    required String communityId,
+    required String uid,
+  }) async {
+    final doc = await _communityMembership
+        .doc(getMembershipId(uid: uid, communityId: communityId))
+        .get();
+    if (doc.exists) {
+      final data = doc.data() as Map<String, dynamic>;
+      return data['isCreator'] as bool;
+    }
+    return false;
+  }
 }

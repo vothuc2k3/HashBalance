@@ -61,11 +61,13 @@ class Constants {
   static const String newFollowerTitle = 'New Follower!';
   static const String moderatorInvitationTitle =
       'You are invited as a moderator!';
-  static const String membershipInvitationTitle = 'You are invited to join a community!';
+  static const String membershipInvitationTitle =
+      'You are invited to join a community!';
   static const String incomingCallTitle = 'Incoming Call!';
   static const String commentMentionTitle = 'Comment Mentioned!';
 
   //MARK: - Notification Types
+  static const String commentMentionType = 'comment_mention';
   static const String friendRequestType = 'friend_request';
   static const String acceptRequestType = 'accept_request';
   static const String moderatorInvitationType = 'moderator_invitation';
@@ -74,10 +76,12 @@ class Constants {
   static const String newFollowerType = 'new_follower';
   static const String newPostType = 'new_post';
   static const String incomingCallType = 'incoming_call';
+
+  //MARK: - Report Types
   static const String userReportType = 'user_report';
   static const String postReportType = 'post_report';
   static const String commentReportType = 'comment_report';
-  static const String commentMentionType = 'comment_mention';
+  static const String communityReportType = 'community_report';
 
   //MARK: - Call Status
   static const String callStatusDialling = 'dialling';

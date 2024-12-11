@@ -342,4 +342,12 @@ class CommunityController extends StateNotifier<bool> {
   Future<List<String>> getMembershipUids(String communityId) async {
     return await _communityRepository.getMembershipUids(communityId);
   }
+
+  Future<bool> isCommunityCreator({
+    required String communityId,
+    required String uid,
+  }) async {
+    return await _communityRepository.isCommunityCreator(
+        communityId: communityId, uid: uid);
+  }
 }

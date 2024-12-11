@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/widgets/loading.dart';
 import 'package:hash_balance/features/admin_dashboard/controller/admin_dashboard_controller.dart';
+import 'package:hash_balance/features/admin_dashboard/screen/admin_report_screen.dart';
+import 'package:hash_balance/features/badge/screen/badges_screen.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/home/screen/search_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
@@ -53,9 +55,29 @@ class AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     }
   }
 
+  _navigateToCreateBadgeScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const BadgesScreen(isAdmin: true),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: ref.watch(preferredThemeProvider).second,
+        onPressed: _navigateToCreateBadgeScreen,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Image.asset(
+            'assets/images/default_badge.png',
+            fit: BoxFit.cover,
+          ),
+        ),
+      ),
       backgroundColor: ref.watch(preferredThemeProvider).first,
       appBar: AppBar(
         backgroundColor: ref.watch(preferredThemeProvider).second,
@@ -83,9 +105,12 @@ class AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                           value: usersCount.toString(),
                           icon: Icons.people,
                           color: Colors.blueAccent,
+                          onTap: () {},
                         ),
                         loading: () => const Loading(),
-                        error: (error, stack) => Text(error.toString()),
+                        error: (error, stack) => Text(
+                          error.toString(),
+                        ),
                       ),
                   ref.watch(postsCountProvider).when(
                         data: (postsCount) => _buildStatCard(
@@ -93,6 +118,7 @@ class AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                           value: postsCount.toString(),
                           icon: Icons.post_add,
                           color: Colors.greenAccent,
+                          onTap: () {},
                         ),
                         loading: () => const Loading(),
                         error: (error, stack) => Text(error.toString()),
@@ -103,6 +129,7 @@ class AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                           value: commentsCount.toString(),
                           icon: Icons.comment,
                           color: Colors.orangeAccent,
+                          onTap: () {},
                         ),
                         loading: () => const Loading(),
                         error: (error, stack) => Text(error.toString()),
@@ -113,6 +140,14 @@ class AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                           value: reportsCount.toString(),
                           icon: Icons.report,
                           color: Colors.redAccent,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const AdminReportScreen(),
+                              ),
+                            );
+                          },
                         ),
                         loading: () => const Loading(),
                         error: (error, stack) => Text(error.toString()),
@@ -150,33 +185,37 @@ class AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     required String value,
     required IconData icon,
     required Color color,
+    required VoidCallback onTap,
   }) {
     return Expanded(
-      child: Container(
-        margin: const EdgeInsets.all(8.0),
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, size: 40, color: color),
-            const SizedBox(height: 10),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: color,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, size: 40, color: color),
+              const SizedBox(height: 10),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
               ),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-          ],
+              const SizedBox(height: 5),
+              Text(
+                title,
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+            ],
+          ),
         ),
       ),
     );

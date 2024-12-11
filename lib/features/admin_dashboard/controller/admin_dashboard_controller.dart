@@ -2,6 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/features/admin_dashboard/repository/admin_dashboard_repository.dart';
+import 'package:hash_balance/models/report_model.dart';
+
+final adminReportsProvider = StreamProvider((ref) {
+  return ref.watch(adminDashboardControllerProvider.notifier).getReports();
+});
 
 final topActiveUsersProvider = FutureProvider((ref) {
   return ref
@@ -76,4 +81,10 @@ class AdminDashboardController extends StateNotifier<bool> {
   Future<Either<Failures, void>> disableUserAccount(String uid) async {
     return await _adminDashboardRepository.disableUserAccount(uid);
   }
+
+  Stream<Either<Failures, List<Report>>> getReports() {
+    return _adminDashboardRepository.getReports();
+  }
+
+
 }

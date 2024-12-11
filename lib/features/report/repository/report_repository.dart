@@ -5,8 +5,12 @@ import 'package:hash_balance/core/constants/firebase_constants.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/firebase_providers.dart';
 import 'package:hash_balance/models/comment_model.dart';
+import 'package:hash_balance/models/community_membership_model.dart';
+import 'package:hash_balance/models/community_model.dart';
 import 'package:hash_balance/models/conbined_models/comment_report_model.dart';
+import 'package:hash_balance/models/conbined_models/community_report_model.dart';
 import 'package:hash_balance/models/conbined_models/post_report_model.dart';
+import 'package:hash_balance/models/conbined_models/user_report_model.dart';
 import 'package:hash_balance/models/post_model.dart';
 import 'package:hash_balance/models/report_model.dart';
 import 'package:hash_balance/models/user_model.dart';
@@ -33,6 +37,12 @@ class ReportRepository {
   //REFERENCE ALL THE COMMENTS
   CollectionReference get _comments =>
       _firestore.collection(FirebaseConstants.commentsCollection);
+  //REFERENCE ALL THE COMMUNITIES
+  CollectionReference get _communities =>
+      _firestore.collection(FirebaseConstants.communitiesCollection);
+  //REFERENCE ALL THE MEMBERSHIPS
+  CollectionReference get _memberships =>
+      _firestore.collection(FirebaseConstants.communityMembershipCollection);
 
   Future<Either<Failures, void>> addReport(Report report) async {
     try {
@@ -87,6 +97,37 @@ class ReportRepository {
           comment: reportedComment,
           reporter: reporter,
           commentOwner: commentOwner);
+    });
+  }
+
+  Stream<UserReportModel> fetchUserReportData(Report report) {
+    return _users.doc(report.reporterUid).snapshots().asyncMap((event) async {
+      final reporter = UserModel.fromMap(event.data() as Map<String, dynamic>);
+      final reportedUserDoc = await _users.doc(report.reportedUid).get();
+      final reportedUser =
+          UserModel.fromMap(reportedUserDoc.data() as Map<String, dynamic>);
+      return UserReportModel(reportedUser: reportedUser, reporter: reporter);
+    });
+  }
+
+  Stream<CommunityReportModel> fetchCommunityReportData(Report report) {
+    return _users.doc(report.reporterUid).snapshots().asyncMap((event) async {
+      final reporter = UserModel.fromMap(event.data() as Map<String, dynamic>);
+      final reportedCommunityDoc =
+          await _communities.doc(report.reportedCommunityId).get();
+      final reportedCommunity = Community.fromMap(
+          reportedCommunityDoc.data() as Map<String, dynamic>);
+      final ownerDoc =
+          await _memberships.where('isCreator', isEqualTo: true).get();
+      final membership = CommunityMembership.fromMap(
+          ownerDoc.docs.first.data() as Map<String, dynamic>);
+      final owner = await _users.doc(membership.uid).get();
+      final ownerUser = UserModel.fromMap(owner.data() as Map<String, dynamic>);
+      return CommunityReportModel(
+        community: reportedCommunity,
+        reporter: reporter,
+        communityOwner: ownerUser,
+      );
     });
   }
 

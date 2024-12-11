@@ -128,30 +128,44 @@ class InvitationController {
       final result = await _invitationRepository.addInvitation(invitation);
       result.fold((l) {
         return left(Failures(l.message));
-      }, (r) {
-        final futureResult =
-            _userDeviceController.getUserDeviceTokens(receiverUid);
-        futureResult.then(
-          (result) {
-            if (result.isRight()) {
-              _pushNotificationController.sendPushNotification(
-                result.getRight().getOrElse(() => []),
-                Constants.getModeratorInvitationContent(
+      }, (r) async {
+        final result =
+            await _userDeviceController.getUserDeviceTokens(receiverUid);
+        result.fold(
+          (l) => null,
+          (tokens) async {
+            await _pushNotificationController.sendPushNotification(
+              tokens,
+              Constants.getModeratorInvitationContent(
+                currentUser.name,
+                communityName,
+              ),
+              Constants.moderatorInvitationTitle,
+              {
+                'type': Constants.moderatorInvitationType,
+                'invitationId': invitation.id,
+                'communityId': communityId,
+              },
+              Constants.moderatorInvitationType,
+            );
+            await _notificationController.addNotification(
+              receiverUid,
+              NotificationModel(
+                id: _uuid.v1(),
+                title: Constants.moderatorInvitationTitle,
+                message: Constants.getModeratorInvitationContent(
                   currentUser.name,
                   communityName,
                 ),
-                Constants.moderatorInvitationTitle,
-                {
-                  'type': Constants.moderatorInvitationType,
-                  'invitationId': invitation.id,
-                  'communityId': communityId,
-                },
-                Constants.moderatorInvitationType,
-              );
-            }
+                communityId: communityId,
+                type: Constants.moderatorInvitationType,
+                senderUid: currentUser.uid,
+                createdAt: Timestamp.now(),
+                isRead: false,
+              ),
+            );
           },
         );
-
         return right(null);
       });
       return result;

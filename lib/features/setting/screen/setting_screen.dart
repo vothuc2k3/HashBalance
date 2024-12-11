@@ -162,9 +162,7 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
       final deviceToken = await FirebaseMessaging.instance.getToken();
       if (deviceToken != null) {
         await ref.read(userDeviceControllerProvider).removeUserDeviceToken(
-              uid: currentUser.uid,
-              deviceToken: deviceToken,
-            );
+            uid: currentUser.uid, deviceToken: deviceToken);
       }
       showToast(true, 'Notifications Disabled');
     }
@@ -236,15 +234,6 @@ class SettingScreenState extends ConsumerState<SettingScreen> {
         ),
         child: Column(
           children: [
-            ListTile(
-              title: const Text(
-                'Test Button',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              onTap: () async {},
-            ),
             if (currentUser != null)
               ListTile(
                 title: Text(
