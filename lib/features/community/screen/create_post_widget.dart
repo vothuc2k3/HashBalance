@@ -253,8 +253,7 @@ class _CreatePostWidgetState extends ConsumerState<CreatePostWidget> {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8.0),
                                   ),
-                                  fixedSize: const Size(
-                                      150, 48), // Fixed width and height
+                                  fixedSize: const Size(150, 48),
                                 ),
                                 child: const Text(
                                   'Pick Images',

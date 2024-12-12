@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
+import 'package:hash_balance/features/badge/screen/badges_screen.dart';
 import 'package:hash_balance/features/network/controller/network_controller.dart';
 import 'package:hash_balance/features/setting/screen/setting_screen.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
@@ -13,6 +14,7 @@ import 'package:hash_balance/features/user_profile/screen/user_followers_screen.
 import 'package:hash_balance/features/user_profile/screen/user_profile_screen.dart';
 import 'package:hash_balance/models/user_model.dart';
 import 'package:hash_balance/theme/pallette.dart';
+import 'package:mdi/mdi.dart';
 
 class UserProfileDrawer extends ConsumerStatefulWidget {
   const UserProfileDrawer({
@@ -109,6 +111,18 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
                 ),
                 leading: const Icon(Icons.person_add),
                 onTap: () => _navigateToFollowersScreen(),
+              ),
+              ListTile(
+                title: const Text(
+                  'Badges',
+                  style: TextStyle(
+                    color: Pallete.whiteColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                leading: const Icon(Mdi.medal),
+                onTap: () => _navigateToBadgesScreen(),
               ),
               ListTile(
                 leading: const Icon(Icons.receipt_long),
@@ -232,6 +246,17 @@ class UserProfileDrawerState extends ConsumerState<UserProfileDrawer> {
       context,
       MaterialPageRoute(
         builder: (context) => const UserFollowersScreen(),
+      ),
+    );
+  }
+
+  void _navigateToBadgesScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const BadgesScreen(
+          isAdmin: false,
+        ),
       ),
     );
   }

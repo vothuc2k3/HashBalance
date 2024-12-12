@@ -5,9 +5,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hash_balance/core/failures.dart';
 import 'package:hash_balance/core/providers/storage_repository.dart';
+import 'package:hash_balance/features/authentication/repository/auth_repository.dart';
 import 'package:hash_balance/features/badge/repository/badge_repository.dart';
 import 'package:hash_balance/models/badge_model.dart';
 import 'package:uuid/uuid.dart';
+
+final hasBadgeProvider = StreamProvider.family<bool, String>((ref, badgeId) {
+  return ref.watch(badgeControllerProvider.notifier).hasBadge(
+        badgeId: badgeId,
+      );
+});
 
 final badgesProvider = StreamProvider<List<BadgeModel>>((ref) {
   return ref.watch(badgeControllerProvider.notifier).getBadges();
@@ -25,6 +32,7 @@ final badgeControllerProvider =
 class BadgeController extends StateNotifier<bool> {
   final BadgeRepository _badgeRepository;
   final StorageRepository _storageRepository;
+  final Ref _ref;
   final Uuid _uuid = const Uuid();
 
   BadgeController({
@@ -33,6 +41,7 @@ class BadgeController extends StateNotifier<bool> {
     required Ref ref,
   })  : _badgeRepository = badgeRepository,
         _storageRepository = storageRepository,
+        _ref = ref,
         super(false);
 
   Stream<List<BadgeModel>> getBadges() {
@@ -76,5 +85,15 @@ class BadgeController extends StateNotifier<bool> {
     } finally {
       state = false;
     }
+  }
+
+  Stream<bool> hasBadge({
+    required String badgeId,
+  }) {
+    final uid = _ref.read(userProvider)?.uid ?? '';
+    return _badgeRepository.hasBadge(
+      uid: uid,
+      badgeId: badgeId,
+    );
   }
 }

@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hash_balance/core/utils.dart';
+import 'package:hash_balance/core/widgets/loading.dart';
+import 'package:hash_balance/features/badge/controller/badge_controller.dart';
 import 'package:hash_balance/features/theme/controller/preferred_theme.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -30,7 +32,7 @@ class _CreateBadgeScreenState extends ConsumerState<CreateBadgeScreen> {
     }
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState?.validate() ?? false) {
       final name = _nameController.text.trim();
       final threshold = int.tryParse(_thresholdController.text) ?? 0;
@@ -57,14 +59,27 @@ class _CreateBadgeScreenState extends ConsumerState<CreateBadgeScreen> {
         return;
       }
 
-      showToast(true, "Badge created successfully!");
-      Navigator.pop(context);
+      final result =
+          await ref.read(badgeControllerProvider.notifier).createBadge(
+                name: name,
+                threshold: threshold,
+                description: description,
+                imageFile: imageFile,
+              );
+      result.fold(
+        (failure) => showToast(false, failure.message),
+        (_) {
+          showToast(true, "Badge created successfully!");
+          Navigator.pop(context);
+        },
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = ref.watch(preferredThemeProvider);
+    final loading = ref.watch(badgeControllerProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -188,7 +203,7 @@ class _CreateBadgeScreenState extends ConsumerState<CreateBadgeScreen> {
                       ),
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: _submitForm,
+                  onPressed: loading ? null : _submitForm,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 32,
@@ -198,15 +213,18 @@ class _CreateBadgeScreenState extends ConsumerState<CreateBadgeScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     backgroundColor: theme.approveButtonColor,
+                    fixedSize: const Size(150, 60),
                   ),
-                  child: const Text(
-                    "Create Badge",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child: loading
+                      ? const Loading()
+                      : const Text(
+                          "Create Badge",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ],
             ),
