@@ -10,16 +10,18 @@
 .svn/
 migrate_working_dir/
 
-# IntelliJ related
+# IntelliJ/Android Studio related
 *.iml
 *.ipr
 *.iws
 .idea/
+.gradle/
+build/
 
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
 # is commented out by default.
-#.vscode/
+.vscode/
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -29,7 +31,10 @@ migrate_working_dir/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-/build/
+build/
+android/app/build/
+ios/Pods/
+ios/build/
 
 # Symbolication related
 app.*.symbols
@@ -37,19 +42,56 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+# Android specific
+**/android/.gradle
+**/android/.idea
+**/android/local.properties
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
+**/android/gradlew
+**/android/gradlew.bat
+**/android/gradle.properties
+**/android/settings.gradle
 
-# Ignore Gradle project-specific cache directory
-.gradle
+# Xcode specific
+**/ios/.generated
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/*.last_build_id
+**/ios/.symlinks
+**/ios/Pods/
+**/ios/Podfile.lock
+**/ios/DerivedData/
+**/ios/.DS_Store
+**/ios/build/
+**/ios/xcuserdata/
+**/ios/Runner.xcodeproj/project.xcworkspace/
 
-# Ignore Gradle build output directory
-build
+# macOS specific
+**/macos/Pods/
+**/macos/Podfile.lock
+**/macos/build/
 
-# Ignore Environment Variables
-.env
+# Windows specific
+**/windows/build/
+
+# Linux specific
+**/linux/build/
+
+# Web specific
+**/web/.dart_tool/
+**/web/build/
 
 # Firebase
 firebase.json
+**/.firebase/
+**/.firebaserc
+**/google-services.json
+**/ios/Runner/GoogleService-Info.plist
+
+# Environment Variables
+.env
+
+# Custom assets
+**/assets/**/*.temp
